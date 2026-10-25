@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#1E4E4F</color>
+    <color name="ic_launcher_background">#000000</color>
     <!-- Material 3 baseline roles for launcher widgets without dynamic color. -->
     <color name="widgetBackground">#F7F2FA</color>
     <color name="widgetTextPrimary">#1D1B20</color>

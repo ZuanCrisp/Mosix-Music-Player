@@ -109,19 +109,25 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="mosix" android:host="callback" />
                 <data android:scheme="mornye" android:host="callback" />
+                <data android:scheme="spotiflac" android:host="callback" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="mosix" android:host="spotify-callback" />
                 <data android:scheme="mornye" android:host="spotify-callback" />
+                <data android:scheme="spotiflac" android:host="spotify-callback" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="mosix" android:host="session-grant" />
                 <data android:scheme="mornye" android:host="session-grant" />
+                <data android:scheme="spotiflac" android:host="session-grant" />
             </intent-filter>
         </activity>
 

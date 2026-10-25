@@ -3,6 +3,7 @@ package com.zuancrisp.mosix
 import android.net.Uri
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.Locale
 
 /** Process-owned inbox: Activity recreation must not discard browser results. */
 internal class ExtensionAuthCallbacks {
@@ -12,8 +13,9 @@ internal class ExtensionAuthCallbacks {
     private val processing = Mutex()
 
     fun offer(uri: Uri): Boolean {
-        if (!uri.scheme.equals("mornye", ignoreCase = true)) return false
-        val host = uri.host.orEmpty().lowercase(java.util.Locale.US)
+        val scheme = uri.scheme.orEmpty().lowercase(Locale.US)
+        if (scheme !in CALLBACK_SCHEMES) return false
+        val host = uri.host.orEmpty().lowercase(Locale.US)
         val grant = host == "session-grant"
         if (!grant && host != "callback" && host != "spotify-callback") return false
         val state = uri.getQueryParameter("state")?.trim().orEmpty()
@@ -22,6 +24,10 @@ internal class ExtensionAuthCallbacks {
         if (state.isEmpty() || code.isEmpty() || state.length > 4096 || code.length > 16384) return false
         synchronized(pending) { pending.add(Callback(state, code, grant)) }
         return true
+    }
+
+    private companion object {
+        val CALLBACK_SCHEMES = setOf("mosix", "mornye", "spotiflac")
     }
 
     suspend fun drain(complete: suspend (Callback) -> Unit) = processing.withLock {

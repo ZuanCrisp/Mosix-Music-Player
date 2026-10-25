@@ -1,0 +1,393 @@
+import 'dart:async';
+
+import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/utils/string_utils.dart';
+import 'package:sqflite/sqflite.dart';
+
+final _log = AppLogger('ListeningStatistics');
+
+String listeningDay(DateTime date) =>
+    '${date.year.toString().padLeft(4, '0')}-'
+    '${date.month.toString().padLeft(2, '0')}-'
+    '${date.day.toString().padLeft(2, '0')}';
+
+class ListeningTrack {
+  const ListeningTrack({
+    required this.key,
+    required this.title,
+    required this.artist,
+    required this.album,
+    this.artwork,
+  });
+
+  final String key;
+  final String title;
+  final String artist;
+  final String album;
+  final String? artwork;
+}
+
+class ListeningTotal {
+  const ListeningTotal(this.track, this.milliseconds, this.plays);
+
+  final ListeningTrack track;
+  final int milliseconds;
+  final int plays;
+}
+
+class ListeningSummary {
+  const ListeningSummary({
+    this.milliseconds = 0,
+    this.plays = 0,
+    this.tracks = const [],
+    this.artists = const {},
+    this.days = const {},
+  });
+
+  final int milliseconds;
+  final int plays;
+  final List<ListeningTotal> tracks;
+  final Map<String, int> artists;
+  final Map<String, int> days;
+
+  Map<String, String> get artistArtwork {
+    final artwork = <String, String>{};
+    final listeningTime = <String, int>{};
+    for (final total in tracks) {
+      final cover = normalizeCoverReference(total.track.artwork);
+      if (cover == null) continue;
+      final artist = total.track.artist;
+      if (listeningTime.containsKey(artist) &&
+          total.milliseconds <= listeningTime[artist]!) {
+        continue;
+      }
+      artwork[artist] = cover;
+      listeningTime[artist] = total.milliseconds;
+    }
+    return artwork;
+  }
+
+  factory ListeningSummary.fromRows(List<Map<String, Object?>> rows) {
+    final tracks = <String, ListeningTotal>{};
+    final artists = <String, int>{};
+    final days = <String, int>{};
+    var milliseconds = 0;
+    var plays = 0;
+    for (final row in rows) {
+      final time = row['milliseconds'] as int;
+      final count = row['plays'] as int;
+      final key = row['track_key'] as String;
+      final artist = row['artist'] as String;
+      final day = row['day'] as String;
+      milliseconds += time;
+      plays += count;
+      tracks[key] = ListeningTotal(
+        ListeningTrack(
+          key: key,
+          title: row['title'] as String,
+          artist: artist,
+          album: row['album'] as String,
+          artwork: row['artwork'] as String?,
+        ),
+        (tracks[key]?.milliseconds ?? 0) + time,
+        (tracks[key]?.plays ?? 0) + count,
+      );
+      artists[artist] = (artists[artist] ?? 0) + time;
+      days[day] = (days[day] ?? 0) + time;
+    }
+    final ranked = tracks.values.toList()
+      ..sort((a, b) => b.milliseconds.compareTo(a.milliseconds));
+    return ListeningSummary(
+      milliseconds: milliseconds,
+      plays: plays,
+      tracks: ranked,
+      artists: artists,
+      days: days,
+    );
+  }
+}
+
+class ListeningDelta {
+  ListeningDelta(this.day, this.track, this.milliseconds, this.plays);
+
+  final String day;
+  final ListeningTrack track;
+  int milliseconds;
+  int plays;
+}
+
+/// Uses elapsed time, never a change in seek position. Pauses and buffering
+/// stop accrual; a play is counted once after 30 seconds in that session.
+class ListeningRecorder {
+  ListeningRecorder({
+    required this.write,
+    required this.elapsed,
+    required this.now,
+  });
+
+  final Future<void> Function(List<ListeningDelta>) write;
+  final Duration Function() elapsed;
+  final DateTime Function() now;
+  final Map<(String, String), ListeningDelta> _pending = {};
+  Future<void> _writeTail = Future<void>.value();
+  ListeningTrack? _track;
+  Duration? _lastElapsed;
+  DateTime? _lastDate;
+  bool _playing = false;
+  bool _enabled = true;
+  bool _clearing = false;
+  int _sessionMilliseconds = 0;
+  bool _counted = false;
+
+  void update(
+    ListeningTrack? track, {
+    required bool playing,
+    bool ended = false,
+  }) {
+    checkpoint();
+    if (_track?.key != track?.key || ended) {
+      _sessionMilliseconds = 0;
+      _counted = false;
+    }
+    _track = track;
+    _playing = playing && !ended;
+    _lastElapsed = elapsed();
+    _lastDate = now();
+  }
+
+  void setEnabled(bool enabled) {
+    checkpoint();
+    _enabled = enabled;
+    _lastElapsed = elapsed();
+    _lastDate = now();
+  }
+
+  void checkpoint() {
+    final end = elapsed();
+    final date = now();
+    final previous = _lastElapsed;
+    final startDate = _lastDate;
+    _lastElapsed = end;
+    _lastDate = date;
+    final track = _track;
+    if (!_enabled ||
+        _clearing ||
+        !_playing ||
+        track == null ||
+        previous == null) {
+      return;
+    }
+    var time = (end - previous).inMilliseconds;
+    if (time <= 0) return;
+    // Keep a midnight boundary in the correct day without letting wall-clock
+    // adjustments manufacture extra listening time.
+    var cursor = startDate ?? date;
+    while (time > 0) {
+      final midnight = DateTime(cursor.year, cursor.month, cursor.day + 1);
+      final remaining = midnight.difference(cursor).inMilliseconds;
+      final chunk = remaining > 0 && remaining < time ? remaining : time;
+      final day = listeningDay(cursor);
+      final delta = _pending.putIfAbsent((
+        day,
+        track.key,
+      ), () => ListeningDelta(day, track, 0, 0));
+      delta.milliseconds += chunk;
+      _sessionMilliseconds += chunk;
+      if (!_counted && _sessionMilliseconds >= 30000) {
+        delta.plays++;
+        _counted = true;
+      }
+      time -= chunk;
+      cursor = midnight;
+    }
+  }
+
+  Future<void> flush() {
+    if (_clearing) return _writeTail;
+    checkpoint();
+    final batch = _pending.values.toList(growable: false);
+    _pending.clear();
+    _writeTail = _writeTail.then((_) async {
+      if (batch.isEmpty) return;
+      try {
+        await write(batch);
+      } catch (error) {
+        // A transient database failure must neither crash playback nor lose
+        // the buffered time. Retry with the next normal checkpoint.
+        for (final delta in _clearing ? <ListeningDelta>[] : batch) {
+          final existing = _pending[(delta.day, delta.track.key)];
+          if (existing == null) {
+            _pending[(delta.day, delta.track.key)] = delta;
+          } else {
+            existing.milliseconds += delta.milliseconds;
+            existing.plays += delta.plays;
+          }
+        }
+        _log.w('Could not persist listening statistics: $error');
+      }
+    });
+    return _writeTail;
+  }
+
+  Future<void> clear(Future<void> Function() clearStore) async {
+    if (_clearing) return;
+    _clearing = true;
+    _pending.clear();
+    final operation = _writeTail.then((_) => clearStore());
+    _writeTail = operation.catchError((Object error) {
+      _log.w('Could not clear listening statistics: $error');
+    });
+    try {
+      await operation;
+      _sessionMilliseconds = 0;
+      _counted = false;
+    } finally {
+      _lastElapsed = elapsed();
+      _lastDate = now();
+      _clearing = false;
+    }
+  }
+}
+
+class ListeningStatisticsStore {
+  static final instance = ListeningStatisticsStore._();
+  ListeningStatisticsStore._();
+
+  final _database = sqlite.SingleFlightInitializer<Database>();
+
+  Future<Database> _open() => _database.getOrCreate(
+    () => sqlite.openAppDatabase(
+      'listening_statistics.db',
+      version: 1,
+      onCreate: (db, _) => db.execute('''
+        CREATE TABLE listening (
+          day TEXT NOT NULL,
+          track_key TEXT NOT NULL,
+          title TEXT NOT NULL,
+          artist TEXT NOT NULL,
+          album TEXT NOT NULL,
+          artwork TEXT,
+          milliseconds INTEGER NOT NULL DEFAULT 0,
+          plays INTEGER NOT NULL DEFAULT 0,
+          PRIMARY KEY (day, track_key)
+        )
+      '''),
+      onUpgrade: (_, _, _) async {},
+    ),
+  );
+
+  Future<void> add(List<ListeningDelta> deltas) async {
+    final db = await _open();
+    await db.transaction((transaction) async {
+      final batch = transaction.batch();
+      for (final delta in deltas) {
+        batch.rawInsert(
+          '''
+          INSERT OR IGNORE INTO listening
+            (day, track_key, title, artist, album, artwork, milliseconds, plays)
+          VALUES (?, ?, ?, ?, ?, ?, 0, 0)
+        ''',
+          [
+            delta.day,
+            delta.track.key,
+            delta.track.title,
+            delta.track.artist,
+            delta.track.album,
+            delta.track.artwork,
+          ],
+        );
+        // Avoid UPSERT syntax unavailable in older Android SQLite versions.
+        batch.rawUpdate(
+          '''
+          UPDATE listening SET title = ?, artist = ?, album = ?, artwork = ?,
+            milliseconds = milliseconds + ?, plays = plays + ?
+          WHERE day = ? AND track_key = ?
+        ''',
+          [
+            delta.track.title,
+            delta.track.artist,
+            delta.track.album,
+            delta.track.artwork,
+            delta.milliseconds,
+            delta.plays,
+            delta.day,
+            delta.track.key,
+          ],
+        );
+      }
+      await batch.commit(noResult: true);
+    });
+  }
+
+  Future<ListeningSummary> load(DateTime start, DateTime end) async {
+    final db = await _open();
+    return readListeningSummary(db, start, end);
+  }
+
+  Future<void> clear() async => (await _open()).delete('listening');
+}
+
+/// Aggregate in SQLite so an annual recap transfers one row per song, artist
+/// and day, rather than every daily song record into the Flutter heap.
+Future<ListeningSummary> readListeningSummary(
+  DatabaseExecutor db,
+  DateTime start,
+  DateTime end,
+) async {
+  final arguments = [listeningDay(start), listeningDay(end)];
+  final rows = await db.rawQuery('''
+    SELECT totals.track_key, details.title, details.artist, details.album,
+      details.artwork, totals.milliseconds, totals.plays
+    FROM (
+      SELECT track_key, SUM(milliseconds) AS milliseconds, SUM(plays) AS plays,
+        MAX(day) AS last_day
+      FROM listening WHERE day >= ? AND day < ? GROUP BY track_key
+    ) AS totals
+    JOIN listening AS details ON details.track_key = totals.track_key
+      AND details.day = totals.last_day
+    ORDER BY totals.milliseconds DESC
+  ''', arguments);
+  final artistRows = await db.rawQuery('''
+    SELECT artist, SUM(milliseconds) AS milliseconds
+    FROM listening WHERE day >= ? AND day < ? GROUP BY artist
+  ''', arguments);
+  final dayRows = await db.rawQuery('''
+    SELECT day, SUM(milliseconds) AS milliseconds
+    FROM listening WHERE day >= ? AND day < ? GROUP BY day ORDER BY day
+  ''', arguments);
+  final tracks = [
+    for (final row in rows)
+      ListeningTotal(
+        ListeningTrack(
+          key: row['track_key'] as String,
+          title: row['title'] as String,
+          artist: row['artist'] as String,
+          album: row['album'] as String,
+          artwork: row['artwork'] as String?,
+        ),
+        row['milliseconds'] as int,
+        row['plays'] as int,
+      ),
+  ];
+  return ListeningSummary(
+    milliseconds: tracks.fold(0, (sum, track) => sum + track.milliseconds),
+    plays: tracks.fold(0, (sum, track) => sum + track.plays),
+    tracks: tracks,
+    artists: {
+      for (final row in artistRows)
+        row['artist'] as String: row['milliseconds'] as int,
+    },
+    days: {
+      for (final row in dayRows)
+        row['day'] as String: row['milliseconds'] as int,
+    },
+  );
+}
+
+final _listeningClock = Stopwatch()..start();
+final listeningRecorder = ListeningRecorder(
+  write: ListeningStatisticsStore.instance.add,
+  elapsed: () => _listeningClock.elapsed,
+  now: DateTime.now,
+);

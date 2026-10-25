@@ -1,0 +1,17 @@
+{
+    global:
+        Java_com_zarz_spotiflac_NativeAudio_openOboe;
+        Java_com_zarz_spotiflac_NativeAudio_bitsOboe;
+        Java_com_zarz_spotiflac_NativeAudio_deviceOboe;
+        Java_com_zarz_spotiflac_NativeAudio_writeOboe;
+        Java_com_zarz_spotiflac_NativeAudio_startOboe;
+        Java_com_zarz_spotiflac_NativeAudio_flushOboe;
+        Java_com_zarz_spotiflac_NativeAudio_framesOboe;
+        Java_com_zarz_spotiflac_NativeAudio_closeOboe;
+        Java_com_zarz_spotiflac_NativeAudio_openWavPack;
+        Java_com_zarz_spotiflac_NativeAudio_infoWavPack;
+        Java_com_zarz_spotiflac_NativeAudio_readWavPack;
+        Java_com_zarz_spotiflac_NativeAudio_seekWavPack;
+        Java_com_zarz_spotiflac_NativeAudio_closeWavPack;
+    local: *;
+};

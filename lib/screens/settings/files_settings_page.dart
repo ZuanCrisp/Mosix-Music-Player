@@ -1,0 +1,1193 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_switch.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_choice_chip.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/screens/network_storage_screen.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/file_access.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+
+class FilesSettingsPage extends ConsumerStatefulWidget {
+  const FilesSettingsPage({super.key});
+
+  @override
+  ConsumerState<FilesSettingsPage> createState() => _FilesSettingsPageState();
+}
+
+class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
+  int _androidSdkVersion = 0;
+  bool _hasAllFilesAccess = false;
+  bool _artistFolderFiltersExpanded = false;
+  bool _safAccessLost = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeviceInfo();
+    _checkSafAccess();
+  }
+
+  Future<void> _checkSafAccess() async {
+    if (!Platform.isAndroid) return;
+    final settings = ref.read(settingsProvider);
+    if (settings.storageMode != 'saf' || settings.downloadTreeUri.isEmpty) {
+      if (mounted && _safAccessLost) setState(() => _safAccessLost = false);
+      return;
+    }
+    final accessible = await PlatformBridge.isSafTreeAccessible(
+      settings.downloadTreeUri,
+    );
+    if (mounted) setState(() => _safAccessLost = !accessible);
+  }
+
+  Future<void> _pickSafTreeAndSave() async {
+    final result = await PlatformBridge.pickSafTree();
+    if (result == null) return;
+    final treeUri = result['tree_uri'] as String? ?? '';
+    final displayName = result['display_name'] as String? ?? '';
+    if (treeUri.isEmpty) return;
+    final notifier = ref.read(settingsProvider.notifier);
+    notifier.setStorageMode('saf');
+    notifier.setDownloadTreeUri(
+      treeUri,
+      displayName: displayName.isNotEmpty ? displayName : treeUri,
+    );
+  }
+
+  Future<void> _initDeviceInfo() async {
+    if (Platform.isAndroid) {
+      final deviceInfo = DeviceInfoPlugin();
+      final androidInfo = await deviceInfo.androidInfo;
+      final sdkVersion = androidInfo.version.sdkInt;
+      final hasAccess = await Permission.manageExternalStorage.isGranted;
+      if (mounted) {
+        setState(() {
+          _androidSdkVersion = sdkVersion;
+          _hasAllFilesAccess = hasAccess;
+        });
+      }
+    }
+  }
+
+  Future<void> _requestAllFilesAccess() async {
+    final status = await Permission.manageExternalStorage.request();
+    if (status.isGranted) {
+      ref.read(settingsProvider.notifier).setUseAllFilesAccess(true);
+      if (mounted) setState(() => _hasAllFilesAccess = true);
+    } else if (status.isPermanentlyDenied) {
+      if (mounted) {
+        final shouldOpen = await showAppDialog<bool>(
+          context: context,
+          builder: (context) => AppAlertDialog(
+            title: Text(context.l10n.setupStorageAccessRequired),
+            content: Text(context.l10n.allFilesAccessDeniedMessage),
+            actions: [
+              AppDialogAction(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(context.l10n.dialogCancel),
+              ),
+              AppDialogAction(
+                filled: true,
+                isDefault: true,
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(context.l10n.setupOpenSettings),
+              ),
+            ],
+          ),
+        );
+        if (shouldOpen == true) await openAppSettings();
+      }
+    }
+  }
+
+  Future<void> _disableAllFilesAccess() async {
+    ref.read(settingsProvider.notifier).setUseAllFilesAccess(false);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.allFilesAccessDisabledMessage)),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
+        body: CustomScrollView(
+          slivers: [
+            AppSliverHeader.page(title: context.l10n.settingsFiles),
+
+            SliverToBoxAdapter(
+              child: SettingsSectionHeader(
+                title: context.l10n.setupDownloadLocationTitle,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                children: [
+                  SettingsItem(
+                    icon: Icons.folder_outlined,
+                    title: context.l10n.downloadDirectory,
+                    subtitle: settings.downloadDirectory.isEmpty
+                        ? (Platform.isIOS
+                              ? context.l10n.setupAppDocumentsFolder
+                              : 'Download/Mosix')
+                        : settings.downloadDirectory,
+                    onTap: () => _pickDirectory(context, ref),
+                    showDivider: false,
+                  ),
+                  SettingsItem(
+                    icon: Icons.dns_outlined,
+                    title: context.l10n.networkDownloadDestination,
+                    subtitle: settings.networkDownloadFolder.isEmpty
+                        ? context.l10n.networkUseForDownloads
+                        : settings.networkDownloadLabel,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const NetworkStorageScreen(),
+                      ),
+                    ),
+                    showDivider: settings.networkDownloadFolder.isNotEmpty,
+                  ),
+                  if (settings.networkDownloadFolder.isNotEmpty)
+                    SettingsItem(
+                      icon: Icons.phone_android_outlined,
+                      title: context.l10n.networkUseLocalDownloads,
+                      onTap: () => ref
+                          .read(settingsProvider.notifier)
+                          .setNetworkDownloadFolder('', ''),
+                      showDivider: false,
+                    ),
+                ],
+              ),
+            ),
+            if (Platform.isAndroid &&
+                _safAccessLost &&
+                settings.storageMode == 'saf' &&
+                settings.downloadTreeUri.isNotEmpty)
+              SliverToBoxAdapter(
+                child: SettingsInfoCard(
+                  icon: Icons.warning_amber_outlined,
+                  tone: SettingsInfoTone.error,
+                  title: context.l10n.downloadFolderAccessLostTitle,
+                  message: context.l10n.downloadFolderAccessLostSubtitle,
+                  margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                  action: FilledButton.tonal(
+                    onPressed: () async {
+                      await _pickSafTreeAndSave();
+                      await _checkSafAccess();
+                    },
+                    child: Text(context.l10n.downloadFolderReselect),
+                  ),
+                ),
+              ),
+
+            SliverToBoxAdapter(
+              child: SettingsSectionHeader(
+                title: context.l10n.sectionFileSettings,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                children: [
+                  SettingsItem(
+                    icon: Icons.text_fields,
+                    title: context.l10n.downloadFilenameFormat,
+                    subtitle: settings.filenameFormat,
+                    onTap: () => _showFormatEditor(
+                      context,
+                      ref,
+                      settings.filenameFormat,
+                    ),
+                  ),
+                  SettingsItem(
+                    icon: Icons.music_note_outlined,
+                    title: context.l10n.downloadSingleFilenameFormat,
+                    subtitle: settings.singleFilenameFormat,
+                    onTap: () => _showFormatEditor(
+                      context,
+                      ref,
+                      settings.singleFilenameFormat,
+                      onSave: ref
+                          .read(settingsProvider.notifier)
+                          .setSingleFilenameFormat,
+                      title: context.l10n.downloadSingleFilenameFormat,
+                      description:
+                          context.l10n.downloadSingleFilenameFormatDescription,
+                    ),
+                    showDivider: false,
+                  ),
+                ],
+              ),
+            ),
+
+            SliverToBoxAdapter(
+              child: SettingsSectionHeader(
+                title: context.l10n.downloadFolderOrganization,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                children: [
+                  SettingsSwitchItem(
+                    icon: Icons.library_music_outlined,
+                    title: context.l10n.downloadSeparateSinglesFolder,
+                    subtitle: settings.separateSingles
+                        ? context.l10n.downloadSeparateSinglesEnabled
+                        : context.l10n.downloadSeparateSinglesDisabled,
+                    value: settings.separateSingles,
+                    onChanged: (value) => ref
+                        .read(settingsProvider.notifier)
+                        .setSeparateSingles(value),
+                  ),
+                  if (settings.separateSingles)
+                    SettingsItem(
+                      icon: Icons.folder_outlined,
+                      title: context.l10n.downloadAlbumFolderStructure,
+                      subtitle: _getAlbumFolderStructureLabel(
+                        context,
+                        settings.albumFolderStructure,
+                      ),
+                      onTap: () => _showAlbumFolderStructurePicker(
+                        context,
+                        ref,
+                        settings.albumFolderStructure,
+                      ),
+                    ),
+                  if (!settings.separateSingles)
+                    SettingsItem(
+                      icon: Icons.create_new_folder_outlined,
+                      title: context.l10n.downloadFolderOrganization,
+                      subtitle: _getFolderOrganizationLabel(
+                        context,
+                        settings.folderOrganization,
+                      ),
+                      onTap: () => _showFolderOrganizationPicker(
+                        context,
+                        ref,
+                        settings.folderOrganization,
+                      ),
+                    ),
+                  SettingsSwitchItem(
+                    icon: Icons.playlist_play_outlined,
+                    title: context.l10n.downloadCreatePlaylistSourceFolder,
+                    subtitle: _getPlaylistFolderSubtitle(settings),
+                    value: settings.createPlaylistFolder,
+                    onChanged: (value) => ref
+                        .read(settingsProvider.notifier)
+                        .setCreatePlaylistFolder(value),
+                  ),
+                  SettingsSwitchItem(
+                    icon: Icons.person_search_outlined,
+                    title: context.l10n.downloadUseAlbumArtistForFolders,
+                    subtitle: settings.useAlbumArtistForFolders
+                        ? context
+                              .l10n
+                              .downloadUseAlbumArtistForFoldersAlbumSubtitle
+                        : context
+                              .l10n
+                              .downloadUseAlbumArtistForFoldersTrackSubtitle,
+                    value: settings.useAlbumArtistForFolders,
+                    onChanged: (value) => ref
+                        .read(settingsProvider.notifier)
+                        .setUseAlbumArtistForFolders(value),
+                  ),
+                  SettingsItem(
+                    icon: Icons.filter_alt_outlined,
+                    title: context.l10n.downloadArtistNameFilters,
+                    subtitle: _getArtistFolderFilterSubtitle(
+                      context,
+                      usePrimaryArtistOnly: settings.usePrimaryArtistOnly,
+                      filterAlbumArtistContributors:
+                          settings.filterContributingArtistsInAlbumArtist,
+                    ),
+                    trailing: Icon(
+                      _artistFolderFiltersExpanded
+                          ? Icons.expand_less
+                          : Icons.expand_more,
+                    ),
+                    onTap: () => setState(() {
+                      _artistFolderFiltersExpanded =
+                          !_artistFolderFiltersExpanded;
+                    }),
+                    showDivider: !_artistFolderFiltersExpanded,
+                  ),
+                  if (_artistFolderFiltersExpanded) ...[
+                    SettingsSwitchItem(
+                      icon: Icons.person_outline,
+                      title: context.l10n.downloadUsePrimaryArtistOnly,
+                      subtitle: settings.usePrimaryArtistOnly
+                          ? context.l10n.downloadUsePrimaryArtistOnlyEnabled
+                          : context.l10n.downloadUsePrimaryArtistOnlyDisabled,
+                      value: settings.usePrimaryArtistOnly,
+                      onChanged: (value) => ref
+                          .read(settingsProvider.notifier)
+                          .setUsePrimaryArtistOnly(value),
+                    ),
+                    SettingsSwitchItem(
+                      icon: Icons.group_remove_outlined,
+                      title: context.l10n.downloadFilterContributing,
+                      subtitle: settings.filterContributingArtistsInAlbumArtist
+                          ? context.l10n.downloadFilterContributingEnabled
+                          : context.l10n.downloadFilterContributingDisabled,
+                      value: settings.filterContributingArtistsInAlbumArtist,
+                      onChanged: (value) => ref
+                          .read(settingsProvider.notifier)
+                          .setFilterContributingArtistsInAlbumArtist(value),
+                      showDivider: false,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            if (Platform.isAndroid && _androidSdkVersion >= 33) ...[
+              SliverToBoxAdapter(
+                child: SettingsSectionHeader(
+                  title: context.l10n.sectionStorageAccess,
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SettingsGroup(
+                  children: [
+                    SettingsSwitchItem(
+                      icon: Icons.folder_special_outlined,
+                      title: context.l10n.allFilesAccess,
+                      subtitle: _hasAllFilesAccess
+                          ? context.l10n.allFilesAccessEnabledSubtitle
+                          : context.l10n.allFilesAccessDisabledSubtitle,
+                      value: _hasAllFilesAccess && settings.useAllFilesAccess,
+                      onChanged: (value) {
+                        if (value) {
+                          _requestAllFilesAccess();
+                        } else {
+                          _disableAllFilesAccess();
+                        }
+                      },
+                      showDivider: false,
+                    ),
+                  ],
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          context.l10n.allFilesAccessDescription,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getAlbumFolderStructureLabel(BuildContext context, String structure) {
+    switch (structure) {
+      case 'album_only':
+        return context.l10n.albumFolderAlbumOnlySubtitle;
+      case 'artist_year_album':
+        return context.l10n.albumFolderArtistYearAlbumSubtitle;
+      case 'year_album':
+        return context.l10n.albumFolderYearAlbumSubtitle;
+      case 'artist_album_singles':
+        return context.l10n.albumFolderArtistAlbumSinglesSubtitle;
+      case 'artist_album_flat':
+        return context.l10n.albumFolderArtistAlbumFlatSubtitle;
+      default:
+        return context.l10n.albumFolderArtistAlbumSubtitle;
+    }
+  }
+
+  String _getFolderOrganizationLabel(BuildContext context, String value) {
+    switch (value) {
+      case 'playlist':
+        return context.l10n.folderOrganizationByPlaylist;
+      case 'artist':
+        return context.l10n.folderOrganizationByArtist;
+      case 'album':
+        return context.l10n.folderOrganizationByAlbum;
+      case 'artist_album':
+        return context.l10n.folderOrganizationByArtistAlbum;
+      default:
+        return context.l10n.folderOrganizationNone;
+    }
+  }
+
+  String _getPlaylistFolderSubtitle(AppSettings settings) {
+    if (settings.folderOrganization == 'playlist') {
+      return context.l10n.downloadCreatePlaylistSourceFolderRedundant;
+    }
+    if (settings.createPlaylistFolder) {
+      return context.l10n.downloadCreatePlaylistSourceFolderEnabled;
+    }
+    return context.l10n.downloadCreatePlaylistSourceFolderDisabled;
+  }
+
+  String _getArtistFolderFilterSubtitle(
+    BuildContext context, {
+    required bool usePrimaryArtistOnly,
+    required bool filterAlbumArtistContributors,
+  }) {
+    final l10n = context.l10n;
+    final statuses = <String>[
+      usePrimaryArtistOnly
+          ? l10n.downloadPrimaryArtistOnlyOn
+          : l10n.downloadPrimaryArtistOnlyOff,
+      filterAlbumArtistContributors
+          ? l10n.downloadAlbumArtistMetadataPrimaryOnly
+          : l10n.downloadAlbumArtistMetadataFull,
+    ];
+    return statuses.join(' | ');
+  }
+
+  Future<void> _pickDirectory(BuildContext context, WidgetRef ref) async {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      _showIOSDirectoryOptions(context, ref);
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
+      _showAndroidDirectoryOptions(context, ref);
+    }
+  }
+
+  Future<String> _getDefaultAndroidDirectory() async {
+    const directDownloadPath = '/storage/emulated/0/Download/Mosix';
+    try {
+      final downloadDir = Directory(directDownloadPath);
+      if (!await downloadDir.exists()) {
+        await downloadDir.create(recursive: true);
+      }
+      return downloadDir.path;
+    } catch (_) {}
+    try {
+      final externalDir = await getExternalStorageDirectory();
+      if (externalDir != null) {
+        final downloadDir = Directory(
+          '${externalDir.parent.parent.parent.parent.path}/Download/Mosix',
+        );
+        if (!await downloadDir.exists()) {
+          await downloadDir.create(recursive: true);
+        }
+        return downloadDir.path;
+      }
+    } catch (_) {}
+    final appDir = await getApplicationDocumentsDirectory();
+    final fallbackDir = Directory('${appDir.path}/Mosix');
+    if (!await fallbackDir.exists()) await fallbackDir.create(recursive: true);
+    return fallbackDir.path;
+  }
+
+  void _showAndroidDirectoryOptions(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final settings = ref.read(settingsProvider);
+    final isSafMode =
+        settings.storageMode == 'saf' && settings.downloadTreeUri.isNotEmpty;
+    showAppModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: colorScheme.surfaceContainerHigh,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+              child: Text(
+                context.l10n.setupDownloadLocationTitle,
+                style: Theme.of(
+                  ctx,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              child: Text(
+                context.l10n.downloadLocationSubtitle,
+                style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            AppSheetOption(
+              leading: Icon(Icons.folder_special, color: colorScheme.primary),
+              title: Text(context.l10n.storageAutomaticFolder),
+              subtitle: Text(context.l10n.storageAutomaticDownloadFolder),
+              trailing: !isSafMode ? const Icon(Icons.check) : null,
+              onTap: () async {
+                Navigator.pop(ctx);
+                final defaultDir = await _getDefaultAndroidDirectory();
+                final notifier = ref.read(settingsProvider.notifier);
+                notifier.setStorageMode('app');
+                notifier.setDownloadDirectory(defaultDir);
+                notifier.setDownloadTreeUri('');
+              },
+            ),
+            AppSheetOption(
+              leading: Icon(Icons.folder_open, color: colorScheme.primary),
+              title: Text(context.l10n.storageSafRecommended),
+              subtitle: Text(context.l10n.storageDownloadFolderHint),
+              trailing: isSafMode ? const Icon(Icons.check) : null,
+              onTap: () async {
+                Navigator.pop(ctx);
+                await _pickSafTreeAndSave();
+                await _checkSafAccess();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showIOSDirectoryOptions(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    showAppModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: colorScheme.surfaceContainerHigh,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+              child: Text(
+                context.l10n.setupDownloadLocationTitle,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              child: Text(
+                context.l10n.setupDownloadLocationIosMessage,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            AppSheetOption(
+              leading: Icon(Icons.folder_special, color: colorScheme.primary),
+              title: Text(context.l10n.setupAppDocumentsFolder),
+              subtitle: Text(context.l10n.setupAppDocumentsFolderSubtitle),
+              trailing: Icon(Icons.check_circle, color: colorScheme.primary),
+              onTap: () async {
+                final dir = await getApplicationDocumentsDirectory();
+                ref
+                    .read(settingsProvider.notifier)
+                    .setDownloadDirectory(dir.path);
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+            ),
+            AppSheetOption(
+              leading: Icon(
+                Icons.cloud,
+                color: context.isMornye
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+              ),
+              title: Text(context.l10n.setupChooseFromFiles),
+              subtitle: Text(context.l10n.setupChooseFromFilesSubtitle),
+              onTap: () async {
+                Navigator.pop(ctx);
+                await Future<void>.delayed(const Duration(milliseconds: 250));
+                IosPickedDirectory? picked;
+                try {
+                  picked = await PlatformBridge.pickIosDirectory();
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          context.l10n.snackbarFolderPickerFailed(
+                            context.friendlyError(e),
+                          ),
+                        ),
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                        duration: const Duration(seconds: 4),
+                      ),
+                    );
+                  }
+                  return;
+                }
+                if (picked == null || !context.mounted) return;
+
+                final validation = validateIosPath(
+                  picked.path,
+                  bookmark: picked.bookmark,
+                );
+                if (!validation.isValid) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          validation.errorReason ??
+                              context.l10n.setupIcloudNotSupported,
+                        ),
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                        duration: const Duration(seconds: 4),
+                      ),
+                    );
+                  }
+                  return;
+                }
+
+                ref
+                    .read(settingsProvider.notifier)
+                    .setDownloadDirectory(
+                      picked.path,
+                      iosBookmark: picked.bookmark,
+                    );
+              },
+            ),
+            SettingsInfoCard(
+              icon: Icons.info_outline,
+              tone: SettingsInfoTone.warning,
+              message: context.l10n.setupIosEmptyFolderWarning,
+              margin: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFormatEditor(
+    BuildContext context,
+    WidgetRef ref,
+    String current, {
+    void Function(String)? onSave,
+    String? title,
+    String? description,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final save =
+        onSave ?? ref.read(settingsProvider.notifier).setFilenameFormat;
+
+    showAppModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: colorScheme.surface,
+      builder: (context) => _FilenameFormatEditorSheet(
+        initialText: current,
+        onSave: save,
+        title: title,
+        description: description,
+      ),
+    );
+  }
+
+  void _showAlbumFolderStructurePicker(
+    BuildContext context,
+    WidgetRef ref,
+    String current,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    showAppModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: colorScheme.surfaceContainerHigh,
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.7,
+      ),
+      builder: (context) => SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                child: Text(
+                  context.l10n.downloadAlbumFolderStructure,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                child: Text(
+                  context.l10n.albumFolderStructureDescription,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              for (final option in [
+                (
+                  'artist_album',
+                  context.l10n.albumFolderArtistAlbum,
+                  context.l10n.albumFolderArtistAlbumSubtitle,
+                  Icons.folder_outlined,
+                ),
+                (
+                  'artist_year_album',
+                  context.l10n.albumFolderArtistYearAlbum,
+                  context.l10n.albumFolderArtistYearAlbumSubtitle,
+                  Icons.calendar_today_outlined,
+                ),
+                (
+                  'album_only',
+                  context.l10n.albumFolderAlbumOnly,
+                  context.l10n.albumFolderAlbumOnlySubtitle,
+                  Icons.album_outlined,
+                ),
+                (
+                  'year_album',
+                  context.l10n.albumFolderYearAlbum,
+                  context.l10n.albumFolderYearAlbumSubtitle,
+                  Icons.event_outlined,
+                ),
+                (
+                  'artist_album_singles',
+                  context.l10n.albumFolderArtistAlbumSingles,
+                  context.l10n.albumFolderArtistAlbumSinglesSubtitle,
+                  Icons.person_outlined,
+                ),
+                (
+                  'artist_album_flat',
+                  context.l10n.albumFolderArtistAlbumFlat,
+                  context.l10n.albumFolderArtistAlbumFlatSubtitle,
+                  Icons.person_outline_outlined,
+                ),
+              ])
+                AppSheetOption(
+                  leading: Icon(option.$4),
+                  title: Text(option.$2),
+                  subtitle: Text(option.$3),
+                  trailing: current == option.$1
+                      ? const Icon(Icons.check)
+                      : null,
+                  onTap: () {
+                    ref
+                        .read(settingsProvider.notifier)
+                        .setAlbumFolderStructure(option.$1);
+                    Navigator.pop(context);
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFolderOrganizationPicker(
+    BuildContext context,
+    WidgetRef ref,
+    String current,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    showAppModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: colorScheme.surfaceContainerHigh,
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.7,
+      ),
+      builder: (context) => SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                child: Text(
+                  context.l10n.downloadFolderOrganization,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                child: Text(
+                  context.l10n.folderOrganizationDescription,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              for (final option in [
+                (
+                  'none',
+                  context.l10n.folderOrganizationNone,
+                  context.l10n.folderOrganizationNoneSubtitle,
+                  'Mosix/Track.flac',
+                ),
+                (
+                  'playlist',
+                  context.l10n.folderOrganizationByPlaylist,
+                  context.l10n.folderOrganizationByPlaylistSubtitle,
+                  'Mosix/Playlist Name/Track.flac',
+                ),
+                (
+                  'artist',
+                  context.l10n.folderOrganizationByArtist,
+                  context.l10n.folderOrganizationByArtistSubtitle,
+                  'Mosix/Artist Name/Track.flac',
+                ),
+                (
+                  'album',
+                  context.l10n.folderOrganizationByAlbum,
+                  context.l10n.folderOrganizationByAlbumSubtitle,
+                  'Mosix/Album Name/Track.flac',
+                ),
+                (
+                  'artist_album',
+                  context.l10n.folderOrganizationByArtistAlbum,
+                  context.l10n.folderOrganizationByArtistAlbumSubtitle,
+                  'Mosix/Artist/Album/Track.flac',
+                ),
+              ])
+                _FolderOption(
+                  title: option.$2,
+                  subtitle: option.$3,
+                  example: option.$4,
+                  isSelected: current == option.$1,
+                  onTap: () {
+                    ref
+                        .read(settingsProvider.notifier)
+                        .setFolderOrganization(option.$1);
+                    Navigator.pop(context);
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FolderOption extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String example;
+  final bool isSelected;
+  final VoidCallback onTap;
+  const _FolderOption({
+    required this.title,
+    required this.subtitle,
+    required this.example,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return AppSheetOption(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+      title: Text(title),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(subtitle),
+          const SizedBox(height: 4),
+          Text(
+            example,
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 11,
+              color: colorScheme.primary,
+            ),
+          ),
+        ],
+      ),
+      trailing: isSelected
+          ? Icon(Icons.check_circle, color: colorScheme.primary)
+          : Icon(Icons.circle_outlined, color: colorScheme.outline),
+      onTap: onTap,
+    );
+  }
+}
+
+/// Bottom sheet for editing a filename format. Owns its controller and disposes
+/// it in [dispose] to avoid use-after-dispose during the close animation.
+class _FilenameFormatEditorSheet extends StatefulWidget {
+  final String initialText;
+  final void Function(String) onSave;
+  final String? title;
+  final String? description;
+
+  const _FilenameFormatEditorSheet({
+    required this.initialText,
+    required this.onSave,
+    this.title,
+    this.description,
+  });
+
+  @override
+  State<_FilenameFormatEditorSheet> createState() =>
+      _FilenameFormatEditorSheetState();
+}
+
+class _FilenameFormatEditorSheetState
+    extends State<_FilenameFormatEditorSheet> {
+  static const _basicTags = [
+    '{artist}',
+    '{title}',
+    '{album}',
+    '{track}',
+    '{year}',
+    '{date}',
+    '{disc}',
+    '{playlist_position}',
+  ];
+  static const _advancedTags = [
+    '{isrc}',
+    '{provider}',
+    '{provider_id}',
+    '{track_raw}',
+    '{track:02}',
+    '{track:1}',
+    '{playlist_position_raw}',
+    '{playlist_position:02}',
+    '{date:%Y}',
+    '{date:%Y-%m-%d}',
+    '{disc_raw}',
+    '{disc:02}',
+  ];
+
+  late final TextEditingController _controller;
+  late bool _showAdvancedTags;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialText);
+    _showAdvancedTags = RegExp(
+      r'\{(?:isrc|provider|platform|provider_id|id|track_raw|disc_raw|track:\d+|disc:\d+|date:[^}]+)\}',
+      caseSensitive: false,
+    ).hasMatch(widget.initialText);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _insertTag(String tag) {
+    final text = _controller.text;
+    final selection = _controller.selection;
+    final start = selection.start >= 0 ? selection.start : text.length;
+    final end = selection.end >= 0 ? selection.end : text.length;
+    String insertion = tag;
+    if (start > 0) {
+      final before = text.substring(0, start);
+      if (!before.trim().endsWith('-')) {
+        insertion = ' - $tag';
+      } else if (before.trim().endsWith('-') && !before.endsWith(' ')) {
+        insertion = ' $tag';
+      }
+    }
+    final newText = text.replaceRange(start, end, insertion);
+    _controller.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: start + insertion.length),
+    );
+  }
+
+  Widget _tagChip(ColorScheme colorScheme, String tag) {
+    if (context.isMornye) {
+      return AppChoiceChip(
+        label: Text(tag),
+        selected: false,
+        onSelected: (_) => _insertTag(tag),
+      );
+    }
+    return ActionChip(
+      label: Text(tag),
+      onPressed: () => _insertTag(tag),
+      backgroundColor: colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.5,
+      ),
+      side: BorderSide.none,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      labelStyle: TextStyle(
+        color: colorScheme.onSurface,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SingleChildScrollView(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const AppSheetHandle(),
+                Text(
+                  widget.title ?? context.l10n.filenameFormat,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.description ??
+                      context.l10n.downloadFilenameDescription(
+                        '{album}',
+                        '{artist}',
+                        '{date}',
+                        '{disc}',
+                        '{title}',
+                        '{track}',
+                        '{year}',
+                      ),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                TextField(
+                  controller: _controller,
+                  decoration: InputDecoration(
+                    hintText: '{artist} - {title}',
+                    filled: true,
+                    fillColor: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.3,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  autofocus: true,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  context.l10n.downloadFilenameInsertTag,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _basicTags
+                      .map((tag) => _tagChip(colorScheme, tag))
+                      .toList(),
+                ),
+                const SizedBox(height: 12),
+                AppSwitchListTile(
+                  value: _showAdvancedTags,
+                  onChanged: (value) =>
+                      setState(() => _showAdvancedTags = value),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.l10n.filenameShowAdvancedTags),
+                  subtitle: Text(
+                    context.l10n.filenameShowAdvancedTagsDescription,
+                  ),
+                ),
+                if (_showAdvancedTags) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _advancedTags
+                        .map((tag) => _tagChip(colorScheme, tag))
+                        .toList(),
+                  ),
+                ],
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppDialogAction(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(context.l10n.dialogCancel),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: AppDialogAction(
+                        filled: true,
+                        onPressed: () {
+                          widget.onSave(_controller.text);
+                          Navigator.pop(context);
+                        },
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(context.l10n.dialogSave),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -1,0 +1,43 @@
+[package]
+name = "spotiflac-extensions"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+spotiflac-core.workspace = true
+spotiflac-network.workspace = true
+spotiflac-providers.workspace = true
+tokio.workspace = true
+rquickjs.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+base64.workspace = true
+sha2.workspace = true
+sha1.workspace = true
+md-5.workspace = true
+hmac.workspace = true
+aes-gcm.workspace = true
+aes.workspace = true
+blowfish.workspace = true
+zeroize.workspace = true
+getrandom.workspace = true
+tempfile.workspace = true
+zip.workspace = true
+regex.workspace = true
+time.workspace = true
+chrono.workspace = true
+httpdate.workspace = true
+cap-std.workspace = true
+rustix.workspace = true
+
+[dev-dependencies]
+libc = "=0.2.190"
+rustls.workspace = true
+rcgen = { version = "=0.14.10", default-features = false, features = ["crypto", "ring", "pem"] }
+
+[lints]
+workspace = true

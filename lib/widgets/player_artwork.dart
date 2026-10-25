@@ -1,0 +1,70 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
+import 'package:mosix/services/cover_cache_manager.dart';
+
+class PlayerArtwork extends StatelessWidget {
+  /// An HTTP(S) URL, file URI, or absolute local artwork path.
+  final String? artUri;
+  final ColorScheme colorScheme;
+  final int? cacheWidth;
+  final double iconSize;
+
+  const PlayerArtwork({
+    super.key,
+    required this.artUri,
+    required this.colorScheme,
+    this.cacheWidth,
+    this.iconSize = 40,
+  });
+
+  /// Share one full-size decode while artwork moves between player panels.
+  static int transitionCacheWidth(BuildContext context) =>
+      (MediaQuery.sizeOf(context).width *
+              MediaQuery.devicePixelRatioOf(context))
+          .round();
+
+  @override
+  Widget build(BuildContext context) {
+    final placeholder = Container(
+      color: colorScheme.surfaceContainerHighest,
+      child: Icon(
+        Icons.music_note,
+        size: iconSize,
+        color: colorScheme.onSurfaceVariant,
+      ),
+    );
+
+    final uri = artUri;
+    if (uri == null || uri.isEmpty) return placeholder;
+
+    if (uri.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: uri,
+        fit: BoxFit.cover,
+        cacheManager: CoverCacheManager.instance,
+        memCacheWidth: cacheWidth,
+        fadeInDuration: Duration.zero,
+        fadeOutDuration: const Duration(milliseconds: 0),
+        useOldImageOnUrlChange: true,
+        placeholder: (_, _) => placeholder,
+        errorWidget: (_, _, _) => placeholder,
+      );
+    }
+    if (uri.startsWith('file://') || p.isAbsolute(uri)) {
+      final path = uri.startsWith('file://')
+          ? Uri.parse(uri).toFilePath()
+          : uri;
+      return Image.file(
+        File(path),
+        fit: BoxFit.cover,
+        cacheWidth: cacheWidth,
+        gaplessPlayback: true,
+        errorBuilder: (_, _, _) => placeholder,
+      );
+    }
+    return placeholder;
+  }
+}

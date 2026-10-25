@@ -1,0 +1,151 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/screens/settings/log_screen.dart';
+import 'package:mosix/utils/logger.dart';
+
+void main() {
+  test(
+    'native log batches notify once and preserve redaction and capacity',
+    () {
+      final buffer = LogBuffer()..clear();
+      var updates = 0;
+      void listener() => updates++;
+      buffer.addListener(listener);
+      addTearDown(() {
+        buffer.removeListener(listener);
+        buffer.clear();
+      });
+      buffer.addAll([
+        for (var index = 0; index < 600; index++)
+          LogEntry(
+            timestamp: DateTime(2026),
+            level: 'ERROR',
+            tag: 'Native',
+            message: '$index -decryption_key secret-value',
+          ),
+      ]);
+      expect(updates, 1);
+      expect(buffer.length, LogBuffer.maxEntries);
+      expect(buffer.entries.first.message, startsWith('100 '));
+      expect(buffer.entries.last.message, startsWith('599 '));
+      expect(formatLogEntries(buffer.entries), isNot(contains('secret-value')));
+      buffer.addAll(const []);
+      expect(updates, 1);
+    },
+  );
+
+  test('selected log export keeps chronological lines only', () {
+    final entries = [
+      LogEntry(
+        timestamp: DateTime(2026, 8, 11, 10, 20, 30, 40),
+        level: 'INFO',
+        tag: 'Search',
+        message: 'first',
+      ),
+      LogEntry(
+        timestamp: DateTime(2026, 8, 11, 10, 20, 31, 50),
+        level: 'ERROR',
+        tag: 'Download',
+        message: 'second',
+        error: 'failed',
+        isFromGo: true,
+      ),
+    ];
+
+    expect(
+      formatLogEntries(entries),
+      '[10:20:30.040] [INFO] [Search] first\n'
+      '[10:20:31.050] [ERROR] [Native] [Download] second | failed',
+    );
+  });
+
+  test('log buffer redacts media keys and bounds exported payloads', () {
+    final buffer = LogBuffer()..clear();
+    addTearDown(buffer.clear);
+    buffer.add(
+      LogEntry(
+        timestamp: DateTime(2026, 8, 31),
+        level: 'ERROR',
+        tag: 'FFmpeg',
+        message:
+            '-decryption_key raw-media-key ${List.filled(5000, 'x').join()}',
+      ),
+    );
+
+    final stored = buffer.entries.single.message;
+    expect(stored, isNot(contains('raw-media-key')));
+    expect(stored, contains('[REDACTED]'));
+    expect(stored, endsWith('...[truncated]'));
+    expect(stored.length, lessThan(4100));
+  });
+
+  testWidgets('long press selects multiple log rows for copying', (
+    tester,
+  ) async {
+    String? clipboardText;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          clipboardText = (call.arguments as Map<Object?, Object?>)['text']
+              ?.toString();
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    LogBuffer().clear();
+    addTearDown(LogBuffer().clear);
+    LogBuffer().add(
+      LogEntry(
+        timestamp: DateTime(2026, 8, 11, 10),
+        level: 'ERROR',
+        tag: 'One',
+        message: 'first selected message',
+      ),
+    );
+    LogBuffer().add(
+      LogEntry(
+        timestamp: DateTime(2026, 8, 11, 10, 0, 1),
+        level: 'ERROR',
+        tag: 'Two',
+        message: 'second selected message',
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const LogScreen(),
+      ),
+    );
+
+    await tester.longPress(find.text('first selected message'));
+    await tester.pump();
+    expect(find.text('1 selected'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('second selected message'));
+    await tester.pump();
+    await tester.tap(find.text('second selected message'));
+    await tester.pump();
+    expect(find.text('2 selected'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.copy));
+    await tester.pump();
+
+    expect(clipboardText, contains('first selected message'));
+    expect(clipboardText, contains('second selected message'));
+    expect(find.text('2 selected'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+}

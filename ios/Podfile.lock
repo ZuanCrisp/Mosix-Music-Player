@@ -1,0 +1,33 @@
+PODS:
+  - Flutter (1.0.0)
+  - open_filex (0.0.2):
+    - Flutter
+  - spotiflac_discord (0.1.0):
+    - Flutter
+  - MosixBackend (0.1.0)
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - open_filex (from `.symlinks/plugins/open_filex/ios`)
+  - spotiflac_discord (from `.symlinks/plugins/spotiflac_discord/ios`)
+  - MosixBackend (from `../rust_backend/target/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  open_filex:
+    :path: ".symlinks/plugins/open_filex/ios"
+  spotiflac_discord:
+    :path: ".symlinks/plugins/spotiflac_discord/ios"
+  MosixBackend:
+    :path: "../rust_backend/target/ios"
+
+SPEC CHECKSUMS:
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
+  open_filex: 432f3cd11432da3e39f47fcc0df2b1603854eff1
+  spotiflac_discord: 124688dd44b0428ffea27e4f441352b01f1b47cc
+  MosixBackend: e0c81656e8e4c31e86b9f14bbb8e245fb3a14011
+
+PODFILE CHECKSUM: 6ca58d78915f3e4fcb64938b9167b26e33d44a8a
+
+COCOAPODS: 1.17.0

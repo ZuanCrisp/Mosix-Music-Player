@@ -1,0 +1,124 @@
+name: Download Issue
+description: Report a wrong, missing, failed, or low-quality download
+title: "[Download]: "
+labels: ["download-issue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Download matching is extension-driven. Include the source item, provider order, and logs so the exact decision path can be inspected.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and did not find this problem.
+          required: true
+        - label: I updated the affected extension and retried once.
+          required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      options:
+        - Track or album not found
+        - Wrong track downloaded
+        - Download fails or stalls
+        - Metadata or cover is incorrect
+        - Audio format or quality is incorrect
+        - Duplicate or replacement behavior
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: source-url
+    attributes:
+      label: Source URL
+      description: URL pasted or opened in Mosix, if available.
+      placeholder: "https://..."
+
+  - type: input
+    id: track-info
+    attributes:
+      label: Track or Album
+      placeholder: "Artist - Track or album title"
+    validations:
+      required: true
+
+  - type: input
+    id: metadata-source
+    attributes:
+      label: Search or Metadata Extension
+      placeholder: "Extension name and version"
+    validations:
+      required: true
+
+  - type: input
+    id: download-provider
+    attributes:
+      label: Selected Download Extension
+      placeholder: "Extension name and version"
+    validations:
+      required: true
+
+  - type: textarea
+    id: priority
+    attributes:
+      label: Provider Priority and Requested Quality
+      placeholder: |
+        Provider order: first, second, third
+        Requested quality: best / 24-bit / ...
+        Automatic fallback: on/off
+    validations:
+      required: true
+
+  - type: dropdown
+    id: storage
+    attributes:
+      label: Download Storage
+      options:
+        - SAF folder
+        - App-specific folder
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: worker
+    attributes:
+      label: Download Worker
+      options:
+        - Native worker
+        - Dart worker
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What Happened?
+      description: For a wrong match, identify both the expected and downloaded recording.
+      placeholder: Describe the result and the expected result.
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: App Version, Device, and OS
+      placeholder: "4.8.1 (139), device model, Android/iOS version"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and Screenshots
+      description: Enable detailed logging, retry once, and export Settings > Logs. Remove credentials and personal data.
+      placeholder: Paste logs or drag files here.
+    validations:
+      required: true

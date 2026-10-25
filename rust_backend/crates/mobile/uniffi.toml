@@ -1,0 +1,7 @@
+[bindings.kotlin]
+package_name = "com.spotiflac.backend"
+cdylib_name = "spotiflac_mobile"
+
+[bindings.swift]
+module_name = "SpotiFLACBackend"
+ffi_module_name = "SpotiFLACBackendFFI"

@@ -1,0 +1,117 @@
+name: Extension API Feature Request
+description: Request new API features or capabilities for extension development
+title: "[Extension API]: "
+labels: ["enhancement", "extension-api"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve the Mosix Extension API!
+        This form is for extension developers who need new features or capabilities that don't exist yet.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following before submitting
+      options:
+        - label: I have read the [Extension Development Guide](https://github.com/ZuanCrisp/Mosix-Music-Player/blob/main/docs/EXTENSION_DEVELOPMENT.md)
+          required: true
+        - label: I have searched existing issues and this API feature hasn't been requested yet
+          required: true
+
+  - type: textarea
+    id: extension_goal
+    attributes:
+      label: What are you trying to build?
+      description: Describe the extension or feature you're developing
+      placeholder: "I'm building an extension that downloads from [service name] / provides metadata from [source]..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_limitation
+    attributes:
+      label: Current API Limitation
+      description: What's missing or limiting in the current extension API?
+      placeholder: |
+        The current API doesn't support:
+        - [missing feature 1]
+        - [missing feature 2]
+
+        This prevents me from...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_api
+    attributes:
+      label: Proposed API / Feature
+      description: Describe the API or feature you'd like to see added
+      placeholder: |
+        I would like to have:
+        - A new function `api.newFeature()` that does X
+        - A new manifest field `newOption` that enables Y
+        - Access to Z capability...
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use Case Example
+      description: Provide a code example of how you would use this feature
+      placeholder: |
+        ```javascript
+        // Example usage in extension code
+        function download(request, progressCallback) {
+          const result = api.proposedFeature(params);
+          // ...
+        }
+        ```
+    validations:
+      required: false
+
+  - type: dropdown
+    id: api_category
+    attributes:
+      label: API Category
+      description: What category does this feature fall under?
+      options:
+        - HTTP/Network API
+        - File System API
+        - Storage API
+        - FFmpeg/Audio Processing
+        - Manifest Options
+        - Runtime Functions
+        - UI Integration
+        - Authentication
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How critical is this for your extension?
+      options:
+        - Blocker - Cannot build my extension without this
+        - High - Major functionality depends on this
+        - Medium - Would significantly improve my extension
+        - Low - Nice to have
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Current Workaround
+      description: Are you using any workaround currently? If so, describe it.
+      placeholder: "Currently I'm working around this by..."
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, links to similar APIs, or examples from other platforms
+      placeholder: "Similar feature in other platforms: ..."

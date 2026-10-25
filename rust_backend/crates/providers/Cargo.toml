@@ -1,0 +1,25 @@
+[package]
+name = "spotiflac-providers"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+spotiflac-core.workspace = true
+spotiflac-network.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+url.workspace = true
+tempfile.workspace = true
+rustix.workspace = true
+base64.workspace = true
+regex.workspace = true
+scraper.workspace = true
+html5ever.workspace = true
+httpdate.workspace = true
+
+[lints]
+workspace = true

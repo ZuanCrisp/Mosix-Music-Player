@@ -1,0 +1,609 @@
+import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mosix/services/cover_cache_manager.dart';
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/screens/upgrade_intro_screen.dart';
+
+class AboutPage extends StatelessWidget {
+  const AboutPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
+        body: CustomScrollView(
+          slivers: [
+            AppSliverHeader.page(title: context.l10n.aboutTitle),
+
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  16 + wideListInset(context),
+                  16,
+                  16 + wideListInset(context),
+                  8,
+                ),
+                child: _AppHeaderCard(),
+              ),
+            ),
+
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                children: [
+                  SettingsItem(
+                    icon: Icons.new_releases,
+                    title: context.l10n.upgradeIntroReplay,
+                    showDivider: false,
+                    onTap: () =>
+                        Navigator.of(context, rootNavigator: true).push<void>(
+                          MaterialPageRoute(
+                            builder: (_) => const UpgradeIntroScreen(),
+                            fullscreenDialog: true,
+                          ),
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SettingsSectionHeader(title: 'Maintainer'),
+            ),
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                children: [
+                  _ContributorItem(
+                    name: 'ZuanCrisp',
+                    description: 'Mosix maintainer',
+                    githubUsername: 'ZuanCrisp',
+                    showDivider: false,
+                  ),
+                ],
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SettingsSectionHeader(title: context.l10n.aboutLinks),
+            ),
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                children: [
+                  _AboutSettingsItem(
+                    icon: Icons.phone_android,
+                    title: 'Mosix source',
+                    subtitle: 'github.com/${AppInfo.githubRepo}',
+                    onTap: () => _launchUrl(AppInfo.githubUrl),
+                    showDivider: true,
+                  ),
+                  _AboutSettingsItem(
+                    icon: Icons.bug_report_outlined,
+                    title: context.l10n.aboutReportIssue,
+                    subtitle: context.l10n.aboutReportIssueSubtitle,
+                    onTap: () => _launchUrl('${AppInfo.githubUrl}/issues/new'),
+                    showDivider: false,
+                  ),
+                ],
+              ),
+            ),
+
+            SliverToBoxAdapter(
+              child: SettingsSectionHeader(title: context.l10n.aboutApp),
+            ),
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                children: [
+                  _AboutSettingsItem(
+                    icon: Icons.info_outline,
+                    title: context.l10n.aboutVersion,
+                    subtitle:
+                        'v${AppInfo.displayVersion} (build ${AppInfo.buildNumber})',
+                    showDivider: false,
+                  ),
+                ],
+              ),
+            ),
+
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Center(
+                  child: Text(
+                    AppInfo.shortGitCommit.isEmpty
+                        ? AppInfo.copyright
+                        : '${AppInfo.copyright} · ${AppInfo.shortGitCommit}',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _launchUrl(String url) async {
+  final uri = Uri.parse(url);
+  await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+}
+
+class _AppHeaderCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final cardColor = isDark
+        ? Color.alphaBlend(
+            Colors.white.withValues(alpha: 0.08),
+            colorScheme.surface,
+          )
+        : colorScheme.surfaceContainerHighest;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = constraints.maxWidth;
+        final shortestSide = MediaQuery.sizeOf(context).shortestSide;
+        final textScale = MediaQuery.textScalerOf(
+          context,
+        ).scale(1.0).clamp(1.0, 1.4);
+        final logoSize = (shortestSide * 0.22).clamp(72.0, 88.0);
+        final contentPadding = (cardWidth * 0.06).clamp(16.0, 24.0);
+        final titleGap = (16 * (1 + ((textScale - 1) * 0.2))).clamp(12.0, 20.0);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          padding: EdgeInsets.all(contentPadding),
+          child: Column(
+            children: [
+              Container(
+                width: logoSize,
+                height: logoSize,
+                decoration: BoxDecoration(
+                  color: colorScheme.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: Image.asset(
+                  'assets/images/logo-transparent.png',
+                  color: colorScheme.onPrimary,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: logoSize,
+                      height: logoSize,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: titleGap),
+              Text(
+                AppInfo.appName,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'v${AppInfo.displayVersion}',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: colorScheme.onSecondaryContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              SizedBox(height: titleGap),
+              Text(
+                context.l10n.aboutAppDescription,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ContributorItem extends StatelessWidget {
+  final String name;
+  final String description;
+  final String githubUsername;
+  final bool showDivider;
+
+  const _ContributorItem({
+    required this.name,
+    required this.description,
+    required this.githubUsername,
+    this.showDivider = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: () => _launchUrl('https://github.com/$githubUsername'),
+          splashColor: colorScheme.primary.withValues(alpha: 0.12),
+          highlightColor: colorScheme.primary.withValues(alpha: 0.08),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: CachedNetworkImage(
+                    imageUrl: 'https://github.com/$githubUsername.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 120,
+                    memCacheHeight: 120,
+                    cacheManager: CoverCacheManager.instance,
+                    placeholder: (context, url) => Container(
+                      width: 40,
+                      height: 40,
+                      color: colorScheme.surfaceContainerHighest,
+                      child: Icon(
+                        Icons.person,
+                        color: colorScheme.onSurfaceVariant,
+                        size: 20,
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      width: 40,
+                      height: 40,
+                      color: colorScheme.surfaceContainerHighest,
+                      child: Icon(
+                        Icons.person,
+                        color: colorScheme.onSurfaceVariant,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: Theme.of(context).textTheme.bodyLarge),
+                      const SizedBox(height: 2),
+                      Text(
+                        description,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+              ],
+            ),
+          ),
+        ),
+        if (showDivider)
+          Divider(
+            height: 1,
+            thickness: 1,
+            indent: 76,
+            endIndent: 20,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
+      ],
+    );
+  }
+}
+
+class _Translator {
+  final String name;
+  final String crowdinUsername;
+  final String language;
+  final String flag;
+
+  const _Translator({
+    required this.name,
+    required this.crowdinUsername,
+    required this.language,
+    required this.flag,
+  });
+}
+
+class _TranslatorsSection extends StatelessWidget {
+  const _TranslatorsSection();
+
+  static const List<_Translator> _translators = [
+    _Translator(
+      name: 'Pedro Marcondes',
+      crowdinUsername: 'justapedro',
+      language: 'Portuguese',
+      flag: '🇵🇹',
+    ),
+    _Translator(
+      name: 'Credits 125',
+      crowdinUsername: 'credits125',
+      language: 'Spanish',
+      flag: '🇪🇸',
+    ),
+    _Translator(
+      name: 'Владислав',
+      crowdinUsername: 'odinokiy_kot',
+      language: 'Russian',
+      flag: '🇷🇺',
+    ),
+    _Translator(
+      name: 'Amonoman',
+      crowdinUsername: 'amonoman',
+      language: 'German',
+      flag: '🇩🇪',
+    ),
+    _Translator(
+      name: 'Re*Index.(ot_inc)',
+      crowdinUsername: 'ot_inc',
+      language: 'Japanese',
+      flag: '🇯🇵',
+    ),
+    _Translator(
+      name: 'unkn0wn',
+      crowdinUsername: 'rdclvi',
+      language: 'Indonesian',
+      flag: '🇮🇩',
+    ),
+    _Translator(
+      name: 'lunching1272',
+      crowdinUsername: 'lunching1272',
+      language: 'Chinese Simplified',
+      flag: '🇨🇳',
+    ),
+    _Translator(
+      name: 'Serhii Ilchenko',
+      crowdinUsername: 'Sega_Mostky',
+      language: 'Ukrainian',
+      flag: '🇺🇦',
+    ),
+    _Translator(
+      name: 'Serhii Ilchenko',
+      crowdinUsername: 'Sega_Mostky',
+      language: 'Russian',
+      flag: '🇷🇺',
+    ),
+    _Translator(
+      name: 'Girl-lass',
+      crowdinUsername: 'Girl-lass',
+      language: 'Chinese Simplified',
+      flag: '🇨🇳',
+    ),
+    _Translator(
+      name: 'Kaan',
+      crowdinUsername: 'glai',
+      language: 'Turkish',
+      flag: '🇹🇷',
+    ),
+    _Translator(
+      name: 'BedirhanGltkn',
+      crowdinUsername: 'bedirhangltkn',
+      language: 'Turkish',
+      flag: '🇹🇷',
+    ),
+    _Translator(
+      name: 'Mickael81',
+      crowdinUsername: 'Mickael81',
+      language: 'French',
+      flag: '🇫🇷',
+    ),
+    _Translator(
+      name: 'BrandQc',
+      crowdinUsername: 'BrandQc',
+      language: 'French',
+      flag: '🇫🇷',
+    ),
+    _Translator(
+      name: 'blackgold8282',
+      crowdinUsername: 'blackgold8282',
+      language: 'Korean',
+      flag: '🇰🇷',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final cardColor = isDark
+        ? Color.alphaBlend(
+            Colors.white.withValues(alpha: 0.08),
+            colorScheme.surface,
+          )
+        : colorScheme.surfaceContainerHighest;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _translators
+              .map((translator) => _TranslatorChip(translator: translator))
+              .toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _TranslatorChip extends StatelessWidget {
+  final _Translator translator;
+
+  const _TranslatorChip({required this.translator});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: colorScheme.secondaryContainer,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: () => _launchUrl(
+          'https://crowdin.com/profile/${translator.crowdinUsername}',
+        ),
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircleAvatar(
+                radius: 10,
+                backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
+                child: Text(
+                  translator.name.isNotEmpty
+                      ? translator.name[0].toUpperCase()
+                      : '?',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                translator.name,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: colorScheme.onSecondaryContainer,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(translator.flag, style: const TextStyle(fontSize: 14)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AboutSettingsItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback? onTap;
+  final bool showDivider;
+
+  const _AboutSettingsItem({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.onTap,
+    this.showDivider = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: onTap,
+          splashColor: colorScheme.primary.withValues(alpha: 0.12),
+          highlightColor: colorScheme.primary.withValues(alpha: 0.08),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Icon(
+                    context.adaptiveIcon(icon),
+                    color: context.isMornye
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: Theme.of(context).textTheme.bodyLarge),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle!,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (onTap != null)
+                  Icon(
+                    Icons.chevron_right,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (showDivider)
+          Divider(
+            height: 1,
+            thickness: 1,
+            indent: 76, // 20 + 40 + 16 = 76 (same as contributor item)
+            endIndent: 20,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
+      ],
+    );
+    return SettingsSearchTarget(label: title, child: content);
+  }
+}

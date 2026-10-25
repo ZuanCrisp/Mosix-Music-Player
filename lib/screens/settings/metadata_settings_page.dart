@@ -1,0 +1,326 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/utils/artist_utils.dart';
+import 'package:mosix/screens/settings/metadata_provider_priority_page.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+
+class MetadataSettingsPage extends ConsumerWidget {
+  const MetadataSettingsPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
+        body: CustomScrollView(
+          slivers: [
+            AppSliverHeader.page(title: context.l10n.settingsMetadata),
+
+            SliverToBoxAdapter(
+              child: SettingsSectionHeader(title: context.l10n.sectionDownload),
+            ),
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                children: [
+                  SettingsSwitchItem(
+                    icon: Icons.sell_outlined,
+                    title: context.l10n.optionsEmbedMetadata,
+                    subtitle: settings.embedMetadata
+                        ? context.l10n.optionsEmbedMetadataSubtitleOn
+                        : context.l10n.optionsEmbedMetadataSubtitleOff,
+                    value: settings.embedMetadata,
+                    onChanged: (v) =>
+                        ref.read(settingsProvider.notifier).setEmbedMetadata(v),
+                    showDivider: settings.embedMetadata,
+                  ),
+                  if (settings.embedMetadata) ...[
+                    SettingsItem(
+                      icon: Icons.people_alt_outlined,
+                      title: context.l10n.optionsArtistTagMode,
+                      subtitle: _getArtistTagModeLabel(
+                        context,
+                        settings.artistTagMode,
+                      ),
+                      onTap: () => _showArtistTagModePicker(
+                        context,
+                        ref,
+                        settings.artistTagMode,
+                      ),
+                    ),
+                    SettingsItem(
+                      icon: Icons.photo_size_select_large_outlined,
+                      title: context.l10n.optionsEmbeddedCoverSize,
+                      subtitle: _getEmbeddedCoverSizeLabel(
+                        context,
+                        settings.embeddedCoverMaxDimension,
+                      ),
+                      onTap: () => _showEmbeddedCoverSizePicker(
+                        context,
+                        ref,
+                        settings.embeddedCoverMaxDimension,
+                      ),
+                    ),
+                    SettingsSwitchItem(
+                      icon: Icons.graphic_eq,
+                      title: context.l10n.optionsReplayGain,
+                      subtitle: settings.embedReplayGain
+                          ? context.l10n.optionsReplayGainSubtitleOn
+                          : context.l10n.optionsReplayGainSubtitleOff,
+                      value: settings.embedReplayGain,
+                      onChanged: (v) => ref
+                          .read(settingsProvider.notifier)
+                          .setEmbedReplayGain(v),
+                      showDivider: false,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            SliverToBoxAdapter(
+              child: SettingsSectionHeader(
+                title: context.l10n.sectionMetadataProviders,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                children: [
+                  SettingsItem(
+                    icon: Icons.source_outlined,
+                    title: context.l10n.metadataProvidersTitle,
+                    subtitle: context.l10n.metadataProvidersSubtitle,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => const MetadataProviderPriorityPage(),
+                      ),
+                    ),
+                    showDivider: false,
+                  ),
+                ],
+              ),
+            ),
+
+            SliverToBoxAdapter(
+              child: SettingsSectionHeader(
+                title: context.l10n.sectionDuplicates,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                children: [
+                  SettingsSwitchItem(
+                    icon: Icons.filter_list_outlined,
+                    title: context.l10n.downloadDeduplication,
+                    subtitle: settings.deduplicateDownloads
+                        ? settings.allowQualityVariants
+                              ? context
+                                    .l10n
+                                    .downloadDeduplicationWithQualityVariants
+                              : context.l10n.downloadDeduplicationEnabled
+                        : context.l10n.downloadDeduplicationDisabled,
+                    value: settings.deduplicateDownloads,
+                    onChanged: (value) => ref
+                        .read(settingsProvider.notifier)
+                        .setDeduplicateDownloads(value),
+                  ),
+                  SettingsSwitchItem(
+                    icon: Icons.library_music_outlined,
+                    title: context.l10n.downloadQualityVariants,
+                    subtitle: context.l10n.downloadQualityVariantsDescription,
+                    value: settings.allowQualityVariants,
+                    onChanged: (value) => ref
+                        .read(settingsProvider.notifier)
+                        .setAllowQualityVariants(value),
+                    showDivider: false,
+                  ),
+                ],
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getArtistTagModeLabel(BuildContext context, String mode) {
+    switch (mode) {
+      case artistTagModeSplitVorbis:
+        return context.l10n.optionsArtistTagModeSplitVorbis;
+      case artistTagModePrimary:
+        return context.l10n.optionsArtistTagModePrimary;
+      default:
+        return context.l10n.optionsArtistTagModeJoined;
+    }
+  }
+
+  String _getEmbeddedCoverSizeLabel(BuildContext context, int maxDimension) {
+    if (maxDimension <= 0) {
+      return context.l10n.optionsEmbeddedCoverSizeOriginal;
+    }
+    return '$maxDimension × $maxDimension px';
+  }
+
+  void _showEmbeddedCoverSizePicker(
+    BuildContext context,
+    WidgetRef ref,
+    int currentMaxDimension,
+  ) {
+    const options = [0, 500, 1000, 1500, 2000];
+    final colorScheme = Theme.of(context).colorScheme;
+    showAppModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: colorScheme.surfaceContainerHigh,
+      builder: (context) => SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                child: Text(
+                  context.l10n.optionsEmbeddedCoverSize,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                child: Text(
+                  context.l10n.optionsEmbeddedCoverSizeDescription,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              for (final maxDimension in options)
+                AppSheetOption(
+                  leading: Icon(
+                    maxDimension == 0
+                        ? Icons.image_outlined
+                        : Icons.compress_outlined,
+                  ),
+                  title: Text(
+                    _getEmbeddedCoverSizeLabel(context, maxDimension),
+                  ),
+                  trailing: currentMaxDimension == maxDimension
+                      ? const Icon(Icons.check)
+                      : null,
+                  onTap: () {
+                    ref
+                        .read(settingsProvider.notifier)
+                        .setEmbeddedCoverMaxDimension(maxDimension);
+                    Navigator.pop(context);
+                  },
+                ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showArtistTagModePicker(
+    BuildContext context,
+    WidgetRef ref,
+    String currentMode,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    showAppModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      // Three described options can exceed the default sheet height on
+      // small or landscape screens, as the cover-size picker above does.
+      isScrollControlled: true,
+      backgroundColor: colorScheme.surfaceContainerHigh,
+      builder: (context) => SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                child: Text(
+                  context.l10n.optionsArtistTagMode,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                child: Text(
+                  context.l10n.optionsArtistTagModeDescription,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              AppSheetOption(
+                leading: const Icon(Icons.segment_outlined),
+                title: Text(context.l10n.optionsArtistTagModeJoined),
+                subtitle: Text(context.l10n.optionsArtistTagModeJoinedSubtitle),
+                trailing: currentMode == artistTagModeJoined
+                    ? const Icon(Icons.check)
+                    : null,
+                onTap: () {
+                  ref
+                      .read(settingsProvider.notifier)
+                      .setArtistTagMode(artistTagModeJoined);
+                  Navigator.pop(context);
+                },
+              ),
+              AppSheetOption(
+                leading: const Icon(Icons.library_music_outlined),
+                title: Text(context.l10n.optionsArtistTagModeSplitVorbis),
+                subtitle: Text(
+                  context.l10n.optionsArtistTagModeSplitVorbisSubtitle,
+                ),
+                trailing: currentMode == artistTagModeSplitVorbis
+                    ? const Icon(Icons.check)
+                    : null,
+                onTap: () {
+                  ref
+                      .read(settingsProvider.notifier)
+                      .setArtistTagMode(artistTagModeSplitVorbis);
+                  Navigator.pop(context);
+                },
+              ),
+              AppSheetOption(
+                leading: const Icon(Icons.person_outline),
+                title: Text(context.l10n.optionsArtistTagModePrimary),
+                subtitle: Text(
+                  context.l10n.optionsArtistTagModePrimarySubtitle,
+                ),
+                trailing: currentMode == artistTagModePrimary
+                    ? const Icon(Icons.check)
+                    : null,
+                onTap: () {
+                  ref
+                      .read(settingsProvider.notifier)
+                      .setArtistTagMode(artistTagModePrimary);
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

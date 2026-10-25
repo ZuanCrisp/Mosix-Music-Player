@@ -1,0 +1,39 @@
+[package]
+name = "spotiflac-network"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+tokio.workspace = true
+hyper.workspace = true
+hyper-util.workspace = true
+hyper-rustls.workspace = true
+rustls.workspace = true
+rustls-pemfile.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+bytes.workspace = true
+futures-util.workspace = true
+tokio-util.workspace = true
+async-compression.workspace = true
+tower-service.workspace = true
+hickory-proto.workspace = true
+cookie.workspace = true
+url.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[target.'cfg(target_vendor = "apple")'.dependencies]
+rustls-platform-verifier.workspace = true
+
+[target.'cfg(not(target_vendor = "apple"))'.dependencies]
+rustls-native-certs.workspace = true
+
+[lints]
+workspace = true

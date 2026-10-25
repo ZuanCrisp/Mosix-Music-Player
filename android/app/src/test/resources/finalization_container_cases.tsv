@@ -1,0 +1,17 @@
+# force_conversion	codec	expected
+false		false
+true		true
+true	null	true
+false	m4a	false
+true	m4a	true
+true	MP4	true
+false	flac	true
+false	ALAC	true
+false	pcm_s24le	true
+false	wavpack	true
+true	aac	false
+true	mp4a	false
+true	mp3	false
+true	ogg	false
+true	ac-4	false
+true	unknown	false

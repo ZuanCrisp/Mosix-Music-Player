@@ -1,0 +1,181 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/screens/local_album_screen.dart';
+import 'package:mosix/screens/track_metadata_screen.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+
+LocalLibraryItem _track(int number) => LocalLibraryItem(
+  id: 'track-$number',
+  trackName: 'Song $number',
+  artistName: 'Artist',
+  albumName: 'Album',
+  filePath: 'content://library/document/song-$number.flac',
+  trackNumber: number,
+  scannedAt: DateTime(2026),
+);
+
+void main() {
+  Future<GlobalKey<NavigatorState>> mount(WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(430, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final navigator = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          navigatorKey: navigator,
+          theme: MornyeTheme.build(Brightness.light),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: Text('Library')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    return navigator;
+  }
+
+  PageRoute<void> route(Widget page) => PageRouteBuilder<void>(
+    transitionDuration: const Duration(milliseconds: 400),
+    reverseTransitionDuration: const Duration(milliseconds: 400),
+    pageBuilder: (_, _, _) => page,
+    transitionsBuilder: (_, animation, _, child) => SlideTransition(
+      position: Tween(
+        begin: const Offset(1, 0),
+        end: Offset.zero,
+      ).animate(animation),
+      child: child,
+    ),
+  );
+
+  for (final popEarly in [false, true]) {
+    testWidgets(
+      'metadata starts reading during entrance, early pop=$popEarly',
+      (tester) async {
+        final navigator = await mount(tester);
+        var statCalls = 0;
+        var followUpCalls = 0;
+        final delayedStat = Completer<String>();
+        const channel = MethodChannel('com.zuancrisp.mosix/backend');
+        final messenger =
+            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+        messenger.setMockMethodCallHandler(channel, (call) async {
+          if (call.method == 'safStat') {
+            statCalls++;
+            if (popEarly) return delayedStat.future;
+            return jsonEncode({'exists': false});
+          }
+          followUpCalls++;
+          return null;
+        });
+        addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+        unawaited(
+          navigator.currentState!.push(
+            route(TrackMetadataScreen(localItem: _track(1))),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 150));
+        expect(find.text('Song 1'), findsWidgets);
+        expect(statCalls, 1);
+        if (popEarly) navigator.currentState!.pop();
+        await tester.pumpAndSettle();
+        if (popEarly) {
+          delayedStat.complete(jsonEncode({'exists': true, 'size': 100}));
+          await tester.pump();
+          expect(followUpCalls, 0);
+        }
+        expect(statCalls, 1);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets(
+    'album shows header immediately and applies rows during entrance',
+    (tester) async {
+      final navigator = await mount(tester);
+      final result = Completer<List<LocalLibraryItem>>();
+      unawaited(
+        navigator.currentState!.push(
+          route(
+            LocalAlbumScreen(
+              albumName: 'Album',
+              artistName: 'Artist',
+              loadTracks: () => result.future,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(find.text('Album'), findsWidgets);
+      expect(find.text('No tracks found for this album'), findsNothing);
+      expect(find.byType(AlbumTrackListSkeleton), findsOneWidget);
+      expect(find.byType(ShimmerLoading), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      result.complete([_track(2), _track(1)]);
+      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pump();
+      expect(find.text('Song 1'), findsOneWidget);
+      expect(find.text('Song 2'), findsOneWidget);
+      expect(find.byType(AlbumTrackListSkeleton), findsNothing);
+      expect(
+        ModalRoute.of(
+          tester.element(find.byType(LocalAlbumScreen)),
+        )!.animation!.value,
+        lessThan(1),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Song 1'), findsOneWidget);
+      expect(find.text('Song 2'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Song 1')).dy,
+        lessThan(tester.getTopLeft(find.text('Song 2')).dy),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('album retries failed loading and ignores completion after pop', (
+    tester,
+  ) async {
+    final navigator = await mount(tester);
+    final result = Completer<List<LocalLibraryItem>>();
+    var attempts = 0;
+    unawaited(
+      navigator.currentState!.push(
+        route(
+          LocalAlbumScreen(
+            albumName: 'Album',
+            artistName: 'Artist',
+            loadTracks: () async {
+              if (++attempts == 1) throw StateError('Unavailable');
+              return result.future;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Retry'));
+    await tester.pump();
+    expect(attempts, 2);
+    navigator.currentState!.pop();
+    await tester.pumpAndSettle();
+    result.complete([_track(1)]);
+    await tester.pump();
+    expect(find.byType(LocalAlbumScreen), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+}

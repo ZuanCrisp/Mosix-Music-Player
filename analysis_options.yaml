@@ -1,0 +1,36 @@
+include: package:flutter_lints/flutter.yaml
+
+plugins:
+  riverpod_lint: 3.1.9
+
+analyzer:
+  exclude:
+    - build/**
+    - .dart_tool/**
+    - docs/internal/**
+    - lib/**/*.g.dart
+    - lib/l10n/*.dart
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+    - third_party/audio_service/**
+    - third_party/audioplayers_android/**
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+linter:
+  rules:
+    always_declare_return_types: true
+    avoid_dynamic_calls: true
+    avoid_types_as_parameter_names: true
+    strict_top_level_inference: true
+    type_annotate_public_apis: true
+    cancel_subscriptions: true
+    close_sinks: true
+    # Catches dead cross-layer chains (Dart wrapper kept alive only by its own
+    # declaration) before they accumulate into another dedup campaign.
+    unreachable_from_main: true

@@ -1,0 +1,81 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/services/weekly_releases.dart';
+import 'package:mosix/utils/provider_resource_ids.dart';
+
+final weeklyReleasesProvider = FutureProvider.autoDispose
+    .family<WeeklyReleaseFeed, bool>((ref, refresh) async {
+      final collections = ref.watch(libraryCollectionsProvider);
+      final extensions = ref.watch(extensionProvider);
+      final preferred = ref.watch(
+        settingsProvider.select((s) => s.searchProvider),
+      );
+      if (!collections.isLoaded || !extensions.isInitialized) {
+        return const WeeklyReleaseFeed([]);
+      }
+      final providers = extensions.extensions
+          .where(
+            (extension) => extension.enabled && extension.hasMetadataProvider,
+          )
+          .toList(growable: false);
+      final service = WeeklyReleaseService(
+        preferences: SharedPreferences.getInstance(),
+        loadArtist: (artist) async {
+          final directProvider = artist.providerId;
+          if (directProvider != null &&
+              providers.any((p) => p.id == directProvider)) {
+            return (
+              providerId: directProvider,
+              metadata: await PlatformBridge.getProviderMetadata(
+                directProvider,
+                'artist',
+                stripPrefixedResourceId(artist.artistId),
+              ),
+            );
+          }
+          // Older favorites may not have a provider ID. Resolve them by an
+          // exact artist name in a search-capable metadata extension.
+          final candidates = providers.where((p) => p.hasCustomSearch).toList()
+            ..sort(
+              (a, b) => a.id == preferred
+                  ? -1
+                  : b.id == preferred
+                  ? 1
+                  : 0,
+            );
+          for (final provider in candidates) {
+            try {
+              final matches = await PlatformBridge.customSearchWithExtension(
+                provider.id,
+                artist.name,
+                options: {'filter': 'artist', 'limit': 10},
+              );
+              for (final match in matches) {
+                if (match['name']?.toString().trim().toLowerCase() !=
+                    artist.name.trim().toLowerCase()) {
+                  continue;
+                }
+                final id = match['id']?.toString() ?? '';
+                if (id.isEmpty) continue;
+                return (
+                  providerId: provider.id,
+                  metadata: await PlatformBridge.getProviderMetadata(
+                    provider.id,
+                    'artist',
+                    stripPrefixedResourceId(id),
+                  ),
+                );
+              }
+            } catch (_) {
+              // Try the next installed metadata provider.
+            }
+          }
+          throw StateError('No installed provider can resolve this artist');
+        },
+      );
+      return service.load(collections.favoriteArtists, refresh: refresh);
+    });

@@ -1,0 +1,93 @@
+# Uncomment this line to define a global platform for your project
+platform :ios, '16.0'
+
+# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+def patch_device_info_plus_vision_selector
+  plugin_file = File.join(
+    __dir__,
+    '.symlinks',
+    'plugins',
+    'device_info_plus',
+    'ios',
+    'device_info_plus',
+    'Sources',
+    'device_info_plus',
+    'FPPDeviceInfoPlusPlugin.m'
+  )
+  return unless File.exist?(plugin_file)
+
+  source = File.read(plugin_file)
+  return if source.include?('FPPDeviceInfoPlusVisionCompat')
+
+  marker = "#import <sys/utsname.h>\n"
+  declaration = <<~OBJC
+
+    // Older Xcode SDKs do not declare this selector yet, but device_info_plus
+    // only calls it behind an availability check.
+    @interface NSProcessInfo (FPPDeviceInfoPlusVisionCompat)
+    - (BOOL)isiOSAppOnVision;
+    @end
+  OBJC
+
+  patched = source.sub(marker, "#{marker}#{declaration}\n")
+  File.write(plugin_file, patched) if patched != source
+end
+
+target 'Runner' do
+  use_frameworks!
+  use_modular_headers!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  rust_pod_dir = File.expand_path('../rust_backend/target/ios', __dir__)
+  unless File.directory?(File.join(rust_pod_dir, 'MosixBackendFFI.xcframework')) &&
+         File.file?(File.join(rust_pod_dir, 'MosixBackend.podspec')) &&
+         File.file?(File.join(rust_pod_dir, 'MosixBackend.swift'))
+    raise 'Run bash scripts/build_rust_backend.sh ios before installing Rust application pods'
+  end
+  pod 'MosixBackend', :path => '../rust_backend/target/ios'
+
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  patch_device_info_plus_vision_selector
+
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+      definitions = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS']
+      unless definitions.include?('PERMISSION_NOTIFICATIONS=1')
+        definitions << 'PERMISSION_NOTIFICATIONS=1'
+      end
+    end
+  end
+end

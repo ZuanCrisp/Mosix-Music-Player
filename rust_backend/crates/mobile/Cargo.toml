@@ -1,0 +1,38 @@
+[package]
+name = "spotiflac-mobile"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[dependencies]
+spotiflac-core.workspace = true
+spotiflac-network.workspace = true
+base64.workspace = true
+spotiflac-extensions.workspace = true
+thiserror.workspace = true
+uniffi.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+zeroize.workspace = true
+rustix.workspace = true
+sha2.workspace = true
+tempfile.workspace = true
+scraper.workspace = true
+url.workspace = true
+chrono.workspace = true
+regex.workspace = true
+zip.workspace = true
+roxmltree = "=0.21.1"
+rusqlite = { version = "=0.40.2", features = ["bundled", "modern_sqlite", "hooks"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+libusb1-sys = { version = "=0.7.0", features = ["vendored"] }
+libc = "0.2"
+
+[lints]
+workspace = true

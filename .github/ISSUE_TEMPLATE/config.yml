@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: README
+    url: https://github.com/ZuanCrisp/Mosix-Music-Player#readme
+    about: Check the README for setup instructions and FAQ
+  - name: Extension Development Guide
+    url: https://github.com/ZuanCrisp/Mosix-Music-Player/tree/main/docs
+    about: Documentation for building Mosix extensions

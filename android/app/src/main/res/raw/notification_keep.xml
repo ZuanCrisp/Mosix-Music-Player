@@ -1,0 +1,2 @@
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification_*,@drawable/ic_widget_previous,@drawable/ic_widget_next,@drawable/ic_widget_play,@drawable/ic_widget_pause" />

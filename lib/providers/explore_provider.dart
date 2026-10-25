@@ -1,0 +1,520 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/utils/string_utils.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+
+final _log = AppLogger('ExploreProvider');
+
+class ExploreItem {
+  final String id;
+  final String uri;
+  final String type;
+  final String name;
+  final String artists;
+  final String? description;
+  final String? coverUrl;
+  final String? featuredCoverUrl;
+  final String? heading;
+  final bool? explicit;
+  final String? providerId;
+  final String? albumId;
+  final String? albumName;
+  final String? releaseDate;
+  final int durationMs;
+
+  const ExploreItem({
+    required this.id,
+    required this.uri,
+    required this.type,
+    required this.name,
+    required this.artists,
+    this.description,
+    this.coverUrl,
+    this.featuredCoverUrl,
+    this.heading,
+    this.explicit,
+    this.providerId,
+    this.albumId,
+    this.albumName,
+    this.releaseDate,
+    this.durationMs = 0,
+  });
+
+  factory ExploreItem.fromJson(Map<String, dynamic> json) {
+    return ExploreItem(
+      id: json['id'] as String? ?? '',
+      uri: json['uri'] as String? ?? '',
+      type: json['type'] as String? ?? 'track',
+      name: json['name'] as String? ?? '',
+      artists: json['artists'] as String? ?? '',
+      description: json['description'] as String?,
+      coverUrl: json['cover_url'] as String?,
+      featuredCoverUrl: json['featured_cover_url'] as String?,
+      heading: json['heading'] as String?,
+      explicit: parseExplicitFlag(json['explicit']),
+      providerId: json['provider_id'] as String?,
+      albumId: json['album_id'] as String?,
+      albumName: json['album_name'] as String?,
+      releaseDate: json['release_date']?.toString(),
+      durationMs: json['duration_ms'] as int? ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'uri': uri,
+    'type': type,
+    'name': name,
+    'artists': artists,
+    'description': description,
+    'cover_url': coverUrl,
+    'featured_cover_url': featuredCoverUrl,
+    'heading': heading,
+    'explicit': explicit,
+    'provider_id': providerId,
+    'album_id': albumId,
+    'album_name': albumName,
+    'release_date': releaseDate,
+    'duration_ms': durationMs,
+  };
+}
+
+class ExploreSection {
+  final String uri;
+  final String title;
+  final List<ExploreItem> items;
+  final bool isYTMusicQuickPicks;
+  final bool isFeatured;
+
+  const ExploreSection({
+    required this.uri,
+    required this.title,
+    required this.items,
+    this.isYTMusicQuickPicks = false,
+    this.isFeatured = false,
+  });
+
+  factory ExploreSection.fromJson(Map<String, dynamic> json) {
+    final itemsList = json['items'] as List<dynamic>? ?? [];
+    final items = itemsList
+        .map((item) => ExploreItem.fromJson(item as Map<String, dynamic>))
+        .toList();
+    final isQuickPicks = _isYTMusicQuickPicksItems(items);
+    return ExploreSection(
+      uri: json['uri'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      items: items,
+      isYTMusicQuickPicks: isQuickPicks,
+      isFeatured: json['layout'] == 'featured',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'uri': uri,
+    'title': title,
+    'layout': isFeatured ? 'featured' : 'shelf',
+    'items': items.map((i) => i.toJson()).toList(),
+  };
+}
+
+class ExploreState {
+  final bool isLoading;
+  final String? error;
+  final String? greeting;
+  final String? providerId;
+  final List<ExploreSection> sections;
+  final DateTime? lastFetched;
+
+  const ExploreState({
+    this.isLoading = false,
+    this.error,
+    this.greeting,
+    this.providerId,
+    this.sections = const [],
+    this.lastFetched,
+  });
+
+  bool get hasContent => sections.isNotEmpty;
+
+  ExploreState copyWith({
+    bool? isLoading,
+    String? error,
+    String? greeting,
+    String? providerId,
+    bool clearProviderId = false,
+    List<ExploreSection>? sections,
+    DateTime? lastFetched,
+  }) {
+    return ExploreState(
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      greeting: greeting ?? this.greeting,
+      providerId: clearProviderId ? null : (providerId ?? this.providerId),
+      sections: sections ?? this.sections,
+      lastFetched: lastFetched ?? this.lastFetched,
+    );
+  }
+}
+
+String _getLocalGreeting() {
+  final hour = DateTime.now().hour;
+  if (hour >= 5 && hour < 12) {
+    return 'Good morning';
+  } else if (hour >= 12 && hour < 17) {
+    return 'Good afternoon';
+  } else if (hour >= 17 && hour < 21) {
+    return 'Good evening';
+  } else {
+    return 'Good night';
+  }
+}
+
+bool _isYTMusicQuickPicksItems(List<ExploreItem> items) {
+  if (items.isEmpty) return false;
+  if (items.first.providerId != 'ytmusic-spotiflac') return false;
+  for (final item in items) {
+    if (item.type != 'track') {
+      return false;
+    }
+  }
+  return true;
+}
+
+List<Map<String, Object?>> _normalizeExploreSectionsPayload(
+  dynamic rawSections,
+) {
+  if (rawSections is! List) return const [];
+  final sections = <Map<String, Object?>>[];
+  for (final rawSection in rawSections) {
+    if (rawSection is! Map) continue;
+    final section = Map<Object?, Object?>.from(rawSection);
+    final rawItems = section['items'];
+    final items = <Map<String, Object?>>[];
+    if (rawItems is List) {
+      for (final rawItem in rawItems) {
+        if (rawItem is! Map) continue;
+        items.add(Map<String, Object?>.from(rawItem));
+      }
+    }
+    sections.add({
+      'uri': section['uri']?.toString() ?? '',
+      'title': section['title']?.toString() ?? '',
+      'layout': section['layout']?.toString() ?? 'shelf',
+      'items': items,
+    });
+  }
+  return sections;
+}
+
+List<Map<String, Object?>> _withDefaultExploreProviderId(
+  List<Map<String, Object?>> normalizedSections,
+  String providerId,
+) {
+  final normalizedProviderId = providerId.trim();
+  if (normalizedProviderId.isEmpty) return normalizedSections;
+
+  return normalizedSections
+      .map((section) {
+        final rawItems = section['items'];
+        if (rawItems is! List) return section;
+
+        return <String, Object?>{
+          ...section,
+          'items': rawItems
+              .map((rawItem) {
+                if (rawItem is! Map) return rawItem;
+                final item = Map<String, Object?>.from(rawItem);
+                final itemProviderId =
+                    item['provider_id']?.toString().trim() ?? '';
+                if (itemProviderId.isEmpty) {
+                  item['provider_id'] = normalizedProviderId;
+                }
+                return item;
+              })
+              .toList(growable: false),
+        };
+      })
+      .toList(growable: false);
+}
+
+Map<String, Object?> _decodeExploreCache(String rawCache) {
+  final decoded = jsonDecode(rawCache);
+  if (decoded is! Map) {
+    return const {'provider_id': null, 'sections': <Map<String, Object?>>[]};
+  }
+
+  final providerId = decoded['provider_id']?.toString().trim();
+  var sections = _normalizeExploreSectionsPayload(decoded['sections']);
+  if (providerId != null && providerId.isNotEmpty) {
+    sections = _withDefaultExploreProviderId(sections, providerId);
+  }
+
+  return {'provider_id': providerId, 'sections': sections};
+}
+
+String _encodeExploreCache(Map<String, Object?> cachePayload) {
+  return jsonEncode(cachePayload);
+}
+
+List<ExploreSection> _buildExploreSectionsFromNormalizedPayload(
+  List<Map<String, Object?>> normalizedSections,
+) {
+  return normalizedSections
+      .map(
+        (section) =>
+            ExploreSection.fromJson(Map<String, dynamic>.from(section)),
+      )
+      .toList(growable: false);
+}
+
+class ExploreNotifier extends Notifier<ExploreState> {
+  ExploreNotifier({Future<Map<String, Object?>> Function(String)? decodeCache})
+    : _decodeCache =
+          decodeCache ?? ((raw) => compute(_decodeExploreCache, raw));
+
+  final Future<Map<String, Object?>> Function(String) _decodeCache;
+  static const _cacheKey = 'explore_home_feed_cache';
+  static const _cacheTsKey = 'explore_home_feed_ts';
+  int _homeFeedRequestId = 0;
+  int? _activeHomeFeedRequestId;
+  int _cacheRestoreGeneration = 0;
+
+  bool _isRequestValid(int requestId) =>
+      ref.mounted && requestId == _homeFeedRequestId;
+
+  bool _isCacheRestoreValid(int generation) =>
+      ref.mounted &&
+      generation == _cacheRestoreGeneration &&
+      ref.read(settingsProvider).homeFeedProvider !=
+          AppSettings.homeFeedProviderOff;
+
+  @override
+  ExploreState build() {
+    _restoreFromCache();
+    return const ExploreState();
+  }
+
+  Future<void> _restoreFromCache() async {
+    final generation = _cacheRestoreGeneration;
+    try {
+      if (ref.read(settingsProvider).homeFeedProvider ==
+          AppSettings.homeFeedProviderOff) {
+        _log.d('Home feed disabled, skipping cache restore');
+        return;
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      if (!_isCacheRestoreValid(generation)) return;
+      final cached = prefs.getString(_cacheKey);
+      final cachedTs = prefs.getInt(_cacheTsKey);
+      if (cached == null || cached.isEmpty) return;
+
+      final cachePayload = await _decodeCache(cached);
+      if (!_isCacheRestoreValid(generation)) return;
+      final providerId = cachePayload['provider_id']?.toString().trim();
+      final rawSections = cachePayload['sections'];
+      var normalizedSections = rawSections is List
+          ? rawSections
+                .whereType<Map<Object?, Object?>>()
+                .map((section) => Map<String, Object?>.from(section))
+                .toList(growable: false)
+          : const <Map<String, Object?>>[];
+      final resolvedProviderId = providerId?.isNotEmpty == true
+          ? providerId
+          : _resolveHomeFeedExtension()?.id;
+      if (resolvedProviderId != null && resolvedProviderId.isNotEmpty) {
+        normalizedSections = _withDefaultExploreProviderId(
+          normalizedSections,
+          resolvedProviderId,
+        );
+      }
+      final sections = _buildExploreSectionsFromNormalizedPayload(
+        normalizedSections,
+      );
+
+      if (sections.isEmpty) return;
+
+      final lastFetched = cachedTs != null
+          ? DateTime.fromMillisecondsSinceEpoch(cachedTs)
+          : null;
+
+      _log.i('Restored ${sections.length} cached explore sections');
+      // Cached content can replace the initial spinner while the separate
+      // active request still owns refresh completion and deduplication.
+      state = ExploreState(
+        error: state.error,
+        greeting: _getLocalGreeting(),
+        providerId: resolvedProviderId,
+        sections: sections,
+        lastFetched: lastFetched,
+      );
+    } catch (e) {
+      if (!_isCacheRestoreValid(generation)) return;
+      _log.w('Failed to restore explore cache: $e');
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        if (!_isCacheRestoreValid(generation)) return;
+        await prefs.remove(_cacheKey);
+        await prefs.remove(_cacheTsKey);
+        _log.d('Removed invalid explore cache');
+      } catch (clearError) {
+        _log.w('Failed to remove invalid explore cache: $clearError');
+      }
+    }
+  }
+
+  Extension? _resolveHomeFeedExtension() {
+    final settings = ref.read(settingsProvider);
+    final preferredId = settings.homeFeedProvider;
+    final enabledHomeFeedExtensions = ref
+        .read(extensionProvider)
+        .extensions
+        .where((extension) => extension.enabled && extension.hasHomeFeed)
+        .toList(growable: false);
+
+    if (preferredId != null && preferredId.isNotEmpty) {
+      return enabledHomeFeedExtensions
+          .where((extension) => extension.id == preferredId)
+          .firstOrNull;
+    }
+
+    return enabledHomeFeedExtensions.firstOrNull;
+  }
+
+  Future<void> _saveToCache(
+    List<Map<String, Object?>> normalizedSections,
+    String providerId,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encoded = await compute(_encodeExploreCache, {
+        'provider_id': providerId,
+        'sections': normalizedSections,
+      });
+      await prefs.setString(_cacheKey, encoded);
+      await prefs.setInt(_cacheTsKey, DateTime.now().millisecondsSinceEpoch);
+    } catch (e) {
+      _log.w('Failed to save explore cache: $e');
+    }
+  }
+
+  Future<void> fetchHomeFeed({bool forceRefresh = false}) async {
+    if (ref.read(settingsProvider).homeFeedProvider ==
+        AppSettings.homeFeedProviderOff) {
+      clear();
+      return;
+    }
+
+    if (!forceRefresh &&
+        state.hasContent &&
+        state.lastFetched != null &&
+        DateTime.now().difference(state.lastFetched!).inMinutes < 5) {
+      _log.d('Using cached home feed (fresh enough)');
+      return;
+    }
+
+    if (_activeHomeFeedRequestId != null && !forceRefresh) {
+      _log.d('Home feed fetch already in progress');
+      return;
+    }
+
+    final requestId = ++_homeFeedRequestId;
+    _activeHomeFeedRequestId = requestId;
+    final showLoading = !state.hasContent;
+    state = state.copyWith(isLoading: showLoading, error: null);
+
+    try {
+      final targetExt = _resolveHomeFeedExtension();
+
+      if (targetExt == null) {
+        _log.w('No extension with homeFeed capability found');
+        if (!_isRequestValid(requestId)) return;
+        state = state.copyWith(
+          isLoading: false,
+          error: 'No extension with home feed support enabled',
+        );
+        return;
+      }
+
+      final result = await PlatformBridge.getExtensionHomeFeed(
+        targetExt.id,
+        cancelPrevious: forceRefresh,
+      );
+      if (!_isRequestValid(requestId)) return;
+
+      if (result == null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Failed to fetch home feed',
+        );
+        return;
+      }
+
+      final success = result['success'] as bool? ?? false;
+      if (!success) {
+        final error = result['error'] as String? ?? 'Unknown error';
+        state = state.copyWith(isLoading: false, error: error);
+        return;
+      }
+
+      final sectionsData = result['sections'] as List<dynamic>? ?? [];
+      final normalizedSectionsWithoutProvider = await compute(
+        _normalizeExploreSectionsPayload,
+        sectionsData,
+      );
+      final normalizedSections = _withDefaultExploreProviderId(
+        normalizedSectionsWithoutProvider,
+        targetExt.id,
+      );
+      if (!_isRequestValid(requestId)) return;
+      final sections = _buildExploreSectionsFromNormalizedPayload(
+        normalizedSections,
+      );
+
+      final localGreeting = _getLocalGreeting();
+      _log.i(
+        'Home feed updated: provider=${targetExt.id}, '
+        'sections=${sections.length}',
+      );
+
+      _cacheRestoreGeneration++;
+      state = ExploreState(
+        isLoading: false,
+        greeting: localGreeting,
+        providerId: targetExt.id,
+        sections: sections,
+        lastFetched: DateTime.now(),
+      );
+
+      _saveToCache(normalizedSections, targetExt.id);
+    } catch (e, stack) {
+      _log.e('Error fetching home feed: $e', e, stack);
+      if (!_isRequestValid(requestId)) return;
+      state = state.copyWith(isLoading: false, error: e.toString());
+    } finally {
+      if (_activeHomeFeedRequestId == requestId) {
+        _activeHomeFeedRequestId = null;
+      }
+    }
+  }
+
+  void clear() {
+    _homeFeedRequestId++;
+    _cacheRestoreGeneration++;
+    _activeHomeFeedRequestId = null;
+    PlatformBridge.cancelExtensionHomeFeedRequests();
+    state = const ExploreState();
+  }
+
+  Future<void> refresh() => fetchHomeFeed(forceRefresh: true);
+}
+
+final exploreProvider = NotifierProvider<ExploreNotifier, ExploreState>(() {
+  return ExploreNotifier();
+});

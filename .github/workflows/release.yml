@@ -1,0 +1,695 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag (e.g., v1.0.0)"
+        required: true
+        default: "v1.0.0"
+
+jobs:
+  # Get version first (quick job)
+  get-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
+    steps:
+      - name: Get version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="$INPUT_VERSION"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          if [[ ! "$VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid release version" >&2
+            exit 1
+          fi
+          printf 'version=%s\n' "$VERSION" >> "$GITHUB_OUTPUT"
+
+          # Check if version contains -preview, -beta, -rc, or -alpha (NOT -hotfix)
+          VERSION_LOWER=$(echo "$VERSION" | tr '[:upper:]' '[:lower:]')
+          if [[ "$VERSION_LOWER" == *"-preview"* ]] || [[ "$VERSION_LOWER" == *"-beta"* ]] || [[ "$VERSION_LOWER" == *"-rc"* ]] || [[ "$VERSION_LOWER" == *"-alpha"* ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "Detected pre-release version: $VERSION"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "Detected stable version: $VERSION"
+          fi
+
+  # Android and iOS build in PARALLEL
+  build-android:
+    runs-on: ubuntu-latest
+    needs: get-version
+    env:
+      MOSIX_DISCORD_SDK: "1"
+
+    steps:
+      - name: Free disk space
+        run: |
+          # Remove large unused tools (~15GB total). Docker prune was dropped:
+          # it took 1-2 minutes and the rm below already frees enough.
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf /usr/local/.ghcup
+          # Show available space
+          df -h
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Prepare pinned Discord SDK
+        uses: ./.github/actions/discord-sdk
+        with:
+          passphrase: ${{ secrets.DISCORD_MOBILE_SDK_PASSPHRASE }}
+
+      - name: Setup Java
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: "temurin"
+          java-version: "25"
+
+      - name: Activate pinned Rust toolchain
+        working-directory: rust_backend
+        run: rustup show
+
+      - name: Install Rust binding generator dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libclang-dev
+
+      # Cache Gradle for faster builds
+      - name: Cache Gradle
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper
+          # Do not publish transforms of the decrypted SDK in shared caches.
+          key: gradle-public-dependencies-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-public-dependencies-${{ runner.os }}-
+
+      - name: Cache Android NDK
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /usr/local/lib/android/sdk/ndk/30.0.16248370
+          key: ndk-30.0.16248370
+
+      - name: Install Android SDK & NDK
+        run: |
+          # Use pre-installed Android SDK on GitHub runners
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+
+          # Accept licenses
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+
+          # Install NDK r30 (supports 16KB page size for Android 15+)
+          # Keep the installed platform aligned with compileSdk/targetSdk.
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "ndk;30.0.16248370" \
+            "platforms;android-37.0" \
+            "build-tools;37.0.0" \
+            "cmake;4.1.2"
+
+          # Set NDK path
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/30.0.16248370" >> "$GITHUB_ENV"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: "stable"
+          flutter-version-file: .fvmrc
+          cache: true
+
+      - name: Cache pub dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Generate app icons
+        run: dart run flutter_launcher_icons
+
+      - name: Build release APKs
+        run: |
+          bash scripts/build_android.sh --production --target lib/main.dart
+          ls -la build/app/outputs/flutter-apk/
+
+      - name: Sign and verify release APKs (V1/V2/V3/V4)
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          : "${KEYSTORE_BASE64:?Missing KEYSTORE_BASE64}"
+          : "${KEY_ALIAS:?Missing KEY_ALIAS}"
+          : "${KEYSTORE_PASSWORD:?Missing KEYSTORE_PASSWORD}"
+          export KEY_PASSWORD="${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
+
+          umask 077
+          signing_dir="$(mktemp -d "$RUNNER_TEMP/spotiflac-signing.XXXXXX")"
+          trap 'rm -rf "$signing_dir"' EXIT
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$signing_dir/release.jks"
+          apksigner="$ANDROID_HOME/build-tools/37.0.0/apksigner"
+          apk_dir=build/app/outputs/flutter-apk
+
+          for target in arm64-v8a:arm64 armeabi-v7a:arm32; do
+            abi="${target%%:*}"
+            label="${target##*:}"
+            apk="$apk_dir/Mosix-${VERSION}-${label}.apk"
+            "$apksigner" sign \
+              --ks "$signing_dir/release.jks" \
+              --ks-key-alias "$KEY_ALIAS" \
+              --ks-pass env:KEYSTORE_PASSWORD \
+              --key-pass env:KEY_PASSWORD \
+              --v1-signing-enabled true \
+              --v2-signing-enabled true \
+              --v3-signing-enabled true \
+              --v4-signing-enabled true \
+              --out "$apk" "$apk_dir/app-${abi}-release.apk"
+
+            # V4 is written beside the APK as "$apk.idsig" for incremental
+            # ADB installs; normal installers keep using V1-V3 inside the APK.
+            if [ ! -s "$apk.idsig" ]; then
+              echo "ERROR: APK signature V4 file was not created: $apk.idsig" >&2
+              exit 1
+            fi
+
+            # Verify the app's supported Android versions, then explicitly
+            # exercise V1 too: the manifest's minSdk 24 normally skips it.
+            "$apksigner" verify "$apk"
+            report="$("$apksigner" verify --verbose --print-certs --min-sdk-version 21 \
+              --v4-signature-file "$apk.idsig" "$apk")"
+            for scheme in 1 2 3 4; do
+              if ! grep -Eq "Verified using v${scheme} scheme.*: true" <<< "$report"; then
+                echo "ERROR: APK signature V${scheme} did not verify: $apk" >&2
+                exit 1
+              fi
+            done
+            if grep -qi "Android Debug" <<< "$report"; then
+              echo "ERROR: Refusing to publish a debug-signed APK" >&2
+              exit 1
+            fi
+            printf '%s\n' "$report" | grep -E '^Verifies$|^Verified using v[1234] scheme|certificate SHA-256 digest:'
+          done
+
+      - name: Audit signed Rust APKs before upload
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_check_backend_apk.py'
+          apk_dir=build/app/outputs/flutter-apk
+          python3 scripts/check_backend_apk.py "$apk_dir/Mosix-${VERSION}-arm64.apk" \
+            --backend rust --abis arm64-v8a --discord-sdk
+          python3 scripts/check_backend_apk.py "$apk_dir/Mosix-${VERSION}-arm32.apk" \
+            --backend rust --abis armeabi-v7a --discord-sdk
+          for abi in arm64 arm32; do
+            "$ANDROID_HOME/build-tools/37.0.0/zipalign" -c -P 16 4 \
+              "$apk_dir/Mosix-${VERSION}-${abi}.apk"
+          done
+          (cd "$apk_dir" && sha256sum Mosix-*.apk > SHA256SUMS.txt)
+
+      - name: Record Android symbol provenance
+        run: |
+          test -s build/symbols/android/app.android-arm64.symbols
+          test -s build/symbols/android/app.android-arm.symbols
+          test -s build/app/outputs/mapping/release/mapping.txt
+          git rev-parse HEAD > build/symbols/android/commit.txt
+          sha256sum build/app/outputs/flutter-apk/Mosix-*.apk > build/symbols/android/apk-sha256.txt
+
+      - name: Retain Android debug symbols
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: android-symbols-${{ needs.get-version.outputs.version }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            build/symbols/android/
+            build/app/outputs/mapping/release/mapping.txt
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: android-apk
+          if-no-files-found: error
+          path: |
+            build/app/outputs/flutter-apk/Mosix-*.apk
+            build/app/outputs/flutter-apk/Mosix-*.apk.idsig
+            build/app/outputs/flutter-apk/SHA256SUMS.txt
+
+  build-ios:
+    runs-on: macos-15
+    needs: get-version # Only depends on version, NOT android build!
+    env:
+      MOSIX_DISCORD_SDK: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Prepare pinned Discord SDK
+        uses: ./.github/actions/discord-sdk
+        with:
+          passphrase: ${{ secrets.DISCORD_MOBILE_SDK_PASSPHRASE }}
+
+      - name: Select Xcode 26.1.1
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.1.1.app
+          xcodebuild -version
+
+      - name: Build Rust backend for iOS
+        run: bash scripts/build_ios.sh
+
+      # Cache CocoaPods
+      - name: Cache CocoaPods
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ios/Pods
+          key: pods-rust-${{ runner.os }}-${{ hashFiles('ios/Podfile', 'ios/Podfile.lock', 'rust_backend/MosixBackend.podspec', 'rust_backend/Cargo.lock') }}
+          restore-keys: pods-rust-${{ runner.os }}-
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: "stable"
+          flutter-version-file: .fvmrc
+          cache: true
+
+      - name: Cache pub dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Normalize ffmpeg plugin shell scripts (strip CRLF)
+        run: |
+          find "$HOME/.pub-cache/hosted" -path "*ffmpeg_kit_flutter_new_audio*/scripts/*.sh" -type f -print0 |
+            while IFS= read -r -d '' f; do
+              perl -pi -e 's/\r$//' "$f"
+              chmod +x "$f"
+              echo "Normalized line endings: $f"
+            done
+
+      - name: Generate app icons
+        run: dart run flutter_launcher_icons
+
+      - name: Configure Rust application pods
+        working-directory: ios
+        run: |
+          test -f ../third_party/spotiflac_discord/ios/Frameworks/discord_partner_sdk.xcframework/Info.plist || {
+            echo "Production requires the official Discord SDK. Run scripts/setup_discord_sdk.sh in the build environment first." >&2
+            exit 1
+          }
+          test -f ../third_party/spotiflac_discord/ios/Frameworks/Discord-License-Notices.txt
+          pod install
+
+      - name: Build iOS (unsigned)
+        run: |
+          # Build Flutter iOS without codesigning
+          flutter build ios --release --no-codesign --config-only --target lib/main.dart \
+            --dart-define="GIT_COMMIT=$(git rev-parse --short=8 HEAD)"
+
+          # Use xcodebuild with code signing disabled
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/Runner.xcarchive \
+            archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM=""
+
+      - name: Audit Rust iOS archive before packaging
+        run: |
+          app="ios/build/Runner.xcarchive/Products/Applications/Runner.app"
+          for required in \
+            Frameworks/discord_partner_sdk.framework/discord_partner_sdk \
+            Frameworks/spotiflac_discord.framework/Discord-License-Notices.txt; do
+            test -s "$app/$required" || {
+              echo "Required Discord file missing or empty: $app/$required" >&2
+              exit 1
+            }
+          done
+          python3 -m unittest discover -s scripts -p 'test_check_backend_ios.py'
+          python3 scripts/check_backend_ios.py \
+            ios/build/Runner.xcarchive/Products/Applications/Runner.app \
+            --dsym ios/build/Runner.xcarchive/dSYMs/Runner.app.dSYM \
+            --backend rust --archs arm64 --platform ios --release
+
+      - name: Create IPA
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
+        run: |
+          mkdir -p build/ios/ipa
+          cd ios/build/Runner.xcarchive/Products/Applications
+          mkdir Payload
+          cp -r Runner.app Payload/
+          # Use absolute path to avoid relative path issues
+          zip -r "$GITHUB_WORKSPACE/build/ios/ipa/Mosix-${VERSION}-ios-unsigned.ipa" Payload
+          rm -rf Payload
+
+      - name: Verify IPA created
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
+        run: |
+          ls -la build/ios/ipa/
+          if [ ! -f "build/ios/ipa/Mosix-${VERSION}-ios-unsigned.ipa" ]; then
+            echo "ERROR: IPA not created!"
+            exit 1
+          fi
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ios-ipa
+          path: build/ios/ipa/Mosix-*.ipa
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: [get-version, build-android, build-ios]
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0  # Full history needed for git-cliff
+
+      - name: Generate changelog with git-cliff
+        id: changelog
+        uses: orhun/git-cliff-action@a9a95522b26fe6403f7bb24031f21fb573d0f5ff # v4.9.1
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OUTPUT: /tmp/changelog.txt
+
+      - name: Show generated changelog
+        run: |
+          echo "Generated changelog:"
+          cat /tmp/changelog.txt
+
+      - name: Download Android APK
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: android-apk
+          path: ./release
+
+      - name: Download iOS IPA
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ios-ipa
+          path: ./release
+
+      - name: Verify downloaded Android artifacts
+        run: |
+          cd release
+          sha256sum --check SHA256SUMS.txt
+
+      - name: Prepare release body
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          CURRENT_REF=$(git rev-list -n 1 "$VERSION" 2>/dev/null || git rev-parse HEAD)
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${CURRENT_REF}^" 2>/dev/null || true)
+
+          # Start with git-cliff changelog, but replace its compare footer with a
+          # deterministic previous-tag lookup from git.
+          sed '/^## [0-9][0-9.[:alpha:]-]*$/d; /^\*\*Full Changelog\*\*/d' /tmp/changelog.txt > /tmp/release_body.txt
+
+          if [ -n "$PREVIOUS_TAG" ]; then
+            printf '\n**Full Changelog**: [%s...%s](https://github.com/%s/%s/compare/%s...%s)\n' \
+              "$PREVIOUS_TAG" "$VERSION" "$REPO_OWNER" "$REPO_NAME" "$PREVIOUS_TAG" "$VERSION" \
+              >> /tmp/release_body.txt
+          fi
+
+          # Append download section
+          cat >> /tmp/release_body.txt << FOOTER
+
+          ---
+
+          ### Downloads
+
+          #### Android
+          - **arm64**: \`Mosix-${VERSION}-arm64.apk\` (recommended for modern devices)
+          - **arm32**: \`Mosix-${VERSION}-arm32.apk\` (older devices)
+          - \`*.apk.idsig\`: V4 signatures for \`adb install --incremental\` only; normal installs do not need them
+
+          #### iOS
+          - **iOS**: \`Mosix-${VERSION}-ios-unsigned.ipa\` (sideload required)
+
+          ### Installation
+          **Android**: Enable "Install from unknown sources" and install the APK
+          **iOS**: Use AltStore, Sideloadly, or similar tools to sideload the IPA
+          FOOTER
+
+          echo "Release body:"
+          cat /tmp/release_body.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: ${{ needs.get-version.outputs.version }}
+          name: Mosix ${{ needs.get-version.outputs.version }}
+          body_path: /tmp/release_body.txt
+          files: ./release/*
+          draft: false
+          prerelease: ${{ needs.get-version.outputs.is_prerelease == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-altstore:
+    runs-on: ubuntu-latest
+    needs: [get-version, build-ios, create-release]
+    if: ${{ needs.get-version.outputs.is_prerelease != 'true' }}
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+
+      - name: Download iOS IPA
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ios-ipa
+          path: ./release
+
+      - name: Update apps.json
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          VERSION_NUM="${VERSION#v}"
+          DATE=$(date -u +%Y-%m-%d)
+          IPA_FILE=$(find ./release -name "*ios*.ipa" | head -1)
+
+          if [ -z "$IPA_FILE" ]; then
+            echo "WARNING: IPA file not found, skipping apps.json update"
+            exit 0
+          fi
+
+          IPA_SIZE=$(stat -c%s "$IPA_FILE" 2>/dev/null || stat -f%z "$IPA_FILE")
+          BUNDLE_ID=$(python3 - "$IPA_FILE" <<'PY'
+          import plistlib
+          import sys
+          import zipfile
+
+          with zipfile.ZipFile(sys.argv[1]) as ipa:
+              info_path = next(name for name in ipa.namelist()
+                               if name.startswith("Payload/")
+                               and name.count("/") == 2
+                               and name.endswith(".app/Info.plist"))
+              print(plistlib.loads(ipa.read(info_path))["CFBundleIdentifier"])
+          PY
+          )
+
+          if [ ! -f apps.json ]; then
+            echo "WARNING: apps.json not found on main, skipping"
+            exit 0
+          fi
+
+          jq --arg ver "$VERSION_NUM" \
+             --arg bundle "$BUNDLE_ID" \
+             --arg date "$DATE" \
+             --arg url "https://github.com/${REPOSITORY}/releases/download/${VERSION}/Mosix-${VERSION}-ios-unsigned.ipa" \
+             --argjson size "$IPA_SIZE" \
+             '.apps[0].bundleIdentifier = $bundle | .apps[0].version = $ver | .apps[0].versionDate = $date | .apps[0].downloadURL = $url | .apps[0].size = $size' \
+             apps.json > apps.json.tmp && mv apps.json.tmp apps.json
+
+          echo "Updated apps.json:"
+          cat apps.json
+
+      - name: Commit and push
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add apps.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update AltStore source to ${VERSION}"
+            git push
+          fi
+
+  notify-telegram:
+    runs-on: ubuntu-latest
+    needs: [get-version, create-release]
+    if: ${{ needs.get-version.outputs.is_prerelease != 'true' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Download Android APK
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: android-apk
+          path: ./release
+
+      - name: Download iOS IPA
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ios-ipa
+          path: ./release
+
+      - name: Generate changelog with git-cliff for Telegram
+        uses: orhun/git-cliff-action@a9a95522b26fe6403f7bb24031f21fb573d0f5ff # v4.9.1
+        with:
+          config: cliff.toml
+          args: --latest --strip all
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OUTPUT: /tmp/cliff_tg.txt
+
+      - name: Convert changelog for Telegram
+        id: changelog
+        run: |
+          if [ ! -s /tmp/cliff_tg.txt ]; then
+            echo "See release notes on GitHub for details." > /tmp/changelog.txt
+          else
+            # Convert Markdown to Telegram HTML
+            CHANGELOG=$(cat /tmp/cliff_tg.txt | \
+              sed '/^## [0-9][0-9.[:alpha:]-]*$/d' | \
+              sed '/^\*\*Full Changelog\*\*/d' | \
+              sed 's/ by \[@[^]]*\](https:\/\/github\.com\/[^)]*)//g' | \
+              sed 's/ by @[A-Za-z0-9_-]\+//g' | \
+              sed 's/\[#\([0-9]*\)\]([^)]*)/#\1/g' | \
+              sed 's/\[@\([^]]*\)\]([^)]*)/@\1/g' | \
+              sed 's/&/\&amp;/g' | \
+              sed 's/</\&lt;/g' | \
+              sed 's/>/\&gt;/g' | \
+              sed 's/\*\*\([^*]*\)\*\*/<b>\1<\/b>/g' | \
+              sed 's/^### \(.*\)$/<b>\1<\/b>/g' | \
+              sed 's/^## \(.*\)$/<b>\1<\/b>/g' | \
+              sed 's/^- /• /g')
+
+            # Truncate for Telegram 4096 char limit
+            CHANGELOG=$(echo "$CHANGELOG" | head -c 2500 | sed '$d')
+            echo "$CHANGELOG" > /tmp/changelog.txt
+          fi
+
+          echo "Telegram changelog:"
+          cat /tmp/changelog.txt
+
+      - name: Send to Telegram Channel
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          VERSION: ${{ needs.get-version.outputs.version }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          CHANGELOG=$(cat /tmp/changelog.txt)
+
+          # Find APK files
+          ARM64_APK=$(find ./release -name "*arm64*.apk" | head -1)
+          ARM32_APK=$(find ./release -name "*arm32*.apk" | head -1)
+
+          # Prepare message with changelog (HTML format)
+          printf '%s\n' \
+            "<b>Mosix ${VERSION} Released!</b>" \
+            "" \
+            "<b>What's New:</b>" \
+            "${CHANGELOG}" \
+            "" \
+            "<a href=\"https://github.com/${REPOSITORY}/releases/tag/${VERSION}\">View Release Notes</a>" \
+            > /tmp/telegram_message.txt
+
+          MESSAGE=$(cat /tmp/telegram_message.txt)
+
+          # Send message first (using HTML parse mode)
+          # Use --data-urlencode for proper encoding of special chars (+, &, etc.)
+          # Use || true to ensure file uploads continue even if message fails
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHANNEL_ID}" \
+            --data-urlencode "text=${MESSAGE}" \
+            --data-urlencode "parse_mode=HTML" \
+            --data-urlencode "disable_web_page_preview=true" || true
+
+          # Upload arm64 APK to channel
+          if [ -f "$ARM64_APK" ]; then
+            echo "Uploading arm64 APK to Telegram..."
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+              -F chat_id="${TELEGRAM_CHANNEL_ID}" \
+              -F document=@"${ARM64_APK}" \
+              -F caption="Mosix ${VERSION} - arm64 (recommended)"
+          fi
+
+          # Upload arm32 APK to channel
+          if [ -f "$ARM32_APK" ]; then
+            echo "Uploading arm32 APK to Telegram..."
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+              -F chat_id="${TELEGRAM_CHANNEL_ID}" \
+              -F document=@"${ARM32_APK}" \
+              -F caption="Mosix ${VERSION} - arm32"
+          fi
+
+          # Upload iOS IPA to channel
+          IOS_IPA=$(find ./release -name "*ios*.ipa" | head -1)
+          if [ -f "$IOS_IPA" ]; then
+            echo "Uploading iOS IPA to Telegram..."
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+              -F chat_id="${TELEGRAM_CHANNEL_ID}" \
+              -F document=@"${IOS_IPA}" \
+              -F caption="Mosix ${VERSION} - iOS (unsigned, sideload required)"
+          fi
+
+          echo "Telegram notification sent!"

@@ -1,0 +1,595 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/user_profile_provider.dart';
+import 'package:mosix/screens/settings/profile_settings_page.dart';
+import 'package:mosix/screens/settings/about_page.dart';
+import 'package:mosix/screens/settings/app_settings_page.dart';
+import 'package:mosix/screens/settings/appearance_settings_page.dart';
+import 'package:mosix/screens/settings/backup_restore_page.dart';
+import 'package:mosix/screens/settings/cache_management_page.dart';
+import 'package:mosix/screens/settings/donate_page.dart';
+import 'package:mosix/screens/settings/download_settings_page.dart';
+import 'package:mosix/screens/settings/extensions_page.dart';
+import 'package:mosix/screens/settings/files_settings_page.dart';
+import 'package:mosix/screens/settings/library_settings_page.dart';
+import 'package:mosix/screens/network_storage_screen.dart';
+import 'package:mosix/screens/settings/log_screen.dart';
+import 'package:mosix/screens/settings/lyrics_settings_page.dart';
+import 'package:mosix/screens/settings/metadata_settings_page.dart';
+import 'package:mosix/screens/settings/playback_settings_page.dart';
+import 'package:mosix/screens/settings/settings_search_catalog.dart';
+import 'package:mosix/services/app_remote_config_service.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/widgets/app_search_field.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/profile_avatar.dart';
+
+/// One entry on the Settings tab.
+class _Destination {
+  const _Destination({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.pageBuilder,
+    this.keywords = const [],
+    this.searchEntries = const [],
+    this.showDonationProgress = false,
+  });
+
+  final IconData icon;
+  final MaterialColor iconColor;
+  final String title;
+  final String subtitle;
+  final Widget Function() pageBuilder;
+  final bool showDonationProgress;
+
+  /// Extra search terms for things the title does not spell out (e.g. "SAF"
+  /// for the Files page), so a user can find a page by what it does.
+  final List<String> keywords;
+  final List<SettingsSearchEntry> searchEntries;
+
+  bool matches(SettingsSearchQuery query) {
+    return query.matches([title, subtitle, ...keywords]);
+  }
+}
+
+class _SearchResult {
+  const _SearchResult(this.destination, [this.entry]);
+
+  final _Destination destination;
+  final SettingsSearchEntry? entry;
+}
+
+/// Destinations that stay visually connected inside one settings card.
+class _Group {
+  const _Group({required this.destinations});
+
+  final List<_Destination> destinations;
+}
+
+class SettingsTab extends ConsumerStatefulWidget {
+  const SettingsTab({super.key, this.asPage = false, this.remoteConfigService});
+
+  final bool asPage;
+  final AppRemoteConfigService? remoteConfigService;
+
+  @override
+  ConsumerState<SettingsTab> createState() => _SettingsTabState();
+}
+
+class _SettingsTabState extends ConsumerState<SettingsTab> {
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  AppLocalizations? _cachedLocalizations;
+  List<_Group>? _cachedGroups;
+  String _query = '';
+  bool _hasRequestedDonationGoal = false;
+  MonthlyDonationGoal? _monthlyGoal;
+  String? _activeDonationJson;
+  late final AppRemoteConfigService _remoteConfigService =
+      widget.remoteConfigService ?? AppRemoteConfigService();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_hasRequestedDonationGoal) return;
+    _hasRequestedDonationGoal = true;
+    unawaited(_loadDonationGoal());
+  }
+
+  Future<void> _loadDonationGoal({bool refresh = true}) async {
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final cached = await _remoteConfigService.readCachedConfig();
+    if (!mounted) return;
+    if (cached != null) _applyDonationGoal(cached);
+    if (!refresh) return;
+    final refreshed = await _remoteConfigService.fetchConfigSnapshot(
+      locale: locale,
+    );
+    if (!mounted || refreshed == null) return;
+    _applyDonationGoal(refreshed);
+  }
+
+  void _applyDonationGoal(RemoteConfigSnapshot snapshot) {
+    if (_activeDonationJson == snapshot.rawJson) return;
+    setState(() {
+      _activeDonationJson = snapshot.rawJson;
+      _monthlyGoal = snapshot.config.donate.monthlyGoal;
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  /// Related destinations share one card; whitespace separates each group
+  /// without adding section labels that compete with the page title.
+  List<_Group> _groups(BuildContext context) {
+    final l10n = context.l10n;
+    if (identical(_cachedLocalizations, l10n) && _cachedGroups != null) {
+      return _cachedGroups!;
+    }
+
+    final searchCatalog = SettingsSearchCatalog(
+      l10n,
+      androidAudio: Platform.isAndroid,
+    );
+    final groups = [
+      _Group(
+        destinations: [
+          _Destination(
+            icon: Icons.extension_outlined,
+            iconColor: Colors.teal,
+            title: l10n.settingsExtensions,
+            subtitle: l10n.settingsExtensionsSubtitle,
+            keywords: const ['plugin', 'provider', 'priority', 'store'],
+            searchEntries: searchCatalog.extensions,
+            pageBuilder: () => const ExtensionsPage(),
+          ),
+          _Destination(
+            icon: Icons.palette_outlined,
+            iconColor: Colors.purple,
+            title: l10n.settingsAppearance,
+            subtitle: l10n.settingsAppearanceSubtitle,
+            keywords: const [
+              'theme',
+              'dark',
+              'light',
+              'amoled',
+              'color',
+              'language',
+              'locale',
+              'layout',
+              'grid',
+            ],
+            searchEntries: searchCatalog.appearance,
+            pageBuilder: () => const AppearanceSettingsPage(),
+          ),
+        ],
+      ),
+      _Group(
+        destinations: [
+          _Destination(
+            icon: Icons.library_music_outlined,
+            iconColor: Colors.blue,
+            title: l10n.settingsLocalLibrary,
+            subtitle: l10n.settingsLocalLibrarySubtitle,
+            keywords: const ['scan', 'local', 'duplicate'],
+            searchEntries: searchCatalog.library,
+            pageBuilder: () => const LibrarySettingsPage(),
+          ),
+          _Destination(
+            icon: Icons.dns_outlined,
+            iconColor: Colors.blueGrey,
+            title: l10n.networkStorage,
+            subtitle: 'SMB · WebDAV · HTTP / HTTPS',
+            keywords: const [
+              'nas',
+              'server',
+              'network',
+              'smb',
+              'webdav',
+              'http',
+            ],
+            pageBuilder: () => const NetworkStorageScreen(),
+          ),
+          _Destination(
+            icon: Icons.sell_outlined,
+            iconColor: Colors.amber,
+            title: l10n.settingsMetadata,
+            subtitle: l10n.settingsMetadataSubtitle,
+            keywords: const ['tag', 'cover', 'artwork', 'isrc', 'provider'],
+            searchEntries: searchCatalog.metadata,
+            pageBuilder: () => const MetadataSettingsPage(),
+          ),
+          _Destination(
+            icon: Icons.lyrics_outlined,
+            iconColor: Colors.cyan,
+            title: l10n.settingsLyrics,
+            subtitle: l10n.settingsLyricsSubtitle,
+            keywords: const ['lrc', 'synced', 'provider'],
+            searchEntries: searchCatalog.lyrics,
+            pageBuilder: () => const LyricsSettingsPage(),
+          ),
+          _Destination(
+            icon: Icons.play_circle_outline,
+            iconColor: Colors.indigo,
+            title: l10n.libraryPlayback,
+            subtitle: l10n.settingsPlaybackSubtitle,
+            keywords: const ['player', 'audio', 'playback', 'pemutaran'],
+            searchEntries: searchCatalog.playback,
+            pageBuilder: () => const PlaybackSettingsPage(),
+          ),
+        ],
+      ),
+      _Group(
+        destinations: [
+          _Destination(
+            icon: Icons.download_outlined,
+            iconColor: Colors.green,
+            title: l10n.settingsDownload,
+            subtitle: l10n.settingsDownloadSubtitle,
+            keywords: const [
+              'quality',
+              'flac',
+              'concurrent',
+              'network',
+              'wifi',
+              'service',
+              'region',
+            ],
+            searchEntries: searchCatalog.download,
+            pageBuilder: () => const DownloadSettingsPage(),
+          ),
+          _Destination(
+            icon: Icons.folder_outlined,
+            iconColor: Colors.orange,
+            title: l10n.settingsFiles,
+            subtitle: l10n.settingsFilesSubtitle,
+            keywords: const [
+              'saf',
+              'storage',
+              'folder',
+              'filename',
+              'path',
+              'permission',
+            ],
+            searchEntries: searchCatalog.files,
+            pageBuilder: () => const FilesSettingsPage(),
+          ),
+        ],
+      ),
+      _Group(
+        destinations: [
+          _Destination(
+            icon: Icons.tune_outlined,
+            iconColor: Colors.blueGrey,
+            title: l10n.settingsApp,
+            subtitle: l10n.settingsAppSubtitle,
+            keywords: const ['update', 'channel', 'debug', 'logging'],
+            searchEntries: searchCatalog.app,
+            pageBuilder: () => const AppSettingsPage(),
+          ),
+          _Destination(
+            icon: Icons.storage_outlined,
+            iconColor: Colors.indigo,
+            title: l10n.settingsCache,
+            subtitle: l10n.settingsCacheSubtitle,
+            keywords: const ['clear', 'space', 'image', 'temp'],
+            searchEntries: searchCatalog.cache,
+            pageBuilder: () => const CacheManagementPage(),
+          ),
+          _Destination(
+            icon: Icons.settings_backup_restore,
+            iconColor: Colors.teal,
+            title: l10n.settingsBackup,
+            subtitle: l10n.settingsBackupSubtitle,
+            keywords: const ['export', 'import', 'restore', 'json'],
+            searchEntries: searchCatalog.backup,
+            pageBuilder: () => const BackupRestorePage(),
+          ),
+        ],
+      ),
+      _Group(
+        destinations: [
+          _Destination(
+            icon: Icons.article_outlined,
+            iconColor: Colors.brown,
+            title: l10n.logTitle,
+            subtitle: l10n.settingsLogsSubtitle,
+            keywords: const ['debug', 'error', 'report'],
+            searchEntries: searchCatalog.logs,
+            pageBuilder: () => const LogScreen(),
+          ),
+          _Destination(
+            icon: Icons.info_outline,
+            iconColor: Colors.grey,
+            title: l10n.settingsAbout,
+            subtitle: '${l10n.aboutVersion} ${AppInfo.displayVersion}',
+            keywords: const ['version', 'license', 'contributor'],
+            searchEntries: searchCatalog.about,
+            pageBuilder: () => const AboutPage(),
+          ),
+        ],
+      ),
+    ];
+    _cachedLocalizations = l10n;
+    _cachedGroups = groups;
+    return groups;
+  }
+
+  Future<void> _navigateTo(
+    BuildContext context,
+    Widget page, {
+    String? targetLabel,
+  }) async {
+    _searchFocusNode.unfocus();
+    _searchFocusNode.canRequestFocus = false;
+    FocusManager.instance.primaryFocus?.unfocus();
+    final destination = targetLabel == null
+        ? page
+        : SettingsSearchHighlightScope(targetLabel: targetLabel, child: page);
+    await Navigator.of(
+      context,
+    ).push(slidePageRoute<void>(page: MornyeSettingsTheme(child: destination)));
+    if (!mounted) return;
+
+    if (page is DonatePage) {
+      unawaited(_loadDonationGoal(refresh: false));
+    }
+
+    // A route's focus scope remembers its previously focused child. Keep the
+    // search field out of that restoration cycle while the child page is open,
+    // then re-enable it without requesting focus when Settings becomes active.
+    FocusManager.instance.primaryFocus?.unfocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _searchFocusNode.canRequestFocus = true;
+      _searchFocusNode.unfocus();
+    });
+  }
+
+  Color _iconColorFor(_Destination destination) => context.isMornye
+      ? destination.iconColor[Theme.of(context).brightness == Brightness.dark
+            ? 300
+            : 800]!
+      : Theme.of(context).colorScheme.onSurfaceVariant;
+
+  Widget _itemFor(_Destination destination, {required bool showDivider}) {
+    final goal = _monthlyGoal;
+    return SettingsItem(
+      icon: destination.icon,
+      iconColor: _iconColorFor(destination),
+      showIconInMornye: true,
+      title: destination.title,
+      subtitle: context.isMornye ? null : destination.subtitle,
+      footer: destination.showDonationProgress && goal?.isVisible == true
+          ? _DonationGoalProgress(goal: goal!)
+          : null,
+      showDivider: showDivider,
+      onTap: () => _navigateTo(context, destination.pageBuilder()),
+    );
+  }
+
+  Widget _searchItemFor(_SearchResult result, {required bool showDivider}) {
+    final entry = result.entry;
+    if (entry == null) {
+      return _itemFor(result.destination, showDivider: showDivider);
+    }
+
+    return SettingsItem(
+      key: ValueKey(
+        'settings-search:${result.destination.title}:${entry.title}',
+      ),
+      icon: entry.icon,
+      iconColor: _iconColorFor(result.destination),
+      showIconInMornye: true,
+      title: entry.title,
+      subtitle: result.destination.title,
+      showDivider: showDivider,
+      onTap: () => _navigateTo(
+        context,
+        result.destination.pageBuilder(),
+        targetLabel: entry.targetLabel,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    final wideInset = wideListInset(context);
+    final query = SettingsSearchQuery(_query);
+    final groups = _groups(context);
+
+    final margin = EdgeInsets.fromLTRB(
+      tokens.gapLg + wideInset,
+      context.isMornye ? 12 : tokens.gapSm,
+      tokens.gapLg + wideInset,
+      context.isMornye ? 12 : tokens.gapSm,
+    );
+
+    final List<Widget> body;
+    if (query.isEmpty) {
+      body = [
+        for (final group in groups)
+          SliverToBoxAdapter(
+            child: SettingsGroup(
+              margin: margin,
+              children: [
+                for (var i = 0; i < group.destinations.length; i++)
+                  _itemFor(
+                    group.destinations[i],
+                    showDivider: i != group.destinations.length - 1,
+                  ),
+              ],
+            ),
+          ),
+      ];
+    } else {
+      final matches = <_SearchResult>[
+        for (final group in groups)
+          for (final destination in group.destinations) ...[
+            if (destination.matches(query)) _SearchResult(destination),
+            for (final entry in destination.searchEntries)
+              if (entry.matches(query)) _SearchResult(destination, entry),
+          ],
+      ];
+      body = matches.isEmpty
+          ? [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(tokens.gapXl),
+                  child: Text(
+                    context.l10n.settingsSearchNoResults(_query.trim()),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+            ]
+          : [
+              SliverToBoxAdapter(
+                child: SettingsGroup(
+                  margin: margin,
+                  children: [
+                    for (var i = 0; i < matches.length; i++)
+                      _searchItemFor(
+                        matches[i],
+                        showDivider: i != matches.length - 1,
+                      ),
+                  ],
+                ),
+              ),
+            ];
+    }
+
+    return MornyeSettingsTheme(
+      child: CustomScrollView(
+        slivers: [
+          if (widget.asPage)
+            AppSliverHeader.page(title: context.l10n.settingsTitle)
+          else
+            AppSliverHeader.tabRoot(title: context.l10n.settingsTitle),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                tokens.gapLg + wideInset,
+                tokens.gapSm,
+                tokens.gapLg + wideInset,
+                tokens.gapSm,
+              ),
+              child: AppSearchField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                hintText: context.l10n.settingsSearchHint,
+                clearTooltip: context.l10n.dialogClear,
+                onChanged: (value) => setState(() => _query = value),
+                onClear: () => setState(() => _query = ''),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Consumer(
+              builder: (context, ref, _) {
+                final profile = ref.watch(userProfileProvider).value;
+                return SettingsGroup(
+                  margin: margin,
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      leading: ProfileAvatar(
+                        name: profile?.name ?? '',
+                        photoPath: profile?.photoPath,
+                        size: 64,
+                      ),
+                      title: Text(
+                        profile?.name.isNotEmpty == true
+                            ? profile!.name
+                            : context.l10n.profileSetUp,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      subtitle:
+                          profile?.name.isNotEmpty == true ||
+                              profile?.photoPath?.isNotEmpty == true
+                          ? null
+                          : Text(context.l10n.profileEdit),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: profile == null
+                          ? null
+                          : () => _navigateTo(
+                              context,
+                              ProfileSettingsPage(profile: profile),
+                            ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          ...body,
+          const NavBarSliverSpacer(),
+          const SliverFillRemaining(hasScrollBody: false, child: SizedBox()),
+        ],
+      ),
+    );
+  }
+}
+
+class _DonationGoalProgress extends StatelessWidget {
+  const _DonationGoalProgress({required this.goal});
+
+  final MonthlyDonationGoal goal;
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final percentage =
+        '${NumberFormat('0.#', locale).format(goal.progressPercent)}%';
+    return Row(
+      children: [
+        Expanded(
+          child: LinearProgressIndicator(
+            value: goal.progressRatio,
+            minHeight: 4,
+            borderRadius: BorderRadius.circular(2),
+            semanticsLabel: goal.title,
+            semanticsValue: goal.showPercentage ? percentage : null,
+          ),
+        ),
+        if (goal.showPercentage) ...[
+          const SizedBox(width: 8),
+          Text(
+            percentage,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}

@@ -1,0 +1,273 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/settings/library_settings_page.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/settings_group.dart';
+
+class _Settings extends SettingsNotifier {
+  @override
+  AppSettings build() => const AppSettings(localLibraryEnabled: true);
+}
+
+class _Library extends LocalLibraryNotifier {
+  _Library(this._initial, this._cleanup);
+
+  final LocalLibraryState _initial;
+  final Future<int> Function() _cleanup;
+
+  @override
+  LocalLibraryState build() => _initial;
+
+  @override
+  Future<int> cleanupMissingFiles({String? iosBookmark}) => _cleanup();
+
+  void _beginScan() => state = state.copyWith(isScanning: true);
+}
+
+class _History extends DownloadHistoryNotifier {
+  _History(this._count, this._cleanup);
+
+  final int _count;
+  final Future<int> Function() _cleanup;
+
+  @override
+  DownloadHistoryState build() => DownloadHistoryState(totalCount: _count);
+
+  @override
+  Future<int> cleanupOrphanedDownloads() => _cleanup();
+}
+
+class _RetryLibrary extends _Library {
+  _RetryLibrary()
+    : super(
+        LocalLibraryState(
+          loadFailed: true,
+          sources: const [
+            LocalLibrarySource(
+              id: 'sd-card',
+              path: 'content://storage/tree/sd-card',
+              displayName: 'Saved music',
+              available: false,
+            ),
+          ],
+        ),
+        () async => 0,
+      );
+
+  int _reloadCalls = 0;
+
+  @override
+  Future<void> reloadFromStorage() async {
+    _reloadCalls++;
+    state = state.copyWith(loadFailed: false, totalCount: 5);
+  }
+}
+
+Finder get _cleanupRow => find.byWidgetPredicate(
+  (widget) => widget is SettingsItem && widget.title == 'Cleanup Missing Files',
+);
+
+Future<void> _mount(
+  WidgetTester tester, {
+  required bool mornye,
+  required _Library library,
+  required _History history,
+}) async {
+  SharedPreferences.setMockInitialValues({});
+  tester.view.physicalSize = const Size(430, 1000);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        settingsProvider.overrideWith(_Settings.new),
+        localLibraryProvider.overrideWith(() => library),
+        downloadHistoryProvider.overrideWith(() => history),
+      ],
+      child: MaterialApp(
+        theme: mornye ? MornyeTheme.build(Brightness.dark) : AppTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const LibrarySettingsPage(),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  await tester.scrollUntilVisible(find.text('Cleanup Missing Files'), 300);
+  await tester.pumpAndSettle();
+}
+
+void main() {
+  for (final mornye in [false, true]) {
+    testWidgets('failed load shows saved folder and offers retry ($mornye)', (
+      tester,
+    ) async {
+      final library = _RetryLibrary();
+      await _mount(
+        tester,
+        mornye: mornye,
+        library: library,
+        history: _History(0, () async => 0),
+      );
+      await tester.scrollUntilVisible(find.text('Retry'), -300);
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Library could not be loaded'),
+        findsOneWidget,
+      );
+      expect(find.text('Saved music'), findsOneWidget);
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+      expect(library._reloadCalls, 1);
+      expect(find.textContaining('Library could not be loaded'), findsNothing);
+      expect(find.text('Saved music'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('cleanup works for download-only Library ($mornye)', (
+      tester,
+    ) async {
+      final localDone = Completer<int>();
+      final downloadsDone = Completer<int>();
+      var localCalls = 0;
+      var downloadCalls = 0;
+      await _mount(
+        tester,
+        mornye: mornye,
+        library: _Library(LocalLibraryState(), () {
+          localCalls++;
+          return localDone.future;
+        }),
+        history: _History(8, () {
+          downloadCalls++;
+          return downloadsDone.future;
+        }),
+      );
+      expect(tester.widget<SettingsItem>(_cleanupRow).onTap, isNotNull);
+      await tester.tap(find.text('Cleanup Missing Files'));
+      await tester.pump();
+      expect(localCalls, 1);
+      expect(tester.widget<SettingsItem>(_cleanupRow).onTap, isNull);
+      expect(
+        find.descendant(
+          of: _cleanupRow,
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Cleanup Missing Files'));
+      await tester.pump();
+      expect(localCalls, 1);
+      localDone.complete(0);
+      await tester.pump();
+      expect(downloadCalls, 1);
+      downloadsDone.complete(2);
+      await tester.pumpAndSettle();
+      expect(find.text('Removed 2 missing files from library'), findsOneWidget);
+      expect(tester.widget<SettingsItem>(_cleanupRow).onTap, isNotNull);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('cleanup reports errors and can retry ($mornye)', (
+      tester,
+    ) async {
+      var calls = 0;
+      var downloadCalls = 0;
+      await _mount(
+        tester,
+        mornye: mornye,
+        library: _Library(LocalLibraryState(totalCount: 1), () async {
+          calls++;
+          if (calls == 1) throw StateError('cleanup failed');
+          return 1;
+        }),
+        history: _History(1, () async {
+          downloadCalls++;
+          return 2;
+        }),
+      );
+      await tester.tap(find.text('Cleanup Missing Files'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SnackBar), findsOneWidget);
+      expect(find.textContaining('Error:'), findsOneWidget);
+      expect(downloadCalls, 0);
+      expect(tester.widget<SettingsItem>(_cleanupRow).onTap, isNotNull);
+      await tester.tap(find.text('Cleanup Missing Files'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(find.text('Removed 3 missing files from library'), findsOneWidget);
+      expect(calls, 2);
+      expect(downloadCalls, 1);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('cleanup stays available for hidden source rows ($mornye)', (
+      tester,
+    ) async {
+      await _mount(
+        tester,
+        mornye: mornye,
+        library: _Library(
+          LocalLibraryState(
+            sources: const [
+              LocalLibrarySource(
+                id: 'sd-card',
+                path: 'content://storage/tree/sd-card',
+                displayName: 'Music',
+                available: false,
+                trackCount: 5,
+                isRemovable: true,
+              ),
+            ],
+          ),
+          () async => 0,
+        ),
+        history: _History(0, () async => 0),
+      );
+      expect(tester.widget<SettingsItem>(_cleanupRow).onTap, isNotNull);
+      await tester.tap(find.text('Cleanup Missing Files'));
+      await tester.pumpAndSettle();
+      expect(find.text('Removed 0 missing files from library'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('cleanup cannot race an active scan ($mornye)', (tester) async {
+      var localCalls = 0;
+      var downloadCalls = 0;
+      final library = _Library(LocalLibraryState(totalCount: 1), () async {
+        localCalls++;
+        return 0;
+      });
+      await _mount(
+        tester,
+        mornye: mornye,
+        library: library,
+        history: _History(1, () async {
+          downloadCalls++;
+          return 0;
+        }),
+      );
+      final originalTap = tester.widget<SettingsItem>(_cleanupRow).onTap!;
+      library._beginScan();
+      await tester.pump();
+      expect(tester.widget<SettingsItem>(_cleanupRow).onTap, isNull);
+      originalTap();
+      await tester.pump();
+      expect(localCalls, 0);
+      expect(downloadCalls, 0);
+      expect(tester.takeException(), isNull);
+    });
+  }
+}

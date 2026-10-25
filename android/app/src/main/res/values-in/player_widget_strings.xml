@@ -1,0 +1,14 @@
+<resources>
+    <string name="player_widget_name">Player Mosix</string>
+    <string name="player_widget_description">Musik, cover, dan kontrol playback. Ubah ukuran atau edit tampilannya.</string>
+    <string name="player_widget_empty">Pilih musik di aplikasi</string>
+    <string name="player_widget_play">Putar</string>
+    <string name="player_widget_pause">Jeda</string>
+    <string name="player_widget_previous">Lagu sebelumnya</string>
+    <string name="player_widget_next">Lagu berikutnya</string>
+    <string name="player_widget_artwork">Warna artwork</string>
+    <string name="player_widget_light">Terang</string>
+    <string name="player_widget_dark">Gelap</string>
+    <string name="player_widget_show_artist">Tampilkan nama artis</string>
+    <string name="player_widget_save">Simpan widget</string>
+</resources>

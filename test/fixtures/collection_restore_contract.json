@@ -1,0 +1,32 @@
+{
+  "now": "2026-10-07T05:00:00.000",
+  "input": {
+    "wishlist": [
+      {"key":"example:1","track":{"id":"1","name":"音楽 🎵","extra":[1,true,null]},"addedAt":"2026-10-01"},
+      null,
+      {"key":"","track":{}},
+      {"key":"skipped","track":null}
+    ],
+    "loved": [{"key":"example:2","track":{"id":"2"}}],
+    "favoriteArtists": [{"key":"example:artist","name":"İstanbul","extra":true}],
+    "playlists": [
+      {"id":"p","name":"old","tracks":[{"key":"old","track":{"id":"old"}}]},
+      {"id":"p","name":"最新","coverImagePath":"/covers/a.jpg","createdAt":"2026-09-01","tracks":[
+        {"key":"example:1","track":{"id":"first"},"addedAt":"2026-10-02"},
+        {"key":"example:1","track":{"id":"last"},"addedAt":"2026-10-03"}
+      ]},
+      {"id":"empty"}
+    ]
+  },
+  "commands": [
+    {"kind":"wishlist","values":{"track_key":"example:1","track_json":"{\"id\":\"1\",\"name\":\"音楽 🎵\",\"extra\":[1,true,null]}","added_at":"2026-10-01"}},
+    {"kind":"loved","values":{"track_key":"example:2","track_json":"{\"id\":\"2\"}","added_at":"2026-10-07T05:00:00.000"}},
+    {"kind":"artist","values":{"artist_key":"example:artist","artist_json":"{\"key\":\"example:artist\",\"name\":\"İstanbul\",\"extra\":true}","added_at":"2026-10-07T05:00:00.000"}},
+    {"kind":"playlist","values":{"id":"p","name":"old","cover_image_path":null,"created_at":"2026-10-07T05:00:00.000","updated_at":"2026-10-07T05:00:00.000"}},
+    {"kind":"playlist_track","values":{"playlist_id":"p","track_key":"old","track_json":"{\"id\":\"old\"}","added_at":"2026-10-07T05:00:00.000"}},
+    {"kind":"playlist","values":{"id":"p","name":"最新","cover_image_path":"/covers/a.jpg","created_at":"2026-09-01","updated_at":"2026-09-01"}},
+    {"kind":"playlist_track","values":{"playlist_id":"p","track_key":"example:1","track_json":"{\"id\":\"first\"}","added_at":"2026-10-02"}},
+    {"kind":"playlist_track","values":{"playlist_id":"p","track_key":"example:1","track_json":"{\"id\":\"last\"}","added_at":"2026-10-03"}},
+    {"kind":"playlist","values":{"id":"empty","name":"","cover_image_path":null,"created_at":"2026-10-07T05:00:00.000","updated_at":"2026-10-07T05:00:00.000"}}
+  ]
+}

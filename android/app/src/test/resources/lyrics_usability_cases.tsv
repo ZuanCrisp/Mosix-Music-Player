@@ -1,0 +1,27 @@
+# Shared Dart/Rust/Kotlin lyric-usability cases.
+# Columns: name<TAB>expected boolean<TAB>lyrics. Decode literal \n, \r, \t in lyrics.
+empty	false	
+whitespace	false	 \t\r\n 
+metadata_only	false	[ar:Artist]\n[ti:Title]\n[offset:0]
+metadata_case	false	[AR:Artist]\n[BY:Mosix]
+instrumental	true	 [Instrumental:TRUE] 
+timestamps_only	false	[00:01.00]\n<00:01.10>
+multiple_timestamps	false	[00:01.00][01:02:500] 
+speaker_only	false	v1:\n V2: 
+multiple_singers_only	false	[00:01.00]v3:\n[00:02.00]<00:02.00>V12:
+third_singer_text	true	[00:01.00]v3:Third singer
+inline_before_spaced_speaker	false	[00:00.00]<00:00.01> v1:
+inline_before_tabbed_speaker	false	[00:00.00]<00:00.01>\tV2:\t
+multiple_inline_speaker	false	[00:00.00]<00:00.01> <00:00.02> v2: 
+empty_background	false	[bg: ]
+empty_timed_background	false	[bg:[00:00.00]<00:00.01> v1: ]
+plain_text	true	First line\nSecond line
+timed_text	true	[00:01.00]First line
+timed_speaker_text	true	[00:02:500]<00:02.500> v2: Harmony line
+background_text	true	[bg:Backing vocal]
+timed_background_text	true	[BG:[00:00.00]<00:00.01> v1: Backing vocal]
+multiple_timed_text	true	[00:01.00][00:02.00]Repeated line
+metadata_and_text	true	[ti:Title]\n[00:00.00]Actual lyric
+unicode_text	true	[00:00.00]<00:00.01> v1: 日本語の歌詞
+supplements_only	false	[x-romaji:1000:YQ==]\n[x-translation:1000:Yg==]
+supplements_and_text	true	[x-romaji:1000:YQ==]\n[x-translation:1000:Yg==]\n[00:01.00]Original

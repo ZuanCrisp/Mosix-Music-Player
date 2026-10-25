@@ -1,0 +1,9 @@
+{
+    global:
+        Java_com_zarz_spotiflac_discord_DiscordPresencePlugin_nativeStart;
+        Java_com_zarz_spotiflac_discord_DiscordPresencePlugin_nativeTick;
+        Java_com_zarz_spotiflac_discord_DiscordPresencePlugin_nativeUpdate;
+        Java_com_zarz_spotiflac_discord_DiscordPresencePlugin_nativeClear;
+        Java_com_zarz_spotiflac_discord_DiscordPresencePlugin_nativeStop;
+    local: *;
+};

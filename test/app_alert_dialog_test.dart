@@ -1,0 +1,221 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+
+void main() {
+  for (final brightness in Brightness.values) {
+    for (final reduceMotion in [false, true]) {
+      testWidgets(
+        'confirmation keeps blur during entry and cancels promptly ($brightness, reduce motion: $reduceMotion)',
+        (tester) async {
+          await tester.pumpWidget(
+            ProviderScope(
+              child: MaterialApp(
+                theme: MornyeTheme.build(brightness),
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(disableAnimations: reduceMotion),
+                  child: child!,
+                ),
+                home: Builder(
+                  builder: (context) => Scaffold(
+                    body: TextButton(
+                      child: const Text('Open'),
+                      onPressed: () => showAppDialog<void>(
+                        context: context,
+                        builder: (context) => AppAlertDialog(
+                          title: const Text('Delete Selected'),
+                          content: const Text(
+                            'This will also delete the files.',
+                          ),
+                          actions: [
+                            AppDialogAction(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cancel'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.tap(find.text('Open'));
+          await tester.pump();
+          for (final elapsed in [16, 64, 180]) {
+            await tester.pump(Duration(milliseconds: elapsed));
+            final blur = find.descendant(
+              of: find.byType(AppAlertDialog),
+              matching: find.byType(BackdropFilter),
+            );
+            expect(blur, findsOneWidget);
+            // An opacity layer isolates the filter from the underlying page
+            // until the route finishes entering.
+            final fades = tester.widgetList<FadeTransition>(
+              find.ancestor(of: blur, matching: find.byType(FadeTransition)),
+            );
+            expect(fades.every((fade) => fade.opacity.value == 1), isTrue);
+            final bodyContext = tester.element(
+              find.text('This will also delete the files.'),
+            );
+            expect(
+              DefaultTextStyle.of(bodyContext).style.color,
+              Theme.of(bodyContext).colorScheme.onSurface,
+            );
+          }
+          final panel = find.byType(MornyeGlassPanel);
+          final openWidth = tester.getRect(panel).width;
+          await tester.tap(find.text('Cancel'));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 16));
+          if (!reduceMotion) {
+            // Closing must move on the first frame, rather than holding the
+            // fully open scale while a reversed entrance curve settles.
+            expect(tester.getRect(panel).width, lessThan(openWidth - 1));
+            await tester.pump(const Duration(milliseconds: 164));
+            await tester.pump();
+          }
+          expect(find.byType(AppAlertDialog), findsNothing);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
+
+  for (final mornye in [true, false]) {
+    testWidgets(
+      'confirmation preserves cancel and confirm results (Mornye: $mornye)',
+      (tester) async {
+        bool? result;
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+              home: Builder(
+                builder: (context) => Scaffold(
+                  body: TextButton(
+                    child: const Text('Open'),
+                    onPressed: () async {
+                      result = await showAppDialog<bool>(
+                        context: context,
+                        builder: (context) => AppAlertDialog(
+                          title: const Text('Remove extension'),
+                          content: const Text('Remove this example extension?'),
+                          actions: [
+                            AppDialogAction(
+                              isDefault: true,
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            AppDialogAction(
+                              filled: true,
+                              isDestructive: true,
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Remove'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+        expect(
+          find.byType(MornyeGlassPanel),
+          mornye ? findsOneWidget : findsNothing,
+        );
+        expect(
+          find.byType(AlertDialog),
+          mornye ? findsNothing : findsOneWidget,
+        );
+        if (mornye) {
+          final remove = find.widgetWithText(CupertinoButton, 'Remove');
+          final cancel = find.widgetWithText(CupertinoButton, 'Cancel');
+          expect(
+            tester.getRect(remove).bottom,
+            lessThan(tester.getRect(cancel).top),
+          );
+          expect(tester.getRect(remove).width, tester.getRect(cancel).width);
+          expect(
+            DefaultTextStyle.of(
+              tester.element(find.text('Remove')),
+            ).style.color,
+            MornyeTheme.build(Brightness.dark).colorScheme.primary,
+          );
+          expect(find.byType(CupertinoAlertDialog), findsNothing);
+          expect(find.byType(FilledButton), findsNothing);
+        }
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+        expect(result, isFalse);
+
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Remove'));
+        await tester.pumpAndSettle();
+        expect(result, isTrue);
+
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+        await tester.tapAt(const Offset(10, 10));
+        await tester.pumpAndSettle();
+        expect(result, isNull);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('glass confirmation keeps actions reachable with long text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(393, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: MornyeTheme.build(Brightness.light),
+          home: MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
+            child: AppAlertDialog(
+              title: const Text('Delete these tracks from your library?'),
+              content: Text(
+                List.filled(12, 'This removes the selected files.').join(' '),
+              ),
+              actions: [
+                AppDialogAction(onPressed: () {}, child: const Text('Cancel')),
+                AppDialogAction(
+                  isDestructive: true,
+                  onPressed: () {},
+                  child: const Text('Delete from Library'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Cancel').hitTestable(), findsOneWidget);
+    expect(find.text('Delete from Library').hitTestable(), findsOneWidget);
+    final scroll = find.byType(SingleChildScrollView).first;
+    await tester.drag(scroll, const Offset(0, -150));
+    await tester.pumpAndSettle();
+    expect(find.text('Cancel').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+}

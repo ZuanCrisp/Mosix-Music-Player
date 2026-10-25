@@ -1,0 +1,380 @@
+use super::UsbOutputFormat;
+use std::collections::HashMap;
+
+#[derive(Clone, Debug, Default)]
+pub struct Endpoint {
+    pub address: u8,
+    pub attributes: u8,
+    pub max_packet: usize,
+    pub interval: u8,
+    pub sync_address: u8,
+    pub rate_control: bool,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Alternate {
+    pub control: u8,
+    pub interface: u8,
+    pub alternate: u8,
+    pub uac2: bool,
+    pub terminal: u8,
+    pub clock: u8,
+    pub channels: u8,
+    pub bits: u8,
+    pub subslot: u8,
+    pub pcm: bool,
+    pub rates: Vec<(u32, u32)>,
+    pub endpoints: Vec<Endpoint>,
+}
+
+#[derive(Default)]
+pub struct Device {
+    pub vendor: u16,
+    pub product: u16,
+    pub revision: u16,
+    pub alternates: Vec<Alternate>,
+}
+
+fn u16le(b: &[u8]) -> u16 {
+    u16::from_le_bytes([b[0], b[1]])
+}
+fn u24le(b: &[u8]) -> u32 {
+    u32::from_le_bytes([b[0], b[1], b[2], 0])
+}
+
+/// Only UAC1/2 Type I, mono/stereo output. Ambiguous clock selectors and
+/// implicit feedback are rejected instead of guessing a configuration.
+pub fn parse(bytes: &[u8]) -> Result<Device, String> {
+    let mut device = Device::default();
+    let mut current: Option<Alternate> = None;
+    let mut control = 0;
+    let mut is_control = false;
+    let mut clocks = HashMap::new();
+    let mut offset = 0;
+    let mut configurations = 0;
+    while offset < bytes.len() {
+        let length = *bytes.get(offset).ok_or("truncated descriptor")? as usize;
+        if length < 2 || offset + length > bytes.len() {
+            return Err("malformed USB descriptor".into());
+        }
+        let d = &bytes[offset..offset + length];
+        offset += length;
+        match d[1] {
+            2 => {
+                configurations += 1;
+                if configurations > 1 {
+                    return Err("Multiple USB configurations are not supported".into());
+                }
+            }
+            1 if length >= 18 => {
+                device.vendor = u16le(&d[8..]);
+                device.product = u16le(&d[10..]);
+                device.revision = u16le(&d[12..]);
+            }
+            4 if length >= 9 => {
+                if let Some(a) = current.take() {
+                    device.alternates.push(a);
+                }
+                is_control = d[5] == 1 && d[6] == 1 && d[7] == 0x20;
+                if d[5] == 1 && d[6] == 1 {
+                    control = d[2];
+                }
+                if d[5] == 1 && d[6] == 2 && d[3] > 0 && (d[7] == 0 || d[7] == 0x20) {
+                    current = Some(Alternate {
+                        control,
+                        interface: d[2],
+                        alternate: d[3],
+                        uac2: d[7] == 0x20,
+                        ..Default::default()
+                    });
+                }
+            }
+            0x24 if is_control && length >= 9 && d[2] == 2 => {
+                clocks.insert((control, d[3]), d[7]);
+            }
+            0x24 => {
+                if let Some(a) = current.as_mut() {
+                    if length >= 7 && d[2] == 1 {
+                        a.terminal = d[3];
+                        if a.uac2 && length >= 16 && d[5] == 1 {
+                            let formats = u32::from_le_bytes(d[6..10].try_into().unwrap());
+                            a.pcm = formats & 1 != 0;
+                            a.channels = d[10];
+                        } else if !a.uac2 {
+                            a.pcm = u16le(&d[5..]) == 1;
+                        }
+                    }
+                    if length >= 6 && d[2] == 2 && d[3] == 1 {
+                        if a.uac2 {
+                            a.subslot = d[4];
+                            a.bits = d[5];
+                        } else if length >= 8 {
+                            a.channels = d[4];
+                            a.subslot = d[5];
+                            a.bits = d[6];
+                            let count = d[7] as usize;
+                            if count == 0 && length >= 14 {
+                                a.rates.push((u24le(&d[8..]), u24le(&d[11..])));
+                            } else if length >= 8 + count * 3 {
+                                for f in d[8..8 + count * 3].as_chunks::<3>().0 {
+                                    let rate = u24le(f);
+                                    a.rates.push((rate, rate));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            5 if length >= 7 => {
+                if let Some(a) = current.as_mut() {
+                    let packet = u16le(&d[4..]);
+                    a.endpoints.push(Endpoint {
+                        address: d[2],
+                        attributes: d[3],
+                        max_packet: (packet & 0x7ff) as usize * (1 + ((packet >> 11) & 3) as usize),
+                        interval: d[6],
+                        sync_address: d.get(8).copied().unwrap_or(0),
+                        rate_control: false,
+                    });
+                }
+            }
+            0x25 if length >= 4 && d[2] == 1 => {
+                if let Some(a) = current.as_mut()
+                    && !a.uac2
+                    && let Some(endpoint) = a.endpoints.last_mut()
+                {
+                    endpoint.rate_control = d[3] & 1 != 0;
+                }
+            }
+            _ => {}
+        }
+    }
+    if let Some(a) = current {
+        device.alternates.push(a);
+    }
+    for a in &mut device.alternates {
+        a.clock = clocks.get(&(a.control, a.terminal)).copied().unwrap_or(0);
+    }
+    Ok(device)
+}
+
+/// A deliberately small exact-match registry based on documented USB transport
+/// identities in Linux sound/usb/quirks.c, not a product-name heuristic.
+fn native_encoding(device: &Device, a: &Alternate) -> Option<&'static str> {
+    if !a.uac2 || a.subslot != 4 {
+        return None;
+    }
+    match (device.vendor, device.product, a.alternate, device.revision) {
+        (0x16d0, 0x071a, 2, 0x0199) => Some("dsd_le"),
+        (0x16d0, 0x071a, 2, 0x019b | 0x0203) => Some("dsd_be"),
+        (0x2772, 0x0230, 2, _) | (0x20b1, 0x3089, 2, _) => Some("dsd_be"),
+        _ => None,
+    }
+}
+
+pub fn formats(
+    device: &Device,
+    rate: u32,
+    channels: u8,
+    bits: u8,
+    dsd: bool,
+    dop: bool,
+) -> Vec<(Alternate, UsbOutputFormat)> {
+    let mut result = Vec::new();
+    for a in &device.alternates {
+        if a.channels != channels || !(1..=2).contains(&channels) || !(2..=4).contains(&a.subslot) {
+            continue;
+        }
+        let native = native_encoding(device, a);
+        let (wire_rate, encoding, precision) = if dsd {
+            if let Some(encoding) = native {
+                (rate / 32, encoding, 1)
+            } else if dop && a.pcm && a.bits >= 24 && a.subslot >= 3 {
+                (rate / 16, "dop", 24)
+            } else {
+                continue;
+            }
+        } else {
+            if !a.pcm || native.is_some() || !matches!(bits, 16 | 24 | 32) || a.bits < bits {
+                continue;
+            }
+            (rate, "pcm", a.bits)
+        };
+        if wire_rate == 0 || a.bits > a.subslot * 8 || (a.uac2 && a.clock == 0) {
+            continue;
+        }
+        if !a.uac2
+            && !a
+                .rates
+                .iter()
+                .any(|(min, max)| wire_rate >= *min && wire_rate <= *max)
+        {
+            continue;
+        }
+        result.push((
+            a.clone(),
+            UsbOutputFormat {
+                sample_rate: wire_rate,
+                channels,
+                bits: precision,
+                subslot: a.subslot,
+                encoding: encoding.into(),
+            },
+        ));
+    }
+    result.sort_by_key(|(_, f)| {
+        (
+            if f.encoding.starts_with("dsd_") { 0 } else { 1 },
+            f.subslot,
+        )
+    });
+    result
+}
+
+pub struct PacketClock {
+    nominal: f64,
+    feedback: Option<f64>,
+    remainder: f64,
+}
+impl PacketClock {
+    pub fn new(rate: u32, interval_us: u32) -> Self {
+        Self {
+            nominal: rate as f64 * interval_us as f64 / 1_000_000.0,
+            feedback: None,
+            remainder: 0.0,
+        }
+    }
+    pub fn feedback(&mut self, bytes: &[u8], high_speed: bool, interval_us: u32) -> bool {
+        let frames = match bytes.len() {
+            3 if !high_speed => u24le(bytes) as f64 / 16384.0,
+            4 => u32::from_le_bytes(bytes.try_into().unwrap()) as f64 / 65536.0,
+            _ => return false,
+        } * interval_us as f64
+            / if high_speed { 125.0 } else { 1000.0 };
+        if !frames.is_finite() || (frames - self.nominal).abs() > self.nominal * 0.02 {
+            return false;
+        }
+        self.feedback = Some(frames);
+        true
+    }
+    pub fn next(&mut self) -> usize {
+        self.remainder += self.feedback.unwrap_or(self.nominal);
+        let frames = self.remainder.floor() as usize;
+        self.remainder -= frames as f64;
+        frames
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn parses_uac1_fixed_rate_headset_without_clock_controls() {
+        let raw = [
+            9, 4, 0, 0, 0, 1, 1, 0, 0, 9, 4, 1, 1, 1, 1, 2, 0, 0, 7, 0x24, 1, 1, 1, 1, 0, 11, 0x24,
+            2, 1, 2, 2, 16, 1, 0x80, 0xbb, 0, 9, 5, 1, 0x0d, 192, 0, 1, 0, 0, 7, 0x25, 1, 0, 0, 0,
+            0,
+        ];
+        let device = parse(&raw).unwrap();
+        let matches = formats(&device, 48000, 2, 16, false, false);
+        assert_eq!(matches.len(), 1);
+        let a = &matches[0].0;
+        assert_eq!(a.interface, 1);
+        assert!(!a.endpoints[0].rate_control);
+        assert_eq!(a.endpoints[0].address, 1);
+        assert_eq!(a.endpoints[0].max_packet, 192);
+        assert_eq!(a.endpoints[0].interval, 1);
+        assert_eq!(a.endpoints[0].attributes, 0x0d);
+        assert_eq!(a.endpoints[0].sync_address, 0);
+        assert!(formats(&device, 44100, 2, 16, false, false).is_empty());
+    }
+    #[test]
+    fn resolves_uac2_terminal_clock_and_explicit_feedback() {
+        let raw = [
+            9, 4, 2, 0, 0, 1, 1, 0x20, 0, 17, 0x24, 2, 7, 1, 1, 0, 9, 2, 3, 0, 0, 0, 0, 0, 0, 0, 9,
+            4, 3, 1, 2, 1, 2, 0x20, 0, 16, 0x24, 1, 7, 0, 1, 1, 0, 0, 0, 2, 3, 0, 0, 0, 0, 6, 0x24,
+            2, 1, 4, 24, 7, 5, 1, 5, 0, 4, 1, 7, 5, 0x81, 0x11, 4, 0, 4,
+        ];
+        let device = parse(&raw).unwrap();
+        let matches = formats(&device, 96000, 2, 24, false, false);
+        assert_eq!(matches.len(), 1);
+        assert_eq!(matches[0].0.control, 2);
+        assert_eq!(matches[0].0.clock, 9);
+        assert_eq!(matches[0].0.endpoints[1].address, 0x81);
+        assert_eq!(matches[0].1.subslot, 4);
+        assert!(formats(&device, 96000, 2, 32, false, false).is_empty());
+    }
+    #[test]
+    fn fractional_rates_do_not_drift() {
+        for (rate, interval, packets) in
+            [(44100, 125, 8000), (88200, 1000, 1000), (176400, 125, 8000)]
+        {
+            let mut clock = PacketClock::new(rate, interval);
+            assert_eq!(
+                (0..packets).map(|_| clock.next()).sum::<usize>(),
+                rate as usize
+            );
+        }
+    }
+    #[test]
+    fn invalid_feedback_cannot_overrun_endpoint() {
+        let mut clock = PacketClock::new(48000, 125);
+        assert!(!clock.feedback(&[255; 4], true, 125));
+        assert!(!clock.feedback(&[0; 4], true, 125));
+        assert!(clock.feedback(&(6u32 << 16).to_le_bytes(), true, 125));
+        assert_eq!(clock.next(), 6);
+    }
+    #[test]
+    fn untrusted_descriptors_are_bounded() {
+        for data in [vec![0, 4], vec![9, 4, 0], vec![1], vec![255; 18]] {
+            assert!(parse(&data).is_err());
+        }
+        assert!(parse(&[]).unwrap().alternates.is_empty());
+    }
+    #[test]
+    fn unknown_dsd_device_requires_explicit_dop() {
+        let a = Alternate {
+            uac2: true,
+            clock: 1,
+            channels: 2,
+            bits: 24,
+            subslot: 3,
+            pcm: true,
+            ..Default::default()
+        };
+        let device = Device {
+            alternates: vec![a],
+            ..Default::default()
+        };
+        assert!(formats(&device, 2822400, 2, 1, true, false).is_empty());
+        let f = formats(&device, 2822400, 2, 1, true, true);
+        assert_eq!(f[0].1.sample_rate, 176400);
+        assert_eq!(f[0].1.encoding, "dop");
+        assert!(formats(&device, 96000, 2, 32, false, false).is_empty());
+    }
+    #[test]
+    fn native_requires_exact_firmware_and_altsetting() {
+        let a = Alternate {
+            uac2: true,
+            alternate: 2,
+            clock: 1,
+            channels: 2,
+            subslot: 4,
+            bits: 32,
+            pcm: true,
+            ..Default::default()
+        };
+        let mut d = Device {
+            vendor: 0x16d0,
+            product: 0x071a,
+            revision: 0x0199,
+            alternates: vec![a],
+        };
+        assert_eq!(
+            formats(&d, 2822400, 2, 1, true, false)[0].1.encoding,
+            "dsd_le"
+        );
+        d.revision = 0x100;
+        assert!(formats(&d, 2822400, 2, 1, true, false).is_empty());
+    }
+}

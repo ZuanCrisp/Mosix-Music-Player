@@ -1,0 +1,17 @@
+name: spotiflac_discord
+description: Mobile Discord Social SDK bridge for playback presence.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.10.0
+dependencies:
+  flutter:
+    sdk: flutter
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.zarz.spotiflac.discord
+        pluginClass: DiscordPresencePlugin
+      ios:
+        pluginClass: DiscordPresencePlugin

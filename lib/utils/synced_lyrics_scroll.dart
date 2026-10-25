@@ -1,0 +1,111 @@
+import 'dart:math' as math;
+
+/// Symmetric list padding that lets the first and last lyric lines reach the
+/// vertical center instead of getting pinned to a viewport edge.
+double syncedLyricsCenterPadding({
+  required double viewportDimension,
+  required double estimatedLineExtent,
+  double minimumPadding = 24,
+}) {
+  return math.max(
+    minimumPadding,
+    (viewportDimension - estimatedLineExtent) / 2,
+  );
+}
+
+/// Estimated scroll offset when symmetric center padding is applied.
+double syncedLyricsEstimatedOffset({
+  required int index,
+  required double estimatedLineExtent,
+}) {
+  if (index <= 0) return 0;
+  return index * estimatedLineExtent;
+}
+
+/// Advances to the final lyric line whose timestamp is already due.
+int syncedLyricsDueLineIndex({
+  required List<Duration> lineStarts,
+  required int currentIndex,
+  required Duration position,
+}) {
+  if (lineStarts.isEmpty) return -1;
+  var dueIndex = currentIndex;
+  if (dueIndex < -1) dueIndex = -1;
+  if (dueIndex >= lineStarts.length) dueIndex = lineStarts.length - 1;
+  while (dueIndex + 1 < lineStarts.length &&
+      lineStarts[dueIndex + 1] <= position) {
+    dueIndex++;
+  }
+  return dueIndex;
+}
+
+/// Extrapolates the latest player position for the lyrics animation only.
+///
+/// The global playback state intentionally updates at a lower frequency to
+/// avoid rebuilding unrelated UI on every frame. The active lyric line uses
+/// this value to animate between those updates.
+Duration interpolatedSyncedLyricsPosition({
+  required Duration anchorPosition,
+  required Duration elapsedSinceAnchor,
+  required bool isPlaying,
+}) {
+  if (!isPlaying || elapsedSinceAnchor.isNegative) return anchorPosition;
+  return anchorPosition + elapsedSinceAnchor;
+}
+
+/// Keeps small timing corrections from making the lyric highlight jump while
+/// still applying a seek or another large position change immediately.
+Duration reconcileSyncedLyricsPosition({
+  required Duration predictedPosition,
+  required Duration reportedPosition,
+  Duration seekThreshold = const Duration(milliseconds: 750),
+}) {
+  final drift = (reportedPosition - predictedPosition).abs();
+  if (drift >= seekThreshold) return reportedPosition;
+
+  const correctionFraction = 0.25;
+  final correction =
+      ((reportedPosition - predictedPosition).inMicroseconds *
+              correctionFraction)
+          .round();
+  return predictedPosition + Duration(microseconds: correction);
+}
+
+/// Continuous progress for one timed TTML or enhanced LRC segment.
+double syncedLyricSegmentProgress({
+  required Duration position,
+  required Duration start,
+  required Duration end,
+}) {
+  if (position <= start) return 0;
+  if (position >= end || end <= start) return 1;
+  return (position - start).inMicroseconds / (end - start).inMicroseconds;
+}
+
+/// Subtle vertical emphasis relative to the normal highlighted position.
+/// Long timed segments rise further while held, then settle back to 1. This
+/// follows lyric duration, not pitch, and is deterministic on pause or seek.
+double syncedLyricSegmentLift({
+  required Duration position,
+  required Duration start,
+  required Duration end,
+}) {
+  if (end <= start) return 0;
+  final elapsed = (position - start).inMicroseconds / 1000;
+  final duration = (end - start).inMicroseconds / 1000;
+  double ease(double value) {
+    final t = value.clamp(0.0, 1.0);
+    return t * t * (3 - 2 * t);
+  }
+
+  // Start gently before the color sweep and let the movement trail it. Keep
+  // this envelope independent of word length: fast syllables must not snap
+  // upwards just because their highlight finishes in a few frames.
+  // The whole timed word shares this movement, independent of the color sweep.
+  final normalLift = ease((elapsed + 180) / 720);
+  final heldStrength = ((duration - 1000) / 1500).clamp(0.0, 1.0);
+  if (heldStrength == 0) return normalLift;
+  final rise = ease((elapsed - 400) / math.min(1200, (duration - 400) * 0.6));
+  final settle = ease((duration - elapsed) / 600);
+  return normalLift + 1.3 * heldStrength * rise * settle;
+}

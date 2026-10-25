@@ -1,0 +1,14 @@
+<resources>
+    <string name="player_widget_name">Mosix Player</string>
+    <string name="player_widget_description">Your music, artwork, and playback controls. Resize or edit to customize.</string>
+    <string name="player_widget_empty">Choose music in the app</string>
+    <string name="player_widget_play">Play</string>
+    <string name="player_widget_pause">Pause</string>
+    <string name="player_widget_previous">Previous track</string>
+    <string name="player_widget_next">Next track</string>
+    <string name="player_widget_artwork">Artwork colors</string>
+    <string name="player_widget_light">Light</string>
+    <string name="player_widget_dark">Dark</string>
+    <string name="player_widget_show_artist">Show artist name</string>
+    <string name="player_widget_save">Save widget</string>
+</resources>

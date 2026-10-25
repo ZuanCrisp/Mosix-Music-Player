@@ -1,0 +1,107 @@
+{
+  "listings": [
+    {
+      "protocol": "http",
+      "address": "https://nas.test/music/",
+      "base_url": "https://nas.test/music/",
+      "path": "",
+      "body": "<a href='../'>parent</a><a href='Folder/'>folder</a><a href='A%20%2B%23%25.flac'>audio</a><a href='音.flac'>music</a><a href='nested/song.flac'>nested</a><a href='https://other.test/music/b.flac'>other</a><a href='bad.flac?q=1'>query</a><a href='A%20%2B%23%25.flac'>duplicate</a>",
+      "entries": [
+        {"path": "Folder/", "name": "Folder", "directory": true, "size": null},
+        {"path": "A +#%.flac", "name": "A +#%.flac", "directory": false, "size": null},
+        {"path": "音.flac", "name": "音.flac", "directory": false, "size": null}
+      ]
+    },
+    {
+      "protocol": "http",
+      "address": "https://nas.test/music/",
+      "base_url": "https://nas.test/music/",
+      "path": "",
+      "body": "<a href='ib.flac'>i</a><a href='İA.flac'>dotted capital i</a><a href='%EE%80%80.flac'>private use</a><a href='%F0%90%80%80.flac'>supplementary plane</a>",
+      "entries": [
+        {"path": "İA.flac", "name": "İA.flac", "directory": false, "size": null},
+        {"path": "ib.flac", "name": "ib.flac", "directory": false, "size": null},
+        {"path": "𐀀.flac", "name": "𐀀.flac", "directory": false, "size": null},
+        {"path": ".flac", "name": ".flac", "directory": false, "size": null}
+      ]
+    },
+    {
+      "protocol": "http",
+      "address": "https://nas.test/music/",
+      "base_url": "https://nas.test/music/",
+      "path": "",
+      "body": "<a href='Folder\\'>directory</a><a href=' song.flac '>edge spaces</a><a href='bad%zz.flac'>literal percent</a><a href='nested/%2E%2E/child.flac'>normalized child</a><a href='%2E%2E/outside.flac'>outside</a>",
+      "entries": [
+        {"path": "Folder/", "name": "Folder", "directory": true, "size": null},
+        {"path": " song.flac ", "name": " song.flac ", "directory": false, "size": null},
+        {"path": "bad%zz.flac", "name": "bad%zz.flac", "directory": false, "size": null},
+        {"path": "child.flac", "name": "child.flac", "directory": false, "size": null}
+      ]
+    },
+    {
+      "protocol": "webdav",
+      "address": "https://nas.test/dav/",
+      "base_url": "https://nas.test/dav/Album/",
+      "path": "Album/",
+      "body": "<d:multistatus xmlns:d='DAV:'><d:response><d:href>/dav/Album/A%20B.flac</d:href><d:propstat><d:prop><d:getcontentlength>123</d:getcontentlength></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response><d:response><d:href>/dav/Album/Missing.flac</d:href><d:propstat><d:prop/><d:status>HTTP/1.1 404 Not Found</d:status></d:propstat></d:response></d:multistatus>",
+      "entries": [
+        {"path": "Album/A B.flac", "name": "A B.flac", "directory": false, "size": 123}
+      ]
+    },
+    {
+      "protocol": "http",
+      "address": "https://nas.test/music/",
+      "base_url": "https://nas.test/music/",
+      "path": "",
+      "body": "<a href='a%2fb.flac'>nested</a><a href='https://user@nas.test/music/private.flac'>credentials</a><a href='ok.flac#part'>fragment</a>",
+      "entries": []
+    },
+    {
+      "protocol": "webdav",
+      "address": "https://nas.test/dav/",
+      "base_url": "https://nas.test/dav/Rock%20&%20Roll/",
+      "path": "Rock & Roll/",
+      "body": "<d:multistatus xmlns:d='DAV:'><d:response><d:href>/dav/Rock%20%26%20Roll/A%20%26%20B.flac</d:href><d:propstat><d:prop><d:getcontentlength>123</d:getcontentlength></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response><d:response><d:href>/dav/Rock%20&amp;%20Roll/A%20%26%20B.flac</d:href><d:propstat><d:prop><d:getcontentlength>123</d:getcontentlength></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response><d:response><d:href>/dav/Rock%20%26%20Roll/a%2Fb.flac</d:href><d:propstat><d:prop/><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response><d:response><d:href>/dav/Rock%20%26%20Roll%2FOutside/secret.flac</d:href><d:propstat><d:prop/><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response><d:response><d:href>/dav/Rock%20%26%20Roller/secret.flac</d:href><d:propstat><d:prop/><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response></d:multistatus>",
+      "entries": [
+        {"path": "Rock & Roll/A & B.flac", "name": "A & B.flac", "directory": false, "size": 123}
+      ]
+    },
+    {
+      "protocol": "webdav",
+      "address": "https://nas.test/dav/Rock%20%26%20Roll/",
+      "base_url": "https://nas.test/dav/Rock%20%26%20Roll/",
+      "path": "",
+      "body": "<d:multistatus xmlns:d='DAV:'><d:response><d:href>/dav/Rock%20&amp;%20Roll/A%20%26%20B.flac</d:href><d:propstat><d:prop><d:getcontentlength>123</d:getcontentlength></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response></d:multistatus>",
+      "entries": [
+        {"path": "A & B.flac", "name": "A & B.flac", "directory": false, "size": 123}
+      ]
+    }
+  ],
+  "playlists": [
+    {
+      "format": "csv", "id_seed": 42,
+      "body": "title,artist\nA,B\n\nC,D",
+      "tracks": [
+        {"id": "csv_42_1", "name": "A", "artistName": "B", "albumName": "Unknown Album", "duration": 0, "isrc": null, "coverUrl": null},
+        {"id": "csv_42_3", "name": "C", "artistName": "D", "albumName": "Unknown Album", "duration": 0, "isrc": null, "coverUrl": null}
+      ]
+    },
+    {
+      "format": "csv", "id_seed": 10,
+      "body": "\r\nTrack Name,Artist Name(s),Album Name,Track URI,ISRC\r\n\"Song, \"\"One\"\"\",Artist,Album,spotify:track:abc,AAABC1200001\r\nSecond,,Album,,\r\n",
+      "tracks": [
+        {"id": "abc", "name": "Song, \"One\"", "artistName": "Artist", "albumName": "Album", "duration": 0, "isrc": "AAABC1200001", "coverUrl": null},
+        {"id": "", "name": "Second", "artistName": "", "albumName": "Album", "duration": 0, "isrc": "", "coverUrl": null}
+      ]
+    },
+    {
+      "format": "m3u", "id_seed": 100,
+      "body": "#EXTM3U\r#EXTINF:180.5,Artist - Song - Mix\r#comment\r\nfolder/a.flac\nMusic/02 Demo.flac\n#EXTINF:-1,\nx/.hidden",
+      "tracks": [
+        {"id": "m3u_100_0", "name": "Song - Mix", "artistName": "Artist", "albumName": "Unknown Album", "duration": 181, "isrc": null, "coverUrl": null},
+        {"id": "m3u_100_1", "name": "02 Demo", "artistName": "Unknown Artist", "albumName": "Unknown Album", "duration": 0, "isrc": null, "coverUrl": null},
+        {"id": "m3u_100_2", "name": ".hidden", "artistName": "Unknown Artist", "albumName": "Unknown Album", "duration": 0, "isrc": null, "coverUrl": null}
+      ]
+    }
+  ]
+}

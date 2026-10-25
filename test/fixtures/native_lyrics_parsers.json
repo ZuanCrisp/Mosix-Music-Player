@@ -1,0 +1,1407 @@
+[
+  {
+    "name": "untimed provider results retain writer credits",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[by:Example app (source: extension:example)]\nFirst line\nSecond line\nWritten by: Example Writer"
+    },
+    "expected": {
+      "synced": false,
+      "wordSynced": false,
+      "plainText": "First line\nSecond line",
+      "writers": "Example Writer",
+      "provider": "example",
+      "lines": []
+    }
+  },
+  {
+    "name": "all-zero provider placeholders keep plain lyrics and credits",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[ti:Example]\n[by:Example app (source: extension:example)]\n[00:00.00]First line\r\n[00:00.000]Second line\r[00:00:000]Third line\n[00:00.00]Written by: Example Writer"
+    },
+    "expected": {
+      "synced": false,
+      "wordSynced": false,
+      "plainText": "First line\nSecond line\nThird line",
+      "writers": "Example Writer",
+      "provider": "example",
+      "lines": []
+    }
+  },
+  {
+    "name": "offsets cannot manufacture timing from zero word placeholders",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[offset:-500]\n[00:00.00]<00:00.00>First <00:00.00>line<00:00.00>\n[00:00.00]Second line"
+    },
+    "expected": {
+      "synced": false,
+      "wordSynced": false,
+      "plainText": "First line\nSecond line",
+      "writers": null,
+      "provider": null,
+      "lines": []
+    }
+  },
+  {
+    "name": "empty outro timestamps are not evidence of synchronized lyrics",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[00:00.00]First line\n[00:00.00]Second line\n[01:00.00]"
+    },
+    "expected": {
+      "synced": false,
+      "wordSynced": false,
+      "plainText": "First line\nSecond line",
+      "writers": null,
+      "provider": null,
+      "lines": []
+    }
+  },
+  {
+    "name": "writer credits do not synchronize zero-timed lyric rows",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[00:00.00]First line\n[00:00.00]Second line\n[00:03.00]Written by: Example Writer"
+    },
+    "expected": {
+      "synced": false,
+      "wordSynced": false,
+      "plainText": "First line\nSecond line",
+      "writers": "Example Writer",
+      "provider": null,
+      "lines": []
+    }
+  },
+  {
+    "name": "TTML placeholder zero intervals remain plain lyrics",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<tt><body><p begin=\"0s\" end=\"0s\">First line</p><p begin=\"0s\" end=\"0s\">Second line</p></body></tt>"
+    },
+    "expected": {
+      "synced": false,
+      "wordSynced": false,
+      "plainText": "First line\nSecond line",
+      "writers": null,
+      "provider": null,
+      "lines": []
+    }
+  },
+  {
+    "name": "empty",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": ""
+    },
+    "expected": {
+      "synced": false,
+      "wordSynced": false,
+      "plainText": "",
+      "writers": null,
+      "provider": null,
+      "lines": []
+    }
+  },
+  {
+    "name": "plain IDs and Unicode",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "﻿[ar:Performer]\r[by:Uploader]\r\nV2: 日本語\n\nPlain text"
+    },
+    "expected": {
+      "synced": false,
+      "wordSynced": false,
+      "plainText": "日本語\nPlain text",
+      "writers": null,
+      "provider": null,
+      "lines": []
+    }
+  },
+  {
+    "name": "voices words supplements offset",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[offset:100]\n[x-romaji:2000:U2Vjb25kIHJlYWRpbmc=]\n[x-translation:2000:U2Vjb25kIHRyYW5zbGF0aW9u]\n[00:01.00]v1:<00:01.00>First<00:03.00>\n[00:02.00]<00:02.00> V2: Second<00:04.00>\n[00:04.00]v3:Third\n[00:06.00]v12:Twelfth\n[00:08.00]The v2: label stays inside a sentence"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": true,
+      "plainText": "First\nSecond\nThird\nTwelfth\nThe v2: label stays inside a sentence",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 900,
+          "endMs": 2900,
+          "text": "First",
+          "words": [
+            {
+              "timeMs": 900,
+              "endMs": 2900,
+              "text": "First"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": {
+            "id": "v1",
+            "index": 0,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 1900,
+          "endMs": 3900,
+          "text": "Second",
+          "words": [
+            {
+              "timeMs": 1900,
+              "endMs": 3900,
+              "text": "Second"
+            }
+          ],
+          "romanization": "Second reading",
+          "romanizationWords": [],
+          "translation": "Second translation",
+          "isBackground": false,
+          "vocalGroup": 1,
+          "voice": {
+            "id": "v2",
+            "index": 1,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 3900,
+          "endMs": null,
+          "text": "Third",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 2,
+          "voice": {
+            "id": "v3",
+            "index": 2,
+            "isGroup": true
+          }
+        },
+        {
+          "timeMs": 5900,
+          "endMs": null,
+          "text": "Twelfth",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 3,
+          "voice": {
+            "id": "v12",
+            "index": 11,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 7900,
+          "endMs": null,
+          "text": "The v2: label stays inside a sentence",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 4,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "background groups sorting",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[offset:100]\n[00:01.00]v2:<00:01.00>Lead<00:06.00>\n[bg:<00:04.00>Echo<00:05.00>]\n[bg:[00:05.00]<00:05.00>Again<00:06.00>]\n[00:03.00]v1:<00:03.00>Other lead<00:06.00>"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": true,
+      "plainText": "Lead\nEcho\nAgain\nOther lead",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 900,
+          "endMs": 5900,
+          "text": "Lead",
+          "words": [
+            {
+              "timeMs": 900,
+              "endMs": 5900,
+              "text": "Lead"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": {
+            "id": "v2",
+            "index": 1,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 2900,
+          "endMs": 5900,
+          "text": "Other lead",
+          "words": [
+            {
+              "timeMs": 2900,
+              "endMs": 5900,
+              "text": "Other lead"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 3,
+          "voice": {
+            "id": "v1",
+            "index": 0,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 3900,
+          "endMs": 4900,
+          "text": "Echo",
+          "words": [
+            {
+              "timeMs": 3900,
+              "endMs": 4900,
+              "text": "Echo"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": true,
+          "vocalGroup": 0,
+          "voice": {
+            "id": "v2",
+            "index": 1,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 4900,
+          "endMs": 5900,
+          "text": "Again",
+          "words": [
+            {
+              "timeMs": 4900,
+              "endMs": 5900,
+              "text": "Again"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": true,
+          "vocalGroup": 0,
+          "voice": {
+            "id": "v2",
+            "index": 1,
+            "isGroup": false
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "repeated line and empty end tags",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[00:08.10][00:01.9]<00:01.00>First <00:00.90><00:01.30><00:01.40><00:02.00>second<00:02.00>"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": true,
+      "plainText": "First second",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1900,
+          "endMs": 2000,
+          "text": "First second",
+          "words": [
+            {
+              "timeMs": 1000,
+              "endMs": 1300,
+              "text": "First "
+            },
+            {
+              "timeMs": 2000,
+              "endMs": 2000,
+              "text": "second"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 1,
+          "voice": null
+        },
+        {
+          "timeMs": 8100,
+          "endMs": 2000,
+          "text": "First second",
+          "words": [
+            {
+              "timeMs": 1000,
+              "endMs": 1300,
+              "text": "First "
+            },
+            {
+              "timeMs": 2000,
+              "endMs": 2000,
+              "text": "second"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "stable simultaneous voice order",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[00:02]v2:Guest\n[00:01]Lead\n[00:02]v1:Lead again\n[bg:echo]"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "Guest\nLead\nLead again\necho",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "Lead",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 1,
+          "voice": null
+        },
+        {
+          "timeMs": 2000,
+          "endMs": null,
+          "text": "Guest",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": {
+            "id": "v2",
+            "index": 1,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 2000,
+          "endMs": null,
+          "text": "Lead again",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 2,
+          "voice": {
+            "id": "v1",
+            "index": 0,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 2000,
+          "endMs": null,
+          "text": "echo",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": true,
+          "vocalGroup": 2,
+          "voice": {
+            "id": "v1",
+            "index": 0,
+            "isGroup": false
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "boundary collision supplements",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[x-romaji:1009:TmVhcg==]\n[x-romaji:1010:RXhhY3Q=]\n[x-romaji:1001:RnVydGhlcg==]\n[x-translation:2005:VGll]\n[x-translation:2990:Qm91bmRhcnk=]\n[x-translation:4011:VG9vIGZhcg==]\n[00:01.010]A\n[00:02.000]B\n[00:02.010]C\n[00:03.000]D\n[00:04]E"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "A\nB\nC\nD\nE",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1010,
+          "endMs": null,
+          "text": "A",
+          "words": [],
+          "romanization": "Exact",
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        },
+        {
+          "timeMs": 2000,
+          "endMs": null,
+          "text": "B",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": "Tie",
+          "isBackground": false,
+          "vocalGroup": 1,
+          "voice": null
+        },
+        {
+          "timeMs": 2010,
+          "endMs": null,
+          "text": "C",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 2,
+          "voice": null
+        },
+        {
+          "timeMs": 3000,
+          "endMs": null,
+          "text": "D",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": "Boundary",
+          "isBackground": false,
+          "vocalGroup": 3,
+          "voice": null
+        },
+        {
+          "timeMs": 4000,
+          "endMs": null,
+          "text": "E",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 4,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "romanized timed words offset",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[offset:109]\n[x-romaji-words:1009:W3sidGV4dCI6IlJvIiwic3RhcnRUaW1lTXMiOjEwMDksImVuZFRpbWVNcyI6MTEwN30seyJ0ZXh0IjoibWEgIiwic3RhcnRUaW1lTXMiOjExMDcsImVuZFRpbWVNcyI6MTMwN30seyJ0ZXh0Ijoibml6ZWQiLCJzdGFydFRpbWVNcyI6MjAwMywiZW5kVGltZU1zIjoyNDk3fV0=]\n[x-romaji:1009:Um9tYSBuaXplZA==]\n[00:01.01]Original"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "Original",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 901,
+          "endMs": null,
+          "text": "Original",
+          "words": [],
+          "romanization": "Roma nized",
+          "romanizationWords": [
+            {
+              "timeMs": 900,
+              "endMs": 998,
+              "text": "Ro"
+            },
+            {
+              "timeMs": 998,
+              "endMs": 1198,
+              "text": "ma "
+            },
+            {
+              "timeMs": 1894,
+              "endMs": 2388,
+              "text": "nized"
+            }
+          ],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "romanization mismatched words",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[x-romaji:1000:Um9tYW5pemVk]\n[x-romaji-words:1000:W3sidGV4dCI6Ik90aGVyIiwic3RhcnRUaW1lTXMiOjEwMDAsImVuZFRpbWVNcyI6MTMwMH1d]\n[00:01]Original"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "Original",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "Original",
+          "words": [],
+          "romanization": "Romanized",
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "only romanization timings remain hidden",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[x-romaji-words:1000:W3sidGV4dCI6IlJvIiwic3RhcnRUaW1lTXMiOjEwMDAsImVuZFRpbWVNcyI6MTMwMH1d]\n[00:01]Original"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "Original",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "Original",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "corrupt optional metadata",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[x-romaji:1000:%%%]\n[x-romaji:1000:/w==]\n[x-translation:bad:YQ==]\n[x-translation:1000:]\n[x-romaji-words:1000:W251bGxd]\n[00:01]Original"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "Original",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "Original",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "supplement base64 normalization",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[x-romaji:1000:Um8]\n[x-translation:1000:44GT44KT44Gr44Gh44Gv]\n[00:01]Original"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "Original",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "Original",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": "こんにちは",
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "unicode newline supplement first wins",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[x-translation:1000:5pel5pys6KqeIF0KU2Vjb25kIGxpbmU=]\n[x-translation:1000:SWdub3JlZA==]\n[00:01]Original"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "Original",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "Original",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": "日本語 ]\nSecond line",
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "negative offset and clamped timing",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[offset:2500]\n[00:01]<00:01>Word<00:02>\n[00:03]Next"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": true,
+      "plainText": "Word\nNext",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 0,
+          "endMs": 0,
+          "text": "Word",
+          "words": [
+            {
+              "timeMs": 0,
+              "endMs": 0,
+              "text": "Word"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        },
+        {
+          "timeMs": 500,
+          "endMs": null,
+          "text": "Next",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 1,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "credits explicit trailer",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[au:Existing Writer]\n[x-provider:extension:stored]\n[00:04]Written By: Ignored Writer\n[00:01]Last lyric"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "Last lyric",
+      "writers": "Existing Writer",
+      "provider": "stored",
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "Last lyric",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 1,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "credits via API",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[by:SpotiFLAC-Mobile via Example Lyrics API (source: upstream)]\n[00:01]First line\n[00:04]Written By: Example Writer"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "First line",
+      "writers": "Example Writer",
+      "provider": "Example Lyrics",
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "First line",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "credits source fallback",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "[by:SpotiFLAC-Mobile (source: extension:example.lyrics)]\n[00:01]Lyric"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "Lyric",
+      "writers": null,
+      "provider": "example.lyrics",
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "Lyric",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "TTML namespaced agent inheritance",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<t:tt xmlns:t=\"http://www.w3.org/ns/ttml\" xmlns:m=\"http://www.w3.org/ns/ttml#metadata\"><t:head><t:metadata><m:agent xml:id=\"lead\" type=\"person\"/><m:agent xml:id=\"guest\" type=\"person\"/><m:agent xml:id=\"v3\" type=\"group\"/><m:agent xml:id=\"third\" type=\"person\"/></t:metadata></t:head><t:body><t:div m:agent=\"lead\"><t:p begin=\"1s\" end=\"3s\">Lead</t:p><t:p begin=\"3s\" end=\"5s\" m:agent=\"guest\">Guest</t:p><t:p begin=\"5s\" end=\"7s\" m:agent=\"v3\">Together</t:p><t:p begin=\"7s\" end=\"9s\" m:agent=\"third\">Third</t:p></t:div></t:body></t:tt>"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "Lead\nGuest\nTogether\nThird",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": 3000,
+          "text": "Lead",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": {
+            "id": "lead",
+            "index": 0,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 3000,
+          "endMs": 5000,
+          "text": "Guest",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 1,
+          "voice": {
+            "id": "guest",
+            "index": 1,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 5000,
+          "endMs": 7000,
+          "text": "Together",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 2,
+          "voice": {
+            "id": "v3",
+            "index": 2,
+            "isGroup": true
+          }
+        },
+        {
+          "timeMs": 7000,
+          "endMs": 9000,
+          "text": "Third",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 3,
+          "voice": {
+            "id": "third",
+            "index": 2,
+            "isGroup": false
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "TTML runs voices syllable grouping",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<tt xmlns=\"http://www.w3.org/ns/ttml\" xmlns:m=\"http://www.w3.org/ns/ttml#metadata\"><head><metadata><m:agent xml:id=\"v1\" type=\"person\"/><m:agent xml:id=\"v2\" type=\"person\"/></metadata></head><body><div><p begin=\"1s\" end=\"5s\"><span m:agent=\"v1\"><span begin=\"1s\" end=\"2s\">日本</span><span begin=\"2s\" end=\"3s\">語</span></span><span m:agent=\"v2\" begin=\"2s\" end=\"4s\">Reply</span><span m:agent=\"v1\" m:role=\"x-bg\" begin=\"2s\" end=\"3s\">Echo</span></p></div></body></tt>"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": true,
+      "plainText": "日本語\nReply\nEcho",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": 3000,
+          "text": "日本語",
+          "words": [
+            {
+              "timeMs": 1000,
+              "endMs": 2000,
+              "text": "日本"
+            },
+            {
+              "timeMs": 2000,
+              "endMs": 3000,
+              "text": "語"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": {
+            "id": "v1",
+            "index": 0,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 2000,
+          "endMs": 4000,
+          "text": "Reply",
+          "words": [
+            {
+              "timeMs": 2000,
+              "endMs": 4000,
+              "text": "Reply"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 1,
+          "voice": {
+            "id": "v2",
+            "index": 1,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 2000,
+          "endMs": 3000,
+          "text": "Echo",
+          "words": [
+            {
+              "timeMs": 2000,
+              "endMs": 3000,
+              "text": "Echo"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": true,
+          "vocalGroup": 0,
+          "voice": {
+            "id": "v1",
+            "index": 0,
+            "isGroup": false
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "TTML partial timing retains text",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<tt><body><p begin=\"1s\" end=\"5s\">Untimed <span begin=\"2s\" end=\"3s\">timed</span> ending</p></body></tt>"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "Untimed timed ending",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": 5000,
+          "text": "Untimed timed ending",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "TTML paragraph end and word end separate",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<tt xmlns=\"http://www.w3.org/ns/ttml\"><body><div><p begin=\"00:01.009\" end=\"00:05.000\">\n<span begin=\"00:01.009\" end=\"00:01.307\">First</span>\n<span begin=\"00:02.003\" end=\"00:02.497\">second</span>\n</p></div></body></tt>"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": true,
+      "plainText": "First second",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1009,
+          "endMs": 5000,
+          "text": "First second",
+          "words": [
+            {
+              "timeMs": 1009,
+              "endMs": 1307,
+              "text": "First "
+            },
+            {
+              "timeMs": 2003,
+              "endMs": 2497,
+              "text": "second"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "TTML duplicate songwriters nested entity text",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<tt xmlns:meta=\"urn:example\"><head><meta:songwriter>Example &amp; Writer</meta:songwriter><meta:songwriter>Second <span>Writer</span></meta:songwriter><meta:songwriter>Example &amp; Writer</meta:songwriter></head><body><p begin=\"00:01.00\">Lyric</p></body></tt>"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "Lyric",
+      "writers": "Example & Writer, Second Writer",
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "Lyric",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "TTML invalid missing paragraph timing falls to plain",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<tt><body><p>No time</p></body></tt>"
+    },
+    "expected": {
+      "synced": false,
+      "wordSynced": false,
+      "plainText": "<tt><body><p>No time</p></body></tt>",
+      "writers": null,
+      "provider": null,
+      "lines": []
+    }
+  },
+  {
+    "name": "TTML CDATA vocals skipped but songwriter retained",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<tt><head><songwriter><![CDATA[Writer & guest]]></songwriter></head><body><p begin=\"1s\"><![CDATA[Skipped]]>Visible<![CDATA[Skipped]]> again</p></body></tt>"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "Visible again",
+      "writers": "Writer & guest",
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "Visible again",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "TTML malformed syntax falls to plain",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<tt invalid"
+    },
+    "expected": {
+      "synced": false,
+      "wordSynced": false,
+      "plainText": "<tt invalid",
+      "writers": null,
+      "provider": null,
+      "lines": []
+    }
+  },
+  {
+    "name": "TTML bare ampersand and unknown entities stay literal",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<tt><head><songwriter>Writer & Guest &unknown;</songwriter></head><body><p begin=\"1s\">A & B &unknown; &amp; C</p></body></tt>"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "A & B &unknown; & C",
+      "writers": "Writer & Guest &unknown;",
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "A & B &unknown; & C",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "TTML DOCTYPE accepts declarations without expanding custom entities",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<!DOCTYPE tt [<!ENTITY custom \"Expanded\">]><tt xmlns=\"http://www.w3.org/ns/ttml\"><body><p begin=\"1s\">&custom; &amp; unchanged</p></body></tt>"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "&custom; & unchanged",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "&custom; & unchanged",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "TTML Unicode whitespace regex retains NEL within vocals",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<tt><body><p begin=\"1s\">AB C</p></body></tt>"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": false,
+      "plainText": "AB C",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": null,
+          "text": "AB C",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "TTML clocks negative and hours",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<tt><body><p begin=\"-1.25s\" end=\"0.5s\">Negative</p><p begin=\"01:02:03.456\" end=\"01:02:04.123\"><span begin=\"01:02:03.456\" end=\"01:02:03.455\">Word</span></p><p begin=\"00:07.0005\" end=\"8s\">Rounded</p></body></tt>"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": true,
+      "plainText": "Negative\nWord\nRounded",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": -1250,
+          "endMs": 500,
+          "text": "Negative",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": null
+        },
+        {
+          "timeMs": 7001,
+          "endMs": 8000,
+          "text": "Rounded",
+          "words": [],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 2,
+          "voice": null
+        },
+        {
+          "timeMs": 3723456,
+          "endMs": 3724123,
+          "text": "Word",
+          "words": [
+            {
+              "timeMs": 3723456,
+              "endMs": null,
+              "text": "Word"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 1,
+          "voice": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "TTML same-voice fragments merge across interruption",
+    "request": {
+      "operation": "parse_lyrics",
+      "raw": "<tt xmlns:m=\"http://www.w3.org/ns/ttml#metadata\"><body><p begin=\"1s\" end=\"5s\"><span m:agent=\"v1\" begin=\"1s\">A </span><span m:agent=\"v2\" begin=\"2s\">B</span><span m:agent=\"v1\" begin=\"3s\"> C</span><span m:role=\"x-bg\" m:agent=\"v1\" begin=\"2s\">Echo</span></p></body></tt>"
+    },
+    "expected": {
+      "synced": true,
+      "wordSynced": true,
+      "plainText": "A C\nB\nEcho",
+      "writers": null,
+      "provider": null,
+      "lines": [
+        {
+          "timeMs": 1000,
+          "endMs": 5000,
+          "text": "A C",
+          "words": [
+            {
+              "timeMs": 1000,
+              "endMs": null,
+              "text": "A "
+            },
+            {
+              "timeMs": 3000,
+              "endMs": null,
+              "text": "C"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 0,
+          "voice": {
+            "id": "v1",
+            "index": 0,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 2000,
+          "endMs": 5000,
+          "text": "B",
+          "words": [
+            {
+              "timeMs": 2000,
+              "endMs": null,
+              "text": "B"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": false,
+          "vocalGroup": 1,
+          "voice": {
+            "id": "v2",
+            "index": 1,
+            "isGroup": false
+          }
+        },
+        {
+          "timeMs": 2000,
+          "endMs": 5000,
+          "text": "Echo",
+          "words": [
+            {
+              "timeMs": 2000,
+              "endMs": null,
+              "text": "Echo"
+            }
+          ],
+          "romanization": null,
+          "romanizationWords": [],
+          "translation": null,
+          "isBackground": true,
+          "vocalGroup": 0,
+          "voice": {
+            "id": "v1",
+            "index": 0,
+            "isGroup": false
+          }
+        }
+      ]
+    }
+  }
+]

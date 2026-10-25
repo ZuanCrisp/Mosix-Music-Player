@@ -1,0 +1,31 @@
+name: Prepare Discord Social SDK
+description: Decrypt, verify and stage the pinned Android and iOS SDK.
+inputs:
+  passphrase:
+    description: Decryption key supplied from an Actions repository secret.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Ensure GnuPG is available
+      shell: bash
+      run: |
+        if ! command -v gpg >/dev/null 2>&1; then
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            brew install gnupg
+          else
+            echo "GnuPG is required to prepare the Discord SDK." >&2
+            exit 1
+          fi
+        fi
+
+    - name: Decrypt, verify and stage SDK
+      shell: bash
+      env:
+        DISCORD_MOBILE_SDK_PASSPHRASE: ${{ inputs.passphrase }}
+      run: |
+        set -euo pipefail
+        umask 077
+        sdk_dir="$(python3 scripts/prepare_discord_sdk.py)"
+        bash scripts/setup_discord_sdk.sh "$sdk_dir"
+        printf 'MOSIX_DISCORD_SDK=1\n' >> "$GITHUB_ENV"

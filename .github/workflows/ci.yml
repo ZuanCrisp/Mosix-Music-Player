@@ -1,0 +1,333 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      dart: ${{ steps.filter.outputs.dart }}
+      android: ${{ steps.filter.outputs.android }}
+      ios: ${{ steps.filter.outputs.ios }}
+      rust: ${{ steps.filter.outputs.rust }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Filter paths
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            dart:
+              - 'third_party/audio_service/**'
+              - 'third_party/spotiflac_discord/**'
+              - 'lib/**'
+              - 'test/**'
+              - 'android/app/src/test/resources/**'
+              - 'assets/**'
+              - 'pubspec.yaml'
+              - 'pubspec.lock'
+              - 'analysis_options.yaml'
+              - 'l10n.yaml'
+              - '.fvmrc'
+              - '.github/workflows/ci.yml'
+            rust:
+              - 'rust_backend/**'
+              - 'scripts/*rust*.sh'
+              - 'android/gradlew'
+              - 'android/gradle/wrapper/**'
+              - '.github/workflows/ci.yml'
+            ios:
+              - 'third_party/audio_service/**'
+              - 'third_party/spotiflac_discord/**'
+              - 'scripts/setup_discord_sdk.sh'
+              - 'scripts/prepare_discord_sdk.py'
+              - 'scripts/test_prepare_discord_sdk.py'
+              - '.github/actions/discord-sdk/**'
+              - 'third_party/discord/*.zip.gpg'
+              - 'ios/**'
+              - 'scripts/build_ios.sh'
+              - 'scripts/check_backend_ios.py'
+              - 'scripts/test_check_backend_ios.py'
+              - 'lib/**'
+              - 'assets/**'
+              - 'pubspec.yaml'
+              - 'pubspec.lock'
+              - 'l10n.yaml'
+              - '.fvmrc'
+              - '.github/workflows/ci.yml'
+            android:
+              - 'third_party/audio_service/**'
+              - 'third_party/spotiflac_discord/**'
+              - 'scripts/setup_discord_sdk.sh'
+              - 'scripts/prepare_discord_sdk.py'
+              - 'scripts/test_prepare_discord_sdk.py'
+              - '.github/actions/discord-sdk/**'
+              - 'third_party/discord/*.zip.gpg'
+              - 'android/**'
+              - 'rust_backend/**'
+              - 'scripts/build_android.sh'
+              - 'scripts/build_rust_backend.sh'
+              - 'scripts/check_backend_apk.py'
+              - 'scripts/test_check_backend_apk.py'
+              - 'lib/**'
+              - 'assets/**'
+              - 'pubspec.yaml'
+              - 'pubspec.lock'
+              - 'l10n.yaml'
+              - '.fvmrc'
+              - '.github/workflows/ci.yml'
+
+  flutter:
+    name: Flutter analyze & test
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.dart == 'true'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: "stable"
+          flutter-version-file: .fvmrc
+          cache: true
+
+      - name: Cache pub dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Install media test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          ffmpeg -version
+          ffprobe -version
+
+      - name: Run tests
+        run: flutter test
+
+  rust:
+    name: Rust checks & Android libraries
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Java for Android SDK tools
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: "temurin"
+          java-version: "25"
+
+      - name: Activate pinned Rust toolchain
+        working-directory: rust_backend
+        run: rustup show
+
+      - name: Install C binding generator dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libclang-dev
+
+      - name: Rust formatting, Clippy and unit tests
+        run: bash scripts/check_rust_backend.sh
+
+      - name: Install Android NDK
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;30.0.16248370"'
+
+      - name: Build Android ARM32 and ARM64 libraries
+        run: ANDROID_NDK_HOME="$ANDROID_HOME/ndk/30.0.16248370" bash scripts/build_rust_backend.sh android
+
+  rust-ios:
+    name: Rust iOS libraries & release application
+    runs-on: macos-latest
+    needs: changes
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ios == 'true'
+    env:
+      MOSIX_DISCORD_SDK: "0"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Activate pinned Rust toolchain
+        working-directory: rust_backend
+        run: rustup show
+
+      - name: Build iOS device and universal simulator XCFramework
+        run: bash scripts/build_rust_backend.sh ios
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: "stable"
+          flutter-version-file: .fvmrc
+          cache: true
+
+      - name: Prepare pinned Discord SDK
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: ./.github/actions/discord-sdk
+        with:
+          passphrase: ${{ secrets.DISCORD_MOBILE_SDK_PASSPHRASE }}
+
+      - name: Configure Rust application pods
+        run: |
+          flutter pub get
+          cd ios
+          pod install
+
+      - name: Build and audit Rust iOS release application
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_check_backend_ios.py'
+          flutter build ios --release --no-codesign --target lib/main.dart
+          if [[ "$MOSIX_DISCORD_SDK" == "1" ]]; then
+            test -f build/ios/iphoneos/Runner.app/Frameworks/discord_partner_sdk.framework/discord_partner_sdk
+            test -f build/ios/iphoneos/Runner.app/Frameworks/spotiflac_discord.framework/Discord-License-Notices.txt
+          fi
+          python3 scripts/check_backend_ios.py build/ios/iphoneos/Runner.app \
+            --backend rust --archs arm64 --platform ios --release
+
+  android:
+    name: Android Rust builds & native tests
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
+    env:
+      MOSIX_DISCORD_SDK: "0"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Java
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: "temurin"
+          java-version: "25"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: "stable"
+          flutter-version-file: .fvmrc
+          cache: true
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          gradle-version: "9.8.1"
+          # Cache public dependencies, not transforms of the decrypted SDK.
+          gradle-home-cache-includes: |
+            caches/modules-2
+            notifications
+
+      - name: Install Android SDK & NDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "ndk;30.0.16248370" \
+            "platforms;android-37.0" \
+            "build-tools;37.0.0" \
+            "cmake;4.1.2"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/30.0.16248370" >> "$GITHUB_ENV"
+
+      - name: Test SDK preparation, release selection and APK audits
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_prepare_discord_sdk.py'
+          python3 -m unittest discover -s scripts -p 'test_build_android.py'
+          python3 -m unittest discover -s scripts -p 'test_check_backend_apk.py'
+
+      # Fork PRs cannot access repository secrets and exercise the Lite build.
+      - name: Prepare pinned Discord SDK
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: ./.github/actions/discord-sdk
+        with:
+          passphrase: ${{ secrets.DISCORD_MOBILE_SDK_PASSPHRASE }}
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Configure Flutter SDK for Gradle
+        run: echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+
+      - name: Install Rust application build and media test prerequisites
+        run: |
+          cd rust_backend
+          rustup show
+          sudo apt-get update
+          sudo apt-get install -y libclang-dev ffmpeg
+          ffmpeg -version
+          echo "MOSIX_TEST_FFMPEG=$(command -v ffmpeg)" >> "$GITHUB_ENV"
+
+      - name: Package Rust application and run native unit tests
+        run: gradle -p android :app:assembleDebug :app:testDebugUnitTest
+
+      - name: Build Rust release application
+        run: |
+          if [[ "$MOSIX_DISCORD_SDK" == "1" ]]; then
+            bash scripts/build_android.sh --production --target lib/main.dart
+          else
+            bash scripts/build_android.sh --lite --target lib/main.dart
+          fi
+
+      - name: Verify Rust release APK payloads
+        run: |
+          audit_flags=()
+          if [[ "$MOSIX_DISCORD_SDK" == "1" ]]; then
+            audit_flags+=(--discord-sdk)
+          fi
+          python3 scripts/check_backend_apk.py \
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+            --backend rust --abis arm64-v8a "${audit_flags[@]}"
+          python3 scripts/check_backend_apk.py \
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
+            --backend rust --abis armeabi-v7a "${audit_flags[@]}"
+          # PR builds use Gradle's test key; production signing stays in Release.
+          for abi in arm64-v8a armeabi-v7a; do
+            "$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --verbose \
+              "build/app/outputs/flutter-apk/app-${abi}-release.apk"
+          done
+
+      - name: Record Android symbol provenance
+        run: |
+          test -s build/symbols/android/app.android-arm64.symbols
+          test -s build/symbols/android/app.android-arm.symbols
+          test -s build/app/outputs/mapping/release/mapping.txt
+          git rev-parse HEAD > build/symbols/android/commit.txt
+          sha256sum build/app/outputs/flutter-apk/*release.apk > build/symbols/android/apk-sha256.txt
+
+      - name: Retain Android debug symbols
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: android-symbols-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            build/symbols/android/
+            build/app/outputs/mapping/release/mapping.txt

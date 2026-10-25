@@ -1,0 +1,647 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/l10n/l10n.dart';
+
+/// Hosts selection bars above the shell navigation while keeping modal routes
+/// above the bar. A raw entry in the root [Overlay] stays above routes pushed
+/// later, which made download pickers appear behind the selection toolbar.
+class SelectionOverlayHost extends StatefulWidget {
+  const SelectionOverlayHost({super.key, required this.child});
+
+  final Widget child;
+
+  static _SelectionOverlayHostState? _maybeOf(BuildContext context) =>
+      context.findAncestorStateOfType<_SelectionOverlayHostState>();
+
+  @override
+  State<SelectionOverlayHost> createState() => _SelectionOverlayHostState();
+}
+
+class _SelectionOverlayHostState extends State<SelectionOverlayHost> {
+  SelectionOverlayController? _owner;
+  WidgetBuilder? _builder;
+
+  bool owns(SelectionOverlayController owner) =>
+      _owner == owner && _builder != null;
+
+  void show(SelectionOverlayController owner, WidgetBuilder builder) {
+    _update(() {
+      _owner = owner;
+      _builder = builder;
+    });
+  }
+
+  void hide(SelectionOverlayController owner) {
+    if (_owner != owner) return;
+    _update(() {
+      _owner = null;
+      _builder = null;
+    });
+  }
+
+  /// A screen can remove its bar from dispose while Flutter has locked the
+  /// tree. Clear ownership immediately, then rebuild after that frame so the
+  /// bar cannot outlive the screen or retain its disposed callbacks.
+  void _update(VoidCallback change) {
+    if (!mounted) return;
+    if (SchedulerBinding.instance.schedulerPhase !=
+        SchedulerPhase.persistentCallbacks) {
+      setState(change);
+      return;
+    }
+    change();
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final owner = _owner;
+    final builder = _builder;
+    // A root modal makes the shell route non-current. Removing the toolbar
+    // while that route is covered both prevents visual overlap and avoids the
+    // hidden toolbar intercepting taps during the modal transition. The stored
+    // builder is kept so the selection returns if the modal is dismissed.
+    final routeIsCurrent = ModalRoute.of(context)?.isCurrent ?? true;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        widget.child,
+        if (routeIsCurrent && owner != null && builder != null)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: KeyedSubtree(
+              key: ObjectKey(owner),
+              child: AnimatedSelectionBottomBar(
+                child: Material(
+                  color: Colors.transparent,
+                  child: Builder(builder: builder),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Mounts a selection bar in [SelectionOverlayHost]. Screens rendered outside
+/// the main shell (including isolated widget tests) retain a root-overlay
+/// fallback.
+class SelectionOverlayController {
+  OverlayEntry? _entry;
+  _SelectionOverlayHostState? _host;
+  WidgetBuilder? _builder;
+
+  bool get isVisible => _entry != null || (_host?.owns(this) ?? false);
+
+  /// Shows the bar, or rebuilds it in place when already visible so the
+  /// entrance animation does not replay on every selection change.
+  void show(BuildContext context, WidgetBuilder builder) {
+    if (!TickerMode.valuesOf(context).enabled) {
+      hide();
+      return;
+    }
+
+    _builder = builder;
+    final host = SelectionOverlayHost._maybeOf(context);
+    if (host != null) {
+      _entry?.remove();
+      _entry = null;
+      if (_host != null && _host != host) {
+        _host!.hide(this);
+      }
+      _host = host;
+      host.show(this, builder);
+      return;
+    }
+
+    _host?.hide(this);
+    _host = null;
+    if (_entry != null) {
+      _entry!.markNeedsBuild();
+      return;
+    }
+    _entry = OverlayEntry(
+      builder: (overlayContext) => Positioned(
+        left: 0,
+        right: 0,
+        bottom: 0,
+        child: AnimatedSelectionBottomBar(
+          child: Material(
+            color: Colors.transparent,
+            child: _builder!(overlayContext),
+          ),
+        ),
+      ),
+    );
+    Overlay.of(context, rootOverlay: true).insert(_entry!);
+  }
+
+  void hide() {
+    _host?.hide(this);
+    _host = null;
+    _entry?.remove();
+    _entry = null;
+    _builder = null;
+  }
+
+  /// Call from the host `State.dispose`; an entry left in the root overlay
+  /// outlives the screen that created it.
+  void dispose() => hide();
+}
+
+/// Entrance animation shared by selection bars mounted in the root overlay.
+class AnimatedSelectionBottomBar extends StatefulWidget {
+  const AnimatedSelectionBottomBar({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<AnimatedSelectionBottomBar> createState() =>
+      _AnimatedSelectionBottomBarState();
+}
+
+class _AnimatedSelectionBottomBarState extends State<AnimatedSelectionBottomBar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<Offset> _slideAnimation;
+  late final Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 240),
+    );
+    final curve = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(curve);
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(curve);
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(position: _slideAnimation, child: widget.child),
+    );
+  }
+}
+
+/// Shared chrome for the multi-select bottom bar: rounded surface, drag
+/// handle, close button, "N selected" header and select-all toggle.
+/// The screen-specific action buttons go in [children].
+class SelectionBottomBar extends StatelessWidget {
+  const SelectionBottomBar({
+    super.key,
+    required this.selectedCount,
+    required this.allSelected,
+    required this.onClose,
+    required this.onToggleSelectAll,
+    required this.bottomPadding,
+    required this.children,
+    this.allSelectedLabel,
+    this.tapToSelectLabel,
+  });
+
+  final int selectedCount;
+  final bool allSelected;
+  final VoidCallback onClose;
+  final VoidCallback onToggleSelectAll;
+  final double bottomPadding;
+  final List<Widget> children;
+
+  /// Overrides the default "All tracks selected" subtitle.
+  final String? allSelectedLabel;
+
+  /// Overrides the default "Tap tracks to select" subtitle.
+  final String? tapToSelectLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final header = LayoutBuilder(
+      builder: (context, constraints) => Row(
+        children: [
+          if (context.isMornye)
+            Tooltip(
+              message: MaterialLocalizations.of(context).closeButtonTooltip,
+              child: CupertinoButton(
+                color: MornyeTheme.controlFill(context),
+                borderRadius: BorderRadius.circular(28),
+                padding: const EdgeInsets.all(12),
+                onPressed: onClose,
+                child: Icon(
+                  CupertinoIcons.xmark,
+                  color: colorScheme.onSurface,
+                  size: 24,
+                ),
+              ),
+            )
+          else
+            IconButton.filledTonal(
+              onPressed: onClose,
+              tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+              icon: const Icon(Icons.close),
+              style: IconButton.styleFrom(
+                backgroundColor: colorScheme.surfaceContainerHighest,
+              ),
+            ),
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.selectionSelected(selectedCount),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  allSelected
+                      ? allSelectedLabel ?? context.l10n.selectionAllSelected
+                      : tapToSelectLabel ??
+                            context.l10n.downloadedAlbumTapToSelect,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.4),
+            child: context.isMornye
+                ? CupertinoButton(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    onPressed: onToggleSelectAll,
+                    child: Text(
+                      allSelected
+                          ? context.l10n.actionDeselect
+                          : context.l10n.actionSelectAll,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  )
+                : TextButton.icon(
+                    onPressed: onToggleSelectAll,
+                    icon: Icon(
+                      allSelected ? Icons.deselect : Icons.select_all,
+                      size: 20,
+                    ),
+                    label: Text(
+                      allSelected
+                          ? context.l10n.actionDeselect
+                          : context.l10n.actionSelectAll,
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: colorScheme.primary,
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+    return _SelectionPanelDrag(
+      onClose: onClose,
+      header: header,
+      bottomPadding: bottomPadding,
+      children: children,
+      surfaceBuilder: (content) {
+        if (context.isMornye) {
+          return MornyeGlassPanel.overlay(child: content);
+        }
+        return Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(tokens.radiusSheet),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.shadow.withValues(alpha: 0.15),
+                blurRadius: 12,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+          child: content,
+        );
+      },
+    );
+  }
+}
+
+/// Keeps selection alive when the actions are tucked away. One downward
+/// gesture collapses the actions; only a new gesture on the compact header
+/// dismisses selection. Action scrolling never hides the header.
+class _SelectionPanelDrag extends StatefulWidget {
+  const _SelectionPanelDrag({
+    required this.onClose,
+    required this.header,
+    required this.bottomPadding,
+    required this.children,
+    required this.surfaceBuilder,
+  });
+
+  final VoidCallback onClose;
+  final Widget header;
+  final double bottomPadding;
+  final List<Widget> children;
+  final Widget Function(Widget) surfaceBuilder;
+
+  @override
+  State<_SelectionPanelDrag> createState() => _SelectionPanelDragState();
+}
+
+class _SelectionPanelDragState extends State<_SelectionPanelDrag>
+    with TickerProviderStateMixin {
+  late final AnimationController _offset = AnimationController.unbounded(
+    vsync: this,
+  );
+  late final _SelectionPanelScrollController _scroll =
+      _SelectionPanelScrollController(_drag, _settle);
+  late final AnimationController _expansion = AnimationController(
+    vsync: this,
+    value: 1,
+    duration: const Duration(milliseconds: 220),
+  );
+  final _actionsKey = GlobalKey();
+  bool _expanded = true;
+  bool? _dragFromExpanded;
+  double _pull = 0;
+  double _actionHeight = 1;
+  bool _closing = false;
+
+  double _drag(double delta) {
+    if (_closing) return 0;
+    if (_dragFromExpanded == null) {
+      if (_expanded && _expansion.value == 1 && delta <= 0) return delta;
+      _dragFromExpanded = _expanded;
+      _actionHeight = (_actionsKey.currentContext?.size?.height ?? 1).clamp(
+        1.0,
+        double.infinity,
+      );
+      _pull = _expanded
+          ? (1 - _expansion.value) * _actionHeight
+          : _offset.value - _expansion.value * _actionHeight;
+    }
+    _offset.stop();
+    _expansion.stop();
+    if (_dragFromExpanded!) {
+      final previous = _pull;
+      _pull = (_pull + delta).clamp(0.0, _actionHeight);
+      _expansion.value = 1 - _pull / _actionHeight;
+      // A single pull can reach the compact state, but cannot cancel it.
+      return delta < 0 ? delta - (_pull - previous) : 0;
+    }
+    _pull = (_pull + delta).clamp(-_actionHeight, double.infinity);
+    _expansion.value = (-_pull / _actionHeight).clamp(0.0, 1.0);
+    _offset.value = _pull.clamp(0.0, double.infinity);
+    return 0;
+  }
+
+  bool _settle(double velocity) {
+    if (_closing) return true;
+    final fromExpanded = _dragFromExpanded;
+    if (fromExpanded == null) return false;
+    _dragFromExpanded = null;
+    final threshold = (_actionHeight * 0.25).clamp(64.0, 120.0);
+    if (fromExpanded) {
+      final collapse =
+          velocity > 700 || (velocity >= -700 && _pull >= threshold);
+      _setExpanded(!collapse);
+      return true;
+    }
+    if (_pull < 0) {
+      final expand =
+          velocity < -700 || (velocity <= 700 && -_pull >= threshold);
+      _setExpanded(expand);
+      return true;
+    }
+    final height = context.size?.height ?? 0;
+    _closing =
+        velocity > 700 ||
+        (velocity >= -700 && _offset.value >= (height * 0.25).clamp(64, 120));
+    _animateToRest(_closing ? height : 0);
+    return true;
+  }
+
+  void _setExpanded(bool expanded) {
+    setState(() => _expanded = expanded);
+    if (!expanded && _scroll.hasClients) _scroll.jumpTo(0);
+    _expansion.animateTo(
+      expanded ? 1 : 0,
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+    );
+    _animateToRest(0);
+  }
+
+  void _toggleExpanded() {
+    if (_closing) return;
+    _dragFromExpanded = null;
+    _setExpanded(!_expanded);
+  }
+
+  void _cancelDrag() {
+    final fromExpanded = _dragFromExpanded;
+    _dragFromExpanded = null;
+    if (fromExpanded != null) _setExpanded(fromExpanded);
+  }
+
+  Future<void> _animateToRest(double target) async {
+    try {
+      await _offset
+          .animateTo(
+            target,
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+          )
+          .orCancel;
+      if (mounted && _closing) widget.onClose();
+    } on TickerCanceled {
+      // Another drag or route disposal can interrupt the settling animation.
+    }
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    _offset.dispose();
+    _expansion.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _offset,
+    builder: (_, child) =>
+        Transform.translate(offset: Offset(0, _offset.value), child: child),
+    child: widget.surfaceBuilder(
+      ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.72,
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              widget.bottomPadding > 0 ? 8 : 16,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onVerticalDragUpdate: (details) => _drag(details.delta.dy),
+                  onVerticalDragEnd: (details) =>
+                      _settle(details.primaryVelocity ?? 0),
+                  onVerticalDragCancel: _cancelDrag,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Semantics(
+                        container: true,
+                        button: true,
+                        expanded: _expanded,
+                        label: _expanded
+                            ? MaterialLocalizations.of(
+                                context,
+                              ).expandedIconTapHint
+                            : MaterialLocalizations.of(
+                                context,
+                              ).collapsedIconTapHint,
+                        onTap: _toggleExpanded,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          excludeFromSemantics: true,
+                          onTap: _toggleExpanded,
+                          child: const SizedBox(
+                            height: 32,
+                            child: AppSheetHandle(margin: EdgeInsets.zero),
+                          ),
+                        ),
+                      ),
+                      widget.header,
+                    ],
+                  ),
+                ),
+                Flexible(
+                  child: ExcludeSemantics(
+                    excluding: !_expanded,
+                    child: IgnorePointer(
+                      ignoring: !_expanded,
+                      child: SizeTransition(
+                        sizeFactor: _expansion,
+                        alignment: Alignment.topCenter,
+                        child: SingleChildScrollView(
+                          key: _actionsKey,
+                          controller: _scroll,
+                          physics: const AlwaysScrollableScrollPhysics(
+                            parent: ClampingScrollPhysics(),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(height: 12),
+                              ...widget.children,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _SelectionPanelScrollController extends ScrollController {
+  _SelectionPanelScrollController(this.dragPanel, this.settlePanel);
+
+  final double Function(double) dragPanel;
+  final bool Function(double) settlePanel;
+
+  @override
+  ScrollPosition createScrollPosition(
+    ScrollPhysics physics,
+    ScrollContext context,
+    ScrollPosition? oldPosition,
+  ) => _SelectionPanelScrollPosition(
+    physics: physics,
+    context: context,
+    oldPosition: oldPosition,
+    dragPanel: dragPanel,
+    settlePanel: settlePanel,
+  );
+}
+
+class _SelectionPanelScrollPosition extends ScrollPositionWithSingleContext {
+  _SelectionPanelScrollPosition({
+    required super.physics,
+    required super.context,
+    super.oldPosition,
+    required this.dragPanel,
+    required this.settlePanel,
+  });
+
+  final double Function(double) dragPanel;
+  final bool Function(double) settlePanel;
+
+  @override
+  void applyUserOffset(double delta) {
+    // Scroll back to the top before handing any remaining drag to the panel.
+    if (delta > 0 && pixels > minScrollExtent) {
+      final scrollDelta = delta.clamp(0.0, pixels - minScrollExtent);
+      super.applyUserOffset(scrollDelta);
+      delta -= scrollDelta;
+    }
+    final remaining = dragPanel(delta);
+    if (remaining != 0) super.applyUserOffset(remaining);
+  }
+
+  @override
+  void goBallistic(double velocity) {
+    final movingPanel = settlePanel(-velocity);
+    super.goBallistic(movingPanel ? 0 : velocity);
+  }
+}

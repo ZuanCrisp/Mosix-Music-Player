@@ -1,0 +1,130 @@
+name: Bug Report
+description: Report a reproducible bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a Mosix bug. Please provide enough detail for another person to reproduce it.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and did not find this bug.
+          required: true
+        - label: I can reproduce this on the release channel selected below.
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened, and what did you expect instead?
+      placeholder: Include the visible error and any relevant context.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Open ...
+        2. Enable ...
+        3. Tap ...
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: trigger
+    attributes:
+      label: Area
+      options:
+        - App startup
+        - Search or navigation
+        - Download or verification
+        - Library or metadata
+        - Playback or background service
+        - Audio analysis
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: App Version
+      description: Find this in Settings > About.
+      placeholder: "e.g. 4.8.1 (139)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: channel
+    attributes:
+      label: Release Channel
+      options:
+        - Stable
+        - Beta
+        - Local or development build
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and OS
+      placeholder: "e.g. Samsung Galaxy S24, Android 16"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: storage
+    attributes:
+      label: Download Storage
+      options:
+        - SAF folder
+        - App-specific folder
+        - Not applicable
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: worker
+    attributes:
+      label: Download Worker
+      options:
+        - Native worker
+        - Dart worker
+        - Not applicable
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: provider
+    attributes:
+      label: Extension or Provider
+      description: If relevant, include the extension/provider name and version.
+      placeholder: "Name, version, and selected priority"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and Media
+      description: |
+        Enable detailed logging, reproduce the problem, then export logs from Settings > Logs. For an Android cold-start crash, attach `adb logcat -b crash -d`. Add screenshots or a short recording when useful. Remove credentials and personal data first.
+      placeholder: Paste logs or drag files here.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      placeholder: Settings, frequency, regression version, or anything else that may help.

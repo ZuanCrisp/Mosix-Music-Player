@@ -1,0 +1,25 @@
+[package]
+name = "spotiflac-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+base64.workspace = true
+image.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+regex.workspace = true
+unicode-normalization.workspace = true
+unicode-general-category.workspace = true
+chrono.workspace = true
+rustix.workspace = true
+claxon.workspace = true
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tz-rs.workspace = true
+
+[lints]
+workspace = true

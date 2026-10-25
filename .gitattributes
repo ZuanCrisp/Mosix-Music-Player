@@ -1,0 +1,42 @@
+* text=auto eol=lf
+
+# Scripts executed on Unix runners must keep LF line endings.
+*.sh text eol=lf
+gradlew text eol=lf
+
+# Windows scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Empty TSV fields and trailing lyric whitespace are intentional test data.
+android/app/src/test/resources/lyrics_usability_cases.tsv whitespace=-blank-at-eol
+
+# Retain upstream dependency sources for the Android compatibility patch.
+rust_backend/vendor/** linguist-vendored -text
+third_party/audio_service/** linguist-vendored
+# Keep the pinned package byte-for-byte outside the documented native patch.
+third_party/audio_service/CHANGELOG.md whitespace=-blank-at-eol
+third_party/audio_service/README.md whitespace=-blank-at-eol
+third_party/audio_service/android/src/main/java/com/ryanheise/audioservice/AudioServicePlugin.java whitespace=-blank-at-eol
+third_party/audio_service/darwin/audio_service/Sources/audio_service/AudioServicePlugin.m whitespace=-blank-at-eol
+third_party/audio_service/darwin/audio_service.podspec whitespace=-blank-at-eof
+# Preserve the original whitespace in upstream license and policy documents.
+rust_backend/vendor/rustix-1.1.5/LICENSE-Apache-2.0_WITH_LLVM-exception whitespace=-blank-at-eof
+rust_backend/vendor/rustix-1.1.5/ORG_CODE_OF_CONDUCT.md whitespace=-blank-at-eol
+# Preserve libusb's upstream sources, license whitespace, and source hashes.
+rust_backend/vendor/libusb1-sys-0.7.0/** -whitespace
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.jar binary
+*.aar binary
+*.keystore binary
+*.jks binary

@@ -1,0 +1,144 @@
+name: mosix
+description: Mosix music library, player, downloads, and extension platform
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Localization
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.3
+  timezone: ^0.11.1
+
+  # State Management
+  flutter_riverpod: ^3.4.2
+
+  # Navigation
+  go_router: ^18.0.2
+
+# Storage & Persistence
+  shared_preferences: ^2.5.6
+  flutter_secure_storage: ^11.0.0
+  spotiflac_discord:
+    path: third_party/spotiflac_discord
+  path_provider: ^2.1.6
+  path: ^1.9.1
+  sqflite: ^2.4.4+1
+
+# HTTP & Network
+  http: ^1.6.0
+  # 7.3.2 requires dbus 0.8, while stable notifications still require 0.7.
+  connectivity_plus: ^7.3.1
+  crypto: ^3.0.7
+
+  # Streaming backup archives
+  archive: ^4.5.0
+
+  # UI Components
+  cached_network_image: ^4.0.4
+  flutter_cache_manager: ^3.4.5
+  liquid_glass_easy: 5.0.0
+  cupertino_icons: ^2.0.0
+  volume_controller: ^3.7.1
+
+  # Material Expressive 3 / Dynamic Color
+  dynamic_color: ^2.1.0
+  material_ui: ^1.6.0
+  material_3_expressive: ^1.1.6
+  material_color_utilities: 0.13.0
+
+  # Permissions
+  permission_handler: ^13.0.1
+
+  # File Picker
+  file_picker: ^13.1.0
+
+  # JSON Serialization
+  json_annotation: ^4.12.0
+
+  # Utils
+  url_launcher: ^6.3.3
+  device_info_plus: ^13.3.0
+  share_plus: ^13.3.1
+  receive_sharing_intent: ^1.9.0
+  logger: ^2.7.0
+
+  # FFmpeg for audio conversion
+  ffmpeg_kit_flutter_new_audio: 2.5.7
+  open_filex: ^4.7.0
+
+  video_player: ^2.14.1
+
+  xml: ^7.1.0
+  html: ^0.15.7
+  dart_smb2: 0.1.3
+  synchronized: ^3.4.0
+
+  # Notifications
+  flutter_local_notifications: ^22.3.0
+  audioplayers: ^6.8.1
+  audio_service:
+    path: third_party/audio_service
+  audio_session: ^0.2.4
+
+dependency_overrides:
+  # Preserve Android proxy descriptors supplied by network document providers.
+  audioplayers_android:
+    path: third_party/audioplayers_android
+
+dev_dependencies:
+  integration_test:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+  analyzer: ^14.5.0
+  flutter_lints: ^6.0.0
+  build_runner: ^2.16.2
+  riverpod_lint: ^3.1.9
+  json_serializable: ^6.14.1
+  flutter_launcher_icons: ^0.14.4
+  video_player_platform_interface: 6.9.0
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "icon.png"
+  image_path_android: "icon_android.png"
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "icon_foreground_android.png"
+  adaptive_icon_foreground_inset: 16
+  adaptive_icon_monochrome: "icon_foreground_android.png"
+  ios_content_mode: scaleAspectFill
+  remove_alpha_ios: true
+  background_color_ios: "#000000"
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  shaders:
+    - assets/shaders/mornye_selection_mask.frag
+
+  assets:
+    - assets/images/
+    - assets/fonts/Inter-LICENSE.txt
+    - assets/licenses/usb.txt
+    - assets/licenses/oboe.txt
+    - assets/licenses/wavpack.txt
+    - assets/licenses/libsmb2.txt
+    - assets/licenses/native_palette.txt
+    - assets/licenses/native_data_jobs.txt
+
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/InterVariable.ttf
+    - family: Google Sans Flex
+      fonts:
+        - asset: assets/fonts/GoogleSansFlex.ttf

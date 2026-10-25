@@ -67,3 +67,27 @@ pub fn json_surrogates(json: &str) -> std::borrow::Cow<'_, str> {
         std::borrow::Cow::Owned(output)
     }
 }
+
+/// Lowercase hexadecimal, two digits per byte (Go's `hex.EncodeToString`).
+pub fn lower_hex(bytes: &[u8]) -> String {
+    use std::fmt::Write;
+    let mut output = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        let _ = write!(output, "{byte:02x}");
+    }
+    output
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn lower_hex_matches_per_byte_format_for_every_byte() {
+        assert_eq!(lower_hex(&[]), "");
+        assert_eq!(lower_hex(&[0x00, 0x0f, 0x7f, 0x80, 0xff]), "000f7f80ff");
+        let every: Vec<u8> = (0..=u8::MAX).collect();
+        let previous: String = every.iter().map(|byte| format!("{byte:02x}")).collect();
+        assert_eq!(lower_hex(&every), previous);
+    }
+}

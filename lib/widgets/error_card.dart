@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/app_tokens.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_content_card.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_shape.dart';
+import 'package:mornye/widgets/expressive_button.dart';
 
 /// Error card shown by detail screens: a dedicated rate-limit presentation
 /// when the message looks like an HTTP 429, otherwise a generic error row.
@@ -36,23 +41,21 @@ class ErrorCard extends StatelessWidget {
         ? context.l10n.errorRateLimitedMessage
         : displayError;
     final icon = isRateLimit ? Icons.timer_off : Icons.error_outline;
-    final background = isRateLimit
-        ? colorScheme.errorContainer
-        : colorScheme.errorContainer.withValues(alpha: 0.5);
-    final foreground = isRateLimit
-        ? colorScheme.onErrorContainer
-        : colorScheme.error;
+    // A solid container with its paired on-color keeps text contrast.
+    final background = colorScheme.errorContainer;
+    final foreground = colorScheme.onErrorContainer;
 
-    return Card(
+    return AppContentCard(
       elevation: 0,
       color: background,
+      mornyeSurface: false,
       shape: RoundedRectangleBorder(borderRadius: tokens.borderRadiusCard),
       child: Padding(
         padding: EdgeInsets.all(tokens.gapLg),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: foreground),
+            AppIcon.adaptive(icon, color: foreground),
             SizedBox(width: tokens.gapMd),
             Expanded(
               child: Column(
@@ -77,10 +80,11 @@ class ErrorCard extends StatelessWidget {
                   ),
                   if (onRetry != null) ...[
                     SizedBox(height: tokens.gapMd),
-                    FilledButton.tonalIcon(
+                    ExpressiveButton(
+                      tonal: true,
                       onPressed: onRetry,
                       icon: const Icon(Icons.refresh, size: 18),
-                      label: Text(context.l10n.dialogRetry),
+                      child: Text(context.l10n.dialogRetry),
                     ),
                   ],
                 ],
@@ -122,7 +126,19 @@ class EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 64, color: colorScheme.onSurfaceVariant),
+            if (context.isMornye)
+              Icon(icon, size: 64, color: colorScheme.onSurfaceVariant)
+            else
+              AppShapeBadge(
+                kind: AppShapes.badge,
+                size: 112,
+                color: colorScheme.secondaryContainer,
+                child: AppIcon(
+                  icon,
+                  size: 52,
+                  color: colorScheme.onSecondaryContainer,
+                ),
+              ),
             SizedBox(height: tokens.gapLg),
             Text(
               title,

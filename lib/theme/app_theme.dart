@@ -1,14 +1,21 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mosix/models/theme_settings.dart';
-import 'package:mosix/theme/app_tokens.dart';
+import 'package:mornye/models/theme_settings.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/utils/desktop_platform.dart';
 
 class AppTheme {
   static const Color defaultSeedColor = Color(kDefaultSeedColor);
 
   /// Shared surfaces use one radius scale; actions use round Material shapes.
   static const AppTokens _tokens = AppTokens.standard;
+
+  /// The bundled variable face; its wght, wdth and ROND axes stay variable.
+  static const String bundledFontFamily = 'Google Sans Flex';
+
+  /// Full ROND for the Expressive brand roles of [bundledFontFamily].
+  static const double brandRoundness = 100;
 
   // Override Flutter's default page transitions. Recent Flutter defaults the
   // Android route transition to PredictiveBackPageTransitionsBuilder, whose
@@ -39,6 +46,8 @@ class AppTheme {
           seedColor: seedColor ?? defaultSeedColor,
           brightness: Brightness.light,
         );
+    final family = fontFamily ?? (useSystemFont ? null : bundledFontFamily);
+    final textTheme = _expressiveTextTheme(family);
 
     return ThemeData(
       useMaterial3: true,
@@ -60,9 +69,17 @@ class AppTheme {
       progressIndicatorTheme: _progressIndicatorTheme(scheme),
       switchTheme: _switchTheme(scheme),
       chipTheme: _chipTheme(scheme),
+      popupMenuTheme: _popupMenuTheme(scheme),
+      menuTheme: _menuTheme(scheme),
+      menuButtonTheme: _menuButtonTheme,
+      tabBarTheme: _tabBarTheme(scheme),
       dividerTheme: _dividerTheme(scheme),
-      extensions: const <ThemeExtension<dynamic>>[AppTokens.standard],
-      fontFamily: fontFamily ?? (useSystemFont ? null : 'Google Sans Flex'),
+      extensions: <ThemeExtension<dynamic>>[
+        isDesktopPlatform ? AppTokens.desktop : AppTokens.standard,
+      ],
+      fontFamily: family,
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
     );
   }
 
@@ -79,6 +96,8 @@ class AppTheme {
           seedColor: seedColor ?? defaultSeedColor,
           brightness: Brightness.dark,
         );
+    final family = fontFamily ?? (useSystemFont ? null : bundledFontFamily);
+    final textTheme = _expressiveTextTheme(family);
 
     return ThemeData(
       useMaterial3: true,
@@ -101,9 +120,42 @@ class AppTheme {
       progressIndicatorTheme: _progressIndicatorTheme(scheme),
       switchTheme: _switchTheme(scheme),
       chipTheme: _chipTheme(scheme),
+      popupMenuTheme: _popupMenuTheme(scheme),
+      menuTheme: _menuTheme(scheme),
+      menuButtonTheme: _menuButtonTheme,
+      tabBarTheme: _tabBarTheme(scheme),
       dividerTheme: _dividerTheme(scheme),
-      extensions: const <ThemeExtension<dynamic>>[AppTokens.standard],
-      fontFamily: fontFamily ?? (useSystemFont ? null : 'Google Sans Flex'),
+      extensions: <ThemeExtension<dynamic>>[
+        isDesktopPlatform ? AppTokens.desktop : AppTokens.standard,
+      ],
+      fontFamily: family,
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
+    );
+  }
+
+  // Display, headline and title roles are the Expressive brand roles, so they
+  // take Google Sans Flex's rounded terminals. Body and label roles carry long
+  // reading text and small UI labels, where the default cut terminals stay
+  // crisper; they keep ROND 0, the M3 Expressive brand and plain split.
+  // Only ROND is set: with no wght entry the engine still takes the weight
+  // from fontWeight, so a later copyWith(fontWeight: ...) keeps working.
+  // Imported and system fonts get no axes.
+  static TextTheme? _expressiveTextTheme(String? family) {
+    if (family != bundledFontFamily) return null;
+    const rounded = TextStyle(
+      fontVariations: [FontVariation('ROND', brandRoundness)],
+    );
+    return const TextTheme(
+      displayLarge: rounded,
+      displayMedium: rounded,
+      displaySmall: rounded,
+      headlineLarge: rounded,
+      headlineMedium: rounded,
+      headlineSmall: rounded,
+      titleLarge: rounded,
+      titleMedium: rounded,
+      titleSmall: rounded,
     );
   }
 
@@ -139,7 +191,7 @@ class AppTheme {
   static CardThemeData _cardTheme(ColorScheme scheme) => CardThemeData(
     elevation: 0,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(_tokens.radiusControl),
+      borderRadius: BorderRadius.circular(_tokens.radiusCard),
     ),
     color: scheme.surfaceContainerLow,
     surfaceTintColor: scheme.surfaceTint,
@@ -173,9 +225,7 @@ class AppTheme {
   static TextButtonThemeData _textButtonTheme(ColorScheme scheme) =>
       TextButtonThemeData(
         style: TextButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_tokens.radiusControl),
-          ),
+          shape: const StadiumBorder(),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         ),
       );
@@ -193,7 +243,7 @@ class AppTheme {
   static InputDecorationTheme _inputDecorationTheme(ColorScheme scheme) =>
       InputDecorationTheme(
         filled: true,
-        fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        fillColor: scheme.surfaceContainerHigh,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(_tokens.radiusControl),
           borderSide: BorderSide.none,
@@ -247,7 +297,9 @@ class AppTheme {
     bool isAmoled = false,
   }) => NavigationBarThemeData(
     elevation: 0,
-    backgroundColor: isAmoled ? Colors.black : scheme.surfaceContainer,
+    // Navigation keeps its container tier on AMOLED too, so the bar stays
+    // apart from the black page.
+    backgroundColor: scheme.surfaceContainer,
     indicatorColor: scheme.secondaryContainer,
     surfaceTintColor: isAmoled ? Colors.transparent : scheme.surfaceTint,
     labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
@@ -257,7 +309,7 @@ class AppTheme {
       SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(_tokens.radiusThumb),
+          borderRadius: BorderRadius.circular(_tokens.radiusControl),
         ),
         backgroundColor: scheme.inverseSurface,
         contentTextStyle: TextStyle(color: scheme.onInverseSurface),
@@ -290,6 +342,52 @@ class AppTheme {
       }
       return null;
     }),
+  );
+
+  // Every menu wears the M3 Expressive standard menu skin, as M3EMenuPopup
+  // does: the low container tier, the control radius and a level 2 lift.
+  static PopupMenuThemeData _popupMenuTheme(ColorScheme scheme) =>
+      PopupMenuThemeData(
+        color: scheme.surfaceContainerLow,
+        surfaceTintColor: Colors.transparent,
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(_tokens.radiusControl),
+        ),
+        menuPadding: const EdgeInsets.symmetric(vertical: 8),
+      );
+
+  // Anchored menus share the popup skin; items sit 4dp in from the edge with
+  // rounded corners.
+  static MenuThemeData _menuTheme(ColorScheme scheme) => MenuThemeData(
+    style: MenuStyle(
+      backgroundColor: WidgetStatePropertyAll(scheme.surfaceContainerLow),
+      surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+      elevation: const WidgetStatePropertyAll(3),
+      padding: const WidgetStatePropertyAll(EdgeInsets.all(4)),
+      shape: WidgetStatePropertyAll(
+        RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(_tokens.radiusControl),
+        ),
+      ),
+    ),
+  );
+
+  static final MenuButtonThemeData _menuButtonTheme = MenuButtonThemeData(
+    style: MenuItemButton.styleFrom(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(_tokens.radiusCover),
+      ),
+    ),
+  );
+
+  static TabBarThemeData _tabBarTheme(ColorScheme scheme) => TabBarThemeData(
+    indicatorSize: TabBarIndicatorSize.label,
+    indicator: UnderlineTabIndicator(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+      borderSide: BorderSide(color: scheme.primary, width: 3),
+    ),
+    labelStyle: const TextStyle(fontWeight: FontWeight.w600),
   );
 
   static ChipThemeData _chipTheme(ColorScheme scheme) => ChipThemeData(

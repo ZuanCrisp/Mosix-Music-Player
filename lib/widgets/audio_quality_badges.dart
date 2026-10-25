@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/app_tokens.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/theme/app_tokens.dart';
 
 class AudioQualityBadge extends StatelessWidget {
   final String label;
@@ -104,7 +104,7 @@ class ExplicitTrackTitle extends StatelessWidget {
               child: Transform.translate(
                 offset: const Offset(0, -2),
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 6),
+                  padding: const EdgeInsetsDirectional.only(start: 6),
                   child: ExplicitBadge(
                     colorScheme: colorScheme ?? Theme.of(context).colorScheme,
                   ),
@@ -130,11 +130,12 @@ class DolbyAtmosBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+      // Sits beside the quality badge, which keeps the only accent role.
       decoration: BoxDecoration(
-        color: colorScheme.tertiaryContainer.withValues(alpha: 0.6),
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: context.tokens.borderRadiusBadge,
       ),
-      child: DolbyAtmosLogo(color: colorScheme.onTertiaryContainer),
+      child: DolbyAtmosLogo(color: colorScheme.onSurfaceVariant),
     );
   }
 }

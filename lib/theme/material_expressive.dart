@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_ui/material_ui.dart' as material_ui;
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/skip_autofocus.dart';
 
 /// Motion-heavy expressive controls use their static Material counterpart when
 /// the OS requests reduced motion. Mornye owns its own component system.
@@ -11,9 +12,18 @@ bool materialExpressiveEnabled(BuildContext context) =>
 /// Bridges the app's Flutter theme to the separate Material UI widget library.
 /// Local artwork colors, dynamic colors, fonts and AMOLED surfaces stay intact.
 class MaterialExpressiveScope extends StatelessWidget {
-  const MaterialExpressiveScope({super.key, required this.child});
+  const MaterialExpressiveScope({
+    super.key,
+    required this.child,
+    this.skipAutofocus = false,
+  });
 
   final Widget child;
+
+  /// Keeps [child] from taking keyboard focus as it mounts. `M3EButtonGroup`
+  /// autofocuses its first segment, which would take Space from playback on
+  /// desktop.
+  final bool skipAutofocus;
   static final _themes = Expando<material_ui.ThemeData>();
   static final _expressiveThemes = Expando<M3EThemeData>();
 
@@ -110,7 +120,10 @@ class MaterialExpressiveScope extends StatelessWidget {
       data: expressive,
       // M3E's projection omits fixed color roles. Keep the complete host theme
       // nearest the widgets so it also retains AMOLED and platform typography.
-      child: material_ui.Theme(data: theme, child: child),
+      child: material_ui.Theme(
+        data: theme,
+        child: skipAutofocus ? SkipAutofocus(child: child) : child,
+      ),
     );
     if (Localizations.of<material_ui.MaterialLocalizations>(
           context,

@@ -1,6 +1,6 @@
+use mornye_extensions::RuntimeLimits;
+use mornye_extensions::environment::ExtensionEnvironment;
 use serde_json::{Value, json};
-use spotiflac_extensions::RuntimeLimits;
-use spotiflac_extensions::environment::ExtensionEnvironment;
 use std::collections::BTreeMap;
 use std::io::{Read, Write};
 use std::net::TcpListener;

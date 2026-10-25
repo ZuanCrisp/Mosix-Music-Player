@@ -2,17 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/screens/settings/metadata_settings_page.dart';
-import 'package:mosix/utils/artist_utils.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/screens/settings/metadata_settings_page.dart';
+import 'package:mornye/utils/artist_utils.dart';
 
-/// Skips loading persisted settings; mode changes use the real validation.
-class _Settings extends SettingsNotifier {
-  @override
-  AppSettings build() => const AppSettings();
-}
+import 'support/fixed_settings.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -35,7 +31,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       final container = ProviderContainer(
-        overrides: [settingsProvider.overrideWith(_Settings.new)],
+        overrides: [settingsProvider.overrideWith(FixedSettingsNotifier.new)],
       );
       addTearDown(container.dispose);
       await tester.pumpWidget(
@@ -50,7 +46,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // The row subtitle names the current mode before the picker opens.
       expect(find.text('Single joined value'), findsOneWidget);
       await tester.tap(find.text('Artist Tag Mode'));
       await tester.pumpAndSettle();
@@ -68,7 +63,6 @@ void main() {
 
       expect(container.read(settingsProvider).artistTagMode, 'primary');
       expect(find.byType(BottomSheet), findsNothing);
-      // The settings row now names the selected mode.
       expect(find.text('Primary artist only'), findsOneWidget);
       expect(tester.takeException(), isNull);
 

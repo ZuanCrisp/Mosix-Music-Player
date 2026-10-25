@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:mosix/utils/cache_byte_budget.dart';
-import 'package:mosix/utils/periodic_async_task.dart';
+import 'package:mornye/utils/cache_byte_budget.dart';
+import 'package:mornye/utils/periodic_async_task.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

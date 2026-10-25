@@ -10,6 +10,25 @@ class MediaPlayerWrapper(
     private val wrappedPlayer: WrappedPlayer,
 ) : PlayerWrapper {
     private val mediaPlayer = createMediaPlayer(wrappedPlayer)
+    private var equalizer: PlaybackEqualizer? = null
+    private var playbackParamsApplied = false
+
+    fun setEqualizer(configuration: Map<String, Any?>) {
+        if (Build.VERSION.SDK_INT < 28) {
+            check(configuration["enabled"] != true) { "Equalizer requires Android 9 or later" }
+            return
+        }
+        if (configuration["enabled"] == true && equalizer == null) {
+            equalizer = PlaybackEqualizer(mediaPlayer.audioSessionId)
+        }
+        try {
+            equalizer?.configure(configuration)
+        } catch (error: Exception) {
+            equalizer?.close()
+            equalizer = null
+            throw error
+        }
+    }
 
     private fun createMediaPlayer(wrappedPlayer: WrappedPlayer): MediaPlayer {
         val mediaPlayer = MediaPlayer().apply {
@@ -38,10 +57,12 @@ class MediaPlayerWrapper(
 
     override fun setRate(rate: Float) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // Normal playback does not need the platform's time-stretch path.
+            // Once changed, still apply 1.0 to restore the original speed.
+            if (rate == 1.0f && !playbackParamsApplied) return
             mediaPlayer.playbackParams = mediaPlayer.playbackParams.setSpeed(rate)
-        } else if (rate == 1.0f) {
-            mediaPlayer.start()
-        } else {
+            playbackParamsApplied = true
+        } else if (rate != 1.0f) {
             error("Changing the playback rate is only available for Android M/23+ or using LOW_LATENCY mode.")
         }
     }
@@ -56,8 +77,9 @@ class MediaPlayerWrapper(
     }
 
     override fun start() {
-        // Setting playback rate instead of mediaPlayer.start().
         setRate(wrappedPlayer.rate)
+        // Do not depend on setPlaybackParams implicitly starting the output.
+        mediaPlayer.start()
     }
 
     override fun pause() {
@@ -69,6 +91,8 @@ class MediaPlayerWrapper(
     }
 
     override fun release() {
+        if (Build.VERSION.SDK_INT >= 28) equalizer?.close()
+        equalizer = null
         mediaPlayer.reset()
         mediaPlayer.release()
     }
@@ -89,6 +113,8 @@ class MediaPlayerWrapper(
     }
 
     override fun reset() {
+        if (Build.VERSION.SDK_INT >= 28) equalizer?.close()
+        equalizer = null
         mediaPlayer.reset()
     }
 

@@ -1,4 +1,4 @@
-import 'package:mosix/utils/string_utils.dart';
+import 'package:mornye/utils/string_utils.dart';
 
 class DownloadHistoryItem {
   final String id;
@@ -282,6 +282,16 @@ class DownloadHistoryState {
          (item) => _trackArtistKey(item.trackName, item.artistName),
        );
 
+  DownloadHistoryState._withExistingLookup({
+    required DownloadHistoryState source,
+    required this.items,
+    required this.totalCount,
+    required this.loadedIndexVersion,
+  }) : _lookupItems = source._lookupItems,
+       _bySpotifyId = source._bySpotifyId,
+       _byIsrc = source._byIsrc,
+       _byTrackArtistKey = source._byTrackArtistKey;
+
   static String _trackArtistKey(String trackName, String artistName) {
     final normalizedTrack = trackName.trim().toLowerCase();
     if (normalizedTrack.isEmpty) return '';
@@ -313,11 +323,19 @@ class DownloadHistoryState {
     int? loadedIndexVersion,
     List<DownloadHistoryItem>? lookupItems,
   }) {
+    if (lookupItems == null || identical(lookupItems, _lookupItems)) {
+      return DownloadHistoryState._withExistingLookup(
+        source: this,
+        items: items ?? this.items,
+        totalCount: totalCount ?? this.totalCount,
+        loadedIndexVersion: loadedIndexVersion ?? this.loadedIndexVersion,
+      );
+    }
     return DownloadHistoryState(
       items: items ?? this.items,
       totalCount: totalCount ?? this.totalCount,
       loadedIndexVersion: loadedIndexVersion ?? this.loadedIndexVersion,
-      lookupItems: lookupItems ?? _lookupItems,
+      lookupItems: lookupItems,
     );
   }
 }

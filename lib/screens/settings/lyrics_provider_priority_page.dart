@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_switch.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_switch.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/widgets/discard_changes_dialog.dart';
-import 'package:mosix/widgets/priority_settings_scaffold.dart';
-import 'package:mosix/widgets/reorderable_priority_item.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/constants/music_services.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/widgets/discard_changes_dialog.dart';
+import 'package:mornye/widgets/priority_settings_scaffold.dart';
+import 'package:mornye/widgets/reorderable_priority_item.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/constants/music_services.dart';
 
 class LyricsProviderPriorityPage extends ConsumerStatefulWidget {
   const LyricsProviderPriorityPage({super.key});
@@ -26,6 +27,7 @@ class _LyricsProviderPriorityPageState
     'netease',
     'musixmatch',
     'apple_music',
+    'mornye_lyrics',
     'qqmusic',
     'spotify',
     'deezer',
@@ -33,6 +35,8 @@ class _LyricsProviderPriorityPageState
     'kugou',
     'genius',
     'lyricsplus',
+    'lrcred',
+    'betterlyrics',
   ];
 
   late List<String> _enabledProviders;
@@ -225,6 +229,12 @@ class _LyricsProviderPriorityPageState
           description: context.l10n.lyricsProviderAppleMusicDesc,
           icon: Icons.music_note,
         );
+      case 'mornye_lyrics':
+        return _LyricsProviderInfo(
+          name: 'Zarz-LRC',
+          description: context.l10n.lyricsProviderZarzLrcDesc,
+          icon: Icons.verified_outlined,
+        );
       case 'qqmusic':
         return _LyricsProviderInfo(
           name: 'QQ Music',
@@ -266,6 +276,18 @@ class _LyricsProviderPriorityPageState
           name: 'LyricsPlus',
           description: context.l10n.lyricsProviderLyricsPlusDesc,
           icon: Icons.lyrics_outlined,
+        );
+      case 'lrcred':
+        return _LyricsProviderInfo(
+          name: 'lrc.red',
+          description: context.l10n.lyricsProviderLrcRedDesc,
+          icon: Icons.fingerprint,
+        );
+      case 'betterlyrics':
+        return _LyricsProviderInfo(
+          name: 'BetterLyrics',
+          description: context.l10n.lyricsProviderBetterLyricsDesc,
+          icon: Icons.local_fire_department_outlined,
         );
       default:
         return _LyricsProviderInfo(
@@ -321,7 +343,7 @@ class _DisabledProviderItem extends StatelessWidget {
                 children: [
                   const SizedBox(width: 28),
                   const SizedBox(width: 16),
-                  Icon(info.icon, color: colorScheme.outline),
+                  AppIcon(info.icon, color: colorScheme.outline),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

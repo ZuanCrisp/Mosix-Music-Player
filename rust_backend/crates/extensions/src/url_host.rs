@@ -1,9 +1,9 @@
 use crate::host::decode_go_utf8;
-use rquickjs::{Ctx, Function, IntoJs, Object, Value};
-use spotiflac_network::{
+use mornye_network::{
     query,
     url::{UrlParts, unescape_path},
 };
+use rquickjs::{Ctx, Function, IntoJs, Object, Value};
 use std::{cell::RefCell, rc::Rc};
 
 pub(crate) fn register<'js>(ctx: &Ctx<'js>, host: &Object<'js>) -> rquickjs::Result<()> {

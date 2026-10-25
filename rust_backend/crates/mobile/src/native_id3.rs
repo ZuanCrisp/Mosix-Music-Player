@@ -83,7 +83,7 @@ fn write_lyrics(
         .duration_since(UNIX_EPOCH)
         .map_err(|e| e.to_string())?
         .as_nanos();
-    let staging = parent.join(format!(".spotiflac-lyrics-{}-{nonce}", std::process::id()));
+    let staging = parent.join(format!(".mornye-lyrics-{}-{nonce}", std::process::id()));
     fs::create_dir(&staging).map_err(|e| e.to_string())?;
     let output_path = staging.join("audio.mp3");
     let result = (|| {

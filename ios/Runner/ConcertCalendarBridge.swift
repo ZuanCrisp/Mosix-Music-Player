@@ -9,7 +9,7 @@ final class ConcertCalendarBridge: NSObject, EKEventEditViewDelegate {
     private let store = EKEventStore()
 
     init(messenger: FlutterBinaryMessenger, presenter: @escaping () -> UIViewController?) {
-        channel = FlutterMethodChannel(name: "com.zuancrisp.mosix/concert_calendar", binaryMessenger: messenger)
+        channel = FlutterMethodChannel(name: "com.zarz.mornye/concert_calendar", binaryMessenger: messenger)
         self.presenter = presenter
         super.init()
         channel.setMethodCallHandler { [weak self] call, result in

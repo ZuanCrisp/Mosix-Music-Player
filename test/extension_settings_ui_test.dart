@@ -6,18 +6,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/screens/settings/extension_detail_page.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/settings_group.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/screens/settings/extension_detail_page.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/settings_group.dart';
 
-class _Settings extends SettingsNotifier {
-  @override
-  AppSettings build() => const AppSettings();
-}
+import 'support/fixed_settings.dart';
 
 class _Extensions extends ExtensionNotifier {
   @override
@@ -58,7 +54,7 @@ class _Extensions extends ExtensionNotifier {
 }
 
 void main() {
-  const channel = MethodChannel('com.zuancrisp.mosix/backend');
+  const channel = MethodChannel('com.zarz.mornye/backend');
   setUp(() => SharedPreferences.setMockInitialValues({}));
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -109,7 +105,7 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
-              settingsProvider.overrideWith(_Settings.new),
+              settingsProvider.overrideWith(FixedSettingsNotifier.new),
               extensionProvider.overrideWith(_Extensions.new),
             ],
             child: MaterialApp(

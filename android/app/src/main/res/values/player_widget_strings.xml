@@ -11,4 +11,6 @@
     <string name="player_widget_dark">Dark</string>
     <string name="player_widget_show_artist">Show artist name</string>
     <string name="player_widget_save">Save widget</string>
+    <string name="player_widget_customize">Choose how this widget looks on your home screen.</string>
+    <string name="player_widget_style">Style</string>
 </resources>

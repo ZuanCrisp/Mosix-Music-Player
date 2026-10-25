@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/library_collections_provider.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/providers/recent_access_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/screens/album_screen.dart';
-import 'package:mosix/screens/playlist_screen.dart';
-import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/widgets/track_list_tile.dart';
-import 'package:mosix/widgets/track_detail_actions.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/library_collections_provider.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/recent_access_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/screens/album_screen.dart';
+import 'package:mornye/screens/playlist_screen.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/album_detail_header.dart';
+import 'package:mornye/widgets/track_list_tile.dart';
+import 'package:mornye/widgets/track_detail_actions.dart';
+
+import 'support/fixed_settings.dart';
 
 const _track = Track(
   id: 'example-track',
@@ -25,11 +26,6 @@ const _track = Track(
   albumName: 'Example album',
   duration: 180,
 );
-
-class _Settings extends SettingsNotifier {
-  @override
-  AppSettings build() => const AppSettings();
-}
 
 class _Collections extends LibraryCollectionsNotifier {
   var _batchCalls = 0;
@@ -89,9 +85,11 @@ void main() {
       final snapshot = Provider<DownloadQueueLookup>((ref) => lookup);
       final container = ProviderContainer(
         overrides: [
-          settingsProvider.overrideWith(_Settings.new),
+          settingsProvider.overrideWith(FixedSettingsNotifier.new),
           libraryCollectionsProvider.overrideWith(_Collections.new),
-          currentMediaItemProvider.overrideWith((ref) => Stream.value(null)),
+          currentMediaItemProvider.overrideWithBuild(
+            (ref, notifier) => Stream.value(null),
+          ),
           downloadQueueLookupProvider.overrideWith(
             (ref) => ref.watch(snapshot),
           ),
@@ -204,10 +202,12 @@ void main() {
         final collections = _Collections();
         final container = ProviderContainer(
           overrides: [
-            settingsProvider.overrideWith(_Settings.new),
+            settingsProvider.overrideWith(FixedSettingsNotifier.new),
             libraryCollectionsProvider.overrideWith(() => collections),
             recentAccessProvider.overrideWith(_Recent.new),
-            currentMediaItemProvider.overrideWith((ref) => Stream.value(null)),
+            currentMediaItemProvider.overrideWithBuild(
+              (ref, notifier) => Stream.value(null),
+            ),
             downloadQueueLookupProvider.overrideWithValue(
               const DownloadQueueLookup.empty(),
             ),

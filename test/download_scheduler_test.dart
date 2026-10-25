@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/download_scheduler.dart';
+import 'package:mornye/services/download_scheduler.dart';
 
 class _Queue {
   final queued = <String>['a', 'b', 'c', 'd'];

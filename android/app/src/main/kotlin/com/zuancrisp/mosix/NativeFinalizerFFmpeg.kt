@@ -15,9 +15,6 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.math.pow
 
-
-// FFmpeg execution, probing, and container helpers for NativeDownloadFinalizer.
-
 internal fun isMP4ContainerFile(path: String): Boolean {
     return try {
         File(path).inputStream().use { stream ->
@@ -157,7 +154,7 @@ internal fun NativeDownloadFinalizer.promoteStagedConversion(stagedPath: String,
     if (!staged.isFile || staged.length() == 0L) return false
     fsyncQuietly(staged)
     val final = File(finalPath)
-    val backup = File("$finalPath.spotiflac-backup-${System.nanoTime()}")
+    val backup = File("$finalPath.mornye-backup-${System.nanoTime()}")
     val backedUp = final.exists()
     if (backedUp && (!final.isFile || !final.renameTo(backup))) return false
     if (staged.renameTo(final)) {
@@ -241,12 +238,4 @@ internal fun NativeDownloadFinalizer.isNativeFlacFile(path: String): Boolean {
         Log.w(TAG, "Native FLAC magic probe failed for $path: ${e.message}")
         false
     }
-}
-
-internal fun NativeDownloadFinalizer.requestedDecryptionOutputExt(input: NativeDownloadFinalizer.FinalizeInput): String {
-    val descriptor = input.result.optJSONObject("decryption")
-    return normalizeExt(
-        descriptor?.optString("output_extension", "")
-            ?.ifBlank { input.result.optString("output_extension", "") }
-    )
 }

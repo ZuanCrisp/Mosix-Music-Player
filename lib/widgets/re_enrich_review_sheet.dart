@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/services/batch_metadata_re_enrich.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/app_action_button.dart';
-import 'package:mosix/widgets/app_content_card.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/services/batch_metadata_re_enrich.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/app_action_button.dart';
+import 'package:mornye/widgets/app_content_card.dart';
+import 'package:mornye/theme/mornye_theme.dart';
 
 /// Results belong above the Library selection card and metadata sheets.
 /// A page snackbar can be painted behind either of those surfaces.
@@ -46,6 +46,7 @@ Future<bool> showReEnrichReviewSheet(
       previews.length,
     ),
     maxHeightFactor: 0.9,
+    dialogSize: AppDialogSize.wide,
     builder: (sheetContext) => _ReEnrichReviewContent(previews: previews),
   );
   return confirmed == true;
@@ -151,7 +152,12 @@ class _ReEnrichReviewContent extends StatelessWidget {
                       label:
                           '${_fieldLabel(context, change.field)}: ${_oldValue(context, change)}, ${_newValue(context, change)}',
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(56, 10, 16, 10),
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                          56,
+                          10,
+                          16,
+                          10,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -203,7 +209,13 @@ class _ReEnrichReviewContent extends StatelessWidget {
                           child: Column(children: children),
                         ),
                       )
-                    : SettingsGroup(children: children);
+                    : SettingsGroup(
+                        connected: true,
+                        children: [
+                          for (final child in children)
+                            if (child is! Divider) child,
+                        ],
+                      );
               },
             ),
           ),

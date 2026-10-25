@@ -1,6 +1,9 @@
-import 'package:mosix/models/download_result.dart';
-import 'package:mosix/services/download_saf_file_replacer.dart';
-import 'package:mosix/utils/audio_format_utils.dart';
+import 'dart:io';
+
+import 'package:mornye/models/download_result.dart';
+import 'package:mornye/services/download_saf_file_replacer.dart';
+import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mornye/utils/file_access.dart';
 
 /// Finalizes a requested lossless container using the measured audio stream.
 /// Native FLAC bytes can be renamed; FLAC-in-MP4 still needs remuxing.
@@ -34,31 +37,17 @@ class DownloadContainerFinalizer {
   }) async {
     if (requestedExtension != '.flac') return filePath;
     forceConversion = forceConversion || result.requiresContainerConversion;
-    final reportedCodec = normalizeAudioFormatValue(result.audioCodec);
-    if (!forceConversion && isLossyAudioFormat(reportedCodec)) {
-      debug(
-        'Native-worker output is $reportedCodec; preserving native container.',
-      );
-      return filePath;
-    }
     final outputExtension = result.outputExtension(path: filePath);
     final lowerPath = filePath.toLowerCase();
-    final isSafSource = filePath.startsWith('content://');
+    final isSafSource = isContentUri(filePath);
     final pathLooksLikeM4a =
         lowerPath.endsWith('.m4a') ||
         lowerPath.endsWith('.mp4') ||
         outputExtension == '.m4a' ||
         outputExtension == '.mp4';
     if (!forceConversion && !pathLooksLikeM4a && !isSafSource) return filePath;
-    final decryptionExtension = result.decryption?.normalizedOutputExtension;
-    if (!forceConversion &&
-        decryptionExtension != null &&
-        decryptionExtension != '.flac') {
-      debug(
-        'Native-worker decrypted output requested $decryptionExtension; preserving native container.',
-      );
-      return filePath;
-    }
+    // Provider/decryption extensions describe the input container, not its
+    // audio codec. Inspect the stream before preserving an M4A/MP4 download.
     bool shouldConvert(String? codec) {
       if (shouldAttemptLosslessContainerConversion(
         forceConversion: forceConversion,
@@ -104,8 +93,7 @@ class DownloadContainerFinalizer {
       );
       if (preserve) return filePath;
       if (uri == null) return null;
-      result.fileName = flacName;
-      result.markFlacContainer();
+      result.markFlacContainer(path: uri, name: flacName);
       return uri;
     }
     final codec = await probeCodec(filePath);
@@ -116,7 +104,19 @@ class DownloadContainerFinalizer {
         : await convertToFlac(filePath);
     if (output == null) return null;
     await embedMetadata?.call(output);
-    result.markFlacContainer();
+    result.markFlacContainer(
+      path: output,
+      name: useSaf
+          ? finalizedAudioFileName(
+              fileName:
+                  result.fileName ??
+                  fallbackFileName ??
+                  File(output).uri.pathSegments.last,
+              localPath: output,
+              fallbackExtension: '.flac',
+            )
+          : File(output).uri.pathSegments.last,
+    );
     return output;
   }
 }

@@ -1,3 +1,5 @@
+//! Container readers for FLAC and Ogg streams, including Ogg page and packet parsing.
+
 use super::{AudioMetadata, CoverArt, bytes, comments, exact, id3, seek, utf8};
 use base64::Engine;
 use std::collections::BTreeMap;
@@ -30,17 +32,33 @@ pub(super) fn flac_with_cover(
     Ok(metadata)
 }
 
+/// Locate the FLAC marker after an optional ID3v2 tag, leaving the reader at
+/// the first metadata block. Writers retain the prefix outside this region.
+pub(super) fn flac_start(reader: &mut (impl Read + Seek)) -> Result<u64, String> {
+    let mut signature = [0; 4];
+    exact(reader, &mut signature)?;
+    let mut start = 0;
+    if &signature[..3] == b"ID3" {
+        let mut header = [0; 10];
+        header[..4].copy_from_slice(&signature);
+        exact(reader, &mut header[4..])?;
+        start = id3::v2_tag_length(&header).ok_or("invalid ID3v2 header before fLaC")?;
+        seek(reader, SeekFrom::Start(start))?;
+        exact(reader, &mut signature)?;
+    }
+    if &signature != b"fLaC" {
+        return Err("fLaC head incorrect".into());
+    }
+    Ok(start)
+}
+
 fn flac_inner(
     reader: &mut (impl Read + Seek),
     mut cover: Option<&mut Option<CoverArt>>,
 ) -> Result<AudioMetadata, String> {
-    let mut signature = [0; 4];
-    exact(reader, &mut signature)?;
-    if &signature != b"fLaC" {
-        return Err("fLaC head incorrect".into());
-    }
+    let start = flac_start(reader)?;
     let end = seek(reader, SeekFrom::End(0))?;
-    seek(reader, SeekFrom::Start(4))?;
+    seek(reader, SeekFrom::Start(start + 4))?;
     let mut metadata = AudioMetadata::default();
     let mut found = false;
     let mut front_cover = false;
@@ -188,15 +206,43 @@ impl OggPage {
     }
 }
 
+/// Reading for the comment header stops at this many bytes instead of a page
+/// count. Taggers such as mutagen write pages of about 4 KiB, so a cover in
+/// the comments can span hundreds of pages; a comment packet over 10 MiB is
+/// skipped anyway.
+const OGG_COMMENT_BYTES: usize = 16 * 1024 * 1024;
+
 pub(crate) fn ogg_packets(
     reader: &mut impl Read,
     max_packets: usize,
     max_pages: usize,
 ) -> Result<Vec<Vec<u8>>, String> {
+    ogg_packets_until(reader, max_packets, max_pages, usize::MAX, |_| false)
+}
+
+/// Packets up to and including the comment header (`OpusTags` or the Vorbis
+/// comment packet), which follows the identification header.
+fn ogg_comment_packets(reader: &mut impl Read) -> Result<Vec<Vec<u8>>, String> {
+    ogg_packets_until(reader, 30, usize::MAX, OGG_COMMENT_BYTES, |packet| {
+        packet.starts_with(b"OpusTags") || packet.starts_with(b"\x03vorbis")
+    })
+}
+
+fn ogg_packets_until(
+    reader: &mut impl Read,
+    max_packets: usize,
+    max_pages: usize,
+    max_bytes: usize,
+    done: impl Fn(&[u8]) -> bool,
+) -> Result<Vec<Vec<u8>>, String> {
     let mut packets = Vec::new();
     let mut current = Vec::new();
     let mut skip_packet = false;
+    let mut consumed = 0;
     for _ in 0..max_pages {
+        if consumed >= max_bytes {
+            break;
+        }
         let page = OggPage::read(reader).and_then(|page| page.ok_or_else(|| "EOF".into()));
         let OggPage {
             header,
@@ -207,6 +253,7 @@ pub(crate) fn ogg_packets(
             Err(error) if packets.is_empty() => return Err(error),
             Err(_) => break,
         };
+        consumed += header.len() + segments.len() + data.len();
         if header[5] & 1 == 0 && !current.is_empty() {
             current.clear();
             skip_packet = false;
@@ -224,7 +271,12 @@ pub(crate) fn ogg_packets(
             offset += length;
             if length < 255 {
                 if !current.is_empty() {
-                    packets.push(std::mem::take(&mut current));
+                    let packet = std::mem::take(&mut current);
+                    let finished = done(&packet);
+                    packets.push(packet);
+                    if finished {
+                        return Ok(packets);
+                    }
                 }
                 skip_packet = false;
                 if packets.len() >= max_packets {
@@ -252,7 +304,7 @@ pub(crate) fn ogg_stream_is_opus(packets: &[Vec<u8>]) -> Option<bool> {
 }
 
 pub(super) fn ogg(reader: &mut impl Read) -> Result<AudioMetadata, String> {
-    let packets = ogg_packets(reader, 30, 80)?;
+    let packets = ogg_comment_packets(reader)?;
     let stream = ogg_stream_is_opus(&packets);
     let packet = packets.iter().find_map(|packet| {
         if stream != Some(false) && packet.len() > 8 && packet.starts_with(b"OpusTags") {
@@ -263,22 +315,15 @@ pub(super) fn ogg(reader: &mut impl Read) -> Result<AudioMetadata, String> {
             None
         }
     });
-    let metadata = packet
+    // Every Opus and Vorbis stream has this header, so a complete one without
+    // a title or artist is an untagged or partly tagged song, not a failed read.
+    packet
         .map(|data| comments::ogg(&comments::parse(data, 512 * 1024)))
-        .unwrap_or_default();
-    if metadata.title.is_empty()
-        && metadata.artist.is_empty()
-        && metadata.replay_gain_track_gain.is_empty()
-        && metadata.replay_gain_album_gain.is_empty()
-    {
-        Err("no Vorbis comments found".into())
-    } else {
-        Ok(metadata)
-    }
+        .ok_or_else(|| "no Vorbis comments found".into())
 }
 
 pub(super) fn ogg_cover(reader: &mut impl Read) -> Result<CoverArt, String> {
-    let packets = ogg_packets(reader, 30, 80)?;
+    let packets = ogg_comment_packets(reader)?;
     let stream = ogg_stream_is_opus(&packets);
     for packet in &packets {
         let comments = if stream != Some(false) && packet.starts_with(b"OpusTags") {

@@ -1,8 +1,10 @@
+//! Deezer browse endpoints: album, artist, and playlist lookups.
+
 use super::{
     Check, DeezerClient, ResolverError,
     cache::{Bucket, Value},
 };
-use spotiflac_core::metadata::{
+use mornye_core::metadata::{
     AlbumInfoMetadata, AlbumResponsePayload, AlbumTrackMetadata, ArtistAlbumMetadata,
     ArtistInfoMetadata, ArtistResponsePayload, PlaylistInfoMetadata, PlaylistOwner,
     PlaylistResponsePayload, PlaylistTrackCount,

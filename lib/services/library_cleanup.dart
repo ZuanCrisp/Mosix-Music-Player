@@ -1,30 +1,72 @@
 import 'dart:io';
 import 'dart:isolate';
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/services/library_cover_snapshot.dart';
-import 'package:mosix/services/native_cache_maintenance.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/services/library_cover_snapshot.dart';
+import 'package:mornye/services/native_cache_maintenance.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/logger.dart';
 
 /// Removes rows superseded by a staged scan inside the caller's transaction.
 /// On partial scans, an unreadable file is not evidence that it was deleted.
+({String where, List<Object?> args}) libraryScanReplacementPredicate(
+  String sourceId, {
+  required String stageTable,
+  required bool preserveMissing,
+  List<String>? preserveMissingPaths,
+}) {
+  final args = <Object?>[sourceId];
+  if (!preserveMissing) return (where: 'source_id = ?', args: args);
+  final replaced =
+      'id IN (SELECT id FROM $stageTable) '
+      'OR file_path IN (SELECT file_path FROM $stageTable)';
+  if (preserveMissingPaths == null || preserveMissingPaths.length > 128) {
+    return (where: 'source_id = ? AND ($replaced)', args: args);
+  }
+  if (preserveMissingPaths.isEmpty) {
+    return (where: 'source_id = ?', args: args);
+  }
+  final protected = <String>[];
+  for (final path in preserveMissingPaths) {
+    if (path.endsWith('/')) {
+      // Literal prefixes preserve percent signs and underscores in NAS names.
+      protected.add('substr(file_path, 1, length(?)) = ?');
+      args.addAll([path, path]);
+    } else {
+      protected.add('file_path = ?');
+      args.add(path);
+    }
+  }
+  return (
+    where:
+        'source_id = ? AND ($replaced OR '
+        'NOT (${protected.join(' OR ')}))',
+    args: args,
+  );
+}
+
 Future<void> deleteReplacedLibraryScanRows(
   DatabaseExecutor db,
   String sourceId, {
   required String stageTable,
   required bool preserveMissing,
+  List<String>? preserveMissingPaths,
 }) async {
-  final where = preserveMissing
-      ? 'source_id = ? AND (id IN (SELECT id FROM $stageTable) '
-            'OR file_path IN (SELECT file_path FROM $stageTable))'
-      : 'source_id = ?';
+  final predicate = libraryScanReplacementPredicate(
+    sourceId,
+    stageTable: stageTable,
+    preserveMissing: preserveMissing,
+    preserveMissingPaths: preserveMissingPaths,
+  );
   await db.rawDelete(
     'DELETE FROM library_path_keys WHERE item_id IN '
-    '(SELECT id FROM library WHERE $where)',
-    [sourceId],
+    '(SELECT id FROM library WHERE ${predicate.where})',
+    predicate.args,
   );
-  await db.rawDelete('DELETE FROM library WHERE $where', [sourceId]);
+  await db.rawDelete(
+    'DELETE FROM library WHERE ${predicate.where}',
+    predicate.args,
+  );
 }
 
 /// Deletes a selection atomically without exceeding SQLite's parameter budget.

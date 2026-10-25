@@ -1,11 +1,15 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
-import 'package:mosix/controllers/player_metadata_controller.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/utils/isrc_utils.dart';
-import 'package:mosix/widgets/mornye_player_details_sheet.dart';
-import 'package:mosix/widgets/settings_group.dart';
+import 'package:mornye/controllers/player_metadata_controller.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/theme/app_motion.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/isrc_utils.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/mornye_player_details_sheet.dart';
+import 'package:mornye/widgets/settings_group.dart';
 
 Future<void> showPlayerDetailsSheet(
   BuildContext context,
@@ -13,37 +17,61 @@ Future<void> showPlayerDetailsSheet(
   required PlayerMetadataController metadata,
   required MediaItem? mediaItem,
 }) {
-  final mornye = context.isMornye;
   final fallback = metadata.detailsSnapshot(mediaItem);
   final metadataFuture = metadata.readDetails(mediaItem);
+  Widget details(ScrollController scrollController) =>
+      FutureBuilder<Map<String, dynamic>>(
+        future: metadataFuture,
+        initialData: fallback,
+        builder: (context, snapshot) => _MetadataList(
+          meta: snapshot.data ?? fallback,
+          colorScheme: colorScheme,
+          scrollController: scrollController,
+          mediaItem: mediaItem,
+        ),
+      );
+  if (!context.isMornye) {
+    // The shared sheet supplies the handle, shape and header on phones, and
+    // opens as a desktop dialog.
+    final item = mediaItem;
+    final subtitle = [
+      item?.title,
+      item?.artist,
+    ].whereType<String>().where((part) => part.trim().isNotEmpty).join(' · ');
+    return showAppScrollableBottomSheet<void>(
+      context: context,
+      title: context.l10n.nowPlayingDetails,
+      subtitle: subtitle.isEmpty ? null : subtitle,
+      builder: (context, scrollController) => details(scrollController),
+    );
+  }
+  // The Mornye details draw their own glass, handle and header.
+  if (isDesktopPlatform) {
+    return showAppSheetDialog<void>(
+      context: context,
+      isScrollControlled: true,
+      mornyeGlass: false,
+      builder: (context) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 1,
+        minChildSize: 1,
+        builder: (context, scrollController) => details(scrollController),
+      ),
+    );
+  }
   return showModalBottomSheet<void>(
     context: context,
+    sheetAnimationStyle: AppMotion.surfaceEntrance(context),
     isScrollControlled: true,
-    useRootNavigator: mornye,
-    showDragHandle: !mornye,
-    backgroundColor: mornye
-        ? Colors.transparent
-        : colorScheme.surfaceContainerHigh,
-    builder: (context) {
-      return DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: mornye ? 0.75 : 0.6,
-        maxChildSize: 0.9,
-        minChildSize: 0.4,
-        builder: (context, scrollController) {
-          return FutureBuilder<Map<String, dynamic>>(
-            future: metadataFuture,
-            initialData: fallback,
-            builder: (context, snapshot) => _MetadataList(
-              meta: snapshot.data ?? fallback,
-              colorScheme: colorScheme,
-              scrollController: scrollController,
-              mediaItem: mediaItem,
-            ),
-          );
-        },
-      );
-    },
+    useRootNavigator: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.75,
+      maxChildSize: 0.9,
+      minChildSize: 0.4,
+      builder: (context, scrollController) => details(scrollController),
+    ),
   );
 }
 
@@ -100,77 +128,61 @@ class _MetadataList extends StatelessWidget {
     }
 
     final textTheme = Theme.of(context).textTheme;
+    final tokens = context.tokens;
 
+    // The sheet header names the track, so the rows sit in one group below
+    // it instead of a titled card.
     return ListView(
       controller: scrollController,
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      padding: EdgeInsets.only(top: tokens.gapXs, bottom: tokens.gapXl),
       children: [
-        Card(
-          elevation: 0,
-          color: settingsGroupColor(context),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        if (rows.isEmpty)
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: tokens.gapXl),
+            child: Text(
+              l10n.nowPlayingNoMetadata,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 20,
-                      color: colorScheme.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      context.l10n.nowPlayingDetails,
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
+          )
+        else
+          SettingsGroup(
+            connected: true,
+            children: [
+              for (final (label, value) in rows)
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: tokens.rowPaddingH,
+                    vertical: tokens.rowPaddingVCompact,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          label,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                ...rows.map(
-                  (row) => Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 6,
-                      horizontal: 4,
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: 100,
-                          child: Text(
-                            row.$1,
-                            style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
+                      SizedBox(width: tokens.gapSm),
+                      Expanded(
+                        child: Text(
+                          value,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurface,
                           ),
                         ),
-                        Expanded(
-                          child: Text(
-                            row.$2,
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
-        ),
       ],
     );
   }

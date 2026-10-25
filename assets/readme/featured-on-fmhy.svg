@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="76" viewBox="0 0 250 76" role="img" aria-label="Featured on FMHY">
+  <title>Featured on FMHY</title>
+  <defs>
+    <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a2160"/>
+      <stop offset="1" stop-color="#1c1d3c"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+  <rect x="1.5" y="1.5" width="247" height="73" rx="13" fill="url(#fill)" stroke="#4d4470" stroke-width="2"/>
+  <g filter="url(#glow)" opacity="0.9">
+    <path d="M28 18 L28 58 L62 38 Z" fill="#ff5fd2" transform="translate(-3 0)"/>
+    <path d="M28 18 L28 58 L62 38 Z" fill="#5fe3ff" transform="translate(3 0)"/>
+  </g>
+  <path d="M28 18 L28 58 L62 38 Z" fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif">
+    <text x="84" y="34" font-size="21" fill="#e9e6f2">Featured on</text>
+    <text x="84" y="60" font-size="23" font-weight="700" fill="#b9b2f7">FMHY</text>
+  </g>
+</svg>

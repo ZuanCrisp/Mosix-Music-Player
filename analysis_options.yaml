@@ -9,7 +9,7 @@ analyzer:
     - .dart_tool/**
     - docs/internal/**
     - lib/**/*.g.dart
-    - lib/l10n/*.dart
+    - lib/l10n/app_localizations*.dart
     - android/**
     - ios/**
     - web/**
@@ -31,6 +31,8 @@ linter:
     type_annotate_public_apis: true
     cancel_subscriptions: true
     close_sinks: true
-    # Catches dead cross-layer chains (Dart wrapper kept alive only by its own
-    # declaration) before they accumulate into another dedup campaign.
+    # Reports top-level declarations unreachable from the `main` of an
+    # analyzed executable library (the app entry point and test files). It does
+    # not detect unused public members of library files, such as services or
+    # providers, which have no `main` of their own.
     unreachable_from_main: true

@@ -1,4 +1,4 @@
-use spotiflac_extensions::logging::{LogBuffer as CoreLogBuffer, LogClosed};
+use mornye_extensions::logging::{LogBuffer as CoreLogBuffer, LogClosed};
 use std::sync::Arc;
 
 #[derive(Debug, thiserror::Error, uniffi::Error)]

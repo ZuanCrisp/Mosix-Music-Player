@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart' show CupertinoColors, CupertinoIcons;
 import 'package:flutter/material.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_icon.dart';
 
 /// Removing a row affects the queue only, never the song on disk.
 class PlayerQueueDismissible extends StatefulWidget {
@@ -54,9 +55,10 @@ class _PlayerQueueDismissibleState extends State<PlayerQueueDismissible> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.error,
-              borderRadius: BorderRadius.circular(12),
+              // Matches the queue sheet's row corners.
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(
+            child: AppIcon(
               Icons.delete_outline,
               color: Theme.of(context).colorScheme.onError,
               semanticLabel: MaterialLocalizations.of(

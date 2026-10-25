@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/utils/re_enrich_release_policy.dart';
+import 'package:mornye/utils/re_enrich_release_policy.dart';
 
 void main() {
   test(

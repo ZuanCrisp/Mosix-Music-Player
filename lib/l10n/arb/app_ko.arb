@@ -7,7 +7,7 @@
   "usbBitPerfectDescription": "지원되는 출력에서는 소스의 정밀도를 그대로 유지합니다. 아래에서 다이렉트 USB 또는 AAudio 전용 출력을 선택하세요. 그 외의 경우 Android USB 출력은 Android 14 이상에서만 사용할 수 있습니다. 이 설정은 다음 트랙부터 적용되며, AutoMix 또는 볼륨 정규화가 적용되지 않은 상태에서 작동합니다. 다이렉트 USB 출력에서는 휴대전화의 시스템 볼륨 조절이 작동하지 않을 수 있습니다",
   "usbHardwareVolume": "DAC 하드웨어 볼륨",
   "usbVolumeWarningTitle": "청취 볼륨을 확인하세요",
-  "usbVolumeWarning": "다이렉트 USB 오디오는 일반 재생보다 훨씬 크게 출력될 수 있으며, 휴대전화의 볼륨 버튼으로 음량이 조절되지 않을 수 있습니다. 시작하기 전에 DAC 또는 앰프의 볼륨을 낮추세요. 지원되는 경우 Mosix은 연결 시 DAC의 볼륨을 최대 −40 dB로 설정합니다. 하지만 이것이 모든 앰프나 헤드폰에서 안전한 청취 음량을 보장하는 것은 아닙니다",
+  "usbVolumeWarning": "다이렉트 USB 오디오는 일반 재생보다 훨씬 크게 출력될 수 있으며, 휴대전화의 볼륨 버튼으로 음량이 조절되지 않을 수 있습니다. 시작하기 전에 DAC 또는 앰프의 볼륨을 낮추세요. 지원되는 경우 Mornye는 연결 시 DAC의 볼륨을 최대 −40 dB로 설정합니다. 하지만 이것이 모든 앰프나 헤드폰에서 안전한 청취 음량을 보장하는 것은 아닙니다",
   "usbVolumeAccept": "이해했습니다",
   "usbVolumeUnavailable": "이 DAC에는 검증된 하드웨어 볼륨 조절 기능이 없기 때문에 재생이 일시 중지되었습니다. DAC 또는 앰프의 볼륨을 낮춘 다음, 필요하다면 고정 볼륨 출력을 활성화하고 트랙을 다시 선택하세요",
   "usbFixedVolume": "고정 볼륨 USB 출력 허용",
@@ -26,36 +26,7 @@
   "usbBitPerfectNoDevice": "USB DAC이 연결되어 있지 않습니다. 일반 오디오 출력을 사용합니다",
   "usbBitPerfectFallback": "이 기기 또는 오디오 형식은 Bit-Perfect 출력을 지원하지 않습니다. 일반 재생을 사용합니다",
   "usbBitPerfectRouteChanged": "USB 오디오 출력 경로가 변경되었습니다. 재생이 일시 중지되었습니다. 다시 연결하려면 트랙을 선택하세요",
-  "upgradeIntroWelcome": "Mosix 5.0\n에 오신 것을 환영합니다",
-  "upgradeIntroThemeTitle": "나만의 스타일로\n꾸며보세요",
-  "upgradeIntroThemeBody": "스타일을 선택하세요. 선택한 스타일은 즉시 적용되며, 나중에 디자인 설정에서 변경할 수 있습니다",
-  "upgradeIntroThemeMaterialBody": "Material 디자인 컨트롤과 선택한 강조 색상이 적용된 익숙한 레이아웃",
-  "upgradeIntroThemeMornyeBody": "글래스 스타일의 하단바, 새롭게 디자인된 라이브러리, 그리고 몰입감 있는 플레이어",
-  "upgradeIntroRustTitle": "Rust로 제작된\n새로운 엔진",
-  "upgradeIntroRustBody": "5.0 버전에서는 앱의 백엔드가 Go에서 Rust로 변경되었습니다. 이는 여러분이 매일 사용하는 화면 뒤에서 작동하는 핵심 엔진입니다",
-  "upgradeIntroRustEngineTitle": "화면 뒤에서 작동",
-  "upgradeIntroRustEngineBody": "Rust는 Android와 iOS에서 다운로드, 오디오 메타데이터, 라이브러리 검색, 확장 기능 런타임을 처리합니다",
-  "upgradeIntroRustMemoryTitle": "메모리를 더욱 신중하게 사용",
-  "upgradeIntroRustMemoryBody": "버퍼를 재사용하고 데이터 복사 횟수를 줄여, 아트워크와 확장 기능 데이터를 처리할 때 발생하는 임시 메모리 할당을 줄였습니다",
-  "upgradeIntroRustKeepTitle": "음악을 그대로 유지",
-  "upgradeIntroRustKeepBody": "컬렉션을 다시 다운로드할 필요가 없습니다. 저장된 음악과 설정이 그대로 유지되며, 새로 설정할 필요도 없습니다",
-  "upgradeIntroWelcomeBody": "변경된 내용과 해당 기능을 찾을 수 있는 위치를 간단히 확인해 보세요",
-  "upgradeIntroMornyeBody": "플레이어, 가사 및 하단바 화면이 새로운 모습으로 바뀌었습니다",
-  "upgradeIntroLibrarySummary": "재생목록, 아티스트 또는 앨범별로 음악을 탐색할 수 있습니다",
-  "upgradeIntroRepoSummary": "확장 기능을 통해 음악 소스와 제공자를 선택할 수 있습니다",
-  "upgradeIntroLibraryTitle": "라이브러리를\n알아보세요",
-  "upgradeIntroLibraryBody": "Mornye에서는 카테고리별로 음악을 탐색하거나, 최근 추가됨에서 앨범을 찾을 수 있습니다",
-  "upgradeIntroDownloadsBody": "오른쪽 상단의 다운로드에서 일시정지하거나 다시 시도할 수 있습니다. 다운로드가 완료된 음악은 최근 추가됨으로 이동합니다",
-  "upgradeIntroSearchBody": "여기에서 저장된 음악을 검색할 수 있습니다. 별도의 검색 탭에서는 확장 기능을 통해 제공되는 음악까지 검색합니다",
-  "upgradeIntroPlayerTitle": "플레이어를\n설정하세요",
-  "upgradeIntroPlayerBody": "테마와 재생 옵션은 언제든지 변경할 수 있습니다. 여기에서 해당 설정을 찾을 수 있습니다",
-  "upgradeIntroAppearanceBody": "'설정 → 디자인'에서 테마를 변경할 수 있습니다. Mornye에서는 아래로 스크롤하면 탐색 메뉴가 축소되고, 위로 스크롤하면 다시 확장됩니다",
-  "upgradeIntroAutoMixBody": "트랙 간 템포와 비트를 맞춥니다. '설정 → 로컬 라이브러리 → 재생'에서 활성화하세요. 기본적으로 비활성화되어 있습니다",
-  "upgradeIntroSettingsBody": "Mornye에서 홈 화면의 프로필을 탭하면 설정을 열어 이름과 사진을 수정할 수 있습니다",
-  "upgradeIntroSkip": "건너뛰기",
   "upgradeIntroContinue": "계속",
-  "upgradeIntroDone": "듣기 시작",
-  "upgradeIntroReplay": "5.0의 새로운 기능",
   "cacheMotionArtwork": "오프라인 모션 커버",
   "cacheMotionArtworkDesc": "앨범 동영상은 다운로드할 때 함께 저장됩니다. 동영상을 삭제해도 음악 파일과 정적 앨범 커버는 그대로 유지됩니다",
   "nowPlayingVolume": "볼륨",
@@ -94,7 +65,7 @@
   },
   "@@locale": "ko",
   "@@last_modified": "2026-04-28",
-  "appName": "Mosix",
+  "appName": "Mornye",
   "@appName": {
     "description": "App name - DO NOT TRANSLATE"
   },
@@ -117,10 +88,6 @@
   "homeTitle": "홈",
   "@homeTitle": {
     "description": "Home screen title"
-  },
-  "homeSubtitle": "지원 URL 붙여넣기 또는 이름으로 검색",
-  "@homeSubtitle": {
-    "description": "Subtitle shown below search box"
   },
   "homeEmptyTitle": "아직 검색 제공자가 없음",
   "@homeEmptyTitle": {
@@ -155,10 +122,6 @@
   "libraryNoActiveDownloads": "진행 중인 다운로드가 없습니다",
   "librarySearchHint": "라이브러리 검색",
   "libraryEmptyCollection": "음악이 여기에 표시됩니다",
-  "historySearchHint": "기록 검색...",
-  "@historySearchHint": {
-    "description": "Search bar placeholder in history"
-  },
   "settingsTitle": "설정",
   "@settingsTitle": {
     "description": "Settings screen title"
@@ -516,10 +479,6 @@
   "@aboutMobileDeveloper": {
     "description": "Role description for mobile dev"
   },
-  "aboutOriginalCreator": "Mosix 오리지널 개발자",
-  "@aboutOriginalCreator": {
-    "description": "Role description for original creator"
-  },
   "aboutLogoArtist": "아름다운 로고를 만들어주신 재능 있는 아티스트!",
   "@aboutLogoArtist": {
     "description": "Role description for logo artist"
@@ -539,14 +498,6 @@
   "aboutMobileSource": "모바일 소스 코드",
   "@aboutMobileSource": {
     "description": "Link to mobile GitHub repo"
-  },
-  "aboutPCSource": "PC 소스 코드",
-  "@aboutPCSource": {
-    "description": "Link to PC GitHub repo"
-  },
-  "aboutKeepAndroidOpen": "Keep Android Open",
-  "@aboutKeepAndroidOpen": {
-    "description": "Link to Keep Android Open campaign website"
   },
   "aboutReportIssue": "문제 신고",
   "@aboutReportIssue": {
@@ -757,7 +708,7 @@
   "@setupStorageRequired": {
     "description": "Title when storage permission needed"
   },
-  "setupStorageDescription": "Mosix은 다운로드된 음악 파일을 저장하기 위해 저장소 접근 권한이 필요합니다",
+  "setupStorageDescription": "Mornye는 다운로드된 음악 파일을 저장하기 위해 저장소 접근 권한이 필요합니다",
   "@setupStorageDescription": {
     "description": "Explanation for storage permission"
   },
@@ -1114,7 +1065,7 @@
   "@snackbarFileNotFound": {
     "description": "Snackbar - file doesn't exist"
   },
-  "snackbarSelectExtFile": ".spotiflac-ext 파일을 선택하세요",
+  "snackbarSelectExtFile": ".mornye-ext 파일을 선택하세요",
   "@snackbarSelectExtFile": {
     "description": "Snackbar - wrong file type selected"
   },
@@ -2044,7 +1995,7 @@
   "@extensionsNoExtensions": {
     "description": "Empty state - no extensions"
   },
-  "extensionsNoExtensionsSubtitle": "새 제공자를 추가하려면 .spotiflac-ext 파일을 설치하세요",
+  "extensionsNoExtensionsSubtitle": "새 제공자를 추가하려면 .mornye-ext 파일을 설치하세요",
   "@extensionsNoExtensionsSubtitle": {
     "description": "Empty state subtitle"
   },
@@ -2160,10 +2111,6 @@
   "@qualityHiResFlacMaxSubtitle": {
     "description": "Technical spec for hi-res max"
   },
-  "downloadLossy320": "손실 압축 320kbps",
-  "@downloadLossy320": {
-    "description": "Quality option label for lossy 320kbps"
-  },
   "downloadLossyFormat": "손실 압축 형식",
   "@downloadLossyFormat": {
     "description": "Setting title to pick output format for lossy downloads"
@@ -2203,46 +2150,6 @@
   "downloadAutoConvertOpusSubtitle": "최신 플레이어에 최적화된 효율성",
   "@downloadAutoConvertOpusSubtitle": {
     "description": "Opus automatic conversion option description"
-  },
-  "downloadLossy320Format": "손실 압축 320kbps 형식",
-  "@downloadLossy320Format": {
-    "description": "Title of the lossy format picker bottom sheet"
-  },
-  "downloadLossy320FormatDesc": "320kbps 손실 다운로드의 출력 형식을 선택하세요. 필요에 따라 원본 스트림이 선택한 형식으로 변환됩니다",
-  "@downloadLossy320FormatDesc": {
-    "description": "Description in the lossy format picker"
-  },
-  "downloadLossyMp3": "MP3 320kbps",
-  "@downloadLossyMp3": {
-    "description": "Lossy format option - MP3 320kbps"
-  },
-  "downloadLossyMp3Subtitle": "최상의 호환성, 트랙당 약 10MB",
-  "@downloadLossyMp3Subtitle": {
-    "description": "Subtitle for MP3 320kbps lossy option"
-  },
-  "downloadLossyAac": "AAC/M4A 320kbps",
-  "@downloadLossyAac": {
-    "description": "Lossy format option - AAC in M4A container at 320kbps"
-  },
-  "downloadLossyAacSubtitle": "최상의 모바일 호환성, M4A 컨테이너",
-  "@downloadLossyAacSubtitle": {
-    "description": "Subtitle for AAC/M4A 320kbps lossy option"
-  },
-  "downloadLossyOpus256": "Opus 256kbps",
-  "@downloadLossyOpus256": {
-    "description": "Lossy format option - Opus 256kbps"
-  },
-  "downloadLossyOpus256Subtitle": "최고 음질 Opus, 트랙당 약 8MB",
-  "@downloadLossyOpus256Subtitle": {
-    "description": "Subtitle for Opus 256kbps lossy option"
-  },
-  "downloadLossyOpus128": "Opus 128kbps",
-  "@downloadLossyOpus128": {
-    "description": "Lossy format option - Opus 128kbps"
-  },
-  "downloadLossyOpus128Subtitle": "트랙당 최소 크기, 약 4MB",
-  "@downloadLossyOpus128Subtitle": {
-    "description": "Subtitle for Opus 128kbps lossy option"
   },
   "downloadAskBeforeDownload": "다운로드 전 확인",
   "@downloadAskBeforeDownload": {
@@ -2576,15 +2483,6 @@
       }
     }
   },
-  "discographySelectedCount": "{count} 개 선택됨",
-  "@discographySelectedCount": {
-    "description": "Selection count badge",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "discographyDownloadSelected": "선택 항목 다운로드",
   "@discographyDownloadSelected": {
     "description": "Button - download selected albums"
@@ -2729,7 +2627,7 @@
   "@libraryRemoveFolder": {
     "description": "Action to remove one indexed library source"
   },
-  "libraryRemoveFolderMessage": "Mosix에서 이 폴더와 색인된 트랙을 제거하시겠습니까? 저장소의 오디오 파일은 삭제되지 않습니다",
+  "libraryRemoveFolderMessage": "Mornye에서 이 폴더와 색인된 트랙을 제거하시겠습니까? 저장소의 오디오 파일은 삭제되지 않습니다",
   "@libraryRemoveFolderMessage": {
     "description": "Confirmation shown before removing a library source"
   },
@@ -2889,17 +2787,13 @@
   "@libraryStorageAccessRequired": {
     "description": "Dialog title for storage permission"
   },
-  "libraryStorageAccessMessage": "SpotifyFLAC은 음악 라이브러리를 스캔하기 위해 저장소 접근 권한이 필요합니다. 설정에서 권한을 부여해 주세요",
+  "libraryStorageAccessMessage": "Mornye는 음악 라이브러리를 스캔하기 위해 저장소 접근 권한이 필요합니다. 설정에서 권한을 부여해 주세요",
   "@libraryStorageAccessMessage": {
     "description": "Dialog message for storage permission"
   },
-  "libraryFolderNotExist": "선택한 폴더가 존재하지 않음",
-  "@libraryFolderNotExist": {
-    "description": "Error when folder doesn't exist"
-  },
   "librarySourceDownloaded": "다운로드됨",
   "@librarySourceDownloaded": {
-    "description": "Badge for tracks downloaded via Mosix"
+    "description": "Badge for tracks downloaded via Mornye"
   },
   "librarySourceLocal": "로컬",
   "@librarySourceLocal": {
@@ -3027,11 +2921,11 @@
       }
     }
   },
-  "tutorialWelcomeTitle": "Mosix에 오신 것을 환영합니다!",
+  "tutorialWelcomeTitle": "Mornye에 오신 것을 환영합니다!",
   "@tutorialWelcomeTitle": {
     "description": "Tutorial welcome page title"
   },
-  "tutorialWelcomeDesc": "Mosix에서 확장 기능을 사용하여 음악을 찾고, 원하는 음질을 선택하고, 다운로드를 관리하는 방법을 알아보세요",
+  "tutorialWelcomeDesc": "Mornye에서 확장 기능을 사용하여 음악을 찾고, 원하는 음질을 선택하고, 다운로드를 관리하는 방법을 알아보세요",
   "@tutorialWelcomeDesc": {
     "description": "Tutorial welcome page description"
   },
@@ -3360,10 +3254,6 @@
   "trackReEnrich": "보강",
   "@trackReEnrich": {
     "description": "Menu action - re-embed metadata into audio file"
-  },
-  "trackReEnrichOnlineSubtitle": "온라인에서 메타데이터를 검색하고 파일에 삽입",
-  "@trackReEnrichOnlineSubtitle": {
-    "description": "Subtitle for re-enrich metadata action for local items"
   },
   "trackReEnrichBatchSubtitle": "온라인 업데이트 또는 수동 업데이트를 선택한 다음, 변경 사항을 모두 검토한 후 적용하세요",
   "@trackReEnrichBatchSubtitle": {
@@ -3956,10 +3846,6 @@
       }
     }
   },
-  "selectionShareNoFiles": "공유할 수 있는 파일을 찾을 수 없음",
-  "@selectionShareNoFiles": {
-    "description": "Snackbar when no selected files exist on disk"
-  },
   "selectionConvertCount": "{count} 개의 {count, plural, =1{트랙} other{트랙}} 변환",
   "@selectionConvertCount": {
     "description": "Convert button text with count in selection mode",
@@ -4122,7 +4008,7 @@
   "@safMigrationTitle": {
     "description": "Title of SAF migration dialog"
   },
-  "safMigrationMessage1": "Mosix은 이제 다운로드에 Android 저장소 접근 프레임워크(SAF)를 사용합니다. 이로써 Android 10 이상에서 '권한 거부' 오류가 해결됩니다",
+  "safMigrationMessage1": "Mornye는 이제 다운로드에 Android 저장소 접근 프레임워크(SAF)를 사용합니다. 이로써 Android 10 이상에서 '권한 거부' 오류가 해결됩니다",
   "@safMigrationMessage1": {
     "description": "First paragraph of SAF migration dialog"
   },
@@ -4190,10 +4076,6 @@
   "@backupRestoreConfirmTitle": {
     "description": "Confirmation dialog title before restoring a backup"
   },
-  "backupRestoreConfirmMessage": "현재 설정, 다운로드 기록, 좋아요 표시한 음악, 위시리스트 및 재생목록이 백업 파일의 내용으로 대체됩니다. 이 작업은 되돌릴 수 없습니다",
-  "@backupRestoreConfirmMessage": {
-    "description": "Confirmation dialog message before restoring a backup"
-  },
   "backupRestoreConfirmButton": "복원",
   "@backupRestoreConfirmButton": {
     "description": "Confirm button to proceed with restore"
@@ -4206,7 +4088,7 @@
   "@backupRestoreFailed": {
     "description": "Snackbar when restore fails"
   },
-  "backupInvalidFile": "이 파일은 유효한 Mosix 백업이 아닙니다",
+  "backupInvalidFile": "이 파일은 유효한 Mornye 백업이 아닙니다",
   "@backupInvalidFile": {
     "description": "Snackbar when the chosen file is not a valid backup"
   },
@@ -4390,25 +4272,9 @@
     "description": "Subtitle shown in the download location picker sheet"
   },
   "storageAutomaticFolder": "자동 폴더",
-  "storageAutomaticDownloadFolder": "쓰기 가능하면 Download/Mosix을 사용하고, 그렇지 않으면 앱 저장소를 사용합니다",
+  "storageAutomaticDownloadFolder": "쓰기 가능하면 Download/Mornye을 사용하고, 그렇지 않으면 앱 저장소를 사용합니다",
   "storageSafRecommended": "폴더 선택 (추천)",
-  "storageDownloadFolderHint": "안드로이드 폴더 선택기에서 Download 폴더를 열고 Mosix을 선택하세요.\n해당 폴더가 없다면 '새 폴더'를 사용해 만든 다음, '이 폴더 사용'을 탭하여 접근 권한을 허용하세요",
-  "storageModeAppFolder": "앱 폴더 (추천)",
-  "@storageModeAppFolder": {
-    "description": "Storage mode option - app-managed folder"
-  },
-  "storageModeAppFolderSubtitle": "기본적으로 Music/Mosix에 저장",
-  "@storageModeAppFolderSubtitle": {
-    "description": "Subtitle for app folder storage mode"
-  },
-  "storageModeSaf": "사용자 정의 폴더 (SAF)",
-  "@storageModeSaf": {
-    "description": "Storage mode option - Storage Access Framework"
-  },
-  "storageModeSafSubtitle": "SD 카드를 포함한 아무 폴더나 선택하세요",
-  "@storageModeSafSubtitle": {
-    "description": "Subtitle for SAF storage mode"
-  },
+  "storageDownloadFolderHint": "안드로이드 폴더 선택기에서 Download 폴더를 열고 Mornye을 선택하세요.\n해당 폴더가 없다면 '새 폴더'를 사용해 만든 다음, '이 폴더 사용'을 탭하여 접근 권한을 허용하세요",
   "downloadFolderAccessLostTitle": "다운로드 폴더 접근 손실",
   "@downloadFolderAccessLostTitle": {
     "description": "Title of the warning banner shown in Files settings when the saved SAF folder grant is no longer valid"
@@ -4696,10 +4562,6 @@
       }
     }
   },
-  "editMetadataAutoFillFetch": "가져오기 및 채우기",
-  "@editMetadataAutoFillFetch": {
-    "description": "Button label to fetch online metadata and fill selected fields"
-  },
   "editMetadataAutoFillSearching": "온라인에서 검색하는 중...",
   "@editMetadataAutoFillSearching": {
     "description": "Snackbar shown while searching for online metadata"
@@ -4707,15 +4569,6 @@
   "editMetadataAutoFillNoResults": "온라인에서 일치하는 메타데이터를 찾을 수 없음",
   "@editMetadataAutoFillNoResults": {
     "description": "Snackbar when online metadata search returns no results"
-  },
-  "editMetadataAutoFillDone": "온라인 메타데이터로부터 {count} 개의 {count, plural, =1{필드} other{필드}}가 채워짐",
-  "@editMetadataAutoFillDone": {
-    "description": "Snackbar confirming how many fields were auto-filled",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "editMetadataAutoFillNoneSelected": "자동 채우기를 위해 하나 이상의 필드를 선택하세요",
   "@editMetadataAutoFillNoneSelected": {
@@ -4973,10 +4826,6 @@
   "@hiResCheckVerdictFakeCertain": {
     "description": "Verdict: an exact fingerprint (padded bits or upsampling pattern) proves the file is not real Hi-Res"
   },
-  "hiResCheckVerdictFakeSuspect": "필터링된 마스터일 가능성이 있음",
-  "@hiResCheckVerdictFakeSuspect": {
-    "description": "Verdict: fails the cutoff test but may be a genuine master low-pass filtered in mastering"
-  },
   "hiResCheckReasonSampleHold": "모든 샘플이 반복됨: 복제 방식으로 업샘플링됨",
   "@hiResCheckReasonSampleHold": {
     "description": "Reason: sample-and-hold upsampling detected"
@@ -4984,26 +4833,6 @@
   "hiResCheckReasonInterpolation": "샘플 사이의 값이 선형 보간됨",
   "@hiResCheckReasonInterpolation": {
     "description": "Reason: linear-interpolation upsampling detected"
-  },
-  "hiResCheckReasonImaging": "22 kHz 이상의 콘텐츠가 가청 대역을 그대로 반영함",
-  "@hiResCheckReasonImaging": {
-    "description": "Reason: spectral imaging from upsampling detected"
-  },
-  "hiResCheckMusicContent": "음악 콘텐츠",
-  "@hiResCheckMusicContent": {
-    "description": "Label for the highest frequency that still moves with the music"
-  },
-  "hiResCheckUltrasonicNoise": "{cutoff} 이상에서는 일정한 노이즈만 존재함 (일반적으로 DSD 또는 아날로그 테이프 전송에서 나타나는 특성): {rate} 파일이면 모든 음악 정보를 담을 수 있음",
-  "@hiResCheckUltrasonicNoise": {
-    "description": "Shown when the ultrasonic content of a Hi-Res file is noise rather than music",
-    "placeholders": {
-      "cutoff": {
-        "type": "String"
-      },
-      "rate": {
-        "type": "String"
-      }
-    }
   },
   "hiResCheckTitle": "Hi-Res 진위 여부",
   "@hiResCheckTitle": {
@@ -5064,10 +4893,6 @@
       }
     }
   },
-  "hiResCheckDescription": "업샘플링되었거나 비트 패딩된 가짜 Hi-Res 파일을 감지합니다",
-  "@hiResCheckDescription": {
-    "description": "Explains what the Hi-Res authenticity check does"
-  },
   "hiResCheckRun": "검사",
   "@hiResCheckRun": {
     "description": "Button that starts the Hi-Res authenticity check"
@@ -5079,10 +4904,6 @@
   "hiResCheckVerdictFake": "가짜 Hi-Res일 가능성이 높음",
   "@hiResCheckVerdictFake": {
     "description": "Verdict: the file claims Hi-Res but does not measure as it"
-  },
-  "hiResCheckVerdictGenuine": "실제 Hi-Res로 측정됨",
-  "@hiResCheckVerdictGenuine": {
-    "description": "Verdict: no upsampling or padded bit depth found"
   },
   "hiResCheckVerdictStandard": "일반 음질이며, 특별히 의심되는 사항이 없음",
   "@hiResCheckVerdictStandard": {
@@ -5096,35 +4917,11 @@
   "@hiResCheckUnsupported": {
     "description": "Shown when the file format cannot be decoded by the Hi-Res check"
   },
-  "hiResCheckCutoff": "콘텐츠 주파수 한계",
-  "@hiResCheckCutoff": {
-    "description": "Label for the highest frequency with real content"
-  },
-  "hiResCheckBitsInUse": "사용 중인 비트",
-  "@hiResCheckBitsInUse": {
-    "description": "Label for effective vs declared bit depth"
-  },
-  "hiResCheckDisclaimer": "스펙트럼이 일찍 끊기지만, 그것만으로 업샘플링되었다는 증거는 없습니다. 마스터링 과정에서 의도적으로 낮은 주파수 대역을 제한한 정상적인 원본 마스터일 수도 있습니다. 따라서 자동으로 교체하지 않습니다",
-  "@hiResCheckDisclaimer": {
-    "description": "Caveat shown under a fake Hi-Res verdict"
-  },
   "hiResCheckFailed": "Hi-Res 검사 실패: {error}",
   "@hiResCheckFailed": {
     "description": "Error shown when the Hi-Res check fails",
     "placeholders": {
       "error": {
-        "type": "String"
-      }
-    }
-  },
-  "hiResCheckReasonRate": "{sampleRate}를 선언했지만 콘텐츠가 약 {cutoff}에서 멈춥니다",
-  "@hiResCheckReasonRate": {
-    "description": "Reason for a fake verdict caused by upsampling",
-    "placeholders": {
-      "sampleRate": {
-        "type": "String"
-      },
-      "cutoff": {
         "type": "String"
       }
     }
@@ -5420,7 +5217,7 @@
       }
     }
   },
-  "notifDownloadingUpdate": "Mosix v{version}을 다운로드하는 중",
+  "notifDownloadingUpdate": "Mornye v{version}을 다운로드하는 중",
   "@notifDownloadingUpdate": {
     "description": "Notification title while downloading an app update",
     "placeholders": {
@@ -5448,7 +5245,7 @@
   "@notifUpdateReady": {
     "description": "Notification title when app update download is complete"
   },
-  "notifUpdateReadyBody": "Mosix v{version} 다운로드 완료. 설치하려면 탭하세요",
+  "notifUpdateReadyBody": "Mornye v{version} 다운로드 완료. 설치하려면 탭하세요",
   "@notifUpdateReadyBody": {
     "description": "Notification body when app update is ready to install",
     "placeholders": {
@@ -6127,10 +5924,6 @@
       }
     }
   },
-  "actionGo": "이동",
-  "@actionGo": {
-    "description": "Generic action button label"
-  },
   "logIssueSummary": "문제 요약",
   "@logIssueSummary": {
     "description": "Header for log issue analysis summary"
@@ -6220,7 +6013,7 @@
   "@extensionCustomUrlHandlingSubtitle": {
     "description": "Extension detail subtitle for custom URL handling"
   },
-  "extensionCustomUrlHandlingShareHint": "이 사이트의 링크를 Mosix로 공유하면 이 확장 기능이 처리합니다",
+  "extensionCustomUrlHandlingShareHint": "이 사이트의 링크를 Mornye로 공유하면 이 확장 기능이 처리합니다",
   "@extensionCustomUrlHandlingShareHint": {
     "description": "Extension detail hint explaining share-to-app URL handling"
   },
@@ -6426,17 +6219,13 @@
   "@libraryExternalPlayerSubtitle": {
     "description": "Subtitle for external player option"
   },
-  "libraryBuiltInPreviewPlayer": "내부 미리듣기 플레이어",
+  "libraryBuiltInPreviewPlayer": "내장 플레이어",
   "@libraryBuiltInPreviewPlayer": {
     "description": "Setting option to use the built-in preview player"
   },
-  "libraryBuiltInPreviewPlayerSubtitle": "Mosix에서 빠르게 미리 들을 수 있습니다 ",
+  "libraryBuiltInPreviewPlayerSubtitle": "Mornye에서 바로 음악을 재생합니다",
   "@libraryBuiltInPreviewPlayerSubtitle": {
     "description": "Subtitle for built-in preview player option"
-  },
-  "libraryBuiltInPlayerInfo": "내부 플레이어는 로컬 트랙을 빠르게 미리듣기 위한 도구입니다. 실제 음악 감상은 외부 음악 플레이어를 이용하는 것을 권장합니다",
-  "@libraryBuiltInPlayerInfo": {
-    "description": "Info note explaining the built-in player is for previews only"
   },
   "nowPlayingTitle": "현재 재생 중",
   "@nowPlayingTitle": {
@@ -6901,11 +6690,11 @@
   "@extensionVerificationHelpTitleWaiting": {
     "description": "Dialog title when verification is taking longer than expected"
   },
-  "extensionVerificationHelpMessageManual": "Mosix에서 브라우저를 자동으로 열지 못하였습니다. 아래 링크를 브라우저에서 열거나 직접 복사하세요",
+  "extensionVerificationHelpMessageManual": "Mornye에서 브라우저를 자동으로 열지 못하였습니다. 아래 링크를 브라우저에서 열거나 직접 복사하세요",
   "@extensionVerificationHelpMessageManual": {
     "description": "Dialog message when automatic browser launch for verification fails"
   },
-  "extensionVerificationHelpMessageWaiting": "브라우저가 열리지 않거나 인증을 완료한 후에도 Mosix로 돌아가지 않는다면, 아래 링크를 다시 열거나 직접 복사하세요",
+  "extensionVerificationHelpMessageWaiting": "브라우저가 열리지 않거나 인증을 완료한 후에도 Mornye로 돌아가지 않는다면, 아래 링크를 다시 열거나 직접 복사하세요",
   "@extensionVerificationHelpMessageWaiting": {
     "description": "Dialog message when verification may need manual browser help"
   },
@@ -6938,26 +6727,6 @@
       }
     }
   },
-  "settingsGroupInterface": "확장 기능 및 디자인",
-  "@settingsGroupInterface": {
-    "description": "Settings group covering look and feel"
-  },
-  "settingsGroupContent": "콘텐츠 및 메타데이터",
-  "@settingsGroupContent": {
-    "description": "Settings group covering the library, metadata and lyrics"
-  },
-  "settingsGroupDownloads": "다운로드 및 파일",
-  "@settingsGroupDownloads": {
-    "description": "Settings group covering download behaviour and storage"
-  },
-  "settingsGroupSystem": "시스템",
-  "@settingsGroupSystem": {
-    "description": "Settings group covering app-level data, cache and logs"
-  },
-  "settingsGroupHelp": "정보 및 후원",
-  "@settingsGroupHelp": {
-    "description": "Settings group covering the about page and donations"
-  },
   "libraryFilterMetadataMissingLyrics": "가사 누락",
   "@libraryFilterMetadataMissingLyrics": {
     "description": "Filter option for tracks without embedded or sidecar lyrics"
@@ -6986,7 +6755,6 @@
   "@metadataCopyField": {
     "description": "Metadata menu action that copies the selected key and value"
   },
-  "mornyeShowTabs": "탭 표시",
   "mornyeSearch": "검색",
   "mornyeContinuePlaying": "계속 재생",
   "metadataCopyAll": "모든 메타데이터 복사",

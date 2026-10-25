@@ -1,9 +1,11 @@
+//! Segmented downloads: fetches a list of segments and assembles them into one output file.
+
 use super::segment_store::{SegmentFile, SegmentOutput};
 use super::{DownloadOptions, Failure, header, next_delay, retryable, status_failure};
 use crate::files::{ExtensionFiles, FilePath};
+use mornye_network::{HttpRequest, NetworkSession};
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
-use spotiflac_network::{HttpRequest, NetworkSession};
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -260,7 +262,7 @@ fn fetch(
     options: &DownloadOptions,
     received: &AtomicU64,
     completed: &AtomicBool,
-    reporter: &spotiflac_core::progress::ItemTransferProgressReporter,
+    reporter: &mornye_core::progress::ItemTransferProgressReporter,
     check: &dyn Fn() -> Result<(), String>,
 ) -> Result<Completed, Failure> {
     let mut delay = Duration::from_millis(options.policy.initial_retry_delay_ms as u64);

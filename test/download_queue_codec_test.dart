@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:isolate';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/services/download_queue_codec.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/services/download_queue_codec.dart';
 
 DownloadItem _item(
   int index, {
@@ -115,7 +115,7 @@ void main() {
           isA<RemoteError>().having(
             (error) => error.toString(),
             'message',
-          contains('_ThrowingTrack'),
+            contains('_ThrowingTrack'),
           ),
         ),
       );

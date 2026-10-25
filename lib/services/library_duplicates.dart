@@ -1,13 +1,16 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/services/library_database_models.dart';
-import 'package:mosix/services/library_schema.dart';
-import 'package:mosix/utils/path_match_keys.dart';
+import 'package:mornye/services/library_database_models.dart';
+import 'package:mornye/services/library_schema.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/utils/path_match_keys.dart';
 
 /// Review physical copies, not index rows. History remains intact when a NAS
 /// source is disabled, but must not suggest deleting its replacement SAF copy.
 Future<List<IsrcDuplicateGroup>> readIsrcDuplicateGroups(
-  DatabaseExecutor db,
-) async {
+  DatabaseExecutor db, {
+  Map<String, NetworkConnection> networkConnections = const {},
+  Future<List<NetworkConnection>> Function()? loadNetworkConnections,
+}) async {
   final rows = await db.rawQuery('''
     WITH active_history AS (
       SELECT h.* FROM history_db.history h
@@ -44,13 +47,26 @@ Future<List<IsrcDuplicateGroup>> readIsrcDuplicateGroups(
     ORDER BY isrc_key, bit_depth DESC, sample_rate DESC, bitrate DESC, source, id
   ''');
 
+  final connections =
+      loadNetworkConnections != null &&
+          rows.any(
+            (row) =>
+                (row['file_path'] as String? ?? '').startsWith('network://'),
+          )
+      ? {
+          for (final connection in await loadNetworkConnections())
+            connection.id: connection,
+        }
+      : networkConnections;
+
   final groups = <String, List<IsrcDuplicateEntry>>{};
   final pathsByIsrc = <String, Set<String>>{};
   for (final row in rows) {
     final isrc = row['isrc_key'] as String? ?? '';
     final path = row['file_path'] as String? ?? '';
     if (isrc.isEmpty || path.isEmpty) continue;
-    final keys = buildPhysicalPathMatchKeys(path);
+    final remoteKey = NetworkStorageService.physicalFileKey(path, connections);
+    final keys = {...buildPhysicalPathMatchKeys(path), ?remoteKey};
     final seen = pathsByIsrc.putIfAbsent(isrc, () => {});
     final alreadySeen = keys.any(seen.contains);
     seen.addAll(keys);

@@ -2,12 +2,19 @@ use crate::matching::lowercase;
 use serde::Serialize;
 use std::collections::HashSet;
 
-pub const DEFAULT_PROVIDERS: &[&str] = &["apple_music", "lrclib"];
+pub const DEFAULT_PROVIDERS: &[&str] = &[
+    "apple_music",
+    "lrcred",
+    "mornye_lyrics",
+    "lyricsplus",
+    "lrclib",
+];
 pub const BUILTIN_PROVIDERS: &[&str] = &[
     "lrclib",
     "netease",
     "musixmatch",
     "apple_music",
+    "mornye_lyrics",
     "qqmusic",
     "spotify",
     "deezer",
@@ -15,6 +22,8 @@ pub const BUILTIN_PROVIDERS: &[&str] = &[
     "kugou",
     "genius",
     "lyricsplus",
+    "lrcred",
+    "betterlyrics",
 ];
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -27,7 +36,7 @@ pub struct FetchOptions {
     pub musixmatch_language: String,
 }
 
-super::json::go_deserialize!(FetchOptions {
+crate::json::lenient_deserialize!(FetchOptions {
     "include_translation_netease" => include_translation_netease,
     "include_romanization_netease" => include_romanization_netease,
     "multi_person_word_by_word" => multi_person_word_by_word,
@@ -51,7 +60,7 @@ impl FetchOptions {
     /// Go unmarshals partial settings into the current options. Commit only a
     /// fully valid document, including duplicate fields and null scalar values.
     pub fn update_json(&mut self, raw: &str) -> Result<(), serde_json::Error> {
-        use super::json::Update;
+        use crate::json::Update;
         if raw.trim().is_empty() {
             return Ok(());
         }
@@ -103,7 +112,13 @@ pub fn available_providers() -> Vec<AvailableProvider> {
             "apple_music",
             "Apple Music",
             true,
-            "Apple Music synced lyrics",
+            "Apple Music synced lyrics via Paxsenix",
+        ),
+        (
+            "mornye_lyrics",
+            "Zarz-LRC",
+            false,
+            "Word-by-word Apple Music lyrics from Zarz-LRC",
         ),
         (
             "qqmusic",
@@ -121,6 +136,18 @@ pub fn available_providers() -> Vec<AvailableProvider> {
             "LyricsPlus",
             true,
             "Word-by-word karaoke lyrics (Apple/Musixmatch/Spotify/QQ)",
+        ),
+        (
+            "lrcred",
+            "lrc.red",
+            false,
+            "Word-by-word Apple Music lyrics matched by recording",
+        ),
+        (
+            "betterlyrics",
+            "BetterLyrics",
+            false,
+            "Word-by-word Apple Music lyrics for popular songs",
         ),
     ]
     .into_iter()
@@ -152,6 +179,13 @@ pub fn normalize_provider_order(providers: &[String]) -> Vec<String> {
     providers
         .iter()
         .map(|name| lowercase(name.trim()))
+        .map(|name| {
+            if name == "spotiflac_lyrics" {
+                "mornye_lyrics".into()
+            } else {
+                name
+            }
+        })
         .filter(|name| {
             BUILTIN_PROVIDERS.contains(&name.as_str())
                 || name
@@ -169,8 +203,15 @@ pub fn resolve_order(configured: &[String], extensions: &[String]) -> Vec<String
         .collect();
     configured
         .iter()
-        .filter(|name| BUILTIN_PROVIDERS.contains(&name.as_str()) || available.contains(*name))
-        .cloned()
+        .map(|name| {
+            if name == "spotiflac_lyrics" {
+                "mornye_lyrics"
+            } else {
+                name.as_str()
+            }
+        })
+        .filter(|name| BUILTIN_PROVIDERS.contains(name) || available.contains(*name))
+        .map(str::to_owned)
         .collect()
 }
 
@@ -199,4 +240,31 @@ pub fn cache_key(
         options.apple_elrc_word_sync,
         options.musixmatch_language
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn legacy_lyrics_provider_id_resolves_to_current_id_without_duplicates() {
+        let configured = vec![
+            " SPOTIFLAC_LYRICS ".into(),
+            "mornye_lyrics".into(),
+            "lrclib".into(),
+        ];
+        assert_eq!(
+            normalize_provider_order(&configured),
+            ["mornye_lyrics", "lrclib"]
+        );
+        assert_eq!(
+            resolve_order(&["spotiflac_lyrics".into()], &[]),
+            ["mornye_lyrics"]
+        );
+        assert!(
+            available_providers()
+                .iter()
+                .any(|p| p.id == "mornye_lyrics")
+        );
+    }
 }

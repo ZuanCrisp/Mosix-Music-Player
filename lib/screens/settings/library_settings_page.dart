@@ -1,24 +1,32 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/widgets/app_switch.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_switch.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/providers/download_history_provider.dart';
-import 'package:mosix/providers/local_library_provider.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/widgets/duplicate_review_sheet.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
-import 'package:mosix/widgets/ios_library_folder_sheet.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/library_scan_failure.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/providers/download_history_provider.dart';
+import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/widgets/duplicate_review_sheet.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/app_progress_indicator.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mornye/widgets/ios_library_folder_sheet.dart';
+
+part 'library_settings_page_widgets.dart';
 
 class LibrarySettingsPage extends ConsumerStatefulWidget {
   const LibrarySettingsPage({super.key});
@@ -177,7 +185,25 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
         }
         return;
       }
-      final result = await FilePicker.getDirectoryPath();
+      String? result;
+      try {
+        result = await FilePicker.getDirectoryPath();
+      } catch (e) {
+        // Linux reaches the picker through the desktop portal, which a
+        // session may not run.
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                context.l10n.snackbarFolderPickerFailed(
+                  context.friendlyError(e),
+                ),
+              ),
+            ),
+          );
+        }
+        return;
+      }
       if (result != null) {
         final source = await ref
             .read(localLibraryProvider.notifier)
@@ -331,39 +357,20 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
   }
 
   void _showAutoScanPicker(BuildContext context, String current) {
-    final colorScheme = Theme.of(context).colorScheme;
-    showAppModalBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      builder: (context) => SafeArea(
+      title: context.l10n.libraryAutoScan,
+      subtitle: context.l10n.libraryAutoScanSubtitle,
+      builder: (context, controller) => SingleChildScrollView(
+        controller: controller,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-              child: Text(
-                context.l10n.libraryAutoScan,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: Text(
-                context.l10n.libraryAutoScanSubtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
             _AutoScanOption(
               icon: Icons.block,
               title: context.l10n.libraryAutoScanOff,
               selected: current == 'off',
-              colorScheme: colorScheme,
               onTap: () {
                 ref
                     .read(settingsProvider.notifier)
@@ -375,7 +382,6 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
               icon: Icons.open_in_new,
               title: context.l10n.libraryAutoScanOnOpen,
               selected: current == 'on_open',
-              colorScheme: colorScheme,
               onTap: () {
                 ref
                     .read(settingsProvider.notifier)
@@ -387,7 +393,6 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
               icon: Icons.today,
               title: context.l10n.libraryAutoScanDaily,
               selected: current == 'daily',
-              colorScheme: colorScheme,
               onTap: () {
                 ref
                     .read(settingsProvider.notifier)
@@ -399,7 +404,6 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
               icon: Icons.date_range,
               title: context.l10n.libraryAutoScanWeekly,
               selected: current == 'weekly',
-              colorScheme: colorScheme,
               onTap: () {
                 ref
                     .read(settingsProvider.notifier)
@@ -417,11 +421,13 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
   String _getDefaultViewLabel(BuildContext context, String view) {
     switch (view) {
       case 'all':
-        return context.l10n.historyFilterAll;
+        return context.l10n.searchSongs;
       case 'albums':
         return context.l10n.historyFilterAlbums;
       case 'singles':
         return context.l10n.historyFilterSingles;
+      case 'artists':
+        return context.l10n.searchArtists;
       case 'playlists':
         return context.l10n.searchPlaylists;
       default:
@@ -430,38 +436,28 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
   }
 
   void _showDefaultViewPicker(BuildContext context, String current) {
-    final colorScheme = Theme.of(context).colorScheme;
     final options = [
       ('last', Icons.history, context.l10n.libraryDefaultViewLastUsed),
-      ('all', Icons.apps, context.l10n.historyFilterAll),
+      ('all', Icons.music_note, context.l10n.searchSongs),
       ('albums', Icons.album, context.l10n.historyFilterAlbums),
-      ('singles', Icons.music_note, context.l10n.historyFilterSingles),
+      ('singles', Icons.audiotrack, context.l10n.historyFilterSingles),
+      ('artists', Icons.person, context.l10n.searchArtists),
       ('playlists', Icons.queue_music, context.l10n.searchPlaylists),
     ];
-    showAppModalBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      builder: (context) => SafeArea(
+      title: context.l10n.libraryDefaultView,
+      builder: (context, controller) => SingleChildScrollView(
+        controller: controller,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-              child: Text(
-                context.l10n.libraryDefaultView,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
             for (final (value, icon, label) in options)
               _AutoScanOption(
                 icon: icon,
                 title: label,
                 selected: current == value,
-                colorScheme: colorScheme,
                 onTap: () {
                   ref
                       .read(settingsProvider.notifier)
@@ -495,7 +491,6 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
   }
 
   void _showQualityLabelModePicker(BuildContext context, String current) {
-    final colorScheme = Theme.of(context).colorScheme;
     final options = [
       (
         AppSettings.libraryQualityLabelBitrate,
@@ -525,30 +520,20 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
         context.l10n.libraryQualityLabelFileFormat,
       ),
     ];
-    showAppModalBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      builder: (context) => SafeArea(
+      title: context.l10n.trackAudioQuality,
+      builder: (context, controller) => SingleChildScrollView(
+        controller: controller,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-              child: Text(
-                context.l10n.trackAudioQuality,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
             for (final (value, icon, label) in options)
               _AutoScanOption(
                 icon: icon,
                 title: label,
                 selected: current == value,
-                colorScheme: colorScheme,
                 onTap: () {
                   ref
                       .read(settingsProvider.notifier)
@@ -650,12 +635,8 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
                 }
                 return ListTile(
                   leading: status.loading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(Icons.error_outline, color: colorScheme.error),
+                      ? const AppLoadingIndicator(size: 24, strokeWidth: 2)
+                      : AppIcon(Icons.error_outline, color: colorScheme.error),
                   title: Text(
                     status.loading
                         ? context.l10n.libraryLoading
@@ -663,7 +644,8 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
                   ),
                   trailing: status.loading
                       ? null
-                      : TextButton(
+                      : ExpressiveButton(
+                          text: true,
                           onPressed: () => ref
                               .read(localLibraryProvider.notifier)
                               .reloadFromStorage(),
@@ -675,6 +657,7 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
           ),
           SliverToBoxAdapter(
             child: SettingsGroup(
+              connected: true,
               children: [
                 SettingsSwitchItem(
                   icon: Icons.library_music_outlined,
@@ -700,11 +683,13 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
                             scanned: active ? state.scannedFiles : 0,
                             total: active ? state.scanTotalFiles : 0,
                             progress: active ? state.scanProgress : 0.0,
+                            failures: state.scanFailures[source.id],
                           );
                         }),
                       );
                       return _LibrarySourceSettingsItem(
                         source: source,
+                        failures: scan.failures,
                         isScanning: scan.active,
                         isFinalizing: scan.finalizing,
                         isPaused: scan.paused,
@@ -798,7 +783,7 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
                     ),
                     child: Row(
                       children: [
-                        Icon(
+                        AppIcon(
                           Icons.warning_amber_outlined,
                           color: colorScheme.onTertiaryContainer,
                         ),
@@ -827,7 +812,8 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
                             ],
                           ),
                         ),
-                        TextButton(
+                        ExpressiveButton(
+                          text: true,
                           onPressed: _startScan,
                           child: Text(context.l10n.dialogRetry),
                         ),
@@ -852,6 +838,7 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
                           hasDownloads ||
                           librarySources.isNotEmpty);
                   return SettingsGroup(
+                    connected: true,
                     children: [
                       if (libraryState.isScanning)
                         _ScanProgressTile(
@@ -901,11 +888,9 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
                           subtitle:
                               context.l10n.libraryCleanupMissingFilesSubtitle,
                           trailing: _isCleaningMissingFiles
-                              ? const SizedBox.square(
-                                  dimension: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
+                              ? const AppLoadingIndicator(
+                                  size: 20,
+                                  strokeWidth: 2,
                                 )
                               : null,
                           onTap: canCleanup ? _cleanupMissingFiles : null,
@@ -941,651 +926,9 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          const NavBarSliverSpacer(),
         ],
       ),
-    );
-  }
-}
-
-class _LibrarySourceSettingsItem extends StatelessWidget {
-  final LocalLibrarySource source;
-  final bool isScanning;
-  final bool isFinalizing;
-  final bool isPaused;
-  final int scannedFiles;
-  final int totalFiles;
-  final double progress;
-  final bool enabled;
-  final ValueChanged<bool> onEnabledChanged;
-  final VoidCallback onScan;
-  final VoidCallback onFullScan;
-  final VoidCallback onRemove;
-
-  const _LibrarySourceSettingsItem({
-    required this.source,
-    required this.isScanning,
-    required this.isFinalizing,
-    required this.isPaused,
-    required this.scannedFiles,
-    required this.totalFiles,
-    required this.progress,
-    required this.enabled,
-    required this.onEnabledChanged,
-    required this.onScan,
-    required this.onFullScan,
-    required this.onRemove,
-  });
-
-  String _title() {
-    final normalized = source.displayName
-        .replaceAll('\\', '/')
-        .replaceAll(RegExp(r'/+$'), '');
-    final name = normalized.split('/').last.trim();
-    return name.isEmpty ? source.displayName : name;
-  }
-
-  String _lastScanned(BuildContext context) {
-    final value = source.lastScannedAt;
-    if (value == null) return context.l10n.libraryLastScannedNever;
-    final now = DateTime.now();
-    final diff = now.difference(value);
-    if (diff.inMinutes < 1) return context.l10n.timeJustNow;
-    if (diff.inHours < 1) return context.l10n.timeMinutesAgo(diff.inMinutes);
-    if (diff.inDays < 1) return context.l10n.timeHoursAgo(diff.inHours);
-    if (diff.inDays < 7) return context.l10n.dateDaysAgo(diff.inDays);
-    return '${value.day}/${value.month}/${value.year}';
-  }
-
-  Future<void> _showActions(BuildContext context) async {
-    final canScan =
-        enabled && source.enabled && source.available && !isScanning;
-    final action = await showAppBottomSheet<String>(
-      context: context,
-      useRootNavigator: true,
-      title: _title(),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AppSheetOption(
-            enabled: canScan,
-            leading: const Icon(Icons.refresh_rounded),
-            title: Text(context.l10n.libraryScan),
-            subtitle: Text(context.l10n.libraryScanSubtitle),
-            onTap: canScan ? () => Navigator.pop(context, 'scan') : null,
-          ),
-          AppSheetOption(
-            enabled: canScan,
-            leading: const Icon(Icons.sync_rounded),
-            title: Text(context.l10n.libraryForceFullScan),
-            subtitle: Text(context.l10n.libraryForceFullScanSubtitle),
-            onTap: canScan ? () => Navigator.pop(context, 'full_scan') : null,
-          ),
-          AppSheetOption(
-            leading: Icon(
-              Icons.delete_outline,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            title: Text(
-              context.l10n.libraryRemoveFolder,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-            onTap: () => Navigator.pop(context, 'remove'),
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-    switch (action) {
-      case 'scan':
-        onScan();
-      case 'full_scan':
-        onFullScan();
-      case 'remove':
-        onRemove();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final title = _title();
-    final status = !source.enabled
-        ? context.l10n.librarySourceDisabled
-        : !source.available
-        ? context.l10n.librarySourceOffline
-        : isScanning
-        ? isFinalizing
-              ? context.l10n.libraryScanFinalizing
-              : isPaused
-              ? context.l10n.libraryScanPaused
-              : totalFiles > 0
-              ? context.l10n.librarySourceScanCount(
-                  scannedFiles,
-                  totalFiles,
-                  progress.toStringAsFixed(0),
-                )
-              : context.l10n.libraryScanning
-        : source.lastScanError?.trim().isNotEmpty == true
-        ? context.l10n.notifLibraryScanFailed
-        : context.l10n.librarySourceOnline;
-    final pathLine = source.displayName == title ? null : source.displayName;
-    final details = [
-      status,
-      context.l10n.libraryTracksUnit(source.trackCount),
-      context.l10n.libraryLastScanned(_lastScanned(context)),
-    ].join(' · ');
-
-    return Opacity(
-      opacity: enabled ? 1 : 0.5,
-      child: SettingsItem(
-        icon: source.path.startsWith('network://')
-            ? Icons.dns_outlined
-            : source.isRemovable
-            ? Icons.usb_rounded
-            : Icons.folder_outlined,
-        title: title,
-        titleTrailing: source.isRemovable
-            ? Tooltip(
-                message: context.l10n.libraryExternalStorage,
-                child: const Icon(Icons.sd_storage_outlined, size: 16),
-              )
-            : null,
-        subtitle: pathLine == null ? details : '$pathLine\n$details',
-        onTap: () => _showActions(context),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isScanning)
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: _AnimatedScanCount(
-                  count: scannedFiles,
-                  progress: progress,
-                  determinate: totalFiles > 0 && !isFinalizing,
-                ),
-              ),
-            AppSwitch(
-              adaptive: true,
-              semanticLabel: title,
-              value: source.enabled,
-              onChanged: enabled ? onEnabledChanged : null,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AnimatedScanCount extends StatelessWidget {
-  final int count;
-  final double progress;
-  final bool determinate;
-
-  const _AnimatedScanCount({
-    required this.count,
-    required this.progress,
-    required this.determinate,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: 42,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox.square(
-            dimension: 18,
-            child: CircularProgressIndicator(
-              value: determinate ? (progress / 100).clamp(0.0, 1.0) : null,
-              strokeWidth: 2,
-            ),
-          ),
-          const SizedBox(height: 2),
-          TweenAnimationBuilder<double>(
-            tween: Tween<double>(begin: 0, end: count.toDouble()),
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-            builder: (context, value, _) => Text(
-              value.round().toString(),
-              maxLines: 1,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LibraryHeroCard extends StatelessWidget {
-  final int itemCount;
-  final int excludedDownloadedCount;
-  final bool isScanning;
-  final bool scanIsFinalizing;
-  final bool scanIsPaused;
-  final double scanProgress;
-  final String? scanCurrentFile;
-  final int scanTotalFiles;
-  final int scannedFiles;
-  final DateTime? lastScannedAt;
-
-  const _LibraryHeroCard({
-    required this.itemCount,
-    required this.excludedDownloadedCount,
-    required this.isScanning,
-    required this.scanIsFinalizing,
-    required this.scanIsPaused,
-    required this.scanProgress,
-    this.scanCurrentFile,
-    required this.scanTotalFiles,
-    required this.scannedFiles,
-    this.lastScannedAt,
-  });
-
-  String _formatLastScanned(BuildContext context) {
-    if (lastScannedAt == null) return context.l10n.libraryLastScannedNever;
-    final now = DateTime.now();
-    final diff = now.difference(lastScannedAt!);
-
-    if (diff.inMinutes < 1) return context.l10n.timeJustNow;
-    if (diff.inHours < 1) return context.l10n.timeMinutesAgo(diff.inMinutes);
-    if (diff.inDays < 1) return context.l10n.timeHoursAgo(diff.inHours);
-    if (diff.inDays < 7) return context.l10n.dateDaysAgo(diff.inDays);
-
-    return '${lastScannedAt!.day}/${lastScannedAt!.month}/${lastScannedAt!.year}';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final showIndeterminateProgress =
-        isScanning &&
-        !scanIsPaused &&
-        (scanIsFinalizing ||
-            scanTotalFiles <= 0 ||
-            (scannedFiles <= 0 && scanProgress <= 0));
-    final displayCount = isScanning
-        ? scannedFiles
-        : itemCount + excludedDownloadedCount;
-
-    return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: 16 + wideListInset(context),
-        vertical: 8,
-      ),
-      constraints: const BoxConstraints(minHeight: 220),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          Positioned(
-            right: -20,
-            top: -20,
-            child: Icon(
-              Icons.library_music,
-              size: 200,
-              color: colorScheme.primary.withValues(alpha: 0.05),
-            ),
-          ),
-          Positioned(
-            left: -40,
-            bottom: -40,
-            child: Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: colorScheme.secondaryContainer.withValues(alpha: 0.3),
-              ),
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(
-                        isScanning
-                            ? scanIsPaused
-                                  ? Icons.pause_rounded
-                                  : Icons.sync
-                            : Icons.music_note,
-                        color: colorScheme.onPrimaryContainer,
-                        size: 32,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (isScanning)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 12,
-                              height: 12,
-                              child: scanIsPaused
-                                  ? Icon(
-                                      Icons.pause_rounded,
-                                      size: 12,
-                                      color: colorScheme.onPrimary,
-                                    )
-                                  : CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: colorScheme.onPrimary,
-                                    ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              scanIsPaused
-                                  ? context.l10n.libraryScanPaused
-                                  : context.l10n.libraryScanning,
-                              style: TextStyle(
-                                color: colorScheme.onPrimary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    displayCount.toString(),
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                      height: 1.0,
-                      letterSpacing: -2,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  isScanning
-                      ? context.l10n.libraryFilesUnit(scannedFiles)
-                      : context.l10n.libraryTracksUnit(displayCount),
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                if (!isScanning && excludedDownloadedCount > 0) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    context.l10n.libraryDownloadsHistoryExcluded(
-                      excludedDownloadedCount,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.8,
-                      ),
-                    ),
-                  ),
-                ],
-                if (isScanning) ...[
-                  const SizedBox(height: 16),
-                  LinearProgressIndicator(
-                    value: showIndeterminateProgress
-                        ? null
-                        : scanTotalFiles > 0
-                        ? scanProgress / 100
-                        : 0,
-                    backgroundColor: colorScheme.surfaceContainerHighest,
-                    color: colorScheme.primary,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    scanIsFinalizing
-                        ? context.l10n.libraryScanFinalizing
-                        : scanTotalFiles > 0
-                        ? context.l10n.libraryScanProgress(
-                            scanProgress.toStringAsFixed(0),
-                            scanTotalFiles,
-                          )
-                        : scanIsPaused
-                        ? context.l10n.libraryScanPaused
-                        : context.l10n.libraryScanning,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.8,
-                      ),
-                    ),
-                  ),
-                  if (!scanIsFinalizing &&
-                      scanCurrentFile != null &&
-                      scanCurrentFile!.trim().isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      scanCurrentFile!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.7,
-                        ),
-                      ),
-                    ),
-                  ],
-                ] else ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.history,
-                        size: 14,
-                        color: colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.7,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        context.l10n.libraryLastScanned(
-                          _formatLastScanned(context),
-                        ),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.7,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ScanProgressTile extends StatelessWidget {
-  final bool isFinalizing;
-  final bool isPaused;
-  final double progress;
-  final String? currentFile;
-  final int scannedFiles;
-  final int totalFiles;
-  final VoidCallback onPause;
-  final VoidCallback onResume;
-  final VoidCallback onCancel;
-
-  const _ScanProgressTile({
-    required this.isFinalizing,
-    required this.isPaused,
-    required this.progress,
-    this.currentFile,
-    required this.scannedFiles,
-    required this.totalFiles,
-    required this.onPause,
-    required this.onResume,
-    required this.onCancel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    // A paused bar stays still at its last position instead of animating.
-    final showIndeterminateProgress =
-        !isPaused &&
-        (isFinalizing ||
-            totalFiles <= 0 ||
-            (scannedFiles <= 0 && progress <= 0));
-    final progressValue = totalFiles > 0 ? progress / 100 : 0.0;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                isPaused ? Icons.pause_circle_outline : Icons.scanner,
-                color: colorScheme.primary,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isPaused
-                          ? context.l10n.libraryScanPaused
-                          : context.l10n.libraryScanning,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      isFinalizing
-                          ? context.l10n.libraryScanFinalizing
-                          : totalFiles > 0
-                          ? context.l10n.libraryScanProgress(
-                              progress.toStringAsFixed(0),
-                              totalFiles,
-                            )
-                          : context.l10n.libraryScanning,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (!isFinalizing)
-                TextButton(
-                  onPressed: isPaused ? onResume : onPause,
-                  child: Text(
-                    isPaused
-                        ? context.l10n.actionResume
-                        : context.l10n.actionPause,
-                  ),
-                ),
-              TextButton(
-                onPressed: onCancel,
-                child: Text(context.l10n.actionCancel),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(
-            value: showIndeterminateProgress ? null : progressValue,
-            backgroundColor: colorScheme.surfaceContainerHighest,
-            color: colorScheme.primary,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          if (!isFinalizing &&
-              currentFile != null &&
-              currentFile!.trim().isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              currentFile!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _AutoScanOption extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final bool selected;
-  final ColorScheme colorScheme;
-  final VoidCallback onTap;
-
-  const _AutoScanOption({
-    required this.icon,
-    required this.title,
-    required this.selected,
-    required this.colorScheme,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppSheetOption(
-      leading: Icon(icon),
-      title: Text(title),
-      trailing: selected ? Icon(Icons.check, color: colorScheme.primary) : null,
-      onTap: onTap,
     );
   }
 }

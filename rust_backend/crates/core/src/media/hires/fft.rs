@@ -1,6 +1,6 @@
 //! In-place iterative Cooley-Tukey FFT with precomputed twiddles and
 //! bit-reversal permutation, reused across all STFT frames. The same
-//! algorithm as SpotiFLAC-Module-Version's checker, so both agree bin for bin.
+//! algorithm as the Python reference checker, so both agree bin for bin.
 
 pub struct Radix2Fft {
     n: usize,

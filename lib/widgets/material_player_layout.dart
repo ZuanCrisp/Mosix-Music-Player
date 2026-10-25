@@ -3,15 +3,17 @@ import 'dart:math' as math;
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/controllers/player_metadata_controller.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/routes/now_playing_route.dart';
-import 'package:mosix/utils/clickable_metadata.dart';
-import 'package:mosix/utils/playback_seek_preview.dart';
-import 'package:mosix/widgets/player_artwork.dart';
-import 'package:mosix/widgets/player_gesture_regions.dart';
-import 'package:mosix/widgets/player_metadata_title.dart';
-import 'package:mosix/widgets/player_playback_controls.dart';
+import 'package:mornye/controllers/player_metadata_controller.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/routes/now_playing_route.dart';
+import 'package:mornye/theme/app_motion.dart';
+import 'package:mornye/utils/clickable_metadata.dart';
+import 'package:mornye/utils/playback_seek_preview.dart';
+import 'package:mornye/widgets/player_artwork.dart';
+import 'package:mornye/widgets/player_gesture_regions.dart';
+import 'package:mornye/widgets/player_metadata_title.dart';
+import 'package:mornye/widgets/player_playback_controls.dart';
+import 'package:mornye/widgets/player_volume_control.dart';
 
 class MaterialPlayerLayout extends StatelessWidget {
   const MaterialPlayerLayout({
@@ -23,6 +25,7 @@ class MaterialPlayerLayout extends StatelessWidget {
     required this.showLyrics,
     required this.lyricsBuilder,
     required this.onOpenQueue,
+    this.fullScreenArtwork = false,
   });
 
   final MediaItem mediaItem;
@@ -33,46 +36,91 @@ class MaterialPlayerLayout extends StatelessWidget {
   final WidgetBuilder lyricsBuilder;
   final VoidCallback onOpenQueue;
 
+  /// The page backdrop paints the cover; this area only keeps its gestures.
+  final bool fullScreenArtwork;
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        Widget artworkAt(double artSize) => Center(
-          child: PlayerArtworkDragRegion(
-            child: Hero(
-              tag: kNowPlayingArtworkHeroTag,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: SizedBox(
-                  width: artSize,
-                  height: artSize,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 450),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: ScaleTransition(
-                        scale: Tween(begin: 0.94, end: 1.0).animate(animation),
-                        child: child,
+        Widget artworkAt(double artSize) => fullScreenArtwork
+            ? const PlayerArtworkDragRegion(
+                child: ColoredBox(
+                  color: Colors.transparent,
+                  child: SizedBox.expand(),
+                ),
+              )
+            : Center(
+                child: PlayerArtworkDragRegion(
+                  child: Hero(
+                    tag: kNowPlayingArtworkHeroTag,
+                    child: Consumer(
+                      builder: (context, ref, artwork) {
+                        final resting =
+                            !ref.watch(playbackPlayingProvider) &&
+                            !ref.watch(playbackLoadingProvider);
+                        final motion = AppMotion.spatialSlow(
+                          context,
+                          AppMotionSpec(
+                            MediaQuery.disableAnimationsOf(context)
+                                ? Duration.zero
+                                : const Duration(milliseconds: 500),
+                            Curves.easeOutBack,
+                          ),
+                        );
+                        return AnimatedScale(
+                          scale: resting ? 0.9 : 1,
+                          duration: motion.duration,
+                          curve: motion.curve,
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween(end: resting ? 40 : 20),
+                            duration: motion.duration,
+                            curve: motion.curve,
+                            builder: (context, radius, artwork) => ClipRRect(
+                              borderRadius: BorderRadius.circular(radius),
+                              child: artwork,
+                            ),
+                            child: artwork,
+                          ),
+                        );
+                      },
+                      child: SizedBox(
+                        width: artSize,
+                        height: artSize,
+                        child: AnimatedSwitcher(
+                          duration: MediaQuery.disableAnimationsOf(context)
+                              ? Duration.zero
+                              : const Duration(milliseconds: 450),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(
+                                opacity: animation,
+                                child: ScaleTransition(
+                                  scale: Tween(
+                                    begin: 0.94,
+                                    end: 1.0,
+                                  ).animate(animation),
+                                  child: child,
+                                ),
+                              ),
+                          child: PlayerArtwork(
+                            key: ValueKey(
+                              mediaItem.artUri?.toString() ?? mediaItem.id,
+                            ),
+                            artUri: mediaItem.artUri?.toString(),
+                            colorScheme: colorScheme,
+                            cacheWidth:
+                                (artSize *
+                                        MediaQuery.devicePixelRatioOf(context))
+                                    .round(),
+                          ),
+                        ),
                       ),
-                    ),
-                    child: PlayerArtwork(
-                      key: ValueKey(
-                        mediaItem.artUri?.toString() ?? mediaItem.id,
-                      ),
-                      artUri: mediaItem.artUri?.toString(),
-                      colorScheme: colorScheme,
-                      cacheWidth:
-                          (artSize * MediaQuery.devicePixelRatioOf(context))
-                              .round(),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ),
-        );
+              );
 
         Widget visual() => AnimatedSwitcher(
           duration: MediaQuery.disableAnimationsOf(context)
@@ -136,7 +184,12 @@ class MaterialPlayerLayout extends StatelessWidget {
                 onOpenQueue: onOpenQueue,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: _metadataAndControls(context),
+                  // Short phones keep the room for artwork and lyrics; the
+                  // hardware buttons still set the volume there.
+                  children: _metadataAndControls(
+                    context,
+                    showVolume: constraints.maxHeight >= 600,
+                  ),
                 ),
               ),
             ],
@@ -146,73 +199,88 @@ class MaterialPlayerLayout extends StatelessWidget {
     );
   }
 
-  /// Title/artist, seek slider, and transport buttons — shared by the
+  /// Title/artist, seek slider, transport buttons and volume — shared by the
   /// portrait column and the landscape right pane.
   List<Widget> _metadataAndControls(
     BuildContext context, {
     bool compact = false,
+    bool showVolume = true,
   }) {
+    final fallback = AppMotionSpec(
+      MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 350),
+      Curves.linear,
+    );
+    final slide = AppMotion.spatial(context, fallback);
+    final fade = AppMotion.effects(context, fallback);
     return [
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 28),
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
-          transitionBuilder: (child, animation) => FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween(
-                begin: const Offset(0, 0.15),
-                end: Offset.zero,
-              ).animate(animation),
-              child: child,
-            ),
-          ),
-          child: Row(
-            key: ValueKey(mediaItem.id),
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    PlayerMetadataTitle(
-                      mediaItem: mediaItem,
-                      metadata: metadata,
-                      style:
-                          (compact
-                                  ? Theme.of(context).textTheme.titleLarge
-                                  : Theme.of(context).textTheme.headlineSmall)
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface,
-                              ),
-                      textAlign: TextAlign.center,
-                      maxLines: compact ? 1 : 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: compact ? 4 : 6),
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final track = ref
-                            .watch(playerCollectionTrackProvider(mediaItem))
-                            .value;
-                        return ClickableArtistName(
-                          artistName: mediaItem.artist ?? '',
-                          artistId: track?.artistId,
-                          extensionId: track?.source,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: colorScheme.onSurfaceVariant),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        );
-                      },
-                    ),
-                  ],
-                ),
+        child: ClipRect(
+          child: AnimatedSwitcher(
+            duration: slide.duration,
+            // Finish fading the old title before revealing the next one. This
+            // also keeps rapid skips from stacking several readable titles.
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation.drive(
+                CurveTween(curve: Interval(0.5, 1, curve: fade.curve)),
               ),
-            ],
+              child: SlideTransition(
+                position: Tween(begin: const Offset(0, 0.4), end: Offset.zero)
+                    .chain(
+                      CurveTween(curve: Interval(0.5, 1, curve: slide.curve)),
+                    )
+                    .animate(animation),
+                child: child,
+              ),
+            ),
+            child: Row(
+              key: ValueKey(mediaItem.id),
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      PlayerMetadataTitle(
+                        mediaItem: mediaItem,
+                        metadata: metadata,
+                        style:
+                            (compact
+                                    ? Theme.of(context).textTheme.titleLarge
+                                    : Theme.of(context).textTheme.headlineSmall)
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
+                                ),
+                        textAlign: TextAlign.center,
+                        maxLines: compact ? 1 : 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: compact ? 4 : 6),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final track = ref
+                              .watch(playerCollectionTrackProvider(mediaItem))
+                              .value;
+                          // No extensionId: a downloaded track's source is
+                          // its download service, not a metadata catalog.
+                          return ClickableArtistName(
+                            artistName: mediaItem.artist ?? '',
+                            artistId: track?.artistId,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(color: colorScheme.onSurfaceVariant),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -226,6 +294,10 @@ class MaterialPlayerLayout extends StatelessWidget {
         metadata: metadata,
         compact: compact,
       ),
+      if (showVolume) ...[
+        SizedBox(height: compact ? 8 : 12),
+        const PlayerVolumeControl(),
+      ],
     ];
   }
 }

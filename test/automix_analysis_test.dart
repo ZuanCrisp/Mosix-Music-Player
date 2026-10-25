@@ -2,11 +2,11 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/automix_options.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/services/automix_analysis.dart';
+import 'package:mornye/models/automix_options.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/services/automix_analysis.dart';
 
-Uint8List drumPattern(double bpm, {double phase = 0.17}) {
+Uint8List drumPattern(double bpm, {double phase = 0.17, bool fade = false}) {
   const sampleRate = 11025;
   final bytes = ByteData(sampleRate * 24 * 2);
   final random = math.Random(7);
@@ -14,8 +14,9 @@ Uint8List drumPattern(double bpm, {double phase = 0.17}) {
     final time = i / sampleRate;
     final sinceBeat = (time - phase) % (60 / bpm);
     final transient = time < phase ? 0.0 : math.exp(-sinceBeat * 50);
+    final gain = fade ? 0.03 + 0.97 * math.pow(time / 24, 3) : 1.0;
     final value =
-        0.75 * transient * math.sin(time * 2 * math.pi * 100) +
+        0.75 * gain * transient * math.sin(time * 2 * math.pi * 100) +
         (random.nextDouble() - 0.5) * 0.003;
     bytes.setInt16(i * 2, (value * 32767).round(), Endian.little);
   }
@@ -40,6 +41,15 @@ void main() {
       noise.setInt16(i, random.nextInt(32000) - 16000, Endian.little);
     }
     expect(analyzeAutoMixPcm(noise.buffer.asUint8List()).reliable, isFalse);
+  });
+
+  test('changing dynamics retain a reliable pulse and the quiet intro', () {
+    for (final bpm in [90.0, 120.0, 124.0, 160.0]) {
+      final grid = analyzeAutoMixPcm(drumPattern(bpm, fade: true));
+      expect(grid.reliable, isTrue, reason: '$bpm: ${grid.confidence}');
+      expect(grid.bpm, closeTo(bpm, 0.4));
+      expect(grid.firstSound, lessThan(0.3));
+    }
   });
 
   AutoMixBeatGrid grid(double bpm, {double confidence = 0.9}) =>
@@ -131,6 +141,43 @@ void main() {
       ),
       isNull,
     );
+  });
+
+  test(
+    'measured fallback gets a bass handoff without inventing beat alignment',
+    () {
+      expect(plan(120, 160).assisted, isTrue);
+      expect(plan(120, 124, confidence: 0.35).assisted, isTrue);
+      expect(plan(120, 124, confidence: 0.1).assisted, isFalse);
+      for (final effect in [AutoMixEffect.crossfade, AutoMixEffect.echo]) {
+        final transition = AutoMixPlan.create(
+          outgoingDuration: const Duration(minutes: 3),
+          incomingDuration: const Duration(minutes: 3),
+          outro: grid(120, confidence: 0.35),
+          intro: grid(124),
+          options: AutoMixOptions(effect: effect),
+        )!;
+        expect(transition.assisted, isFalse);
+        expect(transition.beatMatched, isFalse);
+        expect(transition.rate, 1);
+      }
+      final failed = plan(120, 124).withoutBeatMatching();
+      expect(failed.rate, 1);
+      expect(failed.beatMatched, isFalse);
+      expect(failed.fallbackReason, AutoMixFallbackReason.alignmentUnverified);
+    },
+  );
+
+  test('a custom outgoing tempo cannot claim the original beat grid', () {
+    final transition = AutoMixPlan.create(
+      outgoingDuration: const Duration(minutes: 3),
+      incomingDuration: const Duration(minutes: 3),
+      outro: grid(120),
+      intro: grid(124),
+      options: const AutoMixOptions(effect: AutoMixEffect.custom, speed: 1.1),
+    )!;
+    expect(transition.beatMatched, isFalse);
+    expect(transition.fallbackReason, AutoMixFallbackReason.effectTempo);
   });
 
   test('a silent lead-in does not prevent reliable beat matching', () {

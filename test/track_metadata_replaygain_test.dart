@@ -5,10 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/download_history_provider.dart';
-import 'package:mosix/screens/track_metadata_screen.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/download_history_provider.dart';
+import 'package:mornye/screens/track_metadata_screen.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+
+import 'support/app_icon_finder.dart';
 
 class _History extends DownloadHistoryNotifier {
   _History(this._item);
@@ -50,7 +52,7 @@ class _History extends DownloadHistoryNotifier {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zuancrisp.mosix/backend');
+  const channel = MethodChannel('com.zarz.mornye/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
 
@@ -61,6 +63,8 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       final metadata = hasTags
           ? {
+              'bpm': '120',
+              'mood': 'Calm',
               'replaygain_track_gain': ' -6.20 dB ',
               'replaygain_track_peak': '0.000000',
               'replaygain_album_gain': '0.00 dB',
@@ -128,6 +132,10 @@ void main() {
         hasTags,
       );
       for (final text in [
+        'BPM',
+        '120',
+        'Mood',
+        'Calm',
         'ReplayGain Track Gain',
         'ReplayGain Track Peak',
         'ReplayGain Album Gain',
@@ -140,7 +148,7 @@ void main() {
         expect(find.text(text), hasTags ? findsOneWidget : findsNothing);
       }
       Future<void> openRemoval() async {
-        await tester.tap(find.byIcon(Icons.more_vert));
+        await tester.tap(findAppIcon(Icons.more_vert));
         await tester.pumpAndSettle();
         expect(find.text('Edit audio file'), findsNothing);
         expect(find.text('Similar songs in Library'), findsNothing);

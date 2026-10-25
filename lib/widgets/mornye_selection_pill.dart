@@ -5,10 +5,11 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:liquid_glass_easy/liquid_glass_easy.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_liquid_backdrop.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/mornye_liquid_backdrop.dart';
 
 Future<ui.FragmentProgram>? _selectionMaskProgram;
+ui.FragmentProgram? _loadedSelectionMaskProgram;
 const _heldWidthGrowth = 0.28;
 const _heldHeightGrowth = 0.24;
 const _pillRadius = 32.0;
@@ -69,6 +70,8 @@ class _MornyeSelectionPillState extends State<MornyeSelectionPill>
   late final AnimationController _pressController;
   late final CurvedAnimation _pressAnimation;
   ui.FragmentProgram? _maskProgram;
+  Widget? _items;
+  int? _itemsSelected;
 
   @override
   void initState() {
@@ -87,10 +90,12 @@ class _MornyeSelectionPillState extends State<MornyeSelectionPill>
 
   Future<void> _loadMaskProgram() async {
     try {
-      final program = await (_selectionMaskProgram ??=
-          ui.FragmentProgram.fromAsset(
+      final program =
+          _loadedSelectionMaskProgram ??
+          await (_selectionMaskProgram ??= ui.FragmentProgram.fromAsset(
             'assets/shaders/mornye_selection_mask.frag',
           ));
+      _loadedSelectionMaskProgram = program;
       if (mounted) setState(() => _maskProgram = program);
     } catch (error) {
       debugPrint('Mornye selection mask unavailable: $error');
@@ -105,8 +110,15 @@ class _MornyeSelectionPillState extends State<MornyeSelectionPill>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _items = null;
+  }
+
+  @override
   void didUpdateWidget(MornyeSelectionPill oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _items = null;
     if (oldWidget.selectionColor == null && widget.selectionColor != null) {
       unawaited(_loadMaskProgram());
     }
@@ -290,40 +302,7 @@ class _MornyeSelectionPillState extends State<MornyeSelectionPill>
                   selected,
                   count,
                   pressProgress,
-                  Row(
-                    key: _foregroundKey,
-                    children: [
-                      for (var index = 0; index < count; index++)
-                        Expanded(
-                          child: Semantics(
-                            button: true,
-                            selected: index == widget.selectedIndex,
-                            label: widget.labels[index],
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(
-                                  _pillRadius,
-                                ),
-                                // The moving pill supplies press feedback. An
-                                // ink highlight would leave a colored patch on
-                                // the tab where the drag started.
-                                splashFactory: widget.selectionColor == null
-                                    ? null
-                                    : NoSplash.splashFactory,
-                                highlightColor: widget.selectionColor == null
-                                    ? null
-                                    : Colors.transparent,
-                                onTap: () => widget.onChanged(index),
-                                child: ExcludeSemantics(
-                                  child: _item(context, index, selected),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                  _buildItems(selected),
                 ),
                 // The lens must sample the foreground as well as the page.
                 // Below the icons it would look like a rim on a flat backdrop.
@@ -337,6 +316,45 @@ class _MornyeSelectionPillState extends State<MornyeSelectionPill>
     );
     return widget.interactionBuilder?.call(context, pressProgress, content) ??
         content;
+  }
+
+  Widget _buildItems(int selected) {
+    // Masked foreground keeps the same icons and labels during a press or
+    // drag. Only its shader scope and the lens depend on that animation.
+    final itemSelection = widget.selectionColor == null ? selected : null;
+    if (_itemsSelected != itemSelection) _items = null;
+    _itemsSelected = itemSelection;
+    return _items ??= Row(
+      key: _foregroundKey,
+      children: [
+        for (var index = 0; index < widget.labels.length; index++)
+          Expanded(
+            child: Semantics(
+              button: true,
+              selected: index == widget.selectedIndex,
+              label: widget.labels[index],
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(_pillRadius),
+                  // The moving pill supplies press feedback. An ink highlight
+                  // would leave a colored patch where the drag started.
+                  splashFactory: widget.selectionColor == null
+                      ? null
+                      : NoSplash.splashFactory,
+                  highlightColor: widget.selectionColor == null
+                      ? null
+                      : Colors.transparent,
+                  onTap: () => widget.onChanged(index),
+                  child: ExcludeSemantics(
+                    child: _item(context, index, selected),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _item(BuildContext context, int index, int selected) {

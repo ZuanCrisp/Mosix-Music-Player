@@ -19,9 +19,24 @@ class LyricScrollMotion extends StatelessWidget {
   final Widget child;
   final bool enabled;
 
-  static const duration = Duration(milliseconds: 700);
+  static const duration = Duration(milliseconds: 800);
+
+  /// The list scroll to a new line. It starts from rest and settles without
+  /// overshoot, so a line change never opens with a jump.
+  static const scrollDuration = Duration(milliseconds: 550);
+  static final Curve scrollCurve = _SpringCurve(
+    SpringSimulation(
+      SpringDescription.withDampingRatio(mass: 1, stiffness: 196, ratio: 1),
+      0,
+      1,
+      0,
+    ),
+    scrollDuration,
+  );
+
+  // Softer than the scroll, so later rows keep trailing it.
   static final _spring = SpringSimulation(
-    SpringDescription.withDampingRatio(mass: 1, stiffness: 180, ratio: 0.82),
+    SpringDescription.withDampingRatio(mass: 1, stiffness: 121, ratio: 0.85),
     0,
     1,
     0,
@@ -39,9 +54,11 @@ class LyricScrollMotion extends StatelessWidget {
       animation: progress,
       child: child,
       builder: (context, child) {
-        final t = progress.value * 0.7;
+        final t = progress.value * duration.inMilliseconds / 1000;
         final delay = rowsAfterFocus.clamp(1, 6) * 0.035;
-        final scroll = Curves.easeOutCubic.transform((t / 0.38).clamp(0, 1));
+        final scroll = scrollCurve.transform(
+          (t * 1000 / scrollDuration.inMilliseconds).clamp(0.0, 1.0),
+        );
         final following = t <= delay ? 0.0 : _spring.x(t - delay);
         final offset = progress.value >= 1
             ? 0.0
@@ -54,4 +71,20 @@ class LyricScrollMotion extends StatelessWidget {
       },
     );
   }
+}
+
+/// A spring sampled over [duration] and scaled to end exactly at 1.
+class _SpringCurve extends Curve {
+  _SpringCurve(this.simulation, Duration duration)
+    : _seconds = duration.inMicroseconds / Duration.microsecondsPerSecond,
+      _end = simulation.x(
+        duration.inMicroseconds / Duration.microsecondsPerSecond,
+      );
+
+  final SpringSimulation simulation;
+  final double _seconds;
+  final double _end;
+
+  @override
+  double transformInternal(double t) => simulation.x(t * _seconds) / _end;
 }

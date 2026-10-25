@@ -4,10 +4,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:mosix/services/app_remote_config_service.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/widgets/donate_icons.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mornye/services/app_remote_config_service.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/widgets/app_content_card.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_progress_indicator.dart';
+import 'package:mornye/widgets/donate_icons.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
+
+/// Fill of the donate cards. Material puts them on the settings group tier;
+/// Mornye keeps the tone it blends over its surface.
+Color _donateCardColor(BuildContext context) {
+  final theme = Theme.of(context);
+  final colorScheme = theme.colorScheme;
+  if (!context.isMornye) return colorScheme.surfaceContainer;
+  final isDark = theme.brightness == Brightness.dark;
+  return Color.alphaBlend(
+    (isDark ? Colors.white : Colors.black).withValues(
+      alpha: isDark ? 0.08 : 0.04,
+    ),
+    colorScheme.surface,
+  );
+}
 
 class DonatePage extends StatefulWidget {
   final AppRemoteConfigService? remoteConfigService;
@@ -115,16 +134,11 @@ class _MonthlyDonationGoalCard extends StatelessWidget {
     if (RegExp(r'^\d{4}-(0[1-9]|1[0-2])$').hasMatch(period)) {
       period = DateFormat.yMMMM(locale).format(DateTime.parse('$period-01'));
     }
-    final isDark = theme.brightness == Brightness.dark;
-    final cardColor = Color.alphaBlend(
-      (isDark ? Colors.white : Colors.black).withValues(
-        alpha: isDark ? 0.08 : 0.04,
-      ),
-      colorScheme.surface,
-    );
+    final cardColor = _donateCardColor(context);
 
-    return Card(
+    return AppContentCard(
       elevation: 0,
+      mornyeSurface: false,
       color: cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
@@ -168,7 +182,8 @@ class _MonthlyDonationGoalCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
             ],
-            LinearProgressIndicator(
+            AppProgressIndicator.linear(
+              wavy: false,
               value: goal.progressRatio,
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),
@@ -181,7 +196,7 @@ class _MonthlyDonationGoalCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(
+                  AppIcon(
                     Icons.check_circle_outline,
                     size: 20,
                     color: colorScheme.primary,
@@ -246,19 +261,11 @@ class _DonateLinksCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark
-        ? Color.alphaBlend(
-            Colors.white.withValues(alpha: 0.08),
-            colorScheme.surface,
-          )
-        : Color.alphaBlend(
-            Colors.black.withValues(alpha: 0.04),
-            colorScheme.surface,
-          );
+    final cardColor = _donateCardColor(context);
 
-    return Card(
+    return AppContentCard(
       elevation: 0,
+      mornyeSurface: false,
       color: cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       clipBehavior: Clip.antiAlias,
@@ -275,11 +282,13 @@ class _DonateLinksCard extends StatelessWidget {
               ),
             ),
           ),
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-          ),
+          // Material groups rows by the card alone; dividers are Mornye's.
+          if (context.isMornye)
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            ),
           if (!config.enabled)
             Padding(
               padding: const EdgeInsets.all(20),
@@ -296,7 +305,7 @@ class _DonateLinksCard extends StatelessWidget {
                 method: config.methods[index],
                 colorScheme: colorScheme,
               ),
-              if (index < config.methods.length - 1)
+              if (context.isMornye && index < config.methods.length - 1)
                 Divider(
                   height: 1,
                   thickness: 1,
@@ -320,16 +329,11 @@ class _RecentSupportersCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
+    return AppContentCard(
       elevation: 0,
-      color: Color.alphaBlend(
-        (isDark ? Colors.white : Colors.black).withValues(
-          alpha: isDark ? 0.08 : 0.04,
-        ),
-        colorScheme.surface,
-      ),
+      mornyeSurface: false,
+      color: _donateCardColor(context),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -338,7 +342,11 @@ class _RecentSupportersCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.star_rounded, size: 20, color: colorScheme.primary),
+                AppIcon(
+                  Icons.star_rounded,
+                  size: 20,
+                  color: colorScheme.primary,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -416,8 +424,9 @@ class _DonateNoticeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return AppContentCard(
       elevation: 0,
+      mornyeSurface: false,
       color: colorScheme.secondaryContainer.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
@@ -427,7 +436,7 @@ class _DonateNoticeCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
+                AppIcon(
                   Icons.volunteer_activism_rounded,
                   size: 20,
                   color: colorScheme.primary,
@@ -466,8 +475,7 @@ class _DonateMethodItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(method.color);
-
+    // Every method shares the icon container role; the glyph identifies it.
     return InkWell(
       onTap: () => _handleTap(context),
       child: Padding(
@@ -478,10 +486,12 @@ class _DonateMethodItem extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: color,
+                color: colorScheme.secondaryContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Center(child: _methodIcon(method)),
+              child: Center(
+                child: _methodIcon(method, colorScheme.onSecondaryContainer),
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -509,7 +519,7 @@ class _DonateMethodItem extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
+            AppIcon(
               method.isWallet ? Icons.copy_rounded : Icons.open_in_new,
               size: 18,
               color: colorScheme.onSurfaceVariant,
@@ -561,7 +571,7 @@ class _NoticeLine extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: colorScheme.primary),
+        AppIcon(icon, size: 16, color: colorScheme.primary),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -576,33 +586,29 @@ class _NoticeLine extends StatelessWidget {
   }
 }
 
-Widget _methodIcon(DonateMethod method) {
+Widget _methodIcon(DonateMethod method, Color color) {
   switch (method.icon.toLowerCase()) {
     case 'kofi':
     case 'ko-fi':
-      return const KofiIcon(size: 22, color: Colors.white);
+      return KofiIcon(size: 22, color: color);
     case 'github':
     case 'github-sponsors':
-      return const GitHubIcon(size: 22, color: Colors.white);
+      return GitHubIcon(size: 22, color: color);
     case 'crypto':
     case 'wallet':
-      return const Text(
+      return Text(
         '\$',
         style: TextStyle(
-          color: Colors.white,
+          color: color,
           fontSize: 22,
           fontWeight: FontWeight.bold,
         ),
       );
     case 'coffee':
-      return const Icon(
-        Icons.local_cafe_rounded,
-        color: Colors.white,
-        size: 22,
-      );
+      return AppIcon(Icons.local_cafe_rounded, color: color, size: 22);
     case 'heart':
     default:
-      return const Icon(Icons.favorite_rounded, color: Colors.white, size: 22);
+      return AppIcon(Icons.favorite_rounded, color: color, size: 22);
   }
 }
 

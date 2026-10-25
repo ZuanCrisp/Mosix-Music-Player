@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/ffmpeg_support.dart';
+import 'package:mornye/services/ffmpeg_support.dart';
 
 void main() {
   late Directory directory;
@@ -112,7 +112,7 @@ void main() {
         onError: (e) {
           error = e;
           stagingRemained = directory.listSync().any(
-            (entry) => entry.path.contains('.spotiflac-staging-'),
+            (entry) => entry.path.contains('.mornye-staging-'),
           );
         },
       ),

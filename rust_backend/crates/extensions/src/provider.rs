@@ -36,7 +36,7 @@ pub(crate) fn audio_traits(qualities: Vec<String>, modes: Vec<String>) -> Vec<St
             .iter()
             .any(|part| quality.contains(part));
         lossless |= quality.contains("LOSSLESS") || quality.contains("FLAC");
-        let lower = spotiflac_core::matching::lowercase(&quality);
+        let lower = mornye_core::matching::lowercase(&quality);
         let numeric_prefix = |suffix: &str, decimal: bool| {
             lower
                 .find(suffix)

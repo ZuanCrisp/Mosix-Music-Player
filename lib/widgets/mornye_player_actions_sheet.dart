@@ -2,12 +2,12 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/library_collections_provider.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/theme/cover_palette.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/library_collections_provider.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/theme/cover_palette.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/mornye_context_menu.dart';
 
 /// Navigation for the title/artist, separate from playback and file actions.
 class MornyePlayerNavigationMenu extends StatelessWidget {
@@ -116,8 +116,20 @@ class MornyePlayerActionsSheet extends ConsumerWidget {
               context.l10n.nowPlayingDetails,
               CupertinoIcons.info,
             ),
+            _action(
+              context,
+              'shareLyrics',
+              context.l10n.lyricsShareTitle,
+              CupertinoIcons.quote_bubble,
+            ),
           ],
           [
+            _action(
+              context,
+              'equalizer',
+              context.l10n.equalizerTitle,
+              CupertinoIcons.slider_horizontal_3,
+            ),
             _action(
               context,
               'sleepTimer',

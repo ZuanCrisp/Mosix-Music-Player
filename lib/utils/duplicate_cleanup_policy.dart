@@ -1,6 +1,6 @@
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mosix/utils/path_match_keys.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mornye/utils/path_match_keys.dart';
 
 /// Clear every index of a deleted file, but never delete a retained alias.
 Future<int> deleteReviewedDuplicateCopies({

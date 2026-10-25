@@ -4,12 +4,66 @@ import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:mosix/utils/image_cache_utils.dart';
-import 'package:mosix/widgets/cached_cover_image.dart';
+import 'package:mornye/utils/image_cache_utils.dart';
+import 'package:mornye/widgets/cached_cover_image.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  for (final override in [false, true]) {
+    testWidgets('local thumbnail fade keeps its size in a row ($override)', (
+      tester,
+    ) async {
+      final directory = await tester.runAsync(() async {
+        final directory = await Directory.systemTemp.createTemp('cover-row-');
+        await _writeCover(directory, const Size(128, 64));
+        return directory;
+      });
+      try {
+        await tester.runAsync(() async {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    LocalOrNetworkCoverImage(
+                      url: '${directory!.path}/cover.png',
+                      width: 56,
+                      height: 56,
+                      localCacheWidth: override ? 112 : null,
+                      fadeInDuration: const Duration(milliseconds: 180),
+                      placeholder: (_) => const SizedBox.square(dimension: 56),
+                    ),
+                    const Text('Local song'),
+                  ],
+                ),
+              ),
+            ),
+          );
+          expect(tester.takeException(), isNull);
+          expect(
+            tester.getSize(find.byType(LocalOrNetworkCoverImage)),
+            const Size(56, 56),
+          );
+          final provider = tester.widget<Image>(find.byType(Image)).image;
+          await _decodedImageSize(provider);
+        });
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(
+          tester.getSize(find.byType(LocalOrNetworkCoverImage)),
+          const Size(56, 56),
+        );
+      } finally {
+        await tester.pumpWidget(const SizedBox());
+        PaintingBinding.instance.imageCache.clear();
+        PaintingBinding.instance.imageCache.clearLiveImages();
+        await tester.runAsync(() => directory!.delete(recursive: true));
+      }
+    });
+  }
+
   for (final source in [
     'network cover',
     'network backdrop',

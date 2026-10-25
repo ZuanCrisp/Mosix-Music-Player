@@ -20,7 +20,7 @@ class BackendApkAuditTest(unittest.TestCase):
             header[:6] = b"\x7fELF" + bytes([elf_class, 1])
             struct.pack_into("<H", header, 18, machine)
             for library in checker.CORE_LIBRARIES + (
-                "libspotiflac_mobile.so", "libjnidispatch.so",
+                "libmornye_mobile.so", "libjnidispatch.so",
             ):
                 self.entries[f"lib/{abi}/{library}"] = bytes(header)
 
@@ -82,7 +82,7 @@ class BackendApkAuditTest(unittest.TestCase):
 
     def test_missing_backend_in_either_abi_fails(self):
         for abi in checker.ABI_LAYOUT:
-            for library in ("libspotiflac_mobile.so", "libjnidispatch.so"):
+            for library in ("libmornye_mobile.so", "libjnidispatch.so"):
                 with self.subTest(abi=abi, library=library):
                     path = f"lib/{abi}/{library}"
                     data = self.entries.pop(path)
@@ -91,8 +91,8 @@ class BackendApkAuditTest(unittest.TestCase):
                     self.entries[path] = data
 
     def test_wrong_architecture_fails(self):
-        self.entries["lib/armeabi-v7a/libspotiflac_mobile.so"] = self.entries[
-            "lib/arm64-v8a/libspotiflac_mobile.so"
+        self.entries["lib/armeabi-v7a/libmornye_mobile.so"] = self.entries[
+            "lib/arm64-v8a/libmornye_mobile.so"
         ]
         with self.assertRaisesRegex(checker.AuditError, "ELF class"):
             self.audit()

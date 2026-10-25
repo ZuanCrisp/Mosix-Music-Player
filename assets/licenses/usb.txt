@@ -4,8 +4,8 @@ libusb1-sys 0.7.0 (MIT), bundled with libusb 1.0.30 (LGPL-2.1-or-later).
 Source: https://crates.io/crates/libusb1-sys/0.7.0
 libusb source: https://github.com/libusb/libusb/releases/tag/v1.0.30
 The dependency and updated C sources are pinned in rust_backend/vendor. Source for
-SpotiFLAC and scripts/build_rust_backend.sh is available at
-https://github.com/ZuanCrisp/Mosix-Music-Player for rebuilding/relinking the
+Mornye and scripts/build_rust_backend.sh is available at
+https://github.com/mornyeapp/Mornye for rebuilding/relinking the
 Android native library with a modified libusb. This component's LGPL rights,
 including reverse engineering to debug such modifications, are preserved.
 

@@ -79,7 +79,7 @@ class _SmoothedProgressScopeState extends State<SmoothedProgressScope>
     _animation = Tween<double>(
       begin: current,
       end: target,
-    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
+    ).chain(CurveTween(curve: widget.curve)).animate(_controller);
     _controller.forward(from: 0);
   }
 

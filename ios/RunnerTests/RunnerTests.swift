@@ -162,10 +162,10 @@ class RunnerTests: XCTestCase {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
         defer { try? FileManager.default.removeItem(at: root) }
 
-        let prefix = ".spotiflac-ffmpeg-\(Bundle.main.bundleIdentifier ?? "spotiflac")-"
+        let prefix = ".mornye-ffmpeg-\(Bundle.main.bundleIdentifier ?? "mornye")-"
         let ownOrphan = root.appendingPathComponent("\(prefix)\(UUID().uuidString).flac")
         try Data("orphan".utf8).write(to: ownOrphan)
-        let foreignFile = root.appendingPathComponent(".spotiflac-ffmpeg-foreign-\(UUID().uuidString).flac")
+        let foreignFile = root.appendingPathComponent(".mornye-ffmpeg-foreign-\(UUID().uuidString).flac")
         try Data("foreign".utf8).write(to: foreignFile)
         let malformedFile = root.appendingPathComponent("\(prefix)not-a-uuid.flac")
         try Data("malformed".utf8).write(to: malformedFile)
@@ -435,7 +435,7 @@ class RunnerTests: XCTestCase {
 
     func testParsesOAuthCallback() {
         let route = ExtensionCallbackParser.parse(
-            URL(string: "spotiflac://callback?code=auth-code&state=metadata-provider")!
+            URL(string: "mornye://callback?code=auth-code&state=metadata-provider")!
         )
 
         XCTAssertEqual(
@@ -452,7 +452,7 @@ class RunnerTests: XCTestCase {
         let route = ExtensionCallbackParser.parse(
             URL(
                 string:
-                    "spotiflac://session-grant?grant=session-token&state=provider"
+                    "mornye://session-grant?grant=session-token&state=provider"
             )!
         )
 
@@ -474,17 +474,17 @@ class RunnerTests: XCTestCase {
         )
         XCTAssertNil(
             ExtensionCallbackParser.parse(
-                URL(string: "spotiflac://unknown?code=auth&state=provider")!
+                URL(string: "mornye://unknown?code=auth&state=provider")!
             )
         )
         XCTAssertNil(
             ExtensionCallbackParser.parse(
-                URL(string: "spotiflac://callback?code=auth")!
+                URL(string: "mornye://callback?code=auth")!
             )
         )
         XCTAssertNil(
             ExtensionCallbackParser.parse(
-                URL(string: "spotiflac://callback?state=provider")!
+                URL(string: "mornye://callback?state=provider")!
             )
         )
     }

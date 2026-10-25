@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/controllers/metadata_editor_controller.dart';
+import 'package:mornye/controllers/metadata_editor_controller.dart';
 
 void main() {
   test('save snapshots preserve empty tags and explicit track/disc totals', () {

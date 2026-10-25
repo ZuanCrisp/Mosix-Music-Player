@@ -1,7 +1,7 @@
+//! In-memory cache for Deezer album, artist, and playlist responses, with in-flight request sharing.
+
 use super::{Check, DeezerClient, ResolverError};
-use spotiflac_core::metadata::{
-    AlbumExtendedMetadata, AlbumResponsePayload, ArtistResponsePayload, SearchAllResult,
-};
+use mornye_core::metadata::{AlbumExtendedMetadata, AlbumResponsePayload, ArtistResponsePayload};
 use std::collections::BTreeMap;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::{Arc, Condvar, Mutex};
@@ -9,7 +9,6 @@ use std::time::{Duration, Instant};
 
 #[derive(Clone)]
 pub(super) enum Value {
-    Search(Arc<SearchAllResult>),
     Album(Arc<AlbumResponsePayload>),
     Artist(Arc<ArtistResponsePayload>),
     Extended(Arc<AlbumExtendedMetadata>),
@@ -239,7 +238,7 @@ mod tests {
 
     #[test]
     fn metadata_flights_coalesce_and_a_cancelled_waiter_does_not_cancel_the_leader() {
-        let network = spotiflac_network::NetworkService::new().unwrap();
+        let network = mornye_network::NetworkService::new().unwrap();
         let client = DeezerClient::new(&network);
         let started = AtomicBool::new(false);
         let release = AtomicBool::new(false);
@@ -301,7 +300,7 @@ mod tests {
 
     #[test]
     fn cancelled_leaders_release_live_waiters_and_panics_leave_no_stuck_flight() {
-        let network = spotiflac_network::NetworkService::new().unwrap();
+        let network = mornye_network::NetworkService::new().unwrap();
         let client = DeezerClient::new(&network);
         let started = AtomicBool::new(false);
         let cancel = AtomicBool::new(false);
@@ -354,7 +353,7 @@ mod tests {
 
     #[test]
     fn distinct_pending_metadata_flights_are_bounded_and_release_their_slots() {
-        let network = spotiflac_network::NetworkService::new().unwrap();
+        let network = mornye_network::NetworkService::new().unwrap();
         let client = DeezerClient::new(&network);
         let entered = AtomicUsize::new(0);
         let release = AtomicBool::new(false);

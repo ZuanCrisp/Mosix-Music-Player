@@ -1,47 +1,54 @@
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/cover_palette.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/theme/cover_palette.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:mosix/services/cover_cache_manager.dart';
-import 'package:mosix/services/deleted_library_files.dart';
-import 'package:mosix/services/batch_track_actions.dart';
-import 'package:mosix/services/local_track_batch_actions.dart';
-import 'package:mosix/models/unified_library_item.dart';
-import 'package:mosix/models/album_track_order.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/utils/audio_quality_badge_policy.dart';
-import 'package:mosix/utils/confirm_and_delete_tracks.dart';
-import 'package:mosix/utils/cover_art_utils.dart';
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/utils/image_cache_utils.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/providers/playback_provider.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/providers/player_motion_artwork_provider.dart';
-import 'package:mosix/screens/collapsing_header_scroll_mixin.dart';
-import 'package:mosix/screens/selection_mode_mixin.dart';
-import 'package:mosix/screens/track_metadata_screen.dart';
-import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mosix/widgets/collection_scaffold.dart';
-import 'package:mosix/widgets/cached_cover_image.dart';
-import 'package:mosix/widgets/app_snack_bar.dart';
-import 'package:mosix/widgets/album_track_tile.dart';
-import 'package:mosix/widgets/animation_utils.dart';
-import 'package:mosix/widgets/destructive_selection_button.dart';
-import 'package:mosix/widgets/selection_action_button.dart';
-import 'package:mosix/widgets/selection_bottom_bar.dart';
-import 'package:mosix/widgets/library_selection_playback_actions.dart';
-import 'package:mosix/widgets/disc_separator_chip.dart';
-import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
-import 'package:mosix/widgets/motion_header_banner.dart';
-import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mornye/services/cover_cache_manager.dart';
+import 'package:mornye/services/deleted_library_files.dart';
+import 'package:mornye/services/batch_track_actions.dart';
+import 'package:mornye/services/local_track_batch_actions.dart';
+import 'package:mornye/models/unified_library_item.dart';
+import 'package:mornye/models/album_track_order.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/audio_quality_badge_policy.dart';
+import 'package:mornye/utils/confirm_and_delete_tracks.dart';
+import 'package:mornye/utils/cover_art_utils.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/image_cache_utils.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/providers/playback_provider.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/player_motion_artwork_provider.dart';
+import 'package:mornye/screens/collapsing_header_scroll_mixin.dart';
+import 'package:mornye/screens/selection_mode_mixin.dart';
+import 'package:mornye/screens/track_metadata_screen.dart';
+import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mornye/widgets/collection_scaffold.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/widgets/desktop/context_menu.dart';
+import 'package:mornye/widgets/desktop/desktop_selection.dart';
+import 'package:mornye/widgets/desktop/detail_header.dart';
+import 'package:mornye/widgets/desktop/library_track_menu.dart';
+import 'package:mornye/widgets/playlist_picker_sheet.dart';
+import 'package:mornye/widgets/desktop/track_table.dart';
+import 'package:mornye/widgets/cached_cover_image.dart';
+import 'package:mornye/widgets/app_snack_bar.dart';
+import 'package:mornye/widgets/album_track_tile.dart';
+import 'package:mornye/widgets/animation_utils.dart';
+import 'package:mornye/widgets/destructive_selection_button.dart';
+import 'package:mornye/widgets/selection_action_button.dart';
+import 'package:mornye/widgets/selection_bottom_bar.dart';
+import 'package:mornye/widgets/library_selection_playback_actions.dart';
+import 'package:mornye/widgets/disc_separator_chip.dart';
+import 'package:mornye/widgets/album_detail_header.dart';
+import 'package:mornye/widgets/mornye_artist_header.dart';
+import 'package:mornye/widgets/motion_header_banner.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
 
 class DownloadedAlbumScreen extends ConsumerStatefulWidget {
   final String albumName;
@@ -162,6 +169,10 @@ class _DownloadedAlbumScreenState extends ConsumerState<DownloadedAlbumScreen>
     }
   }
 
+  /// A row matches the player by its file, whichever queue played it.
+  PlaybackRowKey _playbackKey(DownloadHistoryItem track) =>
+      (id: track.id, path: track.filePath);
+
   void _onEmbeddedCoverChanged() {
     if (!mounted || _embeddedCoverRefreshScheduled) return;
     _embeddedCoverRefreshScheduled = true;
@@ -274,17 +285,30 @@ class _DownloadedAlbumScreenState extends ConsumerState<DownloadedAlbumScreen>
         ? MediaQuery.paddingOf(context).bottom
         : 0.0;
 
-    return CollectionScaffold(
-      scrollController: scrollController,
-      isSelectionMode: isSelectionMode,
-      onExitSelectionMode: exitSelectionMode,
-      appBar: _buildAppBar(context, colorScheme, tracks, qualityLabelMode),
-      slivers: [_buildTrackList(context, colorScheme, order)],
-      selectionBar: _buildSelectionBottomBar(
-        context,
-        colorScheme,
-        tracks,
-        bottomPadding,
+    return DesktopListScope(
+      onSelectAll: tracks.isEmpty
+          ? null
+          : () => selectAll(tracks.map((track) => track.id)),
+      onClearSelection: isSelectionMode ? exitSelectionMode : null,
+      onDelete: isSelectionMode ? () => _deleteSelected(tracks) : null,
+      onActivate: () {
+        final anchor = tracks
+            .where((track) => track.id == selectionAnchorId)
+            .firstOrNull;
+        if (anchor != null) _openFile(anchor, queueItems: tracks);
+      },
+      child: CollectionScaffold(
+        scrollController: scrollController,
+        isSelectionMode: showsSelectionBar,
+        onExitSelectionMode: exitSelectionMode,
+        appBar: _buildAppBar(context, colorScheme, tracks, qualityLabelMode),
+        slivers: [_buildTrackList(context, colorScheme, order)],
+        selectionBar: _buildSelectionBottomBar(
+          context,
+          colorScheme,
+          tracks,
+          bottomPadding,
+        ),
       ),
     );
   }
@@ -379,18 +403,25 @@ class _DownloadedAlbumScreenState extends ConsumerState<DownloadedAlbumScreen>
         coverSize,
         cacheWidth,
       ),
-      subtitle: Text(
-        widget.artistName,
-        style: TextStyle(
-          color: context.isMornye
-              ? colorScheme.primary
-              : HeaderPalette.of(context).onSurfaceVariant,
-          fontSize: context.tokens.headerSubtitleSize,
-          fontWeight: context.isMornye ? FontWeight.w400 : FontWeight.w600,
+      // Built inside the header, so desktop reads its artwork scheme.
+      subtitle: Builder(
+        builder: (header) => Text(
+          widget.artistName,
+          style: isDesktopPlatform
+              ? desktopDetailSubtitleStyle(header)
+              : TextStyle(
+                  color: context.isMornye
+                      ? colorScheme.primary
+                      : HeaderPalette.of(context).onSurfaceVariant,
+                  fontSize: context.tokens.headerSubtitleSize,
+                  fontWeight: context.isMornye
+                      ? FontWeight.w400
+                      : FontWeight.w600,
+                ),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        textAlign: TextAlign.center,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
       ),
       meta: tracks.isNotEmpty
           ? _buildDownloadedHeaderMeta(context, tracks, commonQuality)
@@ -401,8 +432,27 @@ class _DownloadedAlbumScreenState extends ConsumerState<DownloadedAlbumScreen>
               shuffleTooltip: context.l10n.actionShuffle,
               onPlay: () => _playAll(tracks),
               onShuffle: () => _shuffleAll(tracks),
+              onAddToPlaylist: () => showAddTracksToPlaylistSheet(
+                Navigator.of(context, rootNavigator: true).context,
+                ref,
+                [
+                  for (final track in tracks)
+                    UnifiedLibraryItem.fromDownloadHistory(track).toTrack(),
+                ],
+              ),
             )
           : null,
+      moreMenu: tracks.isEmpty
+          ? null
+          : () => libraryTrackMenuGroups(
+              context,
+              ref,
+              items: [
+                for (final track in tracks)
+                  UnifiedLibraryItem.fromDownloadHistory(track),
+              ],
+              onPlay: () => _playAll(tracks),
+            ),
     );
   }
 
@@ -537,6 +587,7 @@ class _DownloadedAlbumScreenState extends ConsumerState<DownloadedAlbumScreen>
     final tracks = order.tracks;
     final discMap = order.discGroups;
 
+    if (isDesktopPlatform) return _buildDesktopTable(context, tracks);
     if (discMap.length <= 1) {
       return SliverPadding(
         padding: EdgeInsets.symmetric(horizontal: wideListInset(context)),
@@ -606,6 +657,106 @@ class _DownloadedAlbumScreenState extends ConsumerState<DownloadedAlbumScreen>
     );
   }
 
+  /// The desktop song table: a click plays, right-click opens the
+  /// selection's actions.
+  Widget _buildDesktopTable(
+    BuildContext context,
+    List<DownloadHistoryItem> tracks,
+  ) {
+    final mode = ref.watch(
+      settingsProvider.select((s) => s.libraryQualityLabelMode),
+    );
+    final indexById = {
+      for (var index = 0; index < tracks.length; index++)
+        tracks[index].id: index,
+    };
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(horizontal: wideListInset(context)),
+      sliver: SliverTrackTable(
+        rows: [
+          for (final track in tracks)
+            TrackTableRow(
+              id: track.id,
+              number: track.trackNumber,
+              title: track.trackName,
+              artist: track.artistName,
+              album: track.albumName,
+              quality: buildLibraryAudioQualityLabel(
+                mode: mode,
+                format: track.format,
+                filePath: track.filePath,
+                fileName: track.safFileName,
+                bitrateKbps: track.bitrate,
+                bitDepth: track.bitDepth,
+                sampleRate: track.sampleRate,
+                storedQuality: track.quality,
+              ),
+              duration: track.duration == null
+                  ? null
+                  : Duration(seconds: track.duration!),
+              playback: mediaItemPlaybackUiProvider(_playbackKey(track)),
+              trailing: _TrackPlaybackBuilder(
+                playbackKey: _playbackKey(track),
+                builder: (context, playback, toggle) => AlbumTrackPlayButton(
+                  isPlaying: playback.isPlaying,
+                  onPlay: playback.isCurrent
+                      ? toggle
+                      : () => _openFile(track, queueItems: tracks),
+                  dense: true,
+                ),
+              ),
+            ),
+        ],
+        columns: const [
+          TrackTableColumn.number,
+          TrackTableColumn.title,
+          TrackTableColumn.artist,
+          TrackTableColumn.quality,
+          TrackTableColumn.duration,
+        ],
+        selectedIds: selectedIds,
+        albumLayout: context.isMornye,
+        albumArtist: widget.artistName,
+        onSelect: applyDesktopClick,
+        onActivate: (id) {
+          final index = indexById[id];
+          if (index != null) _openFile(tracks[index], queueItems: tracks);
+        },
+        onContextMenu: (id, position) {
+          final index = indexById[id];
+          if (index == null) return;
+          showSelectionMenu(id, () {
+            final items = _selectedUnifiedItems(tracks);
+            return showContextMenu(
+              context,
+              position: position,
+              groups: libraryTrackMenuGroups(
+                context,
+                ref,
+                items: items,
+                onPlay: () => _openFile(tracks[index], queueItems: tracks),
+                onOpenDetails: () => _navigateToMetadataScreen(
+                  tracks[index],
+                  navigationItems: tracks,
+                  navigationIndex: index,
+                ),
+                onDone: exitSelectionMode,
+                onReEnrich: () => _reEnrichSelected(tracks),
+                onConvert: () => showBatchConvertSheet(
+                  this.context,
+                  ref,
+                  items,
+                  onExitSelectionMode: exitSelectionMode,
+                ),
+                onDelete: () => _deleteSelected(tracks),
+              ),
+            );
+          });
+        },
+      ),
+    );
+  }
+
   Widget _buildTrackItem(
     BuildContext context,
     ColorScheme colorScheme,
@@ -613,26 +764,34 @@ class _DownloadedAlbumScreenState extends ConsumerState<DownloadedAlbumScreen>
     List<DownloadHistoryItem> navigationItems,
     int navigationIndex,
   ) {
-    return AlbumTrackTile(
-      trackNumber: track.trackNumber,
-      trackName: track.trackName,
-      subtitle: Text(
-        track.artistName,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: colorScheme.onSurfaceVariant),
+    final subtitle = Text(
+      track.artistName,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(color: colorScheme.onSurfaceVariant),
+    );
+    return _TrackPlaybackBuilder(
+      playbackKey: _playbackKey(track),
+      builder: (context, playback, toggle) => AlbumTrackTile(
+        trackNumber: track.trackNumber,
+        trackName: track.trackName,
+        subtitle: subtitle,
+        isSelectionMode: isSelectionMode,
+        isSelected: selectedIds.contains(track.id),
+        isCurrent: playback.isCurrent,
+        isPlaying: playback.isPlaying,
+        colorScheme: colorScheme,
+        onToggleSelection: () => toggleSelection(track.id),
+        onOpen: () => _navigateToMetadataScreen(
+          track,
+          navigationItems: navigationItems,
+          navigationIndex: navigationIndex,
+        ),
+        onEnterSelectionMode: () => enterSelectionMode(track.id),
+        onPlay: playback.isCurrent
+            ? toggle
+            : () => _openFile(track, queueItems: navigationItems),
       ),
-      isSelectionMode: isSelectionMode,
-      isSelected: selectedIds.contains(track.id),
-      colorScheme: colorScheme,
-      onToggleSelection: () => toggleSelection(track.id),
-      onOpen: () => _navigateToMetadataScreen(
-        track,
-        navigationItems: navigationItems,
-        navigationIndex: navigationIndex,
-      ),
-      onEnterSelectionMode: () => enterSelectionMode(track.id),
-      onPlay: () => _openFile(track, queueItems: navigationItems),
     );
   }
 
@@ -694,63 +853,46 @@ class _DownloadedAlbumScreenState extends ConsumerState<DownloadedAlbumScreen>
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(context.l10n.trackEditMetadata),
         ),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            const spacing = 8.0;
-            final columns = (constraints.maxWidth / 320).floor().clamp(2, 4);
-            final itemWidth =
-                (constraints.maxWidth - spacing * (columns - 1)) / columns;
-            final actions = <Widget>[
+        SelectionActionGrid(
+          children: [
+            SelectionActionButton(
+              icon: Icons.auto_fix_high_outlined,
+              label: '${context.l10n.trackReEnrich} ($selectedCount)',
+              onPressed: selectedCount > 0
+                  ? () => _reEnrichSelected(tracks)
+                  : null,
+              colorScheme: colorScheme,
+            ),
+            SelectionActionButton(
+              icon: Icons.swap_horiz,
+              label: context.l10n.selectionConvertCount(selectedCount),
+              onPressed: selectedCount > 0
+                  ? () => showBatchConvertSheet(
+                      this.context,
+                      ref,
+                      _selectedUnifiedItems(tracks),
+                      onExitSelectionMode: exitSelectionMode,
+                    )
+                  : null,
+              colorScheme: colorScheme,
+            ),
+            for (final remove in [false, true])
               SelectionActionButton(
-                icon: Icons.auto_fix_high_outlined,
-                label: '${context.l10n.trackReEnrich} ($selectedCount)',
+                icon: remove ? Icons.remove_circle_outline : Icons.graphic_eq,
+                label: remove
+                    ? context.l10n.selectionRemoveReplayGainCount(selectedCount)
+                    : context.l10n.selectionReplayGainCount(selectedCount),
                 onPressed: selectedCount > 0
-                    ? () => _reEnrichSelected(tracks)
-                    : null,
-                colorScheme: colorScheme,
-              ),
-              SelectionActionButton(
-                icon: Icons.swap_horiz,
-                label: context.l10n.selectionConvertCount(selectedCount),
-                onPressed: selectedCount > 0
-                    ? () => showBatchConvertSheet(
+                    ? () => runBatchReplayGain(
                         this.context,
-                        ref,
                         _selectedUnifiedItems(tracks),
                         onExitSelectionMode: exitSelectionMode,
+                        remove: remove,
                       )
                     : null,
                 colorScheme: colorScheme,
               ),
-              for (final remove in [false, true])
-                SelectionActionButton(
-                  icon: remove ? Icons.remove_circle_outline : Icons.graphic_eq,
-                  label: remove
-                      ? context.l10n.selectionRemoveReplayGainCount(
-                          selectedCount,
-                        )
-                      : context.l10n.selectionReplayGainCount(selectedCount),
-                  onPressed: selectedCount > 0
-                      ? () => runBatchReplayGain(
-                          this.context,
-                          _selectedUnifiedItems(tracks),
-                          onExitSelectionMode: exitSelectionMode,
-                          remove: remove,
-                        )
-                      : null,
-                  colorScheme: colorScheme,
-                ),
-            ];
-
-            return Wrap(
-              spacing: spacing,
-              runSpacing: spacing,
-              children: [
-                for (final action in actions)
-                  SizedBox(width: itemWidth, child: action),
-              ],
-            );
-          },
+          ],
         ),
 
         const SizedBox(height: 8),
@@ -760,6 +902,36 @@ class _DownloadedAlbumScreenState extends ConsumerState<DownloadedAlbumScreen>
           onPressed: () => _deleteSelected(tracks),
         ),
       ],
+    );
+  }
+}
+
+/// Builds one track's row from its playback state, so a track change
+/// rebuilds only the rows involved. [builder] gets a callback that pauses or
+/// resumes the current track.
+class _TrackPlaybackBuilder extends ConsumerWidget {
+  const _TrackPlaybackBuilder({
+    required this.playbackKey,
+    required this.builder,
+  });
+
+  final PlaybackRowKey playbackKey;
+  final Widget Function(
+    BuildContext context,
+    MediaPlaybackUi playback,
+    VoidCallback toggle,
+  )
+  builder;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playback = ref.watch(mediaItemPlaybackUiProvider(playbackKey));
+    return builder(
+      context,
+      playback,
+      () => ref
+          .read(musicPlayerControllerProvider)
+          .togglePlayPause(playback.isPlaying),
     );
   }
 }

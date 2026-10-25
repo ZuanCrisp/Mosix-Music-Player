@@ -1,22 +1,27 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:material_ui/material_ui.dart' as material_ui;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mosix/constants/app_info.dart';
-import 'package:mosix/screens/main_shell.dart';
-import 'package:mosix/screens/setup_screen.dart';
-import 'package:mosix/screens/tutorial_screen.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/app_navigation_service.dart';
-import 'package:mosix/services/app_orientation.dart';
-import 'package:mosix/theme/dynamic_color_wrapper.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/l10n/supported_locales.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/widgets/app_snack_bar.dart';
-import 'package:mosix/widgets/mornye_glass_preparation.dart';
-import 'package:mosix/widgets/playback_feedback.dart';
+import 'package:mornye/constants/app_info.dart';
+import 'package:mornye/screens/main_shell.dart';
+import 'package:mornye/screens/setup_screen.dart';
+import 'package:mornye/screens/tutorial_screen.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/providers/equalizer_provider.dart';
+import 'package:mornye/services/app_navigation_service.dart';
+import 'package:mornye/services/app_orientation.dart';
+import 'package:mornye/theme/dynamic_color_wrapper.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/l10n/supported_locales.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/widgets/app_snack_bar.dart';
+import 'package:mornye/widgets/desktop/desktop_shortcuts.dart';
+import 'package:mornye/widgets/desktop/library_drop_target.dart';
+import 'package:mornye/widgets/mornye_glass_preparation.dart';
+import 'package:mornye/widgets/playback_feedback.dart';
 
 String initialLocationForAppState({
   required bool isFirstLaunch,
@@ -93,15 +98,44 @@ Locale _resolveSupportedLocale(
   return _fallbackLocale(supportedLocales);
 }
 
-/// iOS-style fluid scroll everywhere: momentum glide + bounce instead of the
-/// Android clamping stop. Widgets that set explicit physics (queue filter
+/// iOS-style fluid scroll on mobile and macOS: momentum glide + bounce instead
+/// of the Android clamping stop. Widgets that set explicit physics (queue filter
 /// PageView, bottom sheets) are unaffected.
-class _FluidScrollBehavior extends MaterialScrollBehavior {
+class _FluidScrollBehavior extends _VerticalScrollbarBehavior {
   const _FluidScrollBehavior();
 
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) =>
       const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+}
+
+/// Desktop scrollbars mark long vertical content only. Rows that scroll
+/// sideways (carousels, shelves, recent cards) already show arrows and read
+/// cleaner without a bar.
+class _VerticalScrollbarBehavior extends MaterialScrollBehavior {
+  const _VerticalScrollbarBehavior();
+
+  @override
+  Widget buildScrollbar(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) => axisDirectionToAxis(details.direction) == Axis.horizontal
+      ? child
+      : super.buildScrollbar(context, child, details);
+}
+
+/// Mobile and macOS use the fluid bounce. Windows and Linux keep Material's
+/// desktop behavior: clamping physics with scrollbars.
+@visibleForTesting
+ScrollBehavior appScrollBehavior({required bool disableOverscrollEffects}) {
+  if (disableOverscrollEffects) {
+    return const _VerticalScrollbarBehavior().copyWith(overscroll: false);
+  }
+  if (isDesktopPlatform && defaultTargetPlatform != TargetPlatform.macOS) {
+    return const _VerticalScrollbarBehavior();
+  }
+  return const _FluidScrollBehavior();
 }
 
 /// Fades the app content in after an orientation change or a width change
@@ -160,21 +194,22 @@ class _OrientationFadeState extends State<_OrientationFade>
   }
 }
 
-class MosixApp extends ConsumerWidget {
+class MornyeApp extends ConsumerWidget {
   final bool disableOverscrollEffects;
 
-  const MosixApp({super.key, this.disableOverscrollEffects = false});
+  const MornyeApp({super.key, this.disableOverscrollEffects = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(equalizerProvider.select((value) => value.settings.enabled));
     final router = ref.watch(_routerProvider);
     final localeString = ref.watch(settingsProvider.select((s) => s.locale));
     final heroAnimationsEnabled = ref.watch(
       settingsProvider.select((s) => s.heroAnimationsEnabled),
     );
-    final scrollBehavior = disableOverscrollEffects
-        ? const MaterialScrollBehavior().copyWith(overscroll: false)
-        : const _FluidScrollBehavior();
+    final scrollBehavior = appScrollBehavior(
+      disableOverscrollEffects: disableOverscrollEffects,
+    );
 
     Locale? locale;
     if (localeString != 'system' && localeString.isNotEmpty) {
@@ -205,25 +240,33 @@ class MosixApp extends ConsumerWidget {
           // dialogs stay centered on large/foldable devices.
           builder: (context, child) {
             final mediaQuery = MediaQuery.of(context);
-            final appContent = _OrientationFade(
+            Widget appContent = _OrientationFade(
               child: AppScaffoldMessenger(
                 child: PlaybackFeedback(
-                  child: child ?? const SizedBox.shrink(),
+                  child: DesktopLibraryDropTarget(
+                    child: child ?? const SizedBox.shrink(),
+                  ),
                 ),
               ),
             );
+            // HeroMode only affects heroes below a *route* subtree. At this
+            // level it sits above the router's Navigator, so the controller
+            // never encounters it while collecting heroes. Removing the
+            // inherited controller disables flights on the root Navigator.
+            if (!heroAnimationsEnabled) {
+              appContent = HeroControllerScope.none(child: appContent);
+            }
+            // Above the root navigator, so shortcuts and the macOS menu bar
+            // also reach Now Playing, dialogs and pushed pages. It stays
+            // outside every conditional wrapper: remounting it would mount a
+            // second macOS menu bar before the first is gone.
+            if (isDesktopPlatform) {
+              appContent = DesktopShortcuts(child: appContent);
+            }
             return MediaQuery(
               data: mediaQuery.copyWith(displayFeatures: const []),
-              // HeroMode only affects heroes below a *route* subtree. At this
-              // level it sits above the router's Navigator, so the controller
-              // never encounters it while collecting heroes. Removing the
-              // inherited controller disables flights on the root Navigator.
               child: MornyeGlassPreparation(
-                child: AdaptiveUiScaler(
-                  child: heroAnimationsEnabled
-                      ? appContent
-                      : HeroControllerScope.none(child: appContent),
-                ),
+                child: AdaptiveUiScaler(child: appContent),
               ),
             );
           },

@@ -1,3 +1,5 @@
+//! Extension manager download support: request types, preflight checks, and the download engine pool.
+
 use super::*;
 use serde::Deserialize;
 
@@ -381,7 +383,7 @@ fn normalize_decryption(value: &mut Value) {
             }
         }
         let strategy = info.get("strategy").and_then(Value::as_str).unwrap_or("");
-        let strategy = match spotiflac_core::matching::lowercase(strategy).as_str() {
+        let strategy = match mornye_core::matching::lowercase(strategy).as_str() {
             ""
             | MOV
             | "ffmpeg_mov_key"

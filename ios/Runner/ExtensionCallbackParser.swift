@@ -8,7 +8,7 @@ struct ExtensionCallbackRoute: Equatable {
 
 enum ExtensionCallbackParser {
     static func parse(_ url: URL) -> ExtensionCallbackRoute? {
-        guard url.scheme?.lowercased() == "spotiflac" else {
+        guard url.scheme?.lowercased() == "mornye" else {
             return nil
         }
 

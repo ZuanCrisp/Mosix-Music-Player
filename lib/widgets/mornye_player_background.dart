@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/theme/cover_palette.dart';
+import 'package:mornye/theme/cover_palette.dart';
 
 /// Opaque cover-derived surface, with full-bleed artwork on the player page
 /// and a muted two-tone gradient behind lyrics and the queue.
@@ -10,12 +10,16 @@ class MornyePlayerBackground extends StatelessWidget {
     this.artwork,
     this.squareArtwork = true,
     this.artworkAspectRatio,
+    this.fadeStart = 0.58,
   });
 
   final Uri? artUri;
   final Widget? artwork;
   final bool squareArtwork;
   final double? artworkAspectRatio;
+
+  /// Fraction of the artwork's height that stays sharp before fading out.
+  final double fadeStart;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +51,7 @@ class MornyePlayerBackground extends StatelessWidget {
           // Carry the cover's muted colour through the controls instead of
           // fading bright artwork into a nearly black, flat surface.
           final backdrop = dominant.withSaturation(
-            dominant.saturation.clamp(0.0, 0.12),
+            dominant.saturation.clamp(0.0, 0.2),
           );
           final motion = MediaQuery.disableAnimationsOf(context)
               ? Duration.zero
@@ -98,11 +102,15 @@ class MornyePlayerBackground extends StatelessWidget {
                       : MediaQuery.sizeOf(context).height * 0.66,
                   child: ShaderMask(
                     blendMode: BlendMode.dstIn,
-                    shaderCallback: (bounds) => const LinearGradient(
+                    shaderCallback: (bounds) => LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      stops: [0, 0.58, 1],
-                      colors: [Colors.white, Colors.white, Colors.transparent],
+                      stops: [0, fadeStart, 1],
+                      colors: const [
+                        Colors.white,
+                        Colors.white,
+                        Colors.transparent,
+                      ],
                     ).createShader(bounds),
                     child: HeroMode(
                       // The compact header owns the route hero while the

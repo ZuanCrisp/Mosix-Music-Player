@@ -1,14 +1,14 @@
 import 'package:flutter/foundation.dart';
-import 'package:mosix/services/ffmpeg_conversion.dart';
-import 'package:mosix/services/ffmpeg_decryption.dart';
-import 'package:mosix/services/ffmpeg_metadata.dart';
-import 'package:mosix/services/ffmpeg_models.dart';
-import 'package:mosix/services/ffmpeg_probe.dart';
-import 'package:mosix/services/ffmpeg_replaygain.dart';
-import 'package:mosix/utils/artist_utils.dart';
-import 'package:mosix/utils/audio_conversion_utils.dart';
+import 'package:mornye/services/ffmpeg_conversion.dart';
+import 'package:mornye/services/ffmpeg_decryption.dart';
+import 'package:mornye/services/ffmpeg_metadata.dart';
+import 'package:mornye/services/ffmpeg_models.dart';
+import 'package:mornye/services/ffmpeg_probe.dart';
+import 'package:mornye/services/ffmpeg_replaygain.dart';
+import 'package:mornye/utils/artist_utils.dart';
+import 'package:mornye/utils/audio_conversion_utils.dart';
 
-export 'package:mosix/services/ffmpeg_models.dart';
+export 'package:mornye/services/ffmpeg_models.dart';
 
 /// Compatibility entry point for callers; feature modules own the operations.
 class FFmpegService {
@@ -168,12 +168,14 @@ class FFmpegService {
     Map<String, String>? metadata,
     String artistTagMode = artistTagModeJoined,
     bool preserveMetadata = true,
+    @visibleForTesting Future<FFmpegResult> Function(List<String>)? execute,
   }) => FFmpegMetadata.embedMetadataToM4a(
     m4aPath: m4aPath,
     coverPath: coverPath,
     metadata: metadata,
     artistTagMode: artistTagMode,
     preserveMetadata: preserveMetadata,
+    execute: execute,
   );
 
   /// Converts with metadata and cover preservation; lossless caps never upscale.

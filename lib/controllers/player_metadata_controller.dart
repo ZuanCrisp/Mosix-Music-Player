@@ -2,12 +2,26 @@ import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
-import 'package:mosix/services/playback_metadata.dart';
-import 'package:mosix/utils/int_utils.dart';
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/playback_metadata.dart';
+import 'package:mornye/utils/int_utils.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/utils/lyrics_parser.dart';
 
 final _log = AppLogger('PlayerMetadata');
+
+/// Returns LRC text from the configured lyrics providers, or empty.
+typedef OnlineLyricsFetcher = Future<String> Function(MediaItem item);
+
+Future<String> _fetchOnlineLyrics(MediaItem item) async {
+  final result = await PlatformBridge.getLyricsLRCWithSource(
+    '',
+    item.title,
+    item.artist ?? '',
+    durationMs: item.duration?.inMilliseconds ?? 0,
+  ).timeout(const Duration(seconds: 30));
+  return result['lyrics']?.toString() ?? '';
+}
 
 /// Owns file metadata and lyrics for the full player. Requests are scoped to
 /// the current queue item so a late probe cannot replace another track's data.
@@ -15,11 +29,17 @@ class PlayerMetadataController extends ChangeNotifier {
   PlayerMetadataController({
     PlaybackMetadataReader? readMetadata,
     Future<ParsedLyrics> Function(String?)? parseLyrics,
+    OnlineLyricsFetcher? fetchOnlineLyrics,
   }) : _readMetadata = readMetadata ?? readPlaybackFileMetadataWithRetry,
-       _parseLyrics = parseLyrics ?? LyricsParser.parseAsyncNative;
+       _parseLyrics = parseLyrics ?? LyricsParser.parseAsyncNative,
+       _fetchOnline = fetchOnlineLyrics ?? _fetchOnlineLyrics;
 
   final PlaybackMetadataReader _readMetadata;
   final Future<ParsedLyrics> Function(String?) _parseLyrics;
+  final OnlineLyricsFetcher _fetchOnline;
+  MediaItem? _item;
+  bool _searchingOnline = false;
+  bool _onlineSearchMissed = false;
   (String, String, String?)? _requestKey;
   String? _loadedPath;
   Map<String, dynamic> _fallback = const {};
@@ -30,12 +50,55 @@ class PlayerMetadataController extends ChangeNotifier {
   bool _disposed = false;
 
   String? get source => _requestKey?.$2;
+
+  /// The path the current metadata was probed from: the resolved copy of a
+  /// document, or the source itself.
+  String? get filePath => _loadedPath;
   Map<String, dynamic>? _metadata;
   ParsedLyrics _lyrics = ParsedLyrics.empty;
   bool _loading = false;
   Map<String, dynamic>? get metadata => _metadata;
   ParsedLyrics get lyrics => _lyrics;
   bool get loading => _loading;
+  bool get searchingOnline => _searchingOnline;
+
+  /// The last online search for this track found nothing.
+  bool get onlineSearchMissed => _onlineSearchMissed;
+
+  bool get canSearchOnline =>
+      (_item?.title.trim().isNotEmpty ?? false) &&
+      (_item?.artist?.trim().isNotEmpty ?? false);
+
+  /// Shows provider lyrics for a file without its own. Nothing is written to
+  /// the file; changing tracks discards the result.
+  Future<void> searchOnline() async {
+    final item = _item;
+    if (_disposed || item == null || _searchingOnline || !canSearchOnline) {
+      return;
+    }
+    final generation = _generation;
+    _searchingOnline = true;
+    _onlineSearchMissed = false;
+    notifyListeners();
+    var parsed = ParsedLyrics.empty;
+    var raw = '';
+    try {
+      raw = await _fetchOnline(item);
+      if (_disposed || generation != _generation) return;
+      if (raw.trim().isNotEmpty) parsed = await _parseLyrics(raw);
+    } catch (error) {
+      _log.w('Failed to search lyrics online: $error');
+    }
+    if (_disposed || generation != _generation) return;
+    _searchingOnline = false;
+    if (parsed.isEmpty) {
+      _onlineSearchMissed = true;
+    } else {
+      _lyrics = parsed;
+      _lyricsRaw = raw;
+    }
+    notifyListeners();
+  }
 
   Future<void> load(
     MediaItem? item, {
@@ -44,9 +107,11 @@ class PlayerMetadataController extends ChangeNotifier {
     if (_disposed) return;
     final source = item?.extras?['source']?.toString() ?? '';
     if (item == null || source.isEmpty) {
+      _item = null;
       if (_requestKey == null) return;
       _generation++;
       _probePending = false;
+      _resetOnlineSearch();
       _requestKey = null;
       _loadedPath = null;
       final pending = _replaceMetadata(const {});
@@ -56,10 +121,12 @@ class PlayerMetadataController extends ChangeNotifier {
     final resolvedSource = item.extras?['resolvedSource']?.toString().trim();
     final key = (item.id, source, resolvedSource);
     final sameItem = key == _requestKey;
+    _item = item;
     _fallback = Map.unmodifiable(playbackAudioMetadataFromMediaItem(item));
     if (!sameItem) {
       _generation++;
       _probePending = false;
+      _resetOnlineSearch();
       _requestKey = key;
       _loadedPath = null;
     }
@@ -159,6 +226,11 @@ class PlayerMetadataController extends ChangeNotifier {
     _lyricsRaw = raw;
     _loading = _probePending;
     notifyListeners();
+  }
+
+  void _resetOnlineSearch() {
+    _searchingOnline = false;
+    _onlineSearchMissed = false;
   }
 
   String _metadataPath(String source, String? resolved) =>

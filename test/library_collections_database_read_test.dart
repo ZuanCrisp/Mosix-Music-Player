@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/services/library_collections_database.dart';
-import 'package:mosix/services/library_collections_hydration.dart';
+import 'package:mornye/services/library_collections_database.dart';
+import 'package:mornye/services/library_collections_hydration.dart';
 
 import 'support/sqlite_process_database.dart';
 

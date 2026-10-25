@@ -7,7 +7,7 @@
   "usbBitPerfectDescription": "Mantén la precisión de la fuente en salidas compatibles. Elige a continuación entre USB directo o AAudio exclusivo; de lo contrario, la salida USB de Android requiere Android 14 o una versión posterior. Se aplica a partir de la siguiente pista, sin AutoMix ni normalización. Es posible que el volumen del sistema no controle la salida USB directa.",
   "usbHardwareVolume": "Volumen del hardware del DAC",
   "usbVolumeWarningTitle": "Revisa el volumen de audio",
-  "usbVolumeWarning": "El audio directo por USB puede ser mucho más alto que la reproducción normal, y es posible que los botones de volumen del teléfono no lo controlen. Baja el volumen de tu DAC o amplificador antes de comenzar. Cuando sea compatible, Mosix configura el DAC a un máximo de −40 dB al conectarse; esto no garantiza un nivel de escucha seguro en todos los amplificadores o audífonos.",
+  "usbVolumeWarning": "El audio directo por USB puede ser mucho más alto que la reproducción normal, y es posible que los botones de volumen del teléfono no lo controlen. Baja el volumen de tu DAC o amplificador antes de comenzar. Cuando sea compatible, Mornye configura el DAC a un máximo de −40 dB al conectarse; esto no garantiza un nivel de escucha seguro en todos los amplificadores o audífonos.",
   "usbVolumeAccept": "Entiendo",
   "usbVolumeUnavailable": "La reproducción está en pausa porque este DAC no cuenta con un control de volumen de hardware verificado. Baja el volumen del DAC o del amplificador; luego, si es necesario, activa la salida de volumen fijo y vuelve a seleccionar la pista.",
   "usbFixedVolume": "Permitir salida USB de volumen fijo",
@@ -26,36 +26,7 @@
   "usbBitPerfectNoDevice": "No hay ningún DAC USB conectado. Se está utilizando la salida de audio normal.",
   "usbBitPerfectFallback": "Este dispositivo o formato de audio no admite la salida con fidelidad bit a bit. Se está utilizando la reproducción normal.",
   "usbBitPerfectRouteChanged": "La conexión de audio USB ha cambiado. La reproducción se ha detenido; selecciona una pista para volver a conectarte.",
-  "upgradeIntroWelcome": "Bienvenido a\nMosix 1.0",
-  "upgradeIntroThemeTitle": "Hazlo\na tu manera.",
-  "upgradeIntroThemeBody": "Elige un estilo. Tu elección se aplica de inmediato y puedes cambiarla más adelante en «Apariencia».",
-  "upgradeIntroThemeMaterialBody": "El diseño que ya conoces, con controles de Material y tu color de acento.",
-  "upgradeIntroThemeMornyeBody": "Navegación «Glass», una biblioteca rediseñada y un reproductor inmersivo.",
-  "upgradeIntroRustTitle": "Un nuevo motor.\nDesarrollado con Rust.",
-  "upgradeIntroRustBody": "En la versión 5.0, el backend de la app pasó de Go a Rust. Es el motor que funciona detrás de las pantallas que usas todos los días.",
-  "upgradeIntroRustEngineTitle": "Trabajando detrás de escena",
-  "upgradeIntroRustEngineBody": "Rust se encarga de las descargas, los metadatos de audio, el escaneo de bibliotecas y el tiempo de ejecución de las extensiones en Android e iOS.",
-  "upgradeIntroRustMemoryTitle": "Más cuidado con la memoria",
-  "upgradeIntroRustMemoryBody": "El uso de búferes reutilizados y un menor número de copias reduce las asignaciones temporales al procesar material gráfico y datos de extensión.",
-  "upgradeIntroRustKeepTitle": "Guarda tu música",
-  "upgradeIntroRustKeepBody": "No es necesario que vuelvas a descargar tu colección. Tu música guardada y tus configuraciones se mantienen tal como están, sin necesidad de volver a configurarlas.",
-  "upgradeIntroWelcomeBody": "Un vistazo rápido a lo que ha cambiado y dónde encontrarlo.",
-  "upgradeIntroMornyeBody": "Un nuevo diseño para tu reproductor, las letras de las canciones y la navegación.",
-  "upgradeIntroLibrarySummary": "Explora tu música por lista de reproducción, artista o álbum.",
-  "upgradeIntroRepoSummary": "Elige tus fuentes y proveedores de música mediante extensiones.",
-  "upgradeIntroLibraryTitle": "Conoce\ntu biblioteca.",
-  "upgradeIntroLibraryBody": "En Mornye, navega por categoría o busca tus álbumes en «Agregados recientemente».",
-  "upgradeIntroDownloadsBody": "Haz una pausa y vuelve a intentarlo desde la sección «Descargas», en la esquina superior derecha. La música que ya se ha reproducido se mueve a «Agregados recientemente».",
-  "upgradeIntroSearchBody": "Busca aquí la música guardada. La pestaña «Buscar», que se encuentra por separado, revisa tus extensiones.",
-  "upgradeIntroPlayerTitle": "Configura\ntu reproductor.",
-  "upgradeIntroPlayerBody": "Puedes cambiar el tema y las opciones de reproducción en cualquier momento. Aquí te indicamos dónde encontrarlas.",
-  "upgradeIntroAppearanceBody": "Cambia los temas en Configuración → Apariencia. En Mornye, desplázate hacia abajo para ver la navegación compacta; desplázate hacia arriba para expandirla.",
-  "upgradeIntroAutoMixBody": "Sincroniza el tempo y los compases entre las canciones. Actívalo en Configuración → Biblioteca local → Reproducción. Desactivado por defecto.",
-  "upgradeIntroSettingsBody": "En Mornye, toca tu perfil en la pantalla de inicio para abrir Configuración y editar tu nombre y tu foto.",
-  "upgradeIntroSkip": "Saltar",
   "upgradeIntroContinue": "Continuar",
-  "upgradeIntroDone": "Empieza a escuchar",
-  "upgradeIntroReplay": "Novedades de la versión 5.0",
   "cacheMotionArtwork": "Cubiertas de movimiento sin conexión",
   "cacheMotionArtworkDesc": "Los videos de los álbumes se guardan junto con las descargas. Al eliminarlos, se conservan tus archivos de música y las portadas estáticas.",
   "nowPlayingVolume": "Volúmen",
@@ -94,7 +65,7 @@
   },
   "@@locale": "es_ES",
   "@@last_modified": "2026-04-28",
-  "appName": "Mosix",
+  "appName": "Mornye",
   "@appName": {
     "description": "App name - DO NOT TRANSLATE"
   },
@@ -117,10 +88,6 @@
   "homeTitle": "Inicio",
   "@homeTitle": {
     "description": "Home screen title"
-  },
-  "homeSubtitle": "Pega una URL compatible o busca por nombre",
-  "@homeSubtitle": {
-    "description": "Subtitle shown below search box"
   },
   "homeEmptyTitle": "Aún no hay proveedores de búsqueda",
   "@homeEmptyTitle": {
@@ -155,10 +122,6 @@
   "libraryNoActiveDownloads": "No hay descargas activas",
   "librarySearchHint": "Busca en tu biblioteca",
   "libraryEmptyCollection": "Tu música aparecerá aquí",
-  "historySearchHint": "Buscar en historial...",
-  "@historySearchHint": {
-    "description": "Search bar placeholder in history"
-  },
   "settingsTitle": "Ajustes",
   "@settingsTitle": {
     "description": "Settings screen title"
@@ -516,10 +479,6 @@
   "@aboutMobileDeveloper": {
     "description": "Role description for mobile dev"
   },
-  "aboutOriginalCreator": "Creador original de Mosix",
-  "@aboutOriginalCreator": {
-    "description": "Role description for original creator"
-  },
   "aboutLogoArtist": "¡El talentoso artista que creó el hermoso logo de nuestra app!",
   "@aboutLogoArtist": {
     "description": "Role description for logo artist"
@@ -539,14 +498,6 @@
   "aboutMobileSource": "Código fuente de la versión móvil",
   "@aboutMobileSource": {
     "description": "Link to mobile GitHub repo"
-  },
-  "aboutPCSource": "Código fuente de la versión para PC",
-  "@aboutPCSource": {
-    "description": "Link to PC GitHub repo"
-  },
-  "aboutKeepAndroidOpen": "Mantener Android activo",
-  "@aboutKeepAndroidOpen": {
-    "description": "Link to Keep Android Open campaign website"
   },
   "aboutReportIssue": "Reportar un problema",
   "@aboutReportIssue": {
@@ -757,7 +708,7 @@
   "@setupStorageRequired": {
     "description": "Title when storage permission needed"
   },
-  "setupStorageDescription": "Mosix necesita permiso de almacenamiento para guardar sus archivos de música descargados.",
+  "setupStorageDescription": "Mornye necesita permiso de almacenamiento para guardar sus archivos de música descargados.",
   "@setupStorageDescription": {
     "description": "Explanation for storage permission"
   },
@@ -1114,7 +1065,7 @@
   "@snackbarFileNotFound": {
     "description": "Snackbar - file doesn't exist"
   },
-  "snackbarSelectExtFile": "Por favor, seleccione un archivo .spotiflac-ext",
+  "snackbarSelectExtFile": "Por favor, seleccione un archivo .mornye-ext",
   "@snackbarSelectExtFile": {
     "description": "Snackbar - wrong file type selected"
   },
@@ -2044,7 +1995,7 @@
   "@extensionsNoExtensions": {
     "description": "Empty state - no extensions"
   },
-  "extensionsNoExtensionsSubtitle": "Instalar archivos .spotiflac-ext para añadir nuevos proveedores",
+  "extensionsNoExtensionsSubtitle": "Instalar archivos .mornye-ext para añadir nuevos proveedores",
   "@extensionsNoExtensionsSubtitle": {
     "description": "Empty state subtitle"
   },
@@ -2160,10 +2111,6 @@
   "@qualityHiResFlacMaxSubtitle": {
     "description": "Technical spec for hi-res max"
   },
-  "downloadLossy320": "Con pérdida, 320 kbps",
-  "@downloadLossy320": {
-    "description": "Quality option label for lossy 320kbps"
-  },
   "downloadLossyFormat": "Formato con pérdida",
   "@downloadLossyFormat": {
     "description": "Setting title to pick output format for lossy downloads"
@@ -2203,46 +2150,6 @@
   "downloadAutoConvertOpusSubtitle": "Mejor eficiencia para reproductores modernos",
   "@downloadAutoConvertOpusSubtitle": {
     "description": "Opus automatic conversion option description"
-  },
-  "downloadLossy320Format": "Formato con pérdida a 320 kbps",
-  "@downloadLossy320Format": {
-    "description": "Title of the lossy format picker bottom sheet"
-  },
-  "downloadLossy320FormatDesc": "Elige el formato de salida para las descargas con pérdida de calidad a 320 kbps. Cuando sea necesario, el audio original se convertirá al formato seleccionado.",
-  "@downloadLossy320FormatDesc": {
-    "description": "Description in the lossy format picker"
-  },
-  "downloadLossyMp3": "MP3 (320 kbps)",
-  "@downloadLossyMp3": {
-    "description": "Lossy format option - MP3 320kbps"
-  },
-  "downloadLossyMp3Subtitle": "Mejor compatibilidad, ~10 MB por pista",
-  "@downloadLossyMp3Subtitle": {
-    "description": "Subtitle for MP3 320kbps lossy option"
-  },
-  "downloadLossyAac": "AAC/M4A (320 kbps)",
-  "@downloadLossyAac": {
-    "description": "Lossy format option - AAC in M4A container at 320kbps"
-  },
-  "downloadLossyAacSubtitle": "La mejor compatibilidad con dispositivos móviles, formato M4A",
-  "@downloadLossyAacSubtitle": {
-    "description": "Subtitle for AAC/M4A 320kbps lossy option"
-  },
-  "downloadLossyOpus256": "OPUS (256 kbps)",
-  "@downloadLossyOpus256": {
-    "description": "Lossy format option - Opus 256kbps"
-  },
-  "downloadLossyOpus256Subtitle": "Mejor calidad de OPUS, ~8 MB por pista",
-  "@downloadLossyOpus256Subtitle": {
-    "description": "Subtitle for Opus 256kbps lossy option"
-  },
-  "downloadLossyOpus128": "OPUS (128 kbps)",
-  "@downloadLossyOpus128": {
-    "description": "Lossy format option - Opus 128kbps"
-  },
-  "downloadLossyOpus128Subtitle": "Tamaño mínimo: ~4 MB por pista",
-  "@downloadLossyOpus128Subtitle": {
-    "description": "Subtitle for Opus 128kbps lossy option"
   },
   "downloadAskBeforeDownload": "Preguntar antes de descargar",
   "@downloadAskBeforeDownload": {
@@ -2576,15 +2483,6 @@
       }
     }
   },
-  "discographySelectedCount": "{count} seleccionados",
-  "@discographySelectedCount": {
-    "description": "Selection count badge",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "discographyDownloadSelected": "Descargar seleccionados",
   "@discographyDownloadSelected": {
     "description": "Button - download selected albums"
@@ -2729,7 +2627,7 @@
   "@libraryRemoveFolder": {
     "description": "Action to remove one indexed library source"
   },
-  "libraryRemoveFolderMessage": "¿Deseas eliminar esta carpeta y sus pistas indexadas de Mosix? Los archivos de audio almacenados no se borrarán.",
+  "libraryRemoveFolderMessage": "¿Deseas eliminar esta carpeta y sus pistas indexadas de Mornye? Los archivos de audio almacenados no se borrarán.",
   "@libraryRemoveFolderMessage": {
     "description": "Confirmation shown before removing a library source"
   },
@@ -2889,17 +2787,13 @@
   "@libraryStorageAccessRequired": {
     "description": "Dialog title for storage permission"
   },
-  "libraryStorageAccessMessage": "Mosix necesita acceso al almacenamiento para escanear tu biblioteca musical. Por favor, concede el permiso en los ajustes.",
+  "libraryStorageAccessMessage": "Mornye necesita acceso al almacenamiento para escanear tu biblioteca musical. Por favor, concede el permiso en los ajustes.",
   "@libraryStorageAccessMessage": {
     "description": "Dialog message for storage permission"
   },
-  "libraryFolderNotExist": "La carpeta seleccionada no existe",
-  "@libraryFolderNotExist": {
-    "description": "Error when folder doesn't exist"
-  },
   "librarySourceDownloaded": "Descargado",
   "@librarySourceDownloaded": {
-    "description": "Badge for tracks downloaded via Mosix"
+    "description": "Badge for tracks downloaded via Mornye"
   },
   "librarySourceLocal": "En el dispositivo",
   "@librarySourceLocal": {
@@ -3027,11 +2921,11 @@
       }
     }
   },
-  "tutorialWelcomeTitle": "¡Bienvenido a Mosix!",
+  "tutorialWelcomeTitle": "¡Bienvenido a Mornye!",
   "@tutorialWelcomeTitle": {
     "description": "Tutorial welcome page title"
   },
-  "tutorialWelcomeDesc": "Aprende a buscar música con extensiones, a elegir la calidad que desees y a administrar las descargas en Mosix.",
+  "tutorialWelcomeDesc": "Aprende a buscar música con extensiones, a elegir la calidad que desees y a administrar las descargas en Mornye.",
   "@tutorialWelcomeDesc": {
     "description": "Tutorial welcome page description"
   },
@@ -3360,10 +3254,6 @@
   "trackReEnrich": "Volver a enriquecer",
   "@trackReEnrich": {
     "description": "Menu action - re-embed metadata into audio file"
-  },
-  "trackReEnrichOnlineSubtitle": "Buscar información en línea y incrustar al archivo",
-  "@trackReEnrichOnlineSubtitle": {
-    "description": "Subtitle for re-enrich metadata action for local items"
   },
   "trackReEnrichBatchSubtitle": "Elige entre una actualización en línea o manual, y luego revisa cada cambio antes de escribir",
   "@trackReEnrichBatchSubtitle": {
@@ -3956,10 +3846,6 @@
       }
     }
   },
-  "selectionShareNoFiles": "No se encontraron archivos para compartir",
-  "@selectionShareNoFiles": {
-    "description": "Snackbar when no selected files exist on disk"
-  },
   "selectionConvertCount": "Convertir {count} {count, plural, =1{pista} other{pistas}}",
   "@selectionConvertCount": {
     "description": "Convert button text with count in selection mode",
@@ -4122,7 +4008,7 @@
   "@safMigrationTitle": {
     "description": "Title of SAF migration dialog"
   },
-  "safMigrationMessage1": "Mosix ahora utiliza el Android Storage Access Framework (SAF) para las descargas. Esto soluciona los errores de «permiso denegado» en Android 10 y versiones posteriores.",
+  "safMigrationMessage1": "Mornye ahora utiliza el Android Storage Access Framework (SAF) para las descargas. Esto soluciona los errores de «permiso denegado» en Android 10 y versiones posteriores.",
   "@safMigrationMessage1": {
     "description": "First paragraph of SAF migration dialog"
   },
@@ -4190,10 +4076,6 @@
   "@backupRestoreConfirmTitle": {
     "description": "Confirmation dialog title before restoring a backup"
   },
-  "backupRestoreConfirmMessage": "Esto reemplazará tu configuración actual, historial de descargas, pistas con «Me gusta», lista de deseos y listas de reproducción con el contenido de la copia de seguridad. Esto no se puede deshacer.",
-  "@backupRestoreConfirmMessage": {
-    "description": "Confirmation dialog message before restoring a backup"
-  },
   "backupRestoreConfirmButton": "Restaurar",
   "@backupRestoreConfirmButton": {
     "description": "Confirm button to proceed with restore"
@@ -4206,7 +4088,7 @@
   "@backupRestoreFailed": {
     "description": "Snackbar when restore fails"
   },
-  "backupInvalidFile": "Este archivo no es una copia de seguridad válida de Mosix",
+  "backupInvalidFile": "Este archivo no es una copia de seguridad válida de Mornye",
   "@backupInvalidFile": {
     "description": "Snackbar when the chosen file is not a valid backup"
   },
@@ -4390,25 +4272,9 @@
     "description": "Subtitle shown in the download location picker sheet"
   },
   "storageAutomaticFolder": "Carpeta automática",
-  "storageAutomaticDownloadFolder": "Utiliza «Descargar/Mosix» si es un dispositivo grabable; de lo contrario, utiliza el almacenamiento de la aplicación",
+  "storageAutomaticDownloadFolder": "Utiliza «Descargar/Mornye» si es un dispositivo grabable; de lo contrario, utiliza el almacenamiento de la aplicación",
   "storageSafRecommended": "Selecciona una carpeta (recomendado)",
-  "storageDownloadFolderHint": "En el selector de carpetas de Android, abre la carpeta «Descargas» y selecciona «Mosix». Si no existe, créala con la opción «Nueva carpeta» y, a continuación, toca «Usar esta carpeta» para otorgar acceso.",
-  "storageModeAppFolder": "Carpeta de la App (Recomendado)",
-  "@storageModeAppFolder": {
-    "description": "Storage mode option - app-managed folder"
-  },
-  "storageModeAppFolderSubtitle": "Guarda en Music/Mosix por defecto",
-  "@storageModeAppFolderSubtitle": {
-    "description": "Subtitle for app folder storage mode"
-  },
-  "storageModeSaf": "Carpeta personalizada (SAF)",
-  "@storageModeSaf": {
-    "description": "Storage mode option - Storage Access Framework"
-  },
-  "storageModeSafSubtitle": "Escoge cualquier carpeta, incluyendo la tarjeta SD",
-  "@storageModeSafSubtitle": {
-    "description": "Subtitle for SAF storage mode"
-  },
+  "storageDownloadFolderHint": "En el selector de carpetas de Android, abre la carpeta «Descargas» y selecciona «Mornye». Si no existe, créala con la opción «Nueva carpeta» y, a continuación, toca «Usar esta carpeta» para otorgar acceso.",
   "downloadFolderAccessLostTitle": "Se perdió el acceso a la carpeta de descargas",
   "@downloadFolderAccessLostTitle": {
     "description": "Title of the warning banner shown in Files settings when the saved SAF folder grant is no longer valid"
@@ -4696,10 +4562,6 @@
       }
     }
   },
-  "editMetadataAutoFillFetch": "Recuperar y llenar",
-  "@editMetadataAutoFillFetch": {
-    "description": "Button label to fetch online metadata and fill selected fields"
-  },
   "editMetadataAutoFillSearching": "Buscando en línea...",
   "@editMetadataAutoFillSearching": {
     "description": "Snackbar shown while searching for online metadata"
@@ -4707,15 +4569,6 @@
   "editMetadataAutoFillNoResults": "No hay información coincidente en línea",
   "@editMetadataAutoFillNoResults": {
     "description": "Snackbar when online metadata search returns no results"
-  },
-  "editMetadataAutoFillDone": "Se completaron {count} {count, plural, =1{campo} other{campos}} con metadatos en línea",
-  "@editMetadataAutoFillDone": {
-    "description": "Snackbar confirming how many fields were auto-filled",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "editMetadataAutoFillNoneSelected": "Selecciona al menos un campo para autocompletar",
   "@editMetadataAutoFillNoneSelected": {
@@ -4973,10 +4826,6 @@
   "@hiResCheckVerdictFakeCertain": {
     "description": "Verdict: an exact fingerprint (padded bits or upsampling pattern) proves the file is not real Hi-Res"
   },
-  "hiResCheckVerdictFakeSuspect": "Posiblemente una pista maestra filtrada",
-  "@hiResCheckVerdictFakeSuspect": {
-    "description": "Verdict: fails the cutoff test but may be a genuine master low-pass filtered in mastering"
-  },
   "hiResCheckReasonSampleHold": "Cada muestra se repite: se aumenta su resolución mediante duplicación",
   "@hiResCheckReasonSampleHold": {
     "description": "Reason: sample-and-hold upsampling detected"
@@ -4984,26 +4833,6 @@
   "hiResCheckReasonInterpolation": "Las muestras intermedias se interpolan linealmente",
   "@hiResCheckReasonInterpolation": {
     "description": "Reason: linear-interpolation upsampling detected"
-  },
-  "hiResCheckReasonImaging": "El contenido por encima de los 22 kHz refleja la banda audible",
-  "@hiResCheckReasonImaging": {
-    "description": "Reason: spectral imaging from upsampling detected"
-  },
-  "hiResCheckMusicContent": "Contenido musical",
-  "@hiResCheckMusicContent": {
-    "description": "Label for the highest frequency that still moves with the music"
-  },
-  "hiResCheckUltrasonicNoise": "Por encima de {cutoff} solo se escucha ruido constante (típico del DSD o de las transferencias de cinta analógica): un archivo de {rate} contendría toda la música",
-  "@hiResCheckUltrasonicNoise": {
-    "description": "Shown when the ultrasonic content of a Hi-Res file is noise rather than music",
-    "placeholders": {
-      "cutoff": {
-        "type": "String"
-      },
-      "rate": {
-        "type": "String"
-      }
-    }
   },
   "hiResCheckTitle": "Autenticidad en alta resolución",
   "@hiResCheckTitle": {
@@ -5064,10 +4893,6 @@
       }
     }
   },
-  "hiResCheckDescription": "Detecta archivos falsos de alta resolución que han sido remuestreados o a los que se les han agregado bits",
-  "@hiResCheckDescription": {
-    "description": "Explains what the Hi-Res authenticity check does"
-  },
   "hiResCheckRun": "Verificar",
   "@hiResCheckRun": {
     "description": "Button that starts the Hi-Res authenticity check"
@@ -5079,10 +4904,6 @@
   "hiResCheckVerdictFake": "Probablemente sea una imagen falsa en alta resolución",
   "@hiResCheckVerdictFake": {
     "description": "Verdict: the file claims Hi-Res but does not measure as it"
-  },
-  "hiResCheckVerdictGenuine": "Se reproduce con auténtica alta resolución",
-  "@hiResCheckVerdictGenuine": {
-    "description": "Verdict: no upsampling or padded bit depth found"
   },
   "hiResCheckVerdictStandard": "Definición estándar, nada que destacar",
   "@hiResCheckVerdictStandard": {
@@ -5096,35 +4917,11 @@
   "@hiResCheckUnsupported": {
     "description": "Shown when the file format cannot be decoded by the Hi-Res check"
   },
-  "hiResCheckCutoff": "Corte de contenido",
-  "@hiResCheckCutoff": {
-    "description": "Label for the highest frequency with real content"
-  },
-  "hiResCheckBitsInUse": "Bits en uso",
-  "@hiResCheckBitsInUse": {
-    "description": "Label for effective vs declared bit depth"
-  },
-  "hiResCheckDisclaimer": "El espectro se corta antes de tiempo, pero no hay nada que demuestre que se haya aumentado la resolución: podría tratarse de una masterización genuina filtrada con un filtro de paso bajo durante la masterización. No se reemplaza automáticamente.",
-  "@hiResCheckDisclaimer": {
-    "description": "Caveat shown under a fake Hi-Res verdict"
-  },
   "hiResCheckFailed": "Fallo en la verificación de alta resolución: {error}",
   "@hiResCheckFailed": {
     "description": "Error shown when the Hi-Res check fails",
     "placeholders": {
       "error": {
-        "type": "String"
-      }
-    }
-  },
-  "hiResCheckReasonRate": "Indica {sampleRate}, pero el contenido se detiene en ~{cutoff}",
-  "@hiResCheckReasonRate": {
-    "description": "Reason for a fake verdict caused by upsampling",
-    "placeholders": {
-      "sampleRate": {
-        "type": "String"
-      },
-      "cutoff": {
         "type": "String"
       }
     }
@@ -5420,7 +5217,7 @@
       }
     }
   },
-  "notifDownloadingUpdate": "Descargar Mosix v{version}",
+  "notifDownloadingUpdate": "Descargar Mornye v{version}",
   "@notifDownloadingUpdate": {
     "description": "Notification title while downloading an app update",
     "placeholders": {
@@ -5448,7 +5245,7 @@
   "@notifUpdateReady": {
     "description": "Notification title when app update download is complete"
   },
-  "notifUpdateReadyBody": "Se ha descargado Mosix v{version}. Toca para instalar.",
+  "notifUpdateReadyBody": "Se ha descargado Mornye v{version}. Toca para instalar.",
   "@notifUpdateReadyBody": {
     "description": "Notification body when app update is ready to install",
     "placeholders": {
@@ -6127,10 +5924,6 @@
       }
     }
   },
-  "actionGo": "Ir",
-  "@actionGo": {
-    "description": "Generic action button label"
-  },
   "logIssueSummary": "Resumen de incidencias",
   "@logIssueSummary": {
     "description": "Header for log issue analysis summary"
@@ -6220,7 +6013,7 @@
   "@extensionCustomUrlHandlingSubtitle": {
     "description": "Extension detail subtitle for custom URL handling"
   },
-  "extensionCustomUrlHandlingShareHint": "Comparte enlaces de estos sitios a Mosix y esta extensión los manejará.",
+  "extensionCustomUrlHandlingShareHint": "Comparte enlaces de estos sitios a Mornye y esta extensión los manejará.",
   "@extensionCustomUrlHandlingShareHint": {
     "description": "Extension detail hint explaining share-to-app URL handling"
   },
@@ -6426,17 +6219,13 @@
   "@libraryExternalPlayerSubtitle": {
     "description": "Subtitle for external player option"
   },
-  "libraryBuiltInPreviewPlayer": "Reproductor de vista previa integrado",
+  "libraryBuiltInPreviewPlayer": "Reproductor integrado",
   "@libraryBuiltInPreviewPlayer": {
     "description": "Setting option to use the built-in preview player"
   },
-  "libraryBuiltInPreviewPlayerSubtitle": "Vistas previas rápidas y locales dentro de Mosix",
+  "libraryBuiltInPreviewPlayerSubtitle": "Reproduce tu música directamente en Mornye",
   "@libraryBuiltInPreviewPlayerSubtitle": {
     "description": "Subtitle for built-in preview player option"
-  },
-  "libraryBuiltInPlayerInfo": "El reproductor integrado es una herramienta de vista previa que permite revisar rápidamente las canciones guardadas localmente. Usa un reproductor de música externo para escucharlas.",
-  "@libraryBuiltInPlayerInfo": {
-    "description": "Info note explaining the built-in player is for previews only"
   },
   "nowPlayingTitle": "Ahora en pantalla",
   "@nowPlayingTitle": {
@@ -6901,11 +6690,11 @@
   "@extensionVerificationHelpTitleWaiting": {
     "description": "Dialog title when verification is taking longer than expected"
   },
-  "extensionVerificationHelpMessageManual": "Mosix no pudo abrir el navegador automáticamente. Abre este enlace en tu navegador o cópialo manualmente.",
+  "extensionVerificationHelpMessageManual": "Mornye no pudo abrir el navegador automáticamente. Abre este enlace en tu navegador o cópialo manualmente.",
   "@extensionVerificationHelpMessageManual": {
     "description": "Dialog message when automatic browser launch for verification fails"
   },
-  "extensionVerificationHelpMessageWaiting": "Si el navegador no se abrió, o si la verificación terminó pero no regresaste a Mosix, abre este enlace de nuevo o cópialo manualmente.",
+  "extensionVerificationHelpMessageWaiting": "Si el navegador no se abrió, o si la verificación terminó pero no regresaste a Mornye, abre este enlace de nuevo o cópialo manualmente.",
   "@extensionVerificationHelpMessageWaiting": {
     "description": "Dialog message when verification may need manual browser help"
   },
@@ -6938,26 +6727,6 @@
       }
     }
   },
-  "settingsGroupInterface": "Extensiones y apariencia",
-  "@settingsGroupInterface": {
-    "description": "Settings group covering look and feel"
-  },
-  "settingsGroupContent": "Contenido y metadatos",
-  "@settingsGroupContent": {
-    "description": "Settings group covering the library, metadata and lyrics"
-  },
-  "settingsGroupDownloads": "Descargas y archivos",
-  "@settingsGroupDownloads": {
-    "description": "Settings group covering download behaviour and storage"
-  },
-  "settingsGroupSystem": "Sistema",
-  "@settingsGroupSystem": {
-    "description": "Settings group covering app-level data, cache and logs"
-  },
-  "settingsGroupHelp": "Acerca de y soporte",
-  "@settingsGroupHelp": {
-    "description": "Settings group covering the about page and donations"
-  },
   "libraryFilterMetadataMissingLyrics": "Letra que falta",
   "@libraryFilterMetadataMissingLyrics": {
     "description": "Filter option for tracks without embedded or sidecar lyrics"
@@ -6986,7 +6755,6 @@
   "@metadataCopyField": {
     "description": "Metadata menu action that copies the selected key and value"
   },
-  "mornyeShowTabs": "Mostrar pestañas",
   "mornyeSearch": "Buscar",
   "mornyeContinuePlaying": "Seguir escuchando",
   "metadataCopyAll": "Copy all metadata",

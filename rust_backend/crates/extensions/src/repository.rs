@@ -8,12 +8,12 @@ pub use model::{Registry, RepoExtension, normalize_sha256};
 pub use package::{destination_path, write_verified_package};
 pub use urls::{RegistryLocation, registry_location, require_https};
 
+use mornye_core::fs::{DEFAULT_TEMP_PREFIX, OpenOptionsPortableExt, write_atomic};
+use mornye_network::{HttpRequest, NetworkService, NetworkSession};
 use serde::{Deserialize, Serialize};
-use spotiflac_network::{HttpRequest, NetworkService, NetworkSession};
 use std::collections::BTreeMap;
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
-use std::os::unix::fs::OpenOptionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
@@ -113,10 +113,8 @@ impl ExtensionRepository {
             .write(true)
             .create(true)
             .truncate(false)
-            .mode(0o600)
-            .custom_flags(
-                (rustix::fs::OFlags::NOFOLLOW | rustix::fs::OFlags::NONBLOCK).bits() as i32,
-            )
+            .unix_mode(0o600)
+            .nofollow_nonblock()
             .open(cache_directory.join(".backend-repository.lock"))
             .map_err(|e| cause("failed to lock repository cache", e))?;
         if !lock
@@ -131,9 +129,7 @@ impl ExtensionRepository {
         let cache = (|| {
             let file = OpenOptions::new()
                 .read(true)
-                .custom_flags(
-                    (rustix::fs::OFlags::NOFOLLOW | rustix::fs::OFlags::NONBLOCK).bits() as i32,
-                )
+                .nofollow_nonblock()
                 .open(cache_directory.join(CACHE_FILE))
                 .ok()?;
             let metadata = file.metadata().ok()?;
@@ -273,10 +269,14 @@ impl ExtensionRepository {
             if bytes.len() as u64 > MAX_CACHE_BYTES {
                 return Ok(());
             }
-            let mut file = tempfile::NamedTempFile::new_in(&self.cache_directory)?;
-            file.write_all(&bytes)?;
-            file.as_file().sync_all()?;
-            file.persist(self.cache_directory.join(CACHE_FILE))?;
+            write_atomic(
+                &self.cache_directory,
+                &self.cache_directory.join(CACHE_FILE),
+                DEFAULT_TEMP_PREFIX,
+                |file| file.write_all(&bytes),
+                || Ok(()),
+                false,
+            )?;
             Ok(())
         })();
     }
@@ -500,22 +500,14 @@ fn read_registry(
     let status = stream.response.status;
     let mut body = Vec::new();
     if status == 200 {
-        let mut buffer = [0; 64 * 1024];
-        loop {
-            let limit = buffer.len().min(MAX_REGISTRY_BYTES + 1 - body.len());
-            let count = stream
-                .read(&mut buffer[..limit], check)
-                .map_err(|e| cause("failed to read registry", e))?;
-            if count == 0 {
-                break;
-            }
-            body.extend_from_slice(&buffer[..count]);
-            if body.len() > MAX_REGISTRY_BYTES {
-                return Err(error(format!(
+        body = stream
+            .read_limited(MAX_REGISTRY_BYTES, &mut [0; 64 * 1024], check)
+            .map_err(|e| cause("failed to read registry", e))?
+            .ok_or_else(|| {
+                error(format!(
                     "registry response exceeds {MAX_REGISTRY_BYTES} bytes"
-                )));
-            }
-        }
+                ))
+            })?;
     }
     Ok((status, stream.response.headers, body))
 }
@@ -523,6 +515,26 @@ fn read_registry(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn downloaded_packages_use_current_brand_and_keep_sflx_extension() {
+        for (url, name) in [
+            (
+                "https://example.test/example.spotiflac-ext",
+                "example.mornye-ext",
+            ),
+            (
+                "https://example.test/example.mornye-ext",
+                "example.mornye-ext",
+            ),
+            ("https://example.test/example.sflx", "example.sflx"),
+        ] {
+            assert_eq!(
+                destination_path(Path::new("/extensions"), "example", url).unwrap(),
+                Path::new("/extensions").join(name)
+            );
+        }
+    }
 
     #[test]
     fn cache_registry_clone_shares_arc_and_round_trips_disk_shape() {

@@ -8,9 +8,6 @@ import android.media.AudioManager
 import android.media.AudioMixerAttributes
 import android.media.AudioRouting
 import android.media.AudioTrack
-import android.media.MediaCodec
-import android.media.MediaExtractor
-import android.media.MediaFormat
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
@@ -21,13 +18,13 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import java.io.FileInputStream
 import java.nio.ByteBuffer
 
 /** Engine-owned (not Activity-owned), so playback survives backgrounding. */
 class UsbBitPerfectPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
     private lateinit var methods: MethodChannel
     private lateinit var events: EventChannel
+    private lateinit var route: MethodChannel
     private var engine: UsbPcmPlayback? = null
     private var direct: UsbDirectPlayback? = null
     private var useDirect = false
@@ -43,6 +40,19 @@ class UsbBitPerfectPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Even
         methods.setMethodCallHandler(this)
         events.setStreamHandler(this)
         appContext = binding.applicationContext
+        route = MethodChannel(binding.binaryMessenger, "com.zuancrisp.mosix/audio_route")
+        route.setMethodCallHandler { call, result ->
+            if (call.method != "read") return@setMethodCallHandler result.notImplemented()
+            val path = call.argument<String>("path")
+            // Opening an extractor touches storage; keep it off the main thread.
+            Thread {
+                val info = runCatching { AudioRouteInfo.read(appContext, path) }
+                main.post {
+                    info.onSuccess(result::success)
+                        .onFailure { result.error("audio_route", it.message, null) }
+                }
+            }.start()
+        }
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -101,6 +111,7 @@ class UsbBitPerfectPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Even
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         methods.setMethodCallHandler(null)
         events.setStreamHandler(null)
+        route.setMethodCallHandler(null)
         sink = null
         direct?.dispose()
         direct = null
@@ -120,8 +131,7 @@ private class UsbPcmPlayback(context: Context, private val emit: (Map<String, An
         .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Mosix:UsbPcm")
     private val attributes = AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
         .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build()
-    private var extractor: MediaExtractor? = null
-    private var decoder: MediaCodec? = null
+    private var source: UsbPcmSource? = null
     private var track: AudioTrack? = null
     private var device: AudioDeviceInfo? = null
     private var mixer: AudioMixerAttributes? = null
@@ -129,8 +139,6 @@ private class UsbPcmPlayback(context: Context, private val emit: (Map<String, An
     private var rate = 0
     private var channels = 0
     private var sourceBits = 0
-    private var inputBits = 0
-    private var floatInput = false
     private var outputBits = 0
     private var durationUs = 0L
     private var positionBaseUs = 0L
@@ -139,15 +147,11 @@ private class UsbPcmPlayback(context: Context, private val emit: (Map<String, An
     private var framesWritten = 0L
     private var previousHead = 0L
     private var headWrap = 0L
-    private var inputEnded = false
     private var outputEnded = false
     private var playing = false
     private var invalidRoute = false
     private var nextRouteCheck = 0L
     private var pending: ByteBuffer? = null
-    private var converted: ByteBuffer? = null
-    private val info = MediaCodec.BufferInfo()
-    private val rawBuffer = ByteBuffer.allocateDirect(256 * 1024)
     @Volatile private var revision = 0
     private val routing = AudioRouting.OnRoutingChangedListener {
         if (playing && track?.routedDevice?.id != device?.id) suspendRoute()
@@ -200,38 +204,12 @@ private class UsbPcmPlayback(context: Context, private val emit: (Map<String, An
             it.mixerBehavior == AudioMixerAttributes.MIXER_BEHAVIOR_BIT_PERFECT
         }
         if (supported.isEmpty()) throw Unavailable("unsupported")
-        // The owned descriptor is duplicated by MediaExtractor; a SAF lease may
-        // close as soon as prepare returns without keeping a full-file copy.
-        val media = MediaExtractor().also { extractor = it }
-        FileInputStream(path).use { media.setDataSource(it.fd) }
-        val index = (0 until media.trackCount).firstOrNull {
-            media.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true
-        } ?: throw Unavailable("format")
-        media.selectTrack(index)
-        val format = media.getTrackFormat(index)
-        val mime = format.getString(MediaFormat.KEY_MIME)
-        rate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
-        channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
-        if (channels !in 1..2) throw Unavailable("format")
+        val pcm = UsbPcmSource(path).also { source = it }
+        rate = pcm.rate
+        channels = pcm.channels
+        sourceBits = pcm.bits
+        durationUs = pcm.durationUs
         val mask = if (channels == 1) AudioFormat.CHANNEL_OUT_MONO else AudioFormat.CHANNEL_OUT_STEREO
-        durationUs = if (format.containsKey(MediaFormat.KEY_DURATION)) format.getLong(MediaFormat.KEY_DURATION) else 0
-        if (mime == "audio/flac") {
-            val header = ByteArray(42)
-            FileInputStream(path).use { input ->
-                var offset = 0
-                while (offset < header.size) {
-                    val read = input.read(header, offset, header.size - offset)
-                    if (read <= 0) break
-                    offset += read
-                }
-            }
-            val source = BitPerfectPcm.flacFormat(header) ?: throw Unavailable("format")
-            if (source.first != rate || source.second != channels) throw Unavailable("format")
-            sourceBits = source.third
-        } else if (mime == "audio/raw" && format.containsKey(MediaFormat.KEY_PCM_ENCODING)) {
-            sourceBits = bits(format.getInteger(MediaFormat.KEY_PCM_ENCODING))
-        } else throw Unavailable("format")
-        if (sourceBits !in listOf(16, 24, 32)) throw Unavailable("format")
         val matching = supported.filter { it.format.sampleRate == rate && it.format.channelMask == mask }
         outputBits = BitPerfectPcm.outputBits(sourceBits, matching.map { bits(it.format.encoding) })
             ?: throw Unavailable("format")
@@ -251,28 +229,12 @@ private class UsbPcmPlayback(context: Context, private val emit: (Map<String, An
         audio.addOnRoutingChangedListener(routing, worker)
         // Never change STREAM_MUSIC volume: the DAC owns volume in this mode.
         audio.setVolume(1f)
-        if (mime == "audio/raw") {
-            inputBits = sourceBits
-            floatInput = false
-        } else {
-            // 24-bit integers are represented exactly by IEEE float. Converting
-            // them back is checked sample-by-sample, with no rounding allowed.
-            format.setInteger(MediaFormat.KEY_PCM_ENCODING, when (sourceBits) {
-                16 -> AudioFormat.ENCODING_PCM_16BIT
-                24 -> AudioFormat.ENCODING_PCM_FLOAT
-                else -> AudioFormat.ENCODING_PCM_32BIT
-            })
-            val codec = MediaCodec.createDecoderByType(requireNotNull(mime)).also { decoder = it }
-            codec.configure(format, null, null, 0)
-            codec.start()
-            inputBits = 0
-            val deadline = android.os.SystemClock.elapsedRealtime() + 5000
-            while (pending == null && !outputEnded) {
-                if (revision != expectedRevision) throw Unavailable("cancelled")
-                if (android.os.SystemClock.elapsedRealtime() > deadline) throw Unavailable("format")
-                decode()
-                if (pending == null) Thread.sleep(2)
-            }
+        val deadline = android.os.SystemClock.elapsedRealtime() + 5000
+        while (pending == null && !outputEnded) {
+            if (revision != expectedRevision) throw Unavailable("cancelled")
+            if (android.os.SystemClock.elapsedRealtime() > deadline) throw Unavailable("format")
+            decode()
+            if (pending == null) Thread.sleep(2)
         }
         return mapOf("ready" to true, "device" to usb.productName.toString(), "sampleRate" to rate,
             "bitDepth" to outputBits, "sourceBitDepth" to sourceBits, "duration" to durationUs / 1000)
@@ -285,75 +247,17 @@ private class UsbPcmPlayback(context: Context, private val emit: (Map<String, An
         else -> 0
     }
 
-    private fun acceptFormat(format: MediaFormat) {
-        if (format.getInteger(MediaFormat.KEY_SAMPLE_RATE) != rate ||
-            format.getInteger(MediaFormat.KEY_CHANNEL_COUNT) != channels) throw Unavailable("format")
-        val encoding = if (format.containsKey(MediaFormat.KEY_PCM_ENCODING))
-            format.getInteger(MediaFormat.KEY_PCM_ENCODING) else AudioFormat.ENCODING_PCM_16BIT
-        floatInput = encoding == AudioFormat.ENCODING_PCM_FLOAT
-        inputBits = if (floatInput) 32 else bits(encoding)
-        if (inputBits < sourceBits || (floatInput && sourceBits > 24)) throw Unavailable("format")
-    }
-
-    private fun pcm(input: ByteBuffer, timeUs: Long) {
-        val frameBytes = channels * (inputBits / 8)
-        require(frameBytes > 0 && input.remaining() % frameBytes == 0)
-        val skipFrames = if (timeUs < seekTargetUs)
-            ((seekTargetUs - timeUs) * rate + 999999) / 1000000 else 0
-        val skipped = minOf(skipFrames, (input.remaining() / frameBytes).toLong())
-        input.position(input.position() + skipped.toInt() * frameBytes)
-        if (!input.hasRemaining()) return
-        if (needTimestamp) {
-            positionBaseUs = timeUs + skipped * 1000000 / rate
-            needTimestamp = false
-        }
-        pending = BitPerfectPcm.convert(input, inputBits, sourceBits, outputBits, floatInput, converted)
-            .also { converted = it }
-    }
-
     private fun decode() {
-        val media = extractor ?: return
+        val pcm = source ?: return
         if (pending != null || outputEnded) return
-        val codec = decoder
-        if (codec == null) {
-            rawBuffer.clear()
-            val size = media.readSampleData(rawBuffer, 0)
-            if (size < 0) { outputEnded = true; return }
-            rawBuffer.position(0)
-            rawBuffer.limit(size)
-            pcm(rawBuffer, media.sampleTime)
-            media.advance()
-            return
-        }
-        // Keep the codec fed independently of FLAC block size. Processing only
-        // one tiny frame per pump would starve a high-rate DAC.
-        for (attempt in 0 until 8) {
-            if (inputEnded) break
-            val slot = codec.dequeueInputBuffer(0)
-            if (slot < 0) break
-            val buffer = requireNotNull(codec.getInputBuffer(slot))
-            val size = media.readSampleData(buffer, 0)
-            if (size < 0) {
-                codec.queueInputBuffer(slot, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-                inputEnded = true
-            } else {
-                codec.queueInputBuffer(slot, 0, size, media.sampleTime, 0)
-                media.advance()
+        val buffer = pcm.read(outputBits)
+        outputEnded = pcm.ended
+        if (buffer != null && buffer.hasRemaining()) {
+            if (needTimestamp) {
+                positionBaseUs = pcm.bufferTimeUs
+                needTimestamp = false
             }
-        }
-        val slot = codec.dequeueOutputBuffer(info, 0)
-        if (slot == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) acceptFormat(codec.outputFormat)
-        if (slot >= 0) {
-            try {
-                if (info.size > 0 && info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG == 0) {
-                    if (inputBits == 0) acceptFormat(codec.outputFormat)
-                    val buffer = requireNotNull(codec.getOutputBuffer(slot))
-                    buffer.position(info.offset)
-                    buffer.limit(info.offset + info.size)
-                    pcm(buffer, info.presentationTimeUs)
-                }
-                outputEnded = info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
-            } finally { codec.releaseOutputBuffer(slot, false) }
+            pending = buffer
         }
     }
 
@@ -436,17 +340,15 @@ private class UsbPcmPlayback(context: Context, private val emit: (Map<String, An
         val wasPlaying = playing
         pause()
         track?.flush()
-        decoder?.flush()
         seekTargetUs = if (durationUs > 0) positionUs.coerceIn(0, durationUs - 1)
             else positionUs.coerceAtLeast(0)
-        extractor?.seekTo(seekTargetUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
+        source?.seek(seekTargetUs)
         positionBaseUs = seekTargetUs
         framesWritten = 0
         previousHead = 0
         headWrap = 0
         needTimestamp = true
         pending = null
-        inputEnded = false
         outputEnded = false
         if (wasPlaying) resume()
     }
@@ -458,10 +360,8 @@ private class UsbPcmPlayback(context: Context, private val emit: (Map<String, An
             runCatching { audio.release() }
         }
         track = null
-        runCatching { decoder?.release() }
-        decoder = null
-        runCatching { extractor?.release() }
-        extractor = null
+        runCatching { source?.close() }
+        source = null
         device?.let { runCatching { manager.clearPreferredMixerAttributes(attributes, it) } }
         device = null
         mixer = null
@@ -472,7 +372,6 @@ private class UsbPcmPlayback(context: Context, private val emit: (Map<String, An
         positionBaseUs = 0
         seekTargetUs = 0
         durationUs = 0
-        inputEnded = false
         outputEnded = false
         needTimestamp = true
         invalidRoute = false
@@ -482,7 +381,6 @@ private class UsbPcmPlayback(context: Context, private val emit: (Map<String, An
         revision++
         worker.post {
             closeSource()
-            converted = null
             manager.removeOnPreferredMixerAttributesChangedListener(mixerListener)
             thread.quitSafely()
         }

@@ -2,16 +2,17 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/models/library_collections.dart';
-import 'package:mosix/services/collection_restore_codec.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/collection_track_batch.dart';
-import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
-import 'package:mosix/services/sqlite_native_snapshot.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/models/library_collections.dart';
+import 'package:mornye/services/collection_restore_codec.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/collection_track_batch.dart';
+import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
+import 'package:mornye/services/sqlite_native_snapshot.dart';
+import 'package:mornye/utils/logger.dart';
 
 final _log = AppLogger('LibraryCollectionsDb');
 
@@ -345,6 +346,7 @@ class LibraryCollectionsDatabase {
     });
   }
 
+  @visibleForTesting
   Future<List<Map<String, dynamic>>> loadPlaylistTracks(
     String playlistId,
   ) async {
@@ -992,6 +994,7 @@ class LibraryCollectionsDatabase {
         // after sqflite closes that file; only the database owner publishes
         // into the live database, preserving its WAL and connection caches.
         final stagedPath = '${temporary.path}/$_dbFileName';
+        sqlite.ensureAppDatabaseFactory();
         final stagedDatabase = await openDatabase(
           stagedPath,
           version: _dbVersion,

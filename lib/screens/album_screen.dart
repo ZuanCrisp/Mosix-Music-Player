@@ -1,45 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
-import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/cover_palette.dart';
-import 'package:mosix/screens/track_history_snapshot.dart';
-import 'package:mosix/widgets/collection_scaffold.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/theme/cover_palette.dart';
+import 'package:mornye/screens/track_history_snapshot.dart';
+import 'package:mornye/widgets/collection_scaffold.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:mosix/services/cover_cache_manager.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/recent_access_provider.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/image_cache_utils.dart';
-import 'package:mosix/utils/string_utils.dart';
-import 'package:mosix/utils/cover_art_utils.dart';
-import 'package:mosix/screens/collapsing_header_scroll_mixin.dart';
-import 'package:mosix/screens/selection_mode_mixin.dart';
-import 'package:mosix/widgets/error_card.dart';
-import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/widgets/album_description.dart';
-import 'package:mosix/utils/editorial_notes.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/utils/provider_resource_ids.dart';
-import 'package:mosix/utils/ttl_cache.dart';
-import 'package:mosix/widgets/animation_utils.dart';
-import 'package:mosix/providers/library_collections_provider.dart';
-import 'package:mosix/widgets/playlist_picker_sheet.dart';
-import 'package:mosix/utils/clickable_metadata.dart';
-import 'package:mosix/widgets/cross_extension_share_sheet.dart';
-import 'package:mosix/widgets/track_list_tile.dart';
-import 'package:mosix/widgets/audio_quality_badges.dart';
-import 'package:mosix/widgets/motion_header_banner.dart';
-import 'package:mosix/widgets/track_detail_actions.dart';
-import 'package:mosix/widgets/selection_action_button.dart';
-import 'package:mosix/widgets/selection_bottom_bar.dart';
-import 'package:mosix/widgets/downloadable_cover.dart';
-import 'package:mosix/widgets/disc_separator_chip.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
+import 'package:mornye/services/cover_cache_manager.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/providers/recent_access_provider.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/image_cache_utils.dart';
+import 'package:mornye/utils/string_utils.dart';
+import 'package:mornye/utils/cover_art_utils.dart';
+import 'package:mornye/screens/collapsing_header_scroll_mixin.dart';
+import 'package:mornye/screens/selection_mode_mixin.dart';
+import 'package:mornye/widgets/error_card.dart';
+import 'package:mornye/widgets/album_detail_header.dart';
+import 'package:mornye/widgets/expressive_button_group.dart';
+import 'package:mornye/widgets/album_description.dart';
+import 'package:mornye/utils/editorial_notes.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/provider_resource_ids.dart';
+import 'package:mornye/utils/ttl_cache.dart';
+import 'package:mornye/widgets/animation_utils.dart';
+import 'package:mornye/providers/library_collections_provider.dart';
+import 'package:mornye/widgets/playlist_picker_sheet.dart';
+import 'package:mornye/utils/clickable_metadata.dart';
+import 'package:mornye/widgets/cross_extension_share_sheet.dart';
+import 'package:mornye/widgets/track_list_tile.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/widgets/desktop/detail_header.dart';
+import 'package:mornye/widgets/desktop/desktop_selection.dart';
+import 'package:mornye/widgets/desktop/track_list_table.dart';
+import 'package:mornye/widgets/audio_quality_badges.dart';
+import 'package:mornye/widgets/motion_header_banner.dart';
+import 'package:mornye/widgets/track_detail_actions.dart';
+import 'package:mornye/widgets/selection_action_button.dart';
+import 'package:mornye/widgets/selection_bottom_bar.dart';
+import 'package:mornye/widgets/downloadable_cover.dart';
+import 'package:mornye/widgets/disc_separator_chip.dart';
+import 'package:mornye/widgets/mornye_artist_header.dart';
 
 class _AlbumCache {
   static final _cache = TtlCache<({List<Track> tracks, String? description})>(
@@ -102,6 +107,9 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
   List<String> _audioTraits = const [];
   String? _description;
 
+  /// Double click and Enter actions of the desktop table rows, by row id.
+  final Map<String, VoidCallback> _desktopActivations = {};
+
   String get _cacheKey =>
       '${_effectiveMetadataProviderIdFromAlbumId()}:${widget.albumId}';
 
@@ -152,6 +160,15 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
     if (_tracks == null || _tracks!.isEmpty) {
       _fetchTracks();
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    DetailPage.mark(
+      context,
+      DetailPage.album(widget.albumId, providerId: widget.extensionId),
+    );
   }
 
   Future<void> _fetchTracks() async {
@@ -268,6 +285,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
   }
 
   static final _qualitySeparators = RegExp(r'[\s_-]+');
+  static final _releaseYearPattern = RegExp(r'(\d{4})');
 
   static (String, bool?) _qualitySignature(Track track) => (
     (track.audioQuality ?? '').trim().toLowerCase().replaceAll(
@@ -359,7 +377,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
 
   String? _releaseYear(String? date) {
     if (date == null || date.isEmpty) return null;
-    final match = RegExp(r'(\d{4})').firstMatch(date);
+    final match = _releaseYearPattern.firstMatch(date);
     return match?.group(1);
   }
 
@@ -440,7 +458,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
         _trackSelectionId(tracks[index], index),
     });
 
-    return CollectionScaffold(
+    final scaffold = CollectionScaffold(
       scrollController: scrollController,
       isSelectionMode: isSelectionMode,
       onExitSelectionMode: exitSelectionMode,
@@ -466,13 +484,9 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
             ),
           ),
         if (_isLoading)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: context.isMornye
-                  ? EdgeInsets.zero
-                  : const EdgeInsets.all(16),
-              child: const AlbumTrackListSkeleton(itemCount: 10),
-            ),
+          // The skeleton rows carry the list's own inset.
+          const SliverToBoxAdapter(
+            child: AlbumTrackListSkeleton(itemCount: 10),
           ),
         if (_error != null)
           SliverToBoxAdapter(
@@ -490,6 +504,17 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
           _buildAlbumFooter(context, colorScheme, tracks),
         ],
       ],
+    );
+    return DesktopListScope(
+      onSelectAll: tracks.isEmpty
+          ? null
+          : () => selectAll([
+              for (var index = 0; index < tracks.length; index++)
+                _trackSelectionId(tracks[index], index),
+            ]),
+      onClearSelection: isSelectionMode ? exitSelectionMode : null,
+      onActivate: () => _desktopActivations[selectionAnchorId]?.call(),
+      child: scaffold,
     );
   }
 
@@ -590,26 +615,51 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
                   )
           : null,
       subtitle: (artistName != null && artistName.isNotEmpty)
-          ? ClickableArtistName(
-              artistName: artistName,
-              artistId: _artistId,
-              coverUrl: widget.coverUrl,
-              extensionId: widget.extensionId,
-              style: TextStyle(
-                color: colorScheme.primary,
-                fontSize: context.tokens.headerSubtitleSize,
-                fontWeight: context.isMornye
-                    ? FontWeight.w400
-                    : FontWeight.w600,
+          // Built inside the header, so desktop reads its artwork scheme.
+          ? Builder(
+              builder: (header) => ClickableArtistName(
+                artistName: artistName,
+                artistId: _artistId,
+                coverUrl: widget.coverUrl,
+                extensionId: widget.extensionId,
+                style: isDesktopPlatform
+                    ? desktopDetailSubtitleStyle(header)
+                    : TextStyle(
+                        color: colorScheme.primary,
+                        fontSize: context.tokens.headerSubtitleSize,
+                        fontWeight: context.isMornye
+                            ? FontWeight.w400
+                            : FontWeight.w600,
+                      ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             )
           : null,
       meta: _buildHeaderMeta(context, releaseDate, commonQualityTrack),
       actions: isSelectionMode
           ? null
+          : isDesktopPlatform
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 10,
+              children: [
+                _buildLoveAllButton(),
+                HeaderFilledButton(
+                  icon: context.isMornye
+                      ? CupertinoIcons.arrow_down_circle_fill
+                      : Icons.download,
+                  label: context.isMornye
+                      ? context.l10n.dialogDownload
+                      : context.l10n.downloadAllCount(tracks.length),
+                  onPressed: tracks.isEmpty
+                      ? null
+                      : () => _downloadAll(context),
+                ),
+                _buildAddToPlaylistButton(context),
+              ],
+            )
           : context.isMornye
           ? Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -632,21 +682,17 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
                 _buildAddToPlaylistButton(context),
               ],
             )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+          : ExpressiveButtonGroup(
+              flexible: const {1},
               children: [
                 _buildLoveAllButton(),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: HeaderFilledButton(
-                    icon: Icons.download,
-                    label: context.l10n.downloadAllCount(tracks.length),
-                    onPressed: tracks.isEmpty
-                        ? null
-                        : () => _downloadAll(context),
-                  ),
+                HeaderFilledButton(
+                  icon: Icons.download,
+                  label: context.l10n.downloadAllCount(tracks.length),
+                  onPressed: tracks.isEmpty
+                      ? null
+                      : () => _downloadAll(context),
                 ),
-                const SizedBox(width: 12),
                 _buildAddToPlaylistButton(context),
               ],
             ),
@@ -697,6 +743,45 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
     final hasMultipleDiscs = tracks.any(
       (track) => discNumber(track) > 1 || (track.totalDiscs ?? 1) > 1,
     );
+    if (isDesktopPlatform) {
+      final ids = [
+        for (var i = 0; i < tracks.length; i++) _trackSelectionId(tracks[i], i),
+      ];
+      final inHistory = [
+        for (final lookup in historyLookups)
+          existingHistoryKeys.contains(lookup.lookupKey),
+      ];
+      void activate(int index) => TrackListTile.activate(
+        context,
+        ref,
+        tracks[index],
+        isInHistory: inHistory[index],
+        onDownload: ({bool forceQualityPicker = false}) => _downloadTrack(
+          context,
+          tracks[index],
+          forceQualityPicker: forceQualityPicker,
+        ),
+      );
+      _desktopActivations
+        ..clear()
+        ..addAll({
+          for (var i = 0; i < ids.length; i++) ids[i]: () => activate(i),
+        });
+      return TrackListTable(
+        tracks: tracks,
+        ids: ids,
+        isInHistory: inHistory,
+        selectedIds: selectedIds,
+        onSelect: applyDesktopClick,
+        onActivate: activate,
+        albumLayout: context.isMornye,
+        albumArtist:
+            widget.artistName ??
+            (tracks.isEmpty
+                ? null
+                : (tracks.first.albumArtist ?? tracks.first.artistName)),
+      );
+    }
     return SliverPadding(
       padding: EdgeInsets.symmetric(horizontal: wideListInset(context)),
       sliver: SliverList(

@@ -236,16 +236,47 @@ extension ExtensionNotifierProviderPriority on ExtensionNotifier {
     }
   }
 
-  Future<void> setExtensionSettings(
+  Future<bool> setExtensionSettings(
     String extensionId,
     Map<String, dynamic> settings,
   ) async {
     try {
       await PlatformBridge.setExtensionSettings(extensionId, settings);
+      ref.invalidate(extensionSettingsProvider(extensionId));
+      state = state.copyWith(
+        settingsRevisions: {
+          ...state.settingsRevisions,
+          extensionId: (state.settingsRevisions[extensionId] ?? 0) + 1,
+        },
+      );
       _log.d('Updated settings for extension: $extensionId');
+      return true;
     } catch (e) {
       _log.e('Failed to set extension settings: $e');
       state = state.copyWith(error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> setHomeFeedRegion(String extensionId, String region) async {
+    final extension = state.extensions
+        .where((extension) => extension.id == extensionId)
+        .firstOrNull;
+    final setting = extension?.homeFeedRegionSetting;
+    if (setting == null || !setting.options!.contains(region)) return false;
+    try {
+      final settings = await PlatformBridge.getExtensionSettings(extensionId);
+      if ((settings[setting.key] ?? setting.defaultValue) == region) {
+        return true;
+      }
+      return await setExtensionSettings(extensionId, {
+        ...settings,
+        setting.key: region,
+      });
+    } catch (error) {
+      _log.e('Failed to update home feed country: $error');
+      state = state.copyWith(error: error.toString());
+      return false;
     }
   }
 

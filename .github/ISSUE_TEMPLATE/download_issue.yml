@@ -37,7 +37,7 @@ body:
     id: source-url
     attributes:
       label: Source URL
-      description: URL pasted or opened in Mosix, if available.
+      description: URL pasted or opened in Mornye, if available.
       placeholder: "https://..."
 
   - type: input

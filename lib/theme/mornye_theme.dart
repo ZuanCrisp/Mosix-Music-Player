@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mosix/models/theme_settings.dart';
-import 'package:mosix/theme/app_tokens.dart';
+import 'package:mornye/models/theme_settings.dart';
+import 'package:mornye/theme/app_tokens.dart';
 
 /// Flutter counterpart of Mornye's iPhone visual system. Reference values come
 /// from AccentColor.colorset, Components.swift, PlayerViews.swift and Motion.md
@@ -66,7 +66,8 @@ class MornyeTheme extends ThemeExtension<MornyeTheme> {
   }
 
   static const lightAccent = Color.fromRGBO(204, 46, 51, 1);
-  static const darkAccent = Color.fromRGBO(224, 61, 60, 1);
+  // iOS dark systemRed: accent text stays readable on #1C1C1E cells.
+  static const darkAccent = Color.fromRGBO(255, 69, 58, 1);
 
   static Color accentColor(MornyeAccent accent, Brightness brightness) {
     final dark = brightness == Brightness.dark;
@@ -223,9 +224,7 @@ class MornyeTheme extends ThemeExtension<MornyeTheme> {
           brightness: brightness,
         ).copyWith(
           primary: accent,
-          onPrimary:
-              selectedAccent == MornyeAccent.red ||
-                  accent.computeLuminance() < 0.179
+          onPrimary: accent.computeLuminance() < 0.179
               ? Colors.white
               : Colors.black,
           primaryContainer: grouped,

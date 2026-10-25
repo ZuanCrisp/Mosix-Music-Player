@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_progress_indicator.dart';
 
 class _BatchProgress {
   final int current;
@@ -10,7 +11,7 @@ class _BatchProgress {
 
 /// A reusable progress dialog for batch operations like conversion and
 /// re-enrich. Follows the same visual style as [_FetchingProgressDialog] in
-/// artist_screen.dart.
+/// artist_screen_discography.dart.
 ///
 /// Uses a static [ValueNotifier] so callers do not need the dialog's
 /// [BuildContext] to push updates – unlike `findAncestorStateOfType` which
@@ -131,10 +132,10 @@ class _BatchProgressDialogState extends State<BatchProgressDialog> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                CircularProgressIndicator(
+                AppProgressIndicator.circular(
                   value: progress > 0 ? progress : null,
                   strokeWidth: 4,
-                  backgroundColor: colorScheme.surfaceContainerHighest,
+                  trackColor: colorScheme.surfaceContainerHighest,
                 ),
                 Icon(widget.icon, color: colorScheme.primary, size: 24),
               ],
@@ -168,9 +169,9 @@ class _BatchProgressDialogState extends State<BatchProgressDialog> {
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
+            child: AppProgressIndicator.linear(
               value: progress > 0 ? progress : null,
-              backgroundColor: colorScheme.surfaceContainerHighest,
+              trackColor: colorScheme.surfaceContainerHighest,
               minHeight: 6,
             ),
           ),

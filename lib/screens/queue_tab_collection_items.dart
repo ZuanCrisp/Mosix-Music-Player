@@ -51,13 +51,11 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
                           SizedBox(
                             width: 34,
                             height: 34,
-                            child: CircularProgressIndicator(
+                            child: AppProgressIndicator.circular(
                               value: visualProgress,
                               strokeWidth: 3,
                               color: Colors.white,
-                              backgroundColor: Colors.white.withValues(
-                                alpha: 0.25,
-                              ),
+                              trackColor: Colors.white.withValues(alpha: 0.25),
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -75,16 +73,16 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
                   : SizedBox(
                       width: 34,
                       height: 34,
-                      child: CircularProgressIndicator(
+                      child: AppProgressIndicator.circular(
                         strokeWidth: 3,
                         color: Colors.white,
-                        backgroundColor: Colors.white.withValues(alpha: 0.25),
+                        trackColor: Colors.white.withValues(alpha: 0.25),
                       ),
                     ),
             ),
           if (isFailed)
-            Positioned(
-              right: 4,
+            PositionedDirectional(
+              end: 4,
               top: 4,
               child: Container(
                 padding: const EdgeInsets.all(4),
@@ -92,7 +90,7 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
                   color: colorScheme.errorContainer,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: AppIcon(
                   Icons.error_outline,
                   color: colorScheme.error,
                   size: 14,
@@ -153,35 +151,35 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
           : _navigateToMetadataScreen(item),
       cover: Hero(tag: heroTag, child: cover),
       overlays: [
-        Positioned(
-          right: 4,
+        PositionedDirectional(
+          end: 4,
           top: 4,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             decoration: BoxDecoration(
-              color: colorScheme.primaryContainer,
+              color: colorScheme.surfaceContainerHighest,
               borderRadius: context.tokens.borderRadiusBadge,
             ),
-            child: Icon(
+            child: AppIcon(
               Icons.download_done,
               size: 12,
-              color: colorScheme.onPrimaryContainer,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
         ),
         if (quality != null && quality.isNotEmpty)
-          Positioned(
-            left: 4,
-            right: 28,
+          PositionedDirectional(
+            start: 4,
+            end: 28,
             top: 4,
             child: Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: _buildLibraryQualityBadge(context, colorScheme, quality),
             ),
           ),
         if (playablePath != null)
-          Positioned(
-            right: 4,
+          PositionedDirectional(
+            end: 4,
             bottom: 4,
             child: ValueListenableBuilder<CompletionBridgePlayableResult>(
               valueListenable: _completionBridgePlayableProbe.listenable(
@@ -193,7 +191,7 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
                 if (result.status == CompletionBridgePlayableStatus.playable &&
                     resolvedPath != null) {
                   return _LibraryPlaybackButton(
-                    mediaId: _cleanFilePath(resolvedPath),
+                    playbackKey: (id: '', path: _cleanFilePath(resolvedPath)),
                     playTooltip: context.l10n.a11yPlayTrackByArtist(
                       trackName,
                       artistName,
@@ -217,10 +215,11 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
                       color: colorScheme.primaryContainer,
                       shape: BoxShape.circle,
                     ),
-                    child: CircularProgressIndicator(
+                    child: AppLoadingIndicator(
+                      size: 14,
                       strokeWidth: 2,
                       color: colorScheme.primary,
-                      semanticsLabel: context.l10n.queueCheckingDownloadedFile,
+                      semanticLabel: context.l10n.queueCheckingDownloadedFile,
                     ),
                   );
                 }
@@ -232,7 +231,7 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
                       color: colorScheme.errorContainer,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: AppIcon(
                       Icons.error_outline,
                       color: colorScheme.error,
                       size: 14,
@@ -289,7 +288,10 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
               color: colorScheme.surfaceContainerHighest,
               borderRadius: radius,
             ),
-            child: Icon(Icons.music_note, color: colorScheme.onSurfaceVariant),
+            child: AppIcon(
+              Icons.music_note,
+              color: colorScheme.onSurfaceVariant,
+            ),
           );
     final heroTag = historyItem != null
         ? 'cover_lib_dl_${historyItem.id}'
@@ -323,7 +325,7 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
           if (quality != null && quality.isNotEmpty) ...[
             const SizedBox(height: 4),
             Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: _buildLibraryQualityBadge(
                 context,
                 colorScheme,
@@ -346,7 +348,7 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
                 if (result.status == CompletionBridgePlayableStatus.playable &&
                     resolvedPath != null) {
                   return _LibraryPlaybackButton(
-                    mediaId: _cleanFilePath(resolvedPath),
+                    playbackKey: (id: '', path: _cleanFilePath(resolvedPath)),
                     playTooltip: context.l10n.a11yPlayTrackByArtist(
                       trackName,
                       artistName,
@@ -364,21 +366,18 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
                   return SizedBox.square(
                     dimension: context.tokens.minTouchTarget,
                     child: Center(
-                      child: SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: colorScheme.primary,
-                          semanticsLabel:
-                              context.l10n.queueCheckingDownloadedFile,
-                        ),
+                      child: AppLoadingIndicator(
+                        size: 18,
+                        strokeWidth: 2,
+                        color: colorScheme.primary,
+                        semanticLabel: context.l10n.queueCheckingDownloadedFile,
                       ),
                     ),
                   );
                 }
                 return Tooltip(
                   message: context.l10n.queueDownloadedFileMissing,
-                  child: Icon(
+                  child: AppIcon(
                     Icons.error_outline,
                     color: colorScheme.error,
                     size: 20,
@@ -428,7 +427,7 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
       child: !listStyle && isDetailed
           ? FittedBox(
               fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: label,
             )
           : label,
@@ -446,6 +445,7 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
     required String subtitle,
     required VoidCallback onTap,
     VoidCallback? onLongPress,
+    ValueChanged<Offset>? onContextMenu,
   }) {
     final cover =
         coverWidget ??
@@ -458,7 +458,7 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
                 : colorScheme.secondaryContainer,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
+          child: AppIcon(
             icon ?? Icons.folder,
             color: context.isMornye
                 ? iconColor ?? Colors.white
@@ -467,51 +467,129 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
           ),
         );
 
-    return Card(
+    final card = AppContentCard(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              SizedBox(width: 56, height: 56, child: cover),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+      mornyeSurface: false,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            SizedBox(width: 56, height: 56, child: cover),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Icon(
-                Icons.chevron_right,
-                color: colorScheme.onSurfaceVariant,
-                size: 20,
-              ),
-            ],
-          ),
+            ),
+            AppIcon(
+              Icons.chevron_right,
+              color: colorScheme.onSurfaceVariant,
+              size: 20,
+            ),
+          ],
         ),
       ),
+    );
+    return DesktopContextMenuRegion(
+      onContextMenu:
+          onContextMenu ??
+          (position) => _showOpenMenu(context, position, onTap),
+      child: card,
+    );
+  }
+
+  /// The desktop menu of a folder that offers nothing beyond opening it.
+  void _showOpenMenu(
+    BuildContext context,
+    Offset position,
+    VoidCallback onOpen,
+  ) => showContextMenu(
+    context,
+    position: position,
+    groups: [
+      [
+        ContextMenuAction(
+          icon: Icons.open_in_new,
+          label: context.l10n.desktopMenuOpen,
+          onSelected: onOpen,
+        ),
+      ],
+    ],
+  );
+
+  /// The desktop menu of a playlist: open, rename, and delete. Deleting a
+  /// playlist outside the selection deletes only that playlist.
+  void _showPlaylistMenu(
+    BuildContext context,
+    UserPlaylistCollection playlist,
+    Offset position,
+  ) {
+    final l10n = context.l10n;
+    final root = Navigator.of(context, rootNavigator: true).context;
+    showContextMenu(
+      context,
+      position: position,
+      groups: [
+        [
+          ContextMenuAction(
+            icon: Icons.open_in_new,
+            label: l10n.desktopMenuOpen,
+            onSelected: () => _openPlaylistById(playlist.id),
+          ),
+          ContextMenuAction(
+            icon: Icons.edit_outlined,
+            label: l10n.collectionRenamePlaylist,
+            onSelected: () async {
+              final name = await promptPlaylistName(
+                root,
+                title: l10n.collectionRenamePlaylist,
+                confirmLabel: l10n.dialogSave,
+                initialName: playlist.name,
+              );
+              final trimmed = name?.trim() ?? '';
+              if (trimmed.isEmpty || !mounted) return;
+              await ref
+                  .read(libraryCollectionsProvider.notifier)
+                  .renamePlaylist(playlist.id, trimmed);
+            },
+          ),
+        ],
+        [
+          ContextMenuAction(
+            icon: Icons.delete_outline,
+            label: l10n.collectionDeletePlaylist,
+            destructive: true,
+            onSelected: () {
+              if (!_selectedPlaylistIds.contains(playlist.id)) {
+                _exitPlaylistSelectionMode();
+                _enterPlaylistSelectionMode(playlist.id);
+              }
+              _deleteSelectedPlaylists(this.context);
+            },
+          ),
+        ],
+      ],
     );
   }
 
@@ -526,6 +604,7 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
     required int count,
     required VoidCallback onTap,
     VoidCallback? onLongPress,
+    ValueChanged<Offset>? onContextMenu,
   }) {
     final cover =
         coverWidget ??
@@ -536,7 +615,7 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
                 : colorScheme.secondaryContainer,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
+          child: AppIcon(
             icon ?? Icons.folder,
             color: context.isMornye
                 ? iconColor ?? Colors.white
@@ -545,6 +624,31 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
           ),
         );
 
+    return DesktopContextMenuRegion(
+      onContextMenu:
+          onContextMenu ??
+          (position) => _showOpenMenu(context, position, onTap),
+      child: _buildCollectionGridCell(
+        context: context,
+        colorScheme: colorScheme,
+        cover: cover,
+        title: title,
+        count: count,
+        onTap: onTap,
+        onLongPress: onLongPress,
+      ),
+    );
+  }
+
+  Widget _buildCollectionGridCell({
+    required BuildContext context,
+    required ColorScheme colorScheme,
+    required Widget cover,
+    required String title,
+    required int count,
+    required VoidCallback onTap,
+    VoidCallback? onLongPress,
+  }) {
     return Semantics(
       button: true,
       label: context.l10n.a11yOpenItemCount(title, count),
@@ -687,6 +791,8 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
                     onLongPress: _isPlaylistSelectionMode
                         ? () => _togglePlaylistSelection(playlist.id)
                         : () => _enterPlaylistSelectionMode(playlist.id),
+                    onContextMenu: (position) =>
+                        _showPlaylistMenu(context, playlist, position),
                   ),
                   if (_isPlaylistSelectionMode)
                     Positioned(
@@ -708,9 +814,9 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
                       ),
                     ),
                   if (_isPlaylistSelectionMode)
-                    Positioned(
+                    PositionedDirectional(
                       top: 4,
-                      right: 4,
+                      end: 4,
                       child: IgnorePointer(
                         child: AnimatedSelectionCheckbox(
                           visible: true,
@@ -845,6 +951,8 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
                       onLongPress: _isPlaylistSelectionMode
                           ? () => _togglePlaylistSelection(playlist.id)
                           : () => _enterPlaylistSelectionMode(playlist.id),
+                      onContextMenu: (position) =>
+                          _showPlaylistMenu(context, playlist, position),
                     ),
                   ),
                 ],

@@ -1,6 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/download_connectivity_policy.dart';
+import 'package:mornye/services/download_connectivity_policy.dart';
 
 void main() {
   test(

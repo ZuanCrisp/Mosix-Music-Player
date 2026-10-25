@@ -1,11 +1,11 @@
-# git-cliff configuration for Mosix
+# git-cliff configuration for Mornye
 # https://git-cliff.org/docs/configuration
 
 [changelog]
 # Template for the changelog body
 body = """
 {%- macro remote_url() -%}
-  https://github.com/ZuanCrisp/Mosix-Music-Player
+  https://github.com/mornyeapp/Mornye
 {%- endmacro -%}
 
 {% if version %}\
@@ -22,7 +22,7 @@ body = """
             {% if commit.github.pr_number %} \
                 ([#{{ commit.github.pr_number }}]({{ self::remote_url() }}/pull/{{ commit.github.pr_number }}))\
             {% endif %}\
-            {%- if commit.github.username and commit.github.username != "ZuanCrisp" %} by [@{{ commit.github.username }}](https://github.com/{{ commit.github.username }}){%- endif %}
+            {%- if commit.github.username and commit.github.username != "zarzet" %} by [@{{ commit.github.username }}](https://github.com/{{ commit.github.username }}){%- endif %}
     {%- endfor %}
 {% endfor %}
 
@@ -99,5 +99,5 @@ tag_pattern = "v[0-9].*"
 sort_commits = "newest"
 
 [remote.github]
-owner = "ZuanCrisp"
-repo = "Mosix-Music-Player"
+owner = "mornyeapp"
+repo = "Mornye"

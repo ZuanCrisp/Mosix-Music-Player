@@ -1,24 +1,40 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:mornye/theme/app_motion.dart';
+import 'package:mornye/theme/material_expressive.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_content_card.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/app_progress_indicator.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/app_snack_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/constants/language_choices.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/widgets/scroll_edge_fade.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/services/setup_progress_store.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/constants/language_choices.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/desktop_folders.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/widgets/scroll_edge_fade.dart';
+import 'package:mornye/utils/logger.dart';
+
+part 'setup_steps.dart';
 
 final _log = AppLogger('SetupScreen');
 
@@ -35,9 +51,11 @@ class SetupScreen extends ConsumerStatefulWidget {
 
 class _SetupScreenState extends ConsumerState<SetupScreen>
     with WidgetsBindingObserver {
-  static const _progressKey = 'setup_progress_v1';
-  final _prefs = SharedPreferences.getInstance();
+  final _progressStore = SetupProgressStore();
   final _platform = defaultTargetPlatform;
+  // Desktop has no runtime storage permission: setup skips that step and
+  // picks a plain folder.
+  final _isDesktop = isDesktopPlatform;
   PageController? _pageController;
   final ScrollController _languageScrollController = ScrollController();
   late final Future<void> _initialization;
@@ -56,7 +74,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   bool _isLoading = false;
   int _androidSdkVersion = 0;
 
-  int get _totalSteps => _androidSdkVersion >= 33 ? 5 : 4;
+  int get _totalSteps => _isDesktop
+      ? 3
+      : _androidSdkVersion >= 33
+      ? 5
+      : 4;
+
+  void _setState(VoidCallback fn) => setState(fn);
 
   @override
   void initState() {
@@ -85,10 +109,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         final androidInfo = await DeviceInfoPlugin().androidInfo;
         _androidSdkVersion = androidInfo.version.sdkInt;
       }
-      final prefs = await _prefs;
+      final saved = await _progressStore.readDraft();
       if (!mounted) return;
       _selectedLocale = ref.read(settingsProvider).locale;
-      final saved = prefs.getString(_progressKey);
       if (saved != null) {
         final draft = jsonDecode(saved) as Map<String, dynamic>;
         _currentStep = ((draft['step'] as int?) ?? 0).clamp(0, _totalSteps - 1);
@@ -96,6 +119,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         _selectedDirectoryBookmark = draft['bookmark'] as String?;
         _selectedTreeUri = draft['treeUri'] as String?;
         _notificationPermissionSkipped = draft['skipNotifications'] == true;
+      }
+      if (_isDesktop) {
+        _selectedDirectory ??= await resolveDesktopDefaultOutputDirectory();
       }
       await _checkInitialPermissions();
       if (_platform == TargetPlatform.android) await _restoreSelectedFolder();
@@ -128,16 +154,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Future<void> _saveProgress({int? step}) async {
-    final draft = jsonEncode({
+    await _progressStore.writeDraft({
       'step': step ?? _currentStep,
       'directory': _selectedDirectory,
       'bookmark': _selectedDirectoryBookmark,
       'treeUri': _selectedTreeUri,
       'skipNotifications': _notificationPermissionSkipped,
     });
-    if (!await (await _prefs).setString(_progressKey, draft)) {
-      throw StateError('Could not save setup progress');
-    }
   }
 
   Future<void> _restoreSelectedFolder() => _folderRecovery ??=
@@ -356,7 +379,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       // the external picker is visible, including on Android 13 devices.
       await _saveProgress();
       if (!mounted) return;
-      if (_platform == TargetPlatform.iOS) {
+      if (_isDesktop) {
+        await _pickDesktopDirectory();
+      } else if (_platform == TargetPlatform.iOS) {
         await _showIOSDirectoryOptions();
       } else if (_platform == TargetPlatform.android) {
         Map<String, dynamic>? result;
@@ -426,12 +451,29 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     }
   }
 
+  /// Desktop folders are plain paths: no SAF tree and no iOS bookmark.
+  Future<void> _pickDesktopDirectory() async {
+    final title = context.l10n.setupDownloadLocationTitle;
+    final picked = await FilePicker.getDirectoryPath(
+      dialogTitle: title,
+      initialDirectory: await resolveDesktopPickerInitialDirectory(
+        _selectedDirectory,
+      ),
+    );
+    if (picked == null || picked.isEmpty || !mounted) return;
+    setState(() {
+      _selectedDirectory = picked;
+      _selectedDirectoryBookmark = null;
+      _selectedTreeUri = null;
+    });
+    await _saveProgress();
+  }
+
   Future<void> _showIOSDirectoryOptions() async {
     final colorScheme = Theme.of(context).colorScheme;
-    await showModalBottomSheet<void>(
+    await showAppModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -543,7 +585,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   Future<String> _getDefaultDirectory() async {
     if (_platform == TargetPlatform.android) {
-      final downloadDir = Directory('/storage/emulated/0/Download/Mosix');
+      final downloadDir = Directory('/storage/emulated/0/Download/Mornye');
       try {
         if (!await downloadDir.exists()) {
           await downloadDir.create(recursive: true);
@@ -554,7 +596,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       }
     }
     final appDir = await getApplicationDocumentsDirectory();
-    return '${appDir.path}/Mosix';
+    return '${appDir.path}/Mornye';
   }
 
   Future<void> _completeSetup() async {
@@ -593,7 +635,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       }
 
       await ref.read(settingsProvider.notifier).setFirstLaunchComplete();
-      await (await _prefs).remove(_progressKey);
+      await _progressStore.clear();
 
       if (mounted) context.go('/tutorial');
     } catch (e) {
@@ -651,6 +693,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
     final logicStep = step - 2;
 
+    if (_isDesktop) return logicStep == 0 && _selectedDirectory != null;
     if (_androidSdkVersion >= 33) {
       switch (logicStep) {
         case 0:
@@ -676,553 +719,163 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     if (_initializing) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: Center(child: AppLoadingIndicator()));
     }
 
     final progress = (_currentStep + 1) / _totalSteps;
-
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Row(
-                children: [
-                  if (_currentStep > 0)
-                    IconButton.filledTonal(
-                      onPressed: _prevPage,
-                      tooltip: MaterialLocalizations.of(
-                        context,
-                      ).backButtonTooltip,
-                      icon: const Icon(Icons.arrow_back),
-                      style: IconButton.styleFrom(
-                        backgroundColor: colorScheme.surfaceContainerHighest,
-                        foregroundColor: colorScheme.onSurfaceVariant,
-                      ),
-                    )
-                  else
-                    const SizedBox(width: 48),
-                  const Spacer(),
-                  SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        CircularProgressIndicator(
-                          value: progress,
-                          strokeWidth: 4,
-                          backgroundColor: colorScheme.surfaceContainerHighest,
-                          color: colorScheme.primary,
-                          strokeCap: StrokeCap.round,
-                        ),
-                        Center(
-                          child: Text(
-                            '${_currentStep + 1}/$_totalSteps',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildWelcomeStep(colorScheme),
-                  _buildLanguageStep(colorScheme),
-                  _buildStorageStep(colorScheme),
-                  if (_androidSdkVersion >= 33)
-                    _buildNotificationStep(colorScheme),
-                  _buildDirectoryStep(colorScheme),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: _currentStep < _totalSteps - 1
-          ? FloatingActionButton.extended(
-              onPressed: !_isLoading && _isStepCompleted(_currentStep)
-                  ? _nextPage
-                  : null,
-              label: Row(
-                children: [
-                  Text(context.l10n.setupNext),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward),
-                ],
-              ),
-              icon: const SizedBox.shrink(), // Custom layout
-            )
-          : FloatingActionButton.extended(
-              onPressed: _isLoading ? null : _completeSetup,
-              label: _isLoading
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: colorScheme.onPrimary,
-                      ),
-                    )
-                  : Text(context.l10n.setupGetStarted),
-              icon: const Icon(Icons.check),
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-            ),
+    final stepMotion = AppMotion.spatial(
+      context,
+      const AppMotionSpec(Duration.zero, Curves.linear),
     );
-  }
 
-  Widget _buildWelcomeStep(ColorScheme colorScheme) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-        final textScale = MediaQuery.textScalerOf(
-          context,
-        ).scale(1.0).clamp(1.0, 1.4);
-        final logoSize = (shortestSide * 0.24).clamp(80.0, 104.0);
-        final titleGap = (shortestSide * 0.06).clamp(16.0, 32.0);
-        final subtitleGap = (shortestSide * 0.04).clamp(8.0, 16.0);
-        const totalPadding = 48.0 + _headerHeight;
-        final minContentHeight = constraints.maxHeight > totalPadding
-            ? constraints.maxHeight - totalPadding
-            : 0.0;
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24 + _headerHeight),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: minContentHeight,
-                maxWidth: 560,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/images/logo-transparent.png',
-                    width: logoSize,
-                    height: logoSize,
-                    color: colorScheme.primary,
-                    fit: BoxFit.contain,
-                  ),
-                  SizedBox(height: titleGap),
-                  Text(
-                    context.l10n.appName,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                      fontSize:
-                          (Theme.of(context).textTheme.displaySmall?.fontSize ??
-                              36) *
-                          (1 + ((textScale - 1) * 0.18)),
-                    ),
-                  ),
-                  SizedBox(height: subtitleGap),
-                  Text(
-                    context.l10n.setupDownloadInFlac,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
+    final isLastStep = _currentStep >= _totalSteps - 1;
+    final nextButton = materialExpressiveEnabled(context)
+        ? _buildExpressiveFab(colorScheme)
+        : !isLastStep
+        ? FloatingActionButton.extended(
+            onPressed: !_isLoading && _isStepCompleted(_currentStep)
+                ? _nextPage
+                : null,
+            label: Row(
+              children: [
+                Text(context.l10n.setupNext),
+                const SizedBox(width: 8),
+                const Icon(Icons.arrow_forward),
+              ],
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _onLanguageSelected(String locale) {
-    setState(() => _selectedLocale = locale);
-    ref.read(settingsProvider.notifier).setLocale(locale);
-  }
-
-  Widget _buildLanguageStep(ColorScheme colorScheme) {
-    final languages = supportedLanguageChoices;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-        final iconPadding = (shortestSide * 0.06).clamp(16.0, 24.0);
-        final iconSize = (shortestSide * 0.12).clamp(32.0, 48.0);
-        final titleGap = (shortestSide * 0.06).clamp(16.0, 32.0);
-        final descriptionGap = (shortestSide * 0.04).clamp(8.0, 16.0);
-        final actionGap = (shortestSide * 0.09).clamp(20.0, 48.0);
-
-        return Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                24 + wideListInset(context, contentMaxWidth: 560),
-                24,
-                24 + wideListInset(context, contentMaxWidth: 560),
-                0,
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(iconPadding),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      shape: BoxShape.circle,
+            icon: const SizedBox.shrink(), // Custom layout
+          )
+        : FloatingActionButton.extended(
+            onPressed: _isLoading ? null : _completeSetup,
+            label: _isLoading
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: colorScheme.onPrimary,
                     ),
-                    child: Icon(
-                      Icons.translate,
-                      size: iconSize,
-                      color: colorScheme.primary,
-                    ),
+                  )
+                : Text(context.l10n.setupGetStarted),
+            icon: const Icon(Icons.check),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+          );
+
+    Widget content = Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Row(
+            children: [
+              if (_currentStep > 0)
+                AppIconButton.filledTonal(
+                  onPressed: _prevPage,
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                  icon: const Icon(Icons.arrow_back),
+                  style: IconButton.styleFrom(
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    foregroundColor: colorScheme.onSurfaceVariant,
                   ),
-                  SizedBox(height: titleGap),
-                  Text(
-                    context.l10n.setupLanguageTitle,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: descriptionGap),
-                  Text(
-                    context.l10n.setupLanguageDescription,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: actionGap),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ScrollEdgeFade(
-                child: Scrollbar(
-                  controller: _languageScrollController,
-                  thumbVisibility: true,
-                  child: _buildLanguageList(languages, colorScheme),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildLanguageList(
-    List<(String, String, IconData)> languages,
-    ColorScheme colorScheme,
-  ) {
-    return ListView.builder(
-      controller: _languageScrollController,
-      padding: EdgeInsets.fromLTRB(
-        24 + wideListInset(context, contentMaxWidth: 560),
-        0,
-        24 + wideListInset(context, contentMaxWidth: 560),
-        80,
-      ),
-      itemCount: languages.length,
-      itemBuilder: (context, index) {
-        final lang = languages[index];
-        final code = lang.$1;
-        final name = lang.$2;
-        final isSelected = _selectedLocale == code;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Material(
-            color: isSelected
-                ? colorScheme.primaryContainer
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => _onLanguageSelected(code),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                child: Row(
+                )
+              else
+                const SizedBox(width: 48),
+              const Spacer(),
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: Stack(
+                  fit: StackFit.expand,
                   children: [
-                    Icon(
-                      lang.$3,
-                      color: isSelected
-                          ? colorScheme.onPrimaryContainer
-                          : colorScheme.onSurfaceVariant,
-                      size: 22,
+                    // Expressive steps fill on a spring around a wavy
+                    // ring; the fallback jumps straight to the step.
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(end: progress),
+                      duration: stepMotion.duration,
+                      curve: stepMotion.curve,
+                      builder: (context, value, _) =>
+                          AppProgressIndicator.circular(
+                            wavy: false,
+                            value: value,
+                            strokeWidth: 4,
+                            trackColor: colorScheme.surfaceContainerHighest,
+                            color: colorScheme.primary,
+                            strokeCap: StrokeCap.round,
+                          ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
+                    Center(
                       child: Text(
-                        code == 'system'
-                            ? context.l10n.setupLanguageSystemDefault
-                            : name,
+                        '${_currentStep + 1}/$_totalSteps',
                         style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                          color: isSelected
-                              ? colorScheme.onPrimaryContainer
-                              : colorScheme.onSurface,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
-                    if (isSelected)
-                      Icon(
-                        Icons.check_circle,
-                        color: colorScheme.onPrimaryContainer,
-                        size: 22,
-                      ),
                   ],
                 ),
               ),
+            ],
+          ),
+        ),
+
+        Expanded(
+          child: PageView(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _buildWelcomeStep(colorScheme),
+              _buildLanguageStep(colorScheme),
+              if (!_isDesktop) _buildStorageStep(colorScheme),
+              if (_androidSdkVersion >= 33) _buildNotificationStep(colorScheme),
+              _buildDirectoryStep(colorScheme),
+            ],
+          ),
+        ),
+        // Desktop windows keep the button in the centered column, beside the
+        // content, rather than in the far corner of a wide window.
+        if (_isDesktop)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: nextButton,
             ),
           ),
-        );
+      ],
+    );
+    if (_isDesktop) {
+      content = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: content,
+        ),
+      );
+    }
+
+    final scaffold = Scaffold(
+      backgroundColor: colorScheme.surface,
+      body: SafeArea(child: content),
+      floatingActionButton: _isDesktop ? null : nextButton,
+    );
+    if (!_isDesktop) return scaffold;
+    // Enter moves on, as the default button of a desktop window would.
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.enter): _advanceFromKeyboard,
+        const SingleActivator(LogicalKeyboardKey.numpadEnter):
+            _advanceFromKeyboard,
       },
+      child: Focus(autofocus: true, child: scaffold),
     );
   }
 
-  Widget _buildStorageStep(ColorScheme colorScheme) {
-    return _StepLayout(
-      title: context.l10n.setupStorageRequired,
-      description: context.l10n.setupStorageDescription,
-      icon: Icons.folder,
-      child: _storagePermissionGranted
-          ? _SuccessCard(
-              text: context.l10n.setupStorageGranted,
-              colorScheme: colorScheme,
-            )
-          : FilledButton.tonalIcon(
-              onPressed: _requestStoragePermission,
-              icon: const Icon(Icons.folder_open),
-              label: Text(context.l10n.setupGrantPermission),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-              ),
-            ),
-    );
-  }
-
-  Widget _buildNotificationStep(ColorScheme colorScheme) {
-    return _StepLayout(
-      title: context.l10n.setupNotificationEnable,
-      description: context.l10n.setupNotificationBackgroundDescription,
-      icon: Icons.notifications,
-      child: _notificationPermissionGranted || _notificationPermissionSkipped
-          ? _SuccessCard(
-              text: context.l10n.setupNotificationGranted,
-              colorScheme: colorScheme,
-            )
-          : Column(
-              children: [
-                FilledButton.tonalIcon(
-                  onPressed: _requestNotificationPermission,
-                  icon: const Icon(Icons.notifications_active),
-                  label: Text(context.l10n.setupEnableNotifications),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    setState(() => _notificationPermissionSkipped = true);
-                    await _saveProgress();
-                  },
-                  child: Text(context.l10n.setupSkipForNow),
-                ),
-              ],
-            ),
-    );
-  }
-
-  Widget _buildDirectoryStep(ColorScheme colorScheme) {
-    return _StepLayout(
-      title: context.l10n.setupFolderChoose,
-      description: _platform == TargetPlatform.android
-          ? context.l10n.storageDownloadFolderHint
-          : context.l10n.setupFolderDescription,
-      icon: Icons.create_new_folder,
-      child: Column(
-        children: [
-          if (_selectedDirectory != null)
-            Card(
-              color: colorScheme.secondaryContainer,
-              child: ListTile(
-                leading: Icon(
-                  Icons.folder,
-                  color: colorScheme.onSecondaryContainer,
-                ),
-                title: Text(
-                  _selectedDirectory!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: IconButton(
-                  tooltip: context.l10n.setupChangeFolderTooltip,
-                  icon: const Icon(Icons.edit),
-                  onPressed: _selectDirectory,
-                ),
-              ),
-            )
-          else
-            FilledButton.tonalIcon(
-              onPressed: _selectDirectory,
-              icon: const Icon(Icons.create_new_folder),
-              label: Text(context.l10n.setupSelectFolder),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StepLayout extends StatelessWidget {
-  final String title;
-  final String description;
-  final IconData icon;
-  final Widget child;
-
-  const _StepLayout({
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-        final iconPadding = (shortestSide * 0.06).clamp(16.0, 24.0);
-        final iconSize = (shortestSide * 0.12).clamp(32.0, 48.0);
-        final titleGap = (shortestSide * 0.06).clamp(16.0, 32.0);
-        final descriptionGap = (shortestSide * 0.04).clamp(8.0, 16.0);
-        final actionGap = (shortestSide * 0.09).clamp(20.0, 48.0);
-        // Extra bottom padding offsets the 80dp header above the PageView so
-        // the content sits at the optical center of the full screen.
-        const totalPadding = 48.0 + _headerHeight;
-        final minContentHeight = constraints.maxHeight > totalPadding
-            ? constraints.maxHeight - totalPadding
-            : 0.0;
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24 + _headerHeight),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: minContentHeight,
-                maxWidth: 560,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(iconPadding),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      icon,
-                      size: iconSize,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  SizedBox(height: titleGap),
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: descriptionGap),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: actionGap),
-                  child,
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _SuccessCard extends StatelessWidget {
-  final String text;
-  final ColorScheme colorScheme;
-
-  const _SuccessCard({required this.text, required this.colorScheme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.check_circle, color: colorScheme.onPrimaryContainer),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onPrimaryContainer,
-              ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
+  void _advanceFromKeyboard() {
+    if (_isLoading) return;
+    if (_currentStep >= _totalSteps - 1) {
+      unawaited(_completeSetup());
+    } else if (_isStepCompleted(_currentStep)) {
+      _nextPage();
+    }
   }
 }

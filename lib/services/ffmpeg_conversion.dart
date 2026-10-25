@@ -1,13 +1,13 @@
 import 'dart:io';
 
-import 'package:mosix/services/audio_metadata_mapper.dart';
-import 'package:mosix/services/ffmpeg_metadata.dart';
-import 'package:mosix/services/ffmpeg_models.dart';
-import 'package:mosix/services/ffmpeg_probe.dart';
-import 'package:mosix/services/ffmpeg_support.dart';
-import 'package:mosix/utils/artist_utils.dart';
-import 'package:mosix/utils/audio_conversion_utils.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/services/audio_metadata_mapper.dart';
+import 'package:mornye/services/ffmpeg_metadata.dart';
+import 'package:mornye/services/ffmpeg_models.dart';
+import 'package:mornye/services/ffmpeg_probe.dart';
+import 'package:mornye/services/ffmpeg_support.dart';
+import 'package:mornye/utils/artist_utils.dart';
+import 'package:mornye/utils/audio_conversion_utils.dart';
+import 'package:mornye/utils/logger.dart';
 
 final _log = AppLogger('FFmpeg');
 
@@ -283,18 +283,32 @@ abstract final class FFmpegConversion {
       deleteOriginal: deleteOriginal,
     );
     final outputPath = plan.workingPath;
-    final command = switch (format) {
-      'opus' =>
-        '-v error -hide_banner -i "$inputPath" -codec:a libopus -b:a $bitrate -vbr on -compression_level 10 -map 0:a "$outputPath" -y',
-      'aac' =>
-        '-v error -hide_banner -i "$inputPath" -codec:a aac -b:a $bitrate -map 0:a -f mp4 "$outputPath" -y',
-      _ =>
-        '-v error -hide_banner -i "$inputPath" -codec:a libmp3lame -b:a $bitrate -map 0:a -id3v2_version 3 "$outputPath" -y',
-    };
+    final arguments = <String>[
+      '-v',
+      'error',
+      '-hide_banner',
+      '-i',
+      inputPath,
+      '-codec:a',
+      switch (format) {
+        'opus' => 'libopus',
+        'aac' => 'aac',
+        _ => 'libmp3lame',
+      },
+      '-b:a',
+      bitrate,
+      if (format == 'opus') ...['-vbr', 'on', '-compression_level', '10'],
+      '-map',
+      '0:a',
+      if (format == 'aac') ...['-f', 'mp4'],
+      if (format == 'mp3') ...['-id3v2_version', '3'],
+      outputPath,
+      '-y',
+    ];
     _log.i(
       'Converting ${inputPath.split(Platform.pathSeparator).last} to $format @ $bitrate',
     );
-    final result = await FFmpegExecution.command(command);
+    final result = await FFmpegExecution.arguments(arguments);
     if (!result.success) {
       _log.e('Audio conversion failed: ${result.output}');
       await FFmpegOutput.cleanup(outputPath);

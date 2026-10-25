@@ -1,11 +1,10 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/services/album_completeness.dart';
-import 'package:mosix/services/library_database_models.dart';
-import 'package:mosix/services/library_schema.dart';
-import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
-import 'package:mosix/utils/library_format_filters.dart';
-
-// SQL builders for the queue tab's history+local union queries.
+import 'package:mornye/services/album_completeness.dart';
+import 'package:mornye/services/library_database_models.dart';
+import 'package:mornye/services/library_schema.dart';
+import 'package:mornye/services/library_file_sizes.dart';
+import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
+import 'package:mornye/utils/library_format_filters.dart';
 
 String confirmedMissingLyricsSqlPredicate({
   required String hasLyricsExpr,
@@ -364,7 +363,9 @@ class LibraryQueueStore {
           h.sort_genre,
           h.sort_release,
           h.sort_added
+          ${_trackSizeColumns(request.sortMode)}
         FROM history_db.history h
+        ${_sizeJoin(request.sortMode, 'history_db', 'h')}
         ${where.isEmpty ? '' : 'WHERE ${where.join(' AND ')}'}
         ''';
       parts.add(
@@ -454,7 +455,9 @@ class LibraryQueueStore {
           l.sort_genre,
           l.sort_release,
           l.sort_added
+          ${_trackSizeColumns(request.sortMode)}
         FROM ${LibrarySchema.visibleView} l
+        ${_sizeJoin(request.sortMode, 'main', 'l')}
         ${where.isEmpty ? '' : 'WHERE ${where.join(' AND ')}'}
         ''';
       parts.add(
@@ -515,6 +518,7 @@ class LibraryQueueStore {
           NULL AS sort_genre,
           NULL AS sort_release,
           NULL AS sort_added
+          ${isLibrarySizeSort(request.sortMode) ? ', NULL AS file_size_bytes, 1 AS sort_size_unknown, 0 AS sort_size' : ''}
         WHERE 0
       ''';
     }
@@ -571,7 +575,9 @@ class LibraryQueueStore {
           MIN(COALESCE(h.sort_album_artist, '')) AS sort_artist,
           COALESCE(MAX(h.release_date), '') AS sort_release,
           COALESCE(MAX(h.sort_genre), '') AS sort_genre
+          ${_albumSizeColumns(request.sortMode)}
         FROM history_db.history h
+        ${_sizeJoin(request.sortMode, 'history_db', 'h')}
         ${unfiltered ? '' : '''JOIN (
           SELECT
             album_key,
@@ -633,7 +639,9 @@ class LibraryQueueStore {
           MIN(l.album_artist_norm) AS sort_artist,
           COALESCE(MAX(l.release_date), '') AS sort_release,
           COALESCE(MAX(l.sort_genre), '') AS sort_genre
+          ${_albumSizeColumns(request.sortMode)}
         FROM ${LibrarySchema.visibleView} l
+        ${_sizeJoin(request.sortMode, 'main', 'l')}
         ${unfiltered ? '' : '''JOIN (
           SELECT
             album_key,
@@ -684,6 +692,7 @@ class LibraryQueueStore {
           NULL AS sort_artist,
           NULL AS sort_release,
           NULL AS sort_genre
+          ${isLibrarySizeSort(request.sortMode) ? ', 1 AS sort_size_unknown, 0 AS sort_size' : ''}
         WHERE 0
       ''';
     }
@@ -987,8 +996,31 @@ class LibraryQueueStore {
     ''';
   }
 
+  String _sizeJoin(String sortMode, String schema, String alias) =>
+      isLibrarySizeSort(sortMode)
+      ? 'LEFT JOIN $schema.track_file_sizes file_sizes ON file_sizes.item_id = $alias.id'
+      : '';
+
+  String _trackSizeColumns(String sortMode) => isLibrarySizeSort(sortMode)
+      ? ', file_sizes.size_bytes AS file_size_bytes, '
+            '(file_sizes.size_bytes IS NULL) AS sort_size_unknown, '
+            'COALESCE(file_sizes.size_bytes, 0) AS sort_size'
+      : '';
+
+  String _albumSizeColumns(String sortMode) => isLibrarySizeSort(sortMode)
+      ? ', (COUNT(file_sizes.size_bytes) < COUNT(*)) AS sort_size_unknown, '
+            'COALESCE(SUM(file_sizes.size_bytes), 0) AS sort_size'
+      : '';
+
   List<_QueueOrderTerm> _queueTrackOrderTerms(String sortMode) {
     return switch (sortMode) {
+      'size-asc' || 'size-desc' => [
+        const _QueueOrderTerm('sort_size_unknown'),
+        _QueueOrderTerm('sort_size', descending: sortMode == 'size-desc'),
+        const _QueueOrderTerm('sort_track'),
+        const _QueueOrderTerm('queue_source'),
+        const _QueueOrderTerm('id'),
+      ],
       'oldest' => const [
         _QueueOrderTerm('sort_added'),
         _QueueOrderTerm('sort_track'),
@@ -1066,6 +1098,13 @@ class LibraryQueueStore {
 
   List<_QueueOrderTerm> _queueAlbumOrderTerms(String sortMode) {
     return switch (sortMode) {
+      'size-asc' || 'size-desc' => [
+        const _QueueOrderTerm('sort_size_unknown'),
+        _QueueOrderTerm('sort_size', descending: sortMode == 'size-desc'),
+        const _QueueOrderTerm('sort_album'),
+        const _QueueOrderTerm('queue_source'),
+        const _QueueOrderTerm('album_key'),
+      ],
       'oldest' => const [
         _QueueOrderTerm('sort_added'),
         _QueueOrderTerm('sort_album'),
@@ -1181,6 +1220,7 @@ class LibraryQueueStore {
       'albumName': row['album_name'],
       'albumArtist': row['album_artist'],
       'filePath': row['file_path'],
+      'fileSize': row['file_size_bytes'],
       'isrc': row['isrc'],
       'trackNumber': row['track_number'],
       'totalTracks': row['total_tracks'],

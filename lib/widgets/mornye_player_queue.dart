@@ -2,11 +2,11 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/widgets/player_artwork.dart';
-import 'package:mosix/widgets/player_queue_dismissible.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/widgets/player_artwork.dart';
+import 'package:mornye/widgets/player_queue_dismissible.dart';
 
 /// Upcoming tracks share the player's artwork backdrop and transport controls.
 class MornyePlayerQueue extends ConsumerWidget {
@@ -187,7 +187,7 @@ class MornyePlayerQueue extends ConsumerWidget {
                   key: ObjectKey(item),
                   onRemove: () => controller.removeQueuedItem(item),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.only(left: 12),
+                    contentPadding: const EdgeInsetsDirectional.only(start: 12),
                     minVerticalPadding: 6,
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(5),

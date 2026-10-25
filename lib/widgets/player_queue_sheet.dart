@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/widgets/expressive_button.dart';
-import 'package:mosix/widgets/player_playback_controls.dart';
-import 'package:mosix/widgets/player_artwork.dart';
-import 'package:mosix/widgets/player_queue_dismissible.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/theme/app_motion.dart';
+import 'package:mornye/theme/material_expressive.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/player_playback_controls.dart';
+import 'package:mornye/widgets/player_artwork.dart';
+import 'package:mornye/widgets/player_queue_dismissible.dart';
 
 Future<void> showPlayerQueueSheet(
   BuildContext context,
   ColorScheme colorScheme,
-) => showModalBottomSheet<void>(
+) => showAppModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
   showDragHandle: true,
@@ -32,10 +37,19 @@ class PlayerQueueSheet extends ConsumerWidget {
     super.key,
     required this.colorScheme,
     required this.scrollController,
+    this.embedded = false,
   });
 
   final ColorScheme colorScheme;
   final ScrollController scrollController;
+
+  /// Shown in a panel that has its own title, such as the desktop
+  /// inspector, rather than in a sheet: no title, and shuffling the library
+  /// keeps the panel open.
+  final bool embedded;
+
+  static const _rowRadius = 16.0;
+  static final _liftSpring = SpringCurve(M3EMotion.expressiveSpatialFast);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,20 +57,27 @@ class PlayerQueueSheet extends ConsumerWidget {
     final current = ref.watch(currentMediaItemProvider).value;
     final controller = ref.read(musicPlayerControllerProvider);
     final textTheme = Theme.of(context).textTheme;
+    final expressive = materialExpressiveEnabled(context);
+    final artworkMotion = AppMotion.spatial(
+      context,
+      const AppMotionSpec(Duration.zero, Curves.linear),
+    );
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 4, 16, 8),
+          padding: const EdgeInsetsDirectional.fromSTEB(24, 4, 16, 8),
           child: Row(
             children: [
               Expanded(
-                child: Text(
-                  context.l10n.nowPlayingUpNext,
-                  style: textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
+                child: embedded
+                    ? const SizedBox.shrink()
+                    : Text(
+                        context.l10n.nowPlayingUpNext,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
               ),
               PlayerPlaybackModeButton(
                 mode: PlayerPlaybackMode.autoplay,
@@ -111,11 +132,30 @@ class PlayerQueueSheet extends ConsumerWidget {
                 controller.moveQueueItem(oldIndex, newIndex);
               },
               proxyDecorator: (child, index, animation) {
-                return Material(
-                  elevation: 4,
-                  color: colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
+                if (!expressive) {
+                  return Material(
+                    elevation: 4,
+                    color: colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(12),
+                    child: child,
+                  );
+                }
+                return AnimatedBuilder(
+                  animation: animation,
                   child: child,
+                  builder: (context, child) {
+                    final t = _liftSpring.transform(animation.value);
+                    return Transform.scale(
+                      scale: 1 + 0.03 * t,
+                      child: Material(
+                        elevation: 6 * t.clamp(0.0, 1.0),
+                        color: colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(_rowRadius + 8 * t),
+                        clipBehavior: Clip.antiAlias,
+                        child: child,
+                      ),
+                    );
+                  },
                 );
               },
               itemBuilder: (context, i) {
@@ -129,9 +169,25 @@ class PlayerQueueSheet extends ConsumerWidget {
                     selected: isCurrent,
                     selectedTileColor: colorScheme.secondaryContainer
                         .withValues(alpha: 0.55),
-                    contentPadding: const EdgeInsets.only(left: 16, right: 4),
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                    shape: expressive
+                        ? RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(_rowRadius),
+                          )
+                        : null,
+                    contentPadding: const EdgeInsetsDirectional.only(
+                      start: 16,
+                      end: 4,
+                    ),
+                    leading: TweenAnimationBuilder<double>(
+                      tween: Tween(end: expressive && isCurrent ? 22 : 8),
+                      duration: artworkMotion.duration,
+                      curve: artworkMotion.curve,
+                      builder: (context, radius, child) => ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          radius.clamp(0.0, 22.0),
+                        ),
+                        child: child,
+                      ),
                       child: SizedBox.square(
                         dimension: 44,
                         child: PlayerArtwork(
@@ -165,9 +221,10 @@ class PlayerQueueSheet extends ConsumerWidget {
                     ),
                     trailing: ReorderableDragStartListener(
                       index: i,
+                      // 24dp glyph plus padding gives a 48dp drag target.
                       child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
+                        padding: const EdgeInsets.all(12),
+                        child: AppIcon(
                           Icons.drag_handle,
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -195,7 +252,7 @@ class PlayerQueueSheet extends ConsumerWidget {
         );
         return;
       }
-      if (context.mounted) Navigator.of(context).maybePop();
+      if (context.mounted && !embedded) Navigator.of(context).maybePop();
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

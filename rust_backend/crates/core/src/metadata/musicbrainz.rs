@@ -3,7 +3,7 @@
 mod case_data;
 mod casing;
 
-use crate::lyrics::json::go_deserialize;
+use crate::json::lenient_deserialize;
 use crate::matching::lowercase;
 use std::collections::BTreeSet;
 
@@ -12,34 +12,34 @@ pub struct Tag {
     pub count: isize,
     pub name: String,
 }
-go_deserialize!(Tag { "count" => count, "name" => name, });
+lenient_deserialize!(Tag { "count" => count, "name" => name, });
 
 #[derive(Clone, Debug, Default)]
 pub struct ArtistCredit {
     pub name: String,
     pub joinphrase: String,
 }
-go_deserialize!(ArtistCredit { "name" => name, "joinphrase" => joinphrase, });
+lenient_deserialize!(ArtistCredit { "name" => name, "joinphrase" => joinphrase, });
 
 #[derive(Clone, Debug, Default)]
 pub struct Release {
     pub title: String,
     pub artist_credit: Option<Vec<ArtistCredit>>,
 }
-go_deserialize!(Release { "title" => title, "artist-credit" => artist_credit, });
+lenient_deserialize!(Release { "title" => title, "artist-credit" => artist_credit, });
 
 #[derive(Clone, Debug, Default)]
 pub struct Recording {
     pub tags: Option<Vec<Tag>>,
     pub releases: Option<Vec<Release>>,
 }
-go_deserialize!(Recording { "tags" => tags, "releases" => releases, });
+lenient_deserialize!(Recording { "tags" => tags, "releases" => releases, });
 
 #[derive(Clone, Debug, Default)]
 pub struct Response {
     pub recordings: Option<Vec<Recording>>,
 }
-go_deserialize!(Response { "recordings" => recordings, });
+lenient_deserialize!(Response { "recordings" => recordings, });
 
 pub fn genre(tags: &[Tag]) -> String {
     let mut seen = BTreeSet::new();

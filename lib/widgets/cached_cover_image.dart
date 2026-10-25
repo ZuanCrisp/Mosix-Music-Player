@@ -4,8 +4,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:mosix/services/cover_cache_manager.dart';
-import 'package:mosix/utils/image_cache_utils.dart';
+import 'package:mornye/services/cover_cache_manager.dart';
+import 'package:mornye/utils/image_cache_utils.dart';
 
 class CachedCoverImage extends StatelessWidget {
   static const int _defaultMinCacheExtent = 64;
@@ -211,10 +211,12 @@ class LocalOrNetworkCoverImage extends StatelessWidget {
               if (fadeInDuration == Duration.zero) {
                 return ready ? child : placeholder(context);
               }
+              // The image defines the cover's size even when a track row
+              // gives its leading widget unbounded constraints.
               return Stack(
-                fit: StackFit.expand,
+                fit: StackFit.passthrough,
                 children: [
-                  placeholder(context),
+                  Positioned.fill(child: placeholder(context)),
                   AnimatedOpacity(
                     opacity: ready ? 1.0 : 0.0,
                     duration: fadeInDuration!,

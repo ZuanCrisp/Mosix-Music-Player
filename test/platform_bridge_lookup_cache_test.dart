@@ -5,24 +5,30 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/services/platform_bridge.dart';
+import 'package:mornye/services/platform_bridge.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zuancrisp.mosix/backend');
+  const channel = MethodChannel('com.zarz.mornye/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+  // The waits below keep the original margin after the debounce fires (50 to
+  // 250 ms for the background encode) while skipping the 500 ms default.
+  const debounce = Duration(milliseconds: 10);
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     messenger.setMockMethodCallHandler(channel, (_) async => null);
     await PlatformBridge.clearTrackCache();
+    PlatformBridge.lookupCachePersistDebounceForTesting = debounce;
   });
 
   tearDown(() async {
     messenger.setMockMethodCallHandler(channel, (_) async => null);
     await PlatformBridge.clearTrackCache();
     messenger.setMockMethodCallHandler(channel, null);
+    PlatformBridge.lookupCachePersistDebounceForTesting = null;
   });
 
   Map<String, dynamic> collection([int count = 2]) => {
@@ -57,7 +63,7 @@ void main() {
       expect(results.last['text'], isNot('changed'));
       expect((await load())['text'], isNot('changed'));
       expect(calls, 2);
-      await Future<void>.delayed(const Duration(milliseconds: 550));
+      await Future<void>.delayed(debounce + const Duration(milliseconds: 50));
       final prefs = await SharedPreferences.getInstance();
       final stored = prefs.getString('bridge_metadata_lookup_cache_v1');
       expect(stored == null || jsonDecode(stored) is Map, true);
@@ -95,7 +101,7 @@ void main() {
       });
       await PlatformBridge.getProviderMetadata('example', 'album', 'large');
       await PlatformBridge.getProviderMetadata('example', 'track', 'small');
-      await Future<void>.delayed(const Duration(milliseconds: 650));
+      await Future<void>.delayed(debounce + const Duration(milliseconds: 150));
       final prefs = await SharedPreferences.getInstance();
       final stored = prefs.getString('bridge_metadata_lookup_cache_v1')!;
       expect(utf8.encode(stored).length, lessThanOrEqualTo(2 * 1024 * 1024));
@@ -120,7 +126,7 @@ void main() {
       for (final id in ['escaped', 'multibyte', 'small']) {
         await PlatformBridge.getProviderMetadata('example', 'album', id);
       }
-      await Future<void>.delayed(const Duration(milliseconds: 750));
+      await Future<void>.delayed(debounce + const Duration(milliseconds: 250));
       final prefs = await SharedPreferences.getInstance();
       final stored =
           jsonDecode(prefs.getString('bridge_metadata_lookup_cache_v1')!)
@@ -137,7 +143,7 @@ void main() {
     for (var index = 0; index < 3; index++) {
       await PlatformBridge.getProviderMetadata('example', 'album', '$index');
     }
-    await Future<void>.delayed(const Duration(milliseconds: 750));
+    await Future<void>.delayed(debounce + const Duration(milliseconds: 250));
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString('bridge_metadata_lookup_cache_v1')!;
     expect(utf8.encode(raw).length, lessThanOrEqualTo(2 * 1024 * 1024));

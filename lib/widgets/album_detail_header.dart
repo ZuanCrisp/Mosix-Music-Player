@@ -1,18 +1,28 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderProxySliver;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/providers/runtime_profile_provider.dart';
-import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/cover_palette.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/expressive_button.dart';
-import 'package:mosix/widgets/expressive_icon_button.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/runtime_profile_provider.dart';
+import 'package:mornye/theme/app_motion.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/theme/cover_palette.dart';
+import 'package:mornye/theme/material_expressive.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/expressive_button_group.dart';
+import 'package:mornye/widgets/expressive_icon_button.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/widgets/desktop/context_menu.dart';
+import 'package:mornye/widgets/desktop/detail_header.dart';
 
 /// Collapsing album-detail header shared by the album, local-album, and
 /// downloaded-album screens: full-bleed [background] (optionally blurred and
@@ -23,7 +33,8 @@ import 'package:mosix/utils/adaptive_layout.dart';
 /// Colours come from a scheme derived from [paletteSource] (see [CoverPalette])
 /// and are published to descendants through [HeaderPalette], so the header
 /// follows both the artwork and the app's light/dark mode instead of assuming a
-/// black backdrop with white text.
+/// black backdrop with white text. The Material desktop header scopes the same
+/// scheme to its artwork and details (see [desktopDetailHeaderSlivers]).
 class AlbumDetailHeader extends StatelessWidget {
   const AlbumDetailHeader({
     super.key,
@@ -43,7 +54,11 @@ class AlbumDetailHeader extends StatelessWidget {
     this.backgroundColor,
     this.immersive = false,
     this.squareArtwork = true,
+    this.moreMenu,
   });
+
+  /// Desktop only: page actions behind a "More" button in the toolbar.
+  final List<List<ContextMenuAction>> Function()? moreMenu;
 
   final String title;
   final double expandedHeight;
@@ -99,7 +114,8 @@ class AlbumDetailHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (context.isMornye && (coverBuilder != null || immersive)) {
+    if (isDesktopPlatform ||
+        (context.isMornye && (coverBuilder != null || immersive))) {
       final scheme = Theme.of(context).colorScheme;
       return HeaderPalette(
         scheme: scheme,
@@ -118,12 +134,19 @@ class AlbumDetailHeader extends StatelessWidget {
   /// Keep the toolbar at the collection scroll-view level so it stays pinned
   /// after the dynamically sized artwork and metadata have scrolled away.
   List<Widget> buildSlivers(BuildContext context) {
+    if (isDesktopPlatform) return _buildDesktopSlivers(context);
     if (!context.isMornye || (coverBuilder == null && !immersive)) {
       return [this];
     }
     final scheme = Theme.of(context).colorScheme;
     final edgeInset = detailHeaderEdgeInset(context);
-    final artworkSize = MediaQuery.sizeOf(context).width.clamp(0.0, 440.0);
+    final screenSize = MediaQuery.sizeOf(context);
+    // Landscape tablets are short: the artwork also yields to the height so
+    // the title and actions stay on the first screen.
+    final artworkSize = math.min(
+      screenSize.width.clamp(0.0, 440.0),
+      math.max(240.0, screenSize.height * 0.55),
+    );
     final details = _buildMornyeDetails(context);
     Widget toolbar({bool collapsed = true}) => SliverAppBar(
       pinned: true,
@@ -145,16 +168,16 @@ class AlbumDetailHeader extends StatelessWidget {
       ),
       leadingWidth: kToolbarHeight + edgeInset,
       leading: Padding(
-        padding: EdgeInsets.only(left: edgeInset),
+        padding: EdgeInsetsDirectional.only(start: edgeInset),
         child:
             leading ??
             HeaderCircleButton(
-              icon: CupertinoIcons.chevron_back,
+              icon: CupertinoIcons.back,
               tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               onPressed: () => Navigator.pop(context),
             ),
       ),
-      actionsPadding: EdgeInsets.only(right: edgeInset),
+      actionsPadding: EdgeInsetsDirectional.only(end: edgeInset),
       actions: appBarActions,
     );
     if (immersive) {
@@ -196,6 +219,7 @@ class AlbumDetailHeader extends StatelessWidget {
         ),
         SliverToBoxAdapter(
           child: Stack(
+            alignment: Alignment.topCenter,
             children: [
               Positioned.fill(
                 child: squareArtwork
@@ -224,6 +248,23 @@ class AlbumDetailHeader extends StatelessWidget {
       SliverToBoxAdapter(child: details),
     ];
   }
+
+  List<Widget> _buildDesktopSlivers(BuildContext context) =>
+      desktopDetailHeaderSlivers(
+        context,
+        title: title,
+        artwork: (context, size) =>
+            coverBuilder?.call(context, size) ?? background,
+        paletteSource: paletteSource,
+        subtitle: subtitle,
+        meta: meta,
+        actions: actions,
+        appBarActions: appBarActions,
+        moreMenu: moreMenu,
+        appBarTitle: appBarTitle,
+        leading: leading,
+        backgroundColor: backgroundColor,
+      );
 
   Widget _buildMornyeDetails(BuildContext context) => Padding(
     padding: EdgeInsets.fromLTRB(20, immersive ? 0 : 20, 20, 28),
@@ -282,14 +323,41 @@ class AlbumDetailHeader extends StatelessWidget {
     final plainArtworkHeader = context.isMornye && coverBuilder != null;
     // iOS does not add horizontal safe-area padding in portrait. Give toolbar
     // controls and header content an explicit inset so circular actions do not
-    // sit against the glass edge on either iPhone or iPad. Android retains its
-    // existing spacing.
+    // sit against the glass edge on either iPhone or iPad. Android uses a
+    // smaller inset for the same reason.
     final iosEdgeInset = detailHeaderEdgeInset(context);
     // Scrim and gradient are drawn from the palette surface instead of black,
     // so a light theme gets a light header with dark text and a dark theme
     // keeps the familiar dark treatment — both tinted by the artwork.
     final scrimColor = headerScheme.surface;
     final onHeader = headerScheme.onSurface;
+    final expressive = materialExpressiveEnabled(context);
+    final fallbackMotion = AppMotionSpec(tokens.motionFast, Curves.linear);
+    final titleSlide = AppMotion.spatial(context, fallbackMotion);
+    final titleFade = AppMotion.effects(context, fallbackMotion);
+    Widget toolbarTitle = AnimatedOpacity(
+      duration: titleFade.duration,
+      curve: titleFade.curve,
+      opacity: showTitleInAppBar ? 1.0 : 0.0,
+      child: Text(
+        appBarTitle ?? title,
+        style: TextStyle(
+          color: onHeader,
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+    if (expressive) {
+      toolbarTitle = AnimatedSlide(
+        duration: titleSlide.duration,
+        curve: titleSlide.curve,
+        offset: showTitleInAppBar ? Offset.zero : const Offset(0, 0.6),
+        child: toolbarTitle,
+      );
+    }
 
     return SliverAppBar(
       expandedHeight: expandedHeight,
@@ -297,26 +365,90 @@ class AlbumDetailHeader extends StatelessWidget {
       stretch: true,
       backgroundColor: backgroundColor ?? headerScheme.surface,
       surfaceTintColor: Colors.transparent,
-      title: AnimatedOpacity(
-        duration: tokens.motionFast,
-        opacity: showTitleInAppBar ? 1.0 : 0.0,
-        child: Text(
-          appBarTitle ?? title,
-          style: TextStyle(
-            color: onHeader,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
+      title: toolbarTitle,
       flexibleSpace: LayoutBuilder(
         builder: (context, constraints) {
           final collapseRatio =
               (constraints.maxHeight - kToolbarHeight) /
               (expandedHeight - kToolbarHeight);
           final showContent = collapseRatio > 0.3;
+          // Expressive headers shrink and fade the hero content with the
+          // scroll instead of hiding it at one threshold.
+          final contentProgress = Curves.easeOut.transform(
+            ((collapseRatio - 0.3) / 0.5).clamp(0.0, 1.0),
+          );
+          final content = Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (coverBuilder != null) ...[
+                Builder(
+                  builder: (context) {
+                    // Landscape headers are short: the cover also yields to
+                    // the height left below the toolbar once the title,
+                    // details and actions are placed, so it never rises
+                    // into the status bar or toolbar buttons.
+                    final toolbarBottom =
+                        MediaQuery.paddingOf(context).top + kToolbarHeight;
+                    final detailsHeight =
+                        40 +
+                        20 +
+                        58 +
+                        (subtitle == null ? 0 : 28) +
+                        (meta == null ? 0 : 34) +
+                        (actions == null ? 0 : 64);
+                    final coverSize = math.min(
+                      (constraints.maxWidth * 0.5).clamp(150.0, 210.0),
+                      math.max(
+                        96.0,
+                        expandedHeight - toolbarBottom - detailsHeight,
+                      ),
+                    );
+                    // Material uses the expressive extra-large corner.
+                    final coverRadius = context.isMornye
+                        ? tokens.radiusControl
+                        : 28.0;
+                    return Container(
+                      width: coverSize,
+                      height: coverSize,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          plainArtworkHeader ? tokens.radiusCover : coverRadius,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: headerScheme.shadow.withValues(alpha: 0.45),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(coverRadius),
+                        child: coverBuilder!(context, coverSize),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+              ],
+              Text(
+                title,
+                style: TextStyle(
+                  color: onHeader,
+                  fontSize: _titleFontSize(),
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (subtitle != null) ...[const SizedBox(height: 6), subtitle!],
+              if (meta != null) ...[const SizedBox(height: 12), meta!],
+              if (actions != null) ...[const SizedBox(height: 16), actions!],
+            ],
+          );
 
           return FlexibleSpaceBar(
             collapseMode: CollapseMode.pin,
@@ -357,76 +489,23 @@ class AlbumDetailHeader extends StatelessWidget {
                   left: 20 + iosEdgeInset,
                   right: 20 + iosEdgeInset,
                   bottom: 40,
-                  child: AnimatedOpacity(
-                    duration: tokens.motionFast,
-                    opacity: showContent ? 1.0 : 0.0,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (coverBuilder != null) ...[
-                          Builder(
-                            builder: (context) {
-                              final coverSize = (constraints.maxWidth * 0.5)
-                                  .clamp(150.0, 210.0)
-                                  .toDouble();
-                              return Container(
-                                width: coverSize,
-                                height: coverSize,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(
-                                    plainArtworkHeader
-                                        ? tokens.radiusCover
-                                        : tokens.radiusControl,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: headerScheme.shadow.withValues(
-                                        alpha: 0.45,
-                                      ),
-                                      blurRadius: 24,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                  ],
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(
-                                    tokens.radiusControl,
-                                  ),
-                                  child: coverBuilder!(context, coverSize),
-                                ),
-                              );
-                            },
+                  child: expressive
+                      ? IgnorePointer(
+                          ignoring: contentProgress == 0,
+                          child: Opacity(
+                            opacity: contentProgress,
+                            child: Transform.scale(
+                              scale: 0.9 + 0.1 * contentProgress,
+                              alignment: Alignment.bottomCenter,
+                              child: content,
+                            ),
                           ),
-                          const SizedBox(height: 20),
-                        ],
-                        Text(
-                          title,
-                          style: TextStyle(
-                            color: onHeader,
-                            fontSize: _titleFontSize(),
-                            fontWeight: FontWeight.bold,
-                            height: 1.2,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
+                        )
+                      : AnimatedOpacity(
+                          duration: tokens.motionFast,
+                          opacity: showContent ? 1.0 : 0.0,
+                          child: content,
                         ),
-                        if (subtitle != null) ...[
-                          const SizedBox(height: 6),
-                          subtitle!,
-                        ],
-                        if (meta != null) ...[
-                          const SizedBox(height: 12),
-                          meta!,
-                        ],
-                        if (actions != null) ...[
-                          const SizedBox(height: 16),
-                          actions!,
-                        ],
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -436,28 +515,43 @@ class AlbumDetailHeader extends StatelessWidget {
       ),
       leadingWidth: kToolbarHeight + iosEdgeInset,
       leading: Padding(
-        padding: EdgeInsets.only(left: iosEdgeInset),
+        padding: EdgeInsetsDirectional.only(start: iosEdgeInset),
         child:
             leading ??
-            IconButton.filledTonal(
-              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-              icon: Icon(
-                context.isMornye ? Icons.chevron_left : Icons.arrow_back,
-              ),
-              style: IconButton.styleFrom(
-                minimumSize: Size.square(tokens.minTouchTarget),
-                backgroundColor: headerScheme.surfaceContainerHigh.withValues(
-                  alpha: 0.75,
+            // Centered so the tight leading slot cannot stretch the circle.
+            Center(
+              child: AppIconButton.filledTonal(
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                icon: AppIcon(
+                  context.isMornye ? Icons.chevron_left : Icons.arrow_back,
                 ),
-                foregroundColor: headerScheme.onSurfaceVariant,
+                style: IconButton.styleFrom(
+                  minimumSize: Size.square(tokens.minTouchTarget),
+                  backgroundColor: headerScheme.surfaceContainerHigh.withValues(
+                    alpha: 0.75,
+                  ),
+                  foregroundColor: headerScheme.onSurfaceVariant,
+                ),
+                onPressed: () => Navigator.pop(context),
               ),
-              onPressed: () => Navigator.pop(context),
             ),
       ),
-      actionsPadding: EdgeInsets.only(right: iosEdgeInset),
+      actionsPadding: EdgeInsetsDirectional.only(end: iosEdgeInset),
       actions: appBarActions,
     );
   }
+}
+
+/// Marks header buttons grouped in one desktop capsule, where they drop their
+/// own glass circle.
+class HeaderActionGroup extends InheritedWidget {
+  const HeaderActionGroup({super.key, required super.child});
+
+  static bool of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<HeaderActionGroup>() != null;
+
+  @override
+  bool updateShouldNotify(HeaderActionGroup oldWidget) => false;
 }
 
 class _AlbumStretchArtwork extends StatelessWidget {
@@ -532,6 +626,7 @@ class AlbumPlayActions extends StatelessWidget {
     required this.onPlay,
     required this.onShuffle,
     this.isPlaying = false,
+    this.onAddToPlaylist,
   });
 
   final String playLabel;
@@ -540,10 +635,14 @@ class AlbumPlayActions extends StatelessWidget {
   final VoidCallback onShuffle;
   final bool isPlaying;
 
+  /// Desktop only: a round "+" after Play that adds the songs to a playlist.
+  final VoidCallback? onAddToPlaylist;
+
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     final scheme = HeaderPalette.of(context);
+    if (isDesktopPlatform) return _buildDesktop(context, scheme);
     if (context.isMornye) {
       return Row(
         children: [
@@ -567,35 +666,88 @@ class AlbumPlayActions extends StatelessWidget {
         ],
       );
     }
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return ExpressiveButtonGroup(
+      flexible: const {0},
+      spacing: tokens.gapMd,
+      slotWidth: tokens.minTouchTarget,
       children: [
-        Flexible(
-          child: ExpressiveButton(
-            onPressed: onPlay,
-            icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow, size: 20),
-            style: FilledButton.styleFrom(
-              backgroundColor: scheme.primary,
-              foregroundColor: scheme.onPrimary,
-              minimumSize: Size(0, tokens.minTouchTarget),
-              shape: const StadiumBorder(),
-            ),
-            child: Text(
-              playLabel,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+        ExpressiveButton(
+          onPressed: onPlay,
+          icon: AppIcon(isPlaying ? Icons.pause : Icons.play_arrow, size: 20),
+          style: FilledButton.styleFrom(
+            backgroundColor: scheme.primary,
+            foregroundColor: scheme.onPrimary,
+            minimumSize: Size(0, tokens.minTouchTarget),
+            shape: const StadiumBorder(),
           ),
+          child: Text(playLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
         ),
-        SizedBox(width: tokens.gapMd),
         ExpressiveIconButton(
           tooltip: shuffleTooltip,
           onPressed: onShuffle,
-          icon: const Icon(Icons.shuffle),
+          icon: const AppIcon(Icons.shuffle),
           size: tokens.minTouchTarget,
           backgroundColor: scheme.secondaryContainer.withValues(alpha: 0.8),
           foregroundColor: scheme.onSecondaryContainer,
         ),
+      ],
+    );
+  }
+
+  /// Shuffle, Play and "+" at their own widths along the artwork's bottom
+  /// edge: round gray buttons around the Play capsule in Mornye, a filled
+  /// Play button with tonal icon buttons in Material.
+  Widget _buildDesktop(BuildContext context, ColorScheme scheme) {
+    final addLabel = context.l10n.collectionAddToPlaylist;
+    if (context.isMornye) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 10,
+        children: [
+          HeaderCircleButton(
+            icon: CupertinoIcons.shuffle,
+            tooltip: shuffleTooltip,
+            tonal: true,
+            onPressed: onShuffle,
+          ),
+          _MornyeHeaderButton(
+            icon: isPlaying
+                ? CupertinoIcons.pause_fill
+                : CupertinoIcons.play_fill,
+            label: playLabel,
+            onPressed: onPlay,
+          ),
+          if (onAddToPlaylist != null)
+            HeaderCircleButton(
+              icon: CupertinoIcons.add,
+              tooltip: addLabel,
+              tonal: true,
+              onPressed: onAddToPlaylist,
+            ),
+        ],
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 8,
+      children: [
+        FilledButton.icon(
+          onPressed: onPlay,
+          icon: AppIcon(isPlaying ? Icons.pause : Icons.play_arrow, size: 20),
+          label: Text(playLabel),
+          style: FilledButton.styleFrom(minimumSize: const Size(112, 40)),
+        ),
+        IconButton.filledTonal(
+          tooltip: shuffleTooltip,
+          onPressed: onShuffle,
+          icon: const AppIcon(Icons.shuffle),
+        ),
+        if (onAddToPlaylist != null)
+          IconButton.filledTonal(
+            tooltip: addLabel,
+            onPressed: onAddToPlaylist,
+            icon: const AppIcon(Icons.playlist_add),
+          ),
       ],
     );
   }
@@ -631,7 +783,7 @@ class HeaderFilledButton extends StatelessWidget {
     }
     return ExpressiveButton(
       onPressed: onPressed,
-      icon: Icon(icon, size: 18),
+      icon: AppIcon(icon, size: 18),
       style: FilledButton.styleFrom(
         backgroundColor: scheme.primary,
         foregroundColor: scheme.onPrimary,
@@ -681,6 +833,23 @@ class HeaderCircleButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = context.tokens;
     final scheme = HeaderPalette.of(context);
+    // Desktop headers use pointer-sized controls.
+    final desktop = isDesktopPlatform;
+    final buttonSize =
+        this.buttonSize ?? (desktop ? (context.isMornye ? 36.0 : 40.0) : null);
+    final iconSize = desktop && this.iconSize == 22 ? 18.0 : this.iconSize;
+    if (context.isMornye && HeaderActionGroup.of(context)) {
+      return IconButton(
+        onPressed: onPressed,
+        tooltip: tooltip,
+        icon: AppIcon(mornyeIconFor(icon), size: iconSize),
+        style: IconButton.styleFrom(
+          minimumSize: Size.square(buttonSize ?? 36),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          foregroundColor: iconColor ?? scheme.onSurface,
+        ),
+      );
+    }
     if (context.isMornye) {
       if (tonal) {
         return Tooltip(
@@ -689,12 +858,13 @@ class HeaderCircleButton extends ConsumerWidget {
             dimension: buttonSize ?? 44,
             child: CupertinoButton(
               padding: EdgeInsets.zero,
+              minimumSize: Size.square(buttonSize ?? 44),
               borderRadius: BorderRadius.circular((buttonSize ?? 48) / 2),
               color: scheme.onSurface.withValues(
                 alpha: scheme.brightness == Brightness.dark ? 0.10 : 0.06,
               ),
               onPressed: onPressed,
-              child: Icon(
+              child: AppIcon(
                 mornyeIconFor(icon),
                 size: iconSize,
                 color: onPressed == null
@@ -709,9 +879,11 @@ class HeaderCircleButton extends ConsumerWidget {
       final button = IconButton(
         onPressed: onPressed,
         tooltip: tooltip,
-        icon: Icon(mornyeIconFor(icon), size: iconSize),
+        icon: AppIcon(mornyeIconFor(icon), size: iconSize),
         style: IconButton.styleFrom(
           minimumSize: Size.square(buttonSize ?? 44),
+          // Keep the glass circle at the button's size for the pointer.
+          tapTargetSize: desktop ? MaterialTapTargetSize.shrinkWrap : null,
           foregroundColor: iconColor ?? scheme.onSurface,
         ),
       );
@@ -734,7 +906,7 @@ class HeaderCircleButton extends ConsumerWidget {
     }
     return ExpressiveIconButton(
       onPressed: onPressed,
-      icon: Icon(icon, size: iconSize),
+      icon: AppIcon(icon, size: iconSize),
       tooltip: tooltip,
       size: buttonSize ?? tokens.minTouchTarget,
       backgroundColor: scheme.surfaceContainerHighest.withValues(alpha: 0.7),
@@ -759,17 +931,25 @@ class _MornyeHeaderButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = HeaderPalette.of(context);
+    // Desktop pills are the compact gray capsules of Apple Music.
+    final desktop = isDesktopPlatform;
+    final filled = prominent && !desktop;
     final foreground = onPressed == null
         ? scheme.onSurfaceVariant
-        : prominent
+        : filled
         ? scheme.onPrimary
         : scheme.primary;
     return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 50),
+      constraints: desktop
+          ? const BoxConstraints(minHeight: 36, maxHeight: 36, minWidth: 130)
+          : const BoxConstraints(minHeight: 50),
       child: CupertinoButton(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        borderRadius: BorderRadius.circular(28),
-        color: prominent
+        padding: desktop
+            ? const EdgeInsets.symmetric(horizontal: 18)
+            : const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        minimumSize: desktop ? const Size(130, 36) : null,
+        borderRadius: BorderRadius.circular(desktop ? 18 : 28),
+        color: filled
             ? scheme.primary
             : scheme.onSurface.withValues(
                 alpha: scheme.brightness == Brightness.dark ? 0.10 : 0.06,
@@ -779,15 +959,15 @@ class _MornyeHeaderButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 20, color: foreground),
-            const SizedBox(width: 8),
+            AppIcon(icon, size: desktop ? 16 : 20, color: foreground),
+            SizedBox(width: desktop ? 6 : 8),
             Flexible(
               child: Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 17,
+                  fontSize: desktop ? 15 : 17,
                   fontWeight: FontWeight.w600,
                   color: foreground,
                 ),
@@ -827,7 +1007,7 @@ class HeaderMetaRow extends StatelessWidget {
     }
 
     return Wrap(
-      alignment: WrapAlignment.center,
+      alignment: isDesktopPlatform ? WrapAlignment.start : WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
       runSpacing: 4,
       children: parts,
@@ -845,16 +1025,23 @@ class HeaderMetaItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = HeaderPalette.of(context);
+    final desktop = isDesktopPlatform;
     final textStyle = TextStyle(
-      color: context.isMornye ? scheme.onSurfaceVariant : scheme.onSurface,
-      fontSize: 13,
-      fontWeight: FontWeight.w500,
+      color: context.isMornye || desktop
+          ? scheme.onSurfaceVariant
+          : scheme.onSurface,
+      fontSize: desktop && context.isMornye ? 12 : 13,
+      fontWeight: desktop ? FontWeight.w600 : FontWeight.w500,
     );
     if (icon == null) return Text(label, style: textStyle);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 15, color: scheme.onSurface),
+        AppIcon(
+          icon,
+          size: 15,
+          color: desktop ? scheme.onSurfaceVariant : scheme.onSurface,
+        ),
         const SizedBox(width: 4),
         Text(label, style: textStyle),
       ],

@@ -3,53 +3,101 @@ import 'dart:io';
 import 'dart:ui' show ImageFilter;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/constants/app_info.dart';
-import 'package:mosix/screens/upgrade_intro_screen.dart';
-import 'package:mosix/services/upgrade_intro_service.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/providers/playback_notification_provider.dart';
-import 'package:mosix/providers/repo_provider.dart';
-import 'package:mosix/providers/runtime_profile_provider.dart';
-import 'package:mosix/providers/track_provider.dart';
-import 'package:mosix/providers/preview_player_provider.dart';
-import 'package:mosix/screens/home_tab.dart';
-import 'package:mosix/screens/repo_tab.dart';
-import 'package:mosix/screens/queue_tab.dart';
-import 'package:mosix/screens/settings/settings_tab.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/shell_navigation_service.dart';
-import 'package:mosix/services/share_intent_service.dart';
-import 'package:mosix/services/music_playback_deck.dart';
-import 'package:mosix/services/listening_statistics.dart';
-import 'package:mosix/services/discord_presence_service.dart';
-import 'package:mosix/services/notification_service.dart';
-import 'package:mosix/services/app_remote_config_service.dart';
-import 'package:mosix/services/update_checker.dart';
-import 'package:mosix/widgets/app_announcement_dialog.dart';
-import 'package:mosix/widgets/app_snack_bar.dart';
-import 'package:mosix/widgets/download_queue_feedback.dart';
-import 'package:mosix/widgets/update_dialog.dart';
-import 'package:mosix/widgets/animation_utils.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/mini_player.dart';
-import 'package:mosix/widgets/lazy_tab_view.dart';
-import 'package:mosix/widgets/expressive_navigation_bar.dart';
-import 'package:mosix/widgets/mornye_bottom_bar.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/selection_bottom_bar.dart';
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/services/saf_migration_prompt_store.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/providers/playback_notification_provider.dart';
+import 'package:mornye/providers/repo_provider.dart';
+import 'package:mornye/providers/runtime_profile_provider.dart';
+import 'package:mornye/providers/track_provider.dart';
+import 'package:mornye/providers/user_profile_provider.dart';
+import 'package:mornye/providers/preview_player_provider.dart';
+import 'package:mornye/screens/home_tab.dart';
+import 'package:mornye/screens/library_tracks_folder_screen.dart';
+import 'package:mornye/screens/mornye_library_screen.dart';
+import 'package:mornye/screens/repo_tab.dart';
+import 'package:mornye/screens/queue_tab.dart';
+import 'package:mornye/screens/settings/profile_settings_page.dart';
+import 'package:mornye/screens/settings/settings_tab.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/shell_navigation_service.dart';
+import 'package:mornye/services/share_intent_service.dart';
+import 'package:mornye/services/music_playback_deck.dart';
+import 'package:mornye/services/listening_statistics.dart';
+import 'package:mornye/services/discord_presence_service.dart';
+import 'package:mornye/services/notification_service.dart';
+import 'package:mornye/services/app_remote_config_service.dart';
+import 'package:mornye/services/update_checker.dart';
+import 'package:mornye/widgets/app_announcement_dialog.dart';
+import 'package:mornye/widgets/app_snack_bar.dart';
+import 'package:mornye/widgets/download_queue_feedback.dart';
+import 'package:mornye/widgets/update_dialog.dart';
+import 'package:mornye/widgets/animation_utils.dart';
+import 'package:mornye/widgets/nav_destination_icons.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/mini_player.dart';
+import 'package:mornye/widgets/lazy_tab_view.dart';
+import 'package:mornye/widgets/expressive_navigation_bar.dart';
+import 'package:mornye/widgets/mornye_bottom_bar.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/selection_bottom_bar.dart';
+import 'package:mornye/widgets/desktop/desktop_commands.dart';
+import 'package:mornye/widgets/desktop/desktop_inspector.dart';
+import 'package:mornye/widgets/desktop/desktop_navigation.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/saf_download_tree.dart';
+
+part 'main_shell_startup_prompts.dart';
 
 final _log = AppLogger('MainShell');
+
+/// The tab at [index] in a style's destination order.
+@visibleForTesting
+ShellTab shellTabAt(
+  int index, {
+  required bool mornye,
+  required bool showStore,
+}) {
+  if (index == 0) return ShellTab.home;
+  if (index == 1) return ShellTab.library;
+  if (showStore && index == 2) return ShellTab.repository;
+  if (mornye && index == (showStore ? 3 : 2)) return ShellTab.search;
+  return ShellTab.settings;
+}
+
+/// Where [tab] sits in a style's destination order, or null when that style
+/// has no such destination.
+@visibleForTesting
+int? shellIndexOfTab(
+  ShellTab tab, {
+  required bool mornye,
+  required bool showStore,
+  required bool desktop,
+}) => switch (tab) {
+  ShellTab.home => 0,
+  ShellTab.library => 1,
+  ShellTab.repository => showStore ? 2 : null,
+  // Material searches from Home.
+  ShellTab.search => mornye ? (showStore ? 3 : 2) : 0,
+  // Mornye phones open Settings as a page, not a destination.
+  ShellTab.settings =>
+    !mornye
+        ? (showStore ? 3 : 2)
+        : desktop
+        ? (showStore ? 4 : 3)
+        : null,
+};
 
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
@@ -98,9 +146,52 @@ class _MainShellState extends ConsumerState<MainShell>
   late final _PreviewStopNavigatorObserver _repoPreviewStopObserver;
   late final _PreviewStopNavigatorObserver _searchPreviewStopObserver;
 
+  /// Desktop: whether Library shows its root page, so the Mornye sidebar
+  /// returns to the Library root's link.
+  late final _libraryDepthObserver = _PageDepthObserver(
+    onRoot: () => desktopSidebarLink.value = null,
+  );
+
+  /// The style the current tab index was chosen under.
+  bool? _indexStyleMornye;
+
+  /// The two styles order their destinations differently, so switching
+  /// styles keeps the same tab rather than the same index (Settings would
+  /// otherwise become Mornye's Search).
+  void _keepTabAcrossStyles() {
+    final mornye = context.isMornye;
+    final previous = _indexStyleMornye;
+    _indexStyleMornye = mornye;
+    if (previous == null || previous == mornye) return;
+    final showStore = ref.read(
+      settingsProvider.select((s) => s.showExtensionStore),
+    );
+    final tab = shellTabAt(
+      _currentIndex,
+      mornye: previous,
+      showStore: showStore,
+    );
+    final index =
+        shellIndexOfTab(
+          tab,
+          mornye: mornye,
+          showStore: showStore,
+          desktop: isDesktopPlatform,
+        ) ??
+        0;
+    if (index == _currentIndex) return;
+    _currentIndex = index;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _pageController.hasClients) {
+        _pageController.jumpToPage(_currentIndex);
+      }
+    });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _keepTabAcrossStyles();
     final l10n = context.l10n;
     NotificationService().updateStrings(l10n);
     final playback = ref.read(musicPlayerRuntimeProvider);
@@ -151,6 +242,7 @@ class _MainShellState extends ConsumerState<MainShell>
     ShellNavigationService.registerTabSelectionHandler(
       owner: this,
       handler: _onShellTabRequested,
+      libraryLinkHandler: _requestDesktopLibraryLink,
     );
     ShellNavigationService.syncState(
       currentTabIndex: _currentIndex,
@@ -163,8 +255,6 @@ class _MainShellState extends ConsumerState<MainShell>
       _initialSafRepairComplete = true;
       if (!mounted) return;
       unawaited(ref.read(musicPlayerRuntimeProvider).restoreSession());
-      await _checkUpgradeIntro();
-      if (!mounted) return;
       _setupShareListener();
       await _checkSafMigration();
       final updateDialogShown = await _checkForUpdates();
@@ -204,115 +294,6 @@ class _MainShellState extends ConsumerState<MainShell>
       unawaited(
         ref.read(musicPlayerRuntimeProvider).handler?.persistCurrentSession(),
       );
-    }
-  }
-
-  Future<void> _repairSafAccessIfNeeded({bool knownLost = false}) async {
-    if (!Platform.isAndroid || _safRepairDialogVisible) return;
-
-    var accessLost = knownLost;
-    if (!accessLost) {
-      final settings = ref.read(settingsProvider);
-      if (settings.storageMode != 'saf' || settings.downloadTreeUri.isEmpty) {
-        return;
-      }
-      accessLost = !await PlatformBridge.isSafTreeAccessible(
-        settings.downloadTreeUri,
-      );
-    }
-    if (!accessLost || !mounted) return;
-
-    _safRepairDialogVisible = true;
-    try {
-      await showAppDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) {
-          var isPickingFolder = false;
-          return StatefulBuilder(
-            builder: (context, setDialogState) {
-              return PopScope(
-                canPop: false,
-                child: AppAlertDialog(
-                  icon: Icon(
-                    Icons.folder_off_outlined,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                  title: Text(context.l10n.downloadFolderAccessLostTitle),
-                  content: Text(context.l10n.downloadFolderAccessLostSubtitle),
-                  actions: [
-                    AppDialogAction(
-                      onPressed: isPickingFolder
-                          ? null
-                          : () {
-                              final notifier = ref.read(
-                                settingsProvider.notifier,
-                              );
-                              notifier.setStorageMode('app');
-                              notifier.setDownloadTreeUri('');
-                              notifier.setDownloadDirectory('');
-                              Navigator.of(dialogContext).pop();
-                            },
-                      child: Text(context.l10n.storageAutomaticFolder),
-                    ),
-                    AppDialogAction(
-                      filled: true,
-                      onPressed: isPickingFolder
-                          ? null
-                          : () async {
-                              setDialogState(() => isPickingFolder = true);
-                              try {
-                                final result =
-                                    await PlatformBridge.pickSafTree();
-                                if (result == null) return;
-                                final treeUri =
-                                    result['tree_uri'] as String? ?? '';
-                                final displayName =
-                                    result['display_name'] as String? ?? '';
-                                if (treeUri.isEmpty) return;
-
-                                final notifier = ref.read(
-                                  settingsProvider.notifier,
-                                );
-                                notifier.setStorageMode('saf');
-                                notifier.setDownloadTreeUri(
-                                  treeUri,
-                                  displayName: displayName.isNotEmpty
-                                      ? displayName
-                                      : treeUri,
-                                );
-                                if (dialogContext.mounted) {
-                                  Navigator.of(dialogContext).pop();
-                                }
-                              } catch (e) {
-                                _log.w(
-                                  'Failed to repair SAF access from startup: $e',
-                                );
-                                if (context.mounted) {
-                                  showCannotOpenFileSnackBar(context, e);
-                                }
-                              } finally {
-                                if (dialogContext.mounted) {
-                                  setDialogState(() => isPickingFolder = false);
-                                }
-                              }
-                            },
-                      child: isPickingFolder
-                          ? const SizedBox.square(
-                              dimension: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(context.l10n.downloadFolderReselect),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      );
-    } finally {
-      _safRepairDialogVisible = false;
     }
   }
 
@@ -380,159 +361,6 @@ class _MainShellState extends ConsumerState<MainShell>
     }
   }
 
-  Future<void> _checkUpgradeIntro() async {
-    try {
-      final preferences = await SharedPreferences.getInstance();
-      if (!mounted) return;
-      final existingInstallation = !ref
-          .read(initialSettingsProvider)
-          .isFirstLaunch;
-      if (UpgradeIntroService.shouldShow(
-        preferences,
-        version: AppInfo.version,
-        existingInstallation: existingInstallation,
-      )) {
-        await Navigator.of(context, rootNavigator: true).push<void>(
-          MaterialPageRoute(
-            builder: (_) => const UpgradeIntroScreen(),
-            fullscreenDialog: true,
-          ),
-        );
-        await UpgradeIntroService.markSeen(preferences);
-      } else if (!existingInstallation) {
-        // Fresh installs already have their own setup tutorial.
-        await UpgradeIntroService.markSeen(preferences);
-      }
-    } catch (error) {
-      _log.w('Could not present upgrade introduction: $error');
-    }
-  }
-
-  Future<bool> _checkForUpdates() async {
-    if (_hasCheckedUpdate) return false;
-    _hasCheckedUpdate = true;
-
-    final settings = ref.read(settingsProvider);
-
-    // Update checks and prompts are entirely controlled by this setting.
-    if (!settings.checkForUpdates) return false;
-
-    final updateInfo = await UpdateChecker().checkForUpdate(
-      channel: settings.updateChannel,
-    );
-    if (updateInfo == null || !mounted) return false;
-
-    showUpdateDialog(
-      context,
-      updateInfo: updateInfo,
-      onDisableUpdates: () {
-        ref.read(settingsProvider.notifier).setCheckForUpdates(false);
-      },
-    );
-    return true;
-  }
-
-  Future<void> _checkAppAnnouncement() async {
-    if (_hasCheckedAppAnnouncement) return;
-    _hasCheckedAppAnnouncement = true;
-
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final remoteConfigService = AppRemoteConfigService();
-    final announcement = await remoteConfigService.fetchActiveAnnouncement(
-      locale: locale,
-    );
-    if (announcement == null || !mounted) return;
-
-    showAppAnnouncementDialog(
-      context,
-      announcement: announcement,
-      onDismiss: () {
-        remoteConfigService.markAnnouncementDismissed(announcement.id);
-      },
-    );
-  }
-
-  static const _safMigrationShownKey = 'saf_migration_prompt_shown';
-
-  Future<void> _checkSafMigration() async {
-    if (!Platform.isAndroid) return;
-
-    final settings = ref.read(settingsProvider);
-    if (settings.storageMode == 'saf') return;
-    if (settings.downloadDirectory.isEmpty) return;
-
-    final deviceInfo = DeviceInfoPlugin();
-    final androidInfo = await deviceInfo.androidInfo;
-    if (androidInfo.version.sdkInt < 29) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool(_safMigrationShownKey) == true) return;
-    await prefs.setBool(_safMigrationShownKey, true);
-
-    if (!mounted) return;
-
-    final colorScheme = Theme.of(context).colorScheme;
-
-    showAppDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AppAlertDialog(
-        icon: Icon(
-          Icons.folder_special_outlined,
-          size: 32,
-          color: colorScheme.primary,
-        ),
-        title: Text(context.l10n.safMigrationTitle),
-        content: ConstrainedBox(
-          // Keeps the text column readable on tablets/landscape.
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(context.l10n.safMigrationMessage1),
-              const SizedBox(height: 12),
-              Text(context.l10n.safMigrationMessage2),
-            ],
-          ),
-        ),
-        actions: [
-          AppDialogAction(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(context.l10n.updateLater),
-          ),
-          AppDialogAction(
-            filled: true,
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final result = await PlatformBridge.pickSafTree();
-              if (result != null) {
-                final treeUri = result['tree_uri'] as String? ?? '';
-                final displayName = result['display_name'] as String? ?? '';
-                if (treeUri.isNotEmpty) {
-                  ref
-                      .read(settingsProvider.notifier)
-                      .setDownloadTreeUri(
-                        treeUri,
-                        displayName: displayName.isNotEmpty
-                            ? displayName
-                            : treeUri,
-                      );
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(context.l10n.safMigrationSuccess)),
-                    );
-                  }
-                }
-              }
-            },
-            child: Text(context.l10n.setupSelectFolder),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -543,6 +371,7 @@ class _MainShellState extends ConsumerState<MainShell>
     _tabJumpOpacity.dispose();
     _tabJumpTransitionController.dispose();
     _mornyeChrome.dispose();
+    _libraryDepthObserver.dispose();
     super.dispose();
   }
 
@@ -559,8 +388,17 @@ class _MainShellState extends ConsumerState<MainShell>
     if (!context.isMornye) ref.read(trackProvider.notifier).clear();
   }
 
+  /// Mornye desktop windows show Settings as a destination after Search, in
+  /// the content pane. Phones and tablets open it as a page instead.
+  bool get _mornyeSettingsTab => context.isMornye && isDesktopPlatform;
+
+  int _settingsIndex(bool showStore) =>
+      context.isMornye ? (showStore ? 4 : 3) : (showStore ? 3 : 2);
+
   void _onShellTabRequested(ShellTab tab) {
-    if (tab == ShellTab.settings && context.isMornye) {
+    // Picking a destination returns from Now Playing to the content pane.
+    if (isDesktopPlatform) desktopNowPlayingOpen.value = false;
+    if (tab == ShellTab.settings && context.isMornye && !_mornyeSettingsTab) {
       unawaited(_openProfileSettings());
       return;
     }
@@ -572,7 +410,7 @@ class _MainShellState extends ConsumerState<MainShell>
       ShellTab.search => context.isMornye ? (showStore ? 3 : 2) : 0,
       ShellTab.library => 1,
       ShellTab.repository => showStore ? 2 : null,
-      ShellTab.settings => showStore ? 3 : 2,
+      ShellTab.settings => _settingsIndex(showStore),
     };
     if (index != null) _onNavTap(index, resetHome: tab != ShellTab.search);
   }
@@ -747,6 +585,197 @@ class _MainShellState extends ConsumerState<MainShell>
     }
   }
 
+  ShellTab _tabForIndex(int index, bool showStore) {
+    if (index == 0) return ShellTab.home;
+    if (index == 1) return ShellTab.library;
+    if (showStore && index == 2) return ShellTab.repository;
+    if (_mornyeSettingsTab && index == _settingsIndex(showStore)) {
+      return ShellTab.settings;
+    }
+    return context.isMornye ? ShellTab.search : ShellTab.settings;
+  }
+
+  List<DesktopDestination> _desktopDestinations({
+    required bool showStore,
+    required int queueCount,
+    required int repoUpdatesCount,
+  }) {
+    final l10n = context.l10n;
+    final mornye = context.isMornye;
+    return [
+      for (final tab in desktopDestinationTabs(
+        mornye: mornye,
+        showStore: showStore,
+      ))
+        switch (tab) {
+          ShellTab.home => DesktopDestination(
+            tab: tab,
+            icon: mornye ? CupertinoIcons.house : Icons.home_outlined,
+            selectedIcon: mornye ? CupertinoIcons.house_fill : Icons.home,
+            label: l10n.navHome,
+          ),
+          ShellTab.library => DesktopDestination(
+            tab: tab,
+            icon: mornye
+                ? CupertinoIcons.square_stack
+                : Icons.library_music_outlined,
+            selectedIcon: mornye
+                ? CupertinoIcons.square_stack_fill
+                : Icons.library_music,
+            label: l10n.navLibrary,
+            badgeCount: queueCount,
+          ),
+          ShellTab.repository => DesktopDestination(
+            tab: tab,
+            icon: mornye
+                ? CupertinoIcons.square_grid_2x2
+                : Icons.extension_outlined,
+            selectedIcon: mornye
+                ? CupertinoIcons.square_grid_2x2_fill
+                : Icons.extension,
+            label: l10n.navStore,
+            badgeCount: repoUpdatesCount,
+          ),
+          ShellTab.search => DesktopDestination(
+            tab: tab,
+            icon: CupertinoIcons.search,
+            selectedIcon: CupertinoIcons.search,
+            label: l10n.mornyeSearch,
+          ),
+          ShellTab.settings => DesktopDestination(
+            tab: tab,
+            icon: mornye ? CupertinoIcons.gear_alt : Icons.settings_outlined,
+            selectedIcon: mornye
+                ? CupertinoIcons.gear_alt_fill
+                : Icons.settings,
+            label: l10n.navSettings,
+          ),
+        },
+    ];
+  }
+
+  /// The Library pages under the Mornye desktop sidebar's Library heading,
+  /// as in Music. Recently Added is the Library root.
+  List<DesktopSidebarLink> _desktopLibraryLinks({required int queueCount}) {
+    final l10n = context.l10n;
+    return [
+      DesktopSidebarLink(
+        id: 'recent',
+        icon: CupertinoIcons.clock,
+        label: l10n.libraryRecentlyAdded,
+      ),
+      DesktopSidebarLink(
+        id: 'artists',
+        icon: CupertinoIcons.music_mic,
+        label: l10n.searchArtists,
+      ),
+      DesktopSidebarLink(
+        id: 'albums',
+        icon: CupertinoIcons.square_stack,
+        label: l10n.searchAlbums,
+      ),
+      DesktopSidebarLink(
+        id: 'songs',
+        icon: CupertinoIcons.music_note,
+        label: l10n.searchSongs,
+      ),
+      DesktopSidebarLink(
+        id: 'downloads',
+        icon: CupertinoIcons.arrow_down_circle,
+        label: l10n.libraryDownloads,
+        badgeCount: queueCount,
+      ),
+    ];
+  }
+
+  /// The page a Mornye desktop sidebar link opens in the Library tab, or
+  /// null for the Library root.
+  Widget? _desktopLibraryPage(String id) {
+    const playlistPrefix = 'playlist:';
+    if (id.startsWith(playlistPrefix)) {
+      return LibraryTracksFolderScreen(
+        mode: LibraryTracksFolderMode.playlist,
+        playlistId: id.substring(playlistPrefix.length),
+      );
+    }
+    // Only the Library root links to sections from its own page.
+    return switch (id) {
+      'artists' => Scaffold(
+        body: MornyeLibraryScreen(
+          page: MornyeLibraryPage.artists,
+          onOpenSection: (_) {},
+        ),
+      ),
+      'albums' => Scaffold(
+        body: MornyeLibraryScreen(
+          page: MornyeLibraryPage.albums,
+          onOpenSection: (_) {},
+        ),
+      ),
+      'songs' => const Scaffold(body: QueueTab(librarySection: 'all')),
+      'downloads' => const Scaffold(
+        body: QueueTab(librarySection: 'downloads'),
+      ),
+      DesktopSidebarLink.allPlaylistsId => const Scaffold(
+        body: QueueTab(librarySection: 'playlists'),
+      ),
+      _ => null,
+    };
+  }
+
+  /// Shows a Library page or playlist picked in the Mornye desktop sidebar
+  /// in the Library tab, in place of the page it showed.
+  void _openDesktopLibraryLink(String id) {
+    _onShellTabRequested(ShellTab.library);
+    final page = _desktopLibraryPage(id);
+    // The Library navigator mounts with the tab on its first visit.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final navigator = _libraryTabNavigatorKey.currentState;
+      if (!mounted || navigator == null) return;
+      navigator.popUntil((route) => route.isFirst);
+      if (page != null) {
+        unawaited(
+          navigator.push(MaterialPageRoute<void>(builder: (_) => page)),
+        );
+      }
+      desktopSidebarLink.value = page == null ? null : id;
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  /// Only the Mornye desktop sidebar has Library links; Material keeps a
+  /// plain Library tab request.
+  bool _requestDesktopLibraryLink(String id) {
+    if (!mounted || !isDesktopPlatform || !context.isMornye) return false;
+    _openDesktopLibraryLink(id);
+    return true;
+  }
+
+  /// Opens the profile from the Mornye desktop sidebar's account row: in
+  /// the Settings detail pane, or as a page when Settings shows only its
+  /// list.
+  void _openDesktopProfile() {
+    final profile = ref.read(userProfileProvider).value;
+    _onShellTabRequested(ShellTab.settings);
+    if (profile == null) return;
+    // Settings registers its detail pane once it has built.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final navigator =
+          ShellNavigationService.activeBackNavigator() ?? Navigator.of(context);
+      unawaited(
+        navigator.push(
+          MaterialPageRoute<void>(
+            builder: (_) => MornyeSettingsTheme(
+              child: ProfileSettingsPage(profile: profile),
+            ),
+          ),
+        ),
+      );
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
   NavigatorState? _navigatorForTab(int index, bool showStore) {
     if (index == 0) return _homeTabNavigatorKey.currentState;
     if (index == 1) return _libraryTabNavigatorKey.currentState;
@@ -813,12 +842,12 @@ class _MainShellState extends ConsumerState<MainShell>
       _TabNavigator(
         key: const ValueKey('tab-library'),
         navigatorKey: _libraryTabNavigatorKey,
-        observers: [_libraryPreviewStopObserver],
+        observers: [
+          _libraryPreviewStopObserver,
+          if (isDesktopPlatform) _libraryDepthObserver,
+        ],
         heroAnimationsEnabled: heroAnimationsEnabled,
-        child: _LibraryTabRoot(
-          parentPageController: _pageController,
-          isTabActive: _currentIndex == 1,
-        ),
+        child: _LibraryTabRoot(isTabActive: _currentIndex == 1),
       ),
       if (showStore)
         _TabNavigator(
@@ -837,15 +866,16 @@ class _MainShellState extends ConsumerState<MainShell>
           heroAnimationsEnabled: heroAnimationsEnabled,
           child: const HomeTab(mode: HomeTabMode.search),
         ),
+      if (_mornyeSettingsTab) const SettingsTab(key: ValueKey('tab-settings')),
     ];
 
     final l10n = context.l10n;
     final destinations = <NavigationDestination>[
       NavigationDestination(
-        icon: Icon(
+        icon: AppIcon(
           context.isMornye ? CupertinoIcons.house_fill : Icons.home_outlined,
         ),
-        selectedIcon: BouncingIcon(child: const Icon(Icons.home)),
+        selectedIcon: BouncingIcon(child: const AppIcon(Icons.home)),
         label: l10n.navHome,
       ),
       NavigationDestination(
@@ -859,7 +889,7 @@ class _MainShellState extends ConsumerState<MainShell>
                 child: Badge(
                   isLabelVisible: queueState > 0,
                   label: Text('$queueState'),
-                  child: const Icon(Icons.library_music_outlined),
+                  child: const AppIcon(Icons.library_music_outlined),
                 ),
               ),
         selectedIcon: SlidingIcon(
@@ -868,7 +898,7 @@ class _MainShellState extends ConsumerState<MainShell>
             child: Badge(
               isLabelVisible: queueState > 0,
               label: Text('$queueState'),
-              child: const Icon(Icons.library_music),
+              child: const AppIcon(Icons.library_music),
             ),
           ),
         ),
@@ -886,7 +916,7 @@ class _MainShellState extends ConsumerState<MainShell>
                   child: Badge(
                     isLabelVisible: repoUpdatesCount > 0,
                     label: Text('$repoUpdatesCount'),
-                    child: const Icon(Icons.extension_outlined),
+                    child: const AppIcon(Icons.extension_outlined),
                   ),
                 ),
           selectedIcon: BouncingIcon(
@@ -895,7 +925,7 @@ class _MainShellState extends ConsumerState<MainShell>
               child: Badge(
                 isLabelVisible: repoUpdatesCount > 0,
                 label: Text('$repoUpdatesCount'),
-                child: const Icon(Icons.extension),
+                child: const AppIcon(Icons.extension),
               ),
             ),
           ),
@@ -903,8 +933,8 @@ class _MainShellState extends ConsumerState<MainShell>
         ),
       if (!context.isMornye)
         NavigationDestination(
-          icon: const Icon(Icons.settings_outlined),
-          selectedIcon: SpinIcon(child: const Icon(Icons.settings)),
+          icon: const AppIcon(Icons.settings_outlined),
+          selectedIcon: SpinIcon(child: const AppIcon(Icons.settings)),
           label: l10n.navSettings,
         ),
       if (context.isMornye)
@@ -929,11 +959,17 @@ class _MainShellState extends ConsumerState<MainShell>
 
     final screenSize = MediaQuery.sizeOf(context);
     final isTablet = screenSize.shortestSide >= 600;
-    // Tablets remain touch-first in both orientations. Reserving the rail for
-    // desktop-width windows keeps all primary destinations at the reachable
-    // bottom edge on iPad and large Android tablets.
-    final useNavigationRail = useNavigationRailForWidth(screenSize.width);
+    // Material follows its expanded window class: landscape tablets get the
+    // rail, portrait tablets keep the bottom bar. Mornye keeps a bottom tab
+    // bar on tablets, compact and centered once the window is expanded, and
+    // reserves the rail for desktop-width windows.
+    final useNavigationRail = context.isMornye
+        ? useNavigationRailForWidth(screenSize.width)
+        : useMaterialNavigationRailForWidth(screenSize.width);
+    final compactMornyeChrome =
+        context.isMornye && screenSize.width >= expandedLayoutBreakpoint;
     final canMinimizeChrome =
+        !isDesktopPlatform &&
         context.isMornye &&
         !useNavigationRail &&
         MediaQuery.viewInsetsOf(context).bottom == 0 &&
@@ -988,6 +1024,35 @@ class _MainShellState extends ConsumerState<MainShell>
             ),
     );
 
+    if (isDesktopPlatform) {
+      // Desktop windows: a rail (Material) or source-list sidebar (Mornye)
+      // with a persistent player; no bottom tabs or touch gestures.
+      final mornye = context.isMornye;
+      final selectedTab = _tabForIndex(selectedDestination, showStore);
+      final destinations = _desktopDestinations(
+        showStore: showStore,
+        // Mornye shows the queue on its Downloads link instead.
+        queueCount: mornye ? 0 : queueState,
+        repoUpdatesCount: repoUpdatesCount,
+      );
+      return DownloadQueueFeedback(
+        child: Scaffold(
+          body: DesktopShellLayout(
+            destinations: destinations,
+            selected: selectedTab,
+            onSelected: _onShellTabRequested,
+            libraryLinks: mornye
+                ? _desktopLibraryLinks(queueCount: queueState)
+                : const [],
+            onOpenLibraryLink: mornye ? _openDesktopLibraryLink : null,
+            onOpenProfile: mornye ? _openDesktopProfile : null,
+            // The selection bar floats over the pages, not the sidebar.
+            body: SelectionOverlayHost(child: pageView),
+          ),
+        ),
+      );
+    }
+
     final shell = SelectionOverlayHost(
       child: BackButtonListener(
         onBackButtonPressed: () async {
@@ -1004,41 +1069,36 @@ class _MainShellState extends ConsumerState<MainShell>
                     SafeArea(
                       right: false,
                       bottom: false,
-                      // The rail needs ~300dp of height for four labeled
-                      // destinations; on short viewports (landscape phone with
-                      // the mini player showing) it must scroll, not overflow.
-                      child: LayoutBuilder(
-                        builder: (context, constraints) =>
-                            SingleChildScrollView(
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  minHeight: constraints.maxHeight,
-                                ),
-                                child: IntrinsicHeight(
-                                  child: NavigationRail(
-                                    selectedIndex: selectedDestination,
-                                    onDestinationSelected: _onNavTap,
-                                    labelType: NavigationRailLabelType.all,
-                                    backgroundColor: Theme.of(
-                                      context,
-                                    ).colorScheme.surfaceContainer,
-                                    destinations: [
-                                      for (final destination in destinations)
-                                        NavigationRailDestination(
-                                          icon: destination.icon,
-                                          selectedIcon:
-                                              destination.selectedIcon,
-                                          label: Text(destination.label),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
+                      child: ExpressiveNavigationRail(
+                        selectedIndex: selectedDestination,
+                        onDestinationSelected: _onNavTap,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainer,
+                        destinations: destinations,
                       ),
                     ),
                     const VerticalDivider(width: 1),
-                    Expanded(child: pageView),
+                    // Width-based layout (centered columns, grids) measures
+                    // the space beside the rail rather than the whole screen.
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final mediaQuery = MediaQuery.of(context);
+                          return MediaQuery(
+                            data: mediaQuery
+                                .copyWith(
+                                  size: Size(
+                                    constraints.maxWidth,
+                                    mediaQuery.size.height,
+                                  ),
+                                )
+                                .removePadding(removeLeft: true),
+                            child: pageView,
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 )
               : pageView,
@@ -1065,20 +1125,34 @@ class _MainShellState extends ConsumerState<MainShell>
                   child: SafeArea(
                     top: false,
                     minimum: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                    child: useNavigationRail
-                        ? const MiniPlayer()
-                        : ValueListenableBuilder<bool>(
-                            valueListenable: _mornyeChrome,
-                            builder: (context, collapsed, _) => MornyeBottomBar(
-                              collapsed: canMinimizeChrome && collapsed,
-                              destinations: destinations,
-                              selectedIndex: selectedDestination,
-                              onSelected: _onNavTap,
-                              onHome: () => _onNavTap(0),
-                              onSearch: ShellNavigationService.requestSearch,
-                              blurEnabled: ref.watch(mornyeBlurEnabledProvider),
-                            ),
-                          ),
+                    // iPadOS-style chrome: one compact, centered pill rather
+                    // than a bar spread across a landscape tablet.
+                    child: Center(
+                      heightFactor: 1,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: compactMornyeChrome ? 600 : double.infinity,
+                        ),
+                        child: useNavigationRail
+                            ? const MiniPlayer()
+                            : ValueListenableBuilder<bool>(
+                                valueListenable: _mornyeChrome,
+                                builder: (context, collapsed, _) =>
+                                    MornyeBottomBar(
+                                      collapsed: canMinimizeChrome && collapsed,
+                                      destinations: destinations,
+                                      selectedIndex: selectedDestination,
+                                      onSelected: _onNavTap,
+                                      onHome: () => _onNavTap(0),
+                                      onSearch:
+                                          ShellNavigationService.requestSearch,
+                                      blurEnabled: ref.watch(
+                                        mornyeBlurEnabledProvider,
+                                      ),
+                                    ),
+                              ),
+                      ),
+                    ),
                   ),
                 );
               }
@@ -1086,27 +1160,17 @@ class _MainShellState extends ConsumerState<MainShell>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const MiniPlayer(),
+                  // The bar's container fill separates it; no divider, so
+                  // the mini player and the bar read as one surface.
                   if (!useNavigationRail)
-                    DecoratedBox(
-                      position: DecorationPosition.foreground,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          top: BorderSide(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.outlineVariant.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ),
-                      child: ExpressiveNavigationBar(
-                        selectedIndex: _currentIndex.clamp(0, maxIndex),
-                        onDestinationSelected: _onNavTap,
-                        isTablet: isTablet,
-                        backgroundColor: settingsGroupColor(
-                          context,
-                        ).withValues(alpha: 0.72),
-                        destinations: destinations,
-                      ),
+                    ExpressiveNavigationBar(
+                      selectedIndex: _currentIndex.clamp(0, maxIndex),
+                      onDestinationSelected: _onNavTap,
+                      isTablet: isTablet,
+                      backgroundColor: settingsGroupColor(
+                        context,
+                      ).withValues(alpha: 0.72),
+                      destinations: destinations,
                     ),
                 ],
               );
@@ -1161,6 +1225,7 @@ class _TabNavigatorState extends State<_TabNavigator> {
   // Hero widgets on routes pushed inside a tab never fly.
   final HeroController _heroController =
       MaterialApp.createMaterialHeroController();
+  final _nowPlayingCloser = DesktopNowPlayingCloser();
 
   @override
   void dispose() {
@@ -1176,6 +1241,7 @@ class _TabNavigatorState extends State<_TabNavigator> {
       observers: [
         _chromeObserver,
         if (widget.heroAnimationsEnabled) _heroController,
+        if (isDesktopPlatform) _nowPlayingCloser,
         ...widget.observers,
       ],
       onGenerateInitialRoutes: (_, _) => [
@@ -1205,26 +1271,64 @@ class _PreviewStopNavigatorObserver extends NavigatorObserver {
   }
 }
 
+/// Counts the pages in a tab navigator for the desktop shell. Navigators
+/// push their first page while building, so [depth] and [onRoot] follow
+/// after the frame rather than marking the shell dirty mid-build.
+class _PageDepthObserver extends NavigatorObserver {
+  _PageDepthObserver({this.onRoot});
+
+  final VoidCallback? onRoot;
+  final depth = ValueNotifier<int>(0);
+  int _pages = 0;
+  bool _scheduled = false;
+  bool _disposed = false;
+
+  void _change(int delta) {
+    _pages += delta;
+    if (_scheduled) return;
+    _scheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scheduled = false;
+      if (_disposed) return;
+      depth.value = _pages;
+      if (_pages <= 1) onRoot?.call();
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  static int _pageCount(Route<dynamic>? route) =>
+      route is PageRoute<dynamic> ? 1 : 0;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _change(_pageCount(route));
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _change(-_pageCount(route));
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _change(-_pageCount(route));
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
+      _change(_pageCount(newRoute) - _pageCount(oldRoute));
+
+  void dispose() {
+    _disposed = true;
+    depth.dispose();
+  }
+}
+
 class _LibraryTabRoot extends ConsumerWidget {
-  final PageController parentPageController;
   final bool isTabActive;
 
-  const _LibraryTabRoot({
-    required this.parentPageController,
-    required this.isTabActive,
-  });
+  const _LibraryTabRoot({required this.isTabActive});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final showStore = ref.watch(
-      settingsProvider.select((s) => s.showExtensionStore),
-    );
-    return QueueTab(
-      isTabActive: isTabActive,
-      parentPageController: parentPageController,
-      parentPageIndex: 1,
-      nextPageIndex: showStore ? 2 : 3,
-    );
+    return QueueTab(isTabActive: isTabActive);
   }
 }
 
@@ -1246,130 +1350,5 @@ class _KeepAliveTabPageState extends State<_KeepAliveTabPage>
   Widget build(BuildContext context) {
     super.build(context);
     return widget.child;
-  }
-}
-
-class BouncingIcon extends StatefulWidget {
-  final Widget child;
-  const BouncingIcon({super.key, required this.child});
-
-  @override
-  State<BouncingIcon> createState() => _BouncingIconState();
-}
-
-class _BouncingIconState extends State<BouncingIcon>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 0.1,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ScaleTransition(scale: _scaleAnimation, child: widget.child);
-  }
-}
-
-class SlidingIcon extends StatefulWidget {
-  final Widget child;
-  const SlidingIcon({super.key, required this.child});
-
-  @override
-  State<SlidingIcon> createState() => _SlidingIconState();
-}
-
-class _SlidingIconState extends State<SlidingIcon>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<Offset> _offsetAnimation;
-  late Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 350),
-      vsync: this,
-    );
-    _offsetAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(position: _offsetAnimation, child: widget.child),
-    );
-  }
-}
-
-class SpinIcon extends StatefulWidget {
-  final Widget child;
-  const SpinIcon({super.key, required this.child});
-
-  @override
-  State<SpinIcon> createState() => _SpinIconState();
-}
-
-class _SpinIconState extends State<SpinIcon>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _rotationAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-    _rotationAnimation = Tween<double>(
-      begin: 0.0,
-      end: 0.5,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return RotationTransition(turns: _rotationAnimation, child: widget.child);
   }
 }

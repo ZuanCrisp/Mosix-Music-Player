@@ -1,8 +1,20 @@
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+
+/// [CupertinoIcons.arrow_right] that points the other way in right-to-left
+/// layouts, as the chevrons [CupertinoIcons.back] and
+/// [CupertinoIcons.forward] do.
+const IconData mornyeArrowForward = IconData(
+  0xf50a,
+  fontFamily: CupertinoIcons.iconFont,
+  fontPackage: CupertinoIcons.iconFontPackage,
+  matchTextDirection: true,
+);
 
 /// Cupertino counterparts for the shared Settings and extension UI symbols.
+/// Directional chevrons use the glyphs that mirror in right-to-left layouts
+/// ([CupertinoIcons.back], not [CupertinoIcons.chevron_back]).
 IconData mornyeIconFor(IconData icon) {
   if (icon.fontFamily == CupertinoIcons.iconFont) return icon;
   return switch (icon) {
@@ -47,7 +59,7 @@ IconData mornyeIconFor(IconData icon) {
     Icons.insert_drive_file_outlined => CupertinoIcons.doc_text,
     Icons.favorite_outline || Icons.favorite_border => CupertinoIcons.heart,
     Icons.favorite => CupertinoIcons.heart_fill,
-    Icons.arrow_back || Icons.chevron_left => CupertinoIcons.chevron_back,
+    Icons.arrow_back || Icons.chevron_left => CupertinoIcons.back,
     Icons.close || Icons.close_rounded => CupertinoIcons.xmark,
     Icons.play_arrow || Icons.play_arrow_rounded => CupertinoIcons.play_fill,
     Icons.shuffle => CupertinoIcons.shuffle,

@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/app_switch.dart';
-import 'package:mosix/widgets/settings_group.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_switch.dart';
+import 'package:mornye/widgets/settings_group.dart';
 
 void main() {
   Future<void> pumpSwitch(

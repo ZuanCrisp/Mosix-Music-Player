@@ -1,7 +1,7 @@
 {
   "@@locale": "zh",
   "@@last_modified": "2026-04-28",
-  "appName": "Mosix 移动版",
+  "appName": "Mornye",
   "@appName": {
     "description": "App name - DO NOT TRANSLATE"
   },
@@ -24,10 +24,6 @@
   "homeTitle": "主页",
   "@homeTitle": {
     "description": "Home screen title"
-  },
-  "homeSubtitle": "粘贴支持的 URL 或按名称搜索",
-  "@homeSubtitle": {
-    "description": "Subtitle shown below search box"
   },
   "homeEmptyTitle": "暂无搜索提供商",
   "@homeEmptyTitle": {
@@ -56,10 +52,6 @@
   "historyFilterSingles": "单曲",
   "@historyFilterSingles": {
     "description": "Filter chip - show singles only"
-  },
-  "historySearchHint": "搜索历史……",
-  "@historySearchHint": {
-    "description": "Search bar placeholder in history"
   },
   "settingsTitle": "设置",
   "@settingsTitle": {
@@ -377,10 +369,6 @@
   "@aboutMobileDeveloper": {
     "description": "Role description for mobile dev"
   },
-  "aboutOriginalCreator": "原 SpotiLDAC 创建者",
-  "@aboutOriginalCreator": {
-    "description": "Role description for original creator"
-  },
   "aboutLogoArtist": "有才华的艺术家创建了我们美丽的应用图标！",
   "@aboutLogoArtist": {
     "description": "Role description for logo artist"
@@ -400,14 +388,6 @@
   "aboutMobileSource": "移动版本源代码",
   "@aboutMobileSource": {
     "description": "Link to mobile GitHub repo"
-  },
-  "aboutPCSource": "桌面版本源代码",
-  "@aboutPCSource": {
-    "description": "Link to PC GitHub repo"
-  },
-  "aboutKeepAndroidOpen": "Keep Android Open（保持安卓开放）",
-  "@aboutKeepAndroidOpen": {
-    "description": "Link to Keep Android Open campaign website"
   },
   "aboutReportIssue": "报告一个问题",
   "@aboutReportIssue": {
@@ -606,7 +586,7 @@
   "@setupStorageRequired": {
     "description": "Title when storage permission needed"
   },
-  "setupStorageDescription": "Mosix 需要存储权限来保存下载的音乐文件。",
+  "setupStorageDescription": "Mornye 需要存储权限来保存下载的音乐文件。",
   "@setupStorageDescription": {
     "description": "Explanation for storage permission"
   },
@@ -947,7 +927,7 @@
   "@snackbarFileNotFound": {
     "description": "Snackbar - file doesn't exist"
   },
-  "snackbarSelectExtFile": "Please select a .spotiflac-ext file",
+  "snackbarSelectExtFile": "Please select a .mornye-ext file",
   "@snackbarSelectExtFile": {
     "description": "Snackbar - wrong file type selected"
   },
@@ -1859,7 +1839,7 @@
   "@extensionsNoExtensions": {
     "description": "Empty state - no extensions"
   },
-  "extensionsNoExtensionsSubtitle": "Install .spotiflac-ext files to add new providers",
+  "extensionsNoExtensionsSubtitle": "Install .mornye-ext files to add new providers",
   "@extensionsNoExtensionsSubtitle": {
     "description": "Empty state subtitle"
   },
@@ -1975,10 +1955,6 @@
   "@qualityHiResFlacMaxSubtitle": {
     "description": "Technical spec for hi-res max"
   },
-  "downloadLossy320": "Lossy 320kbps",
-  "@downloadLossy320": {
-    "description": "Quality option label for lossy 320kbps"
-  },
   "downloadLossyFormat": "Lossy Format",
   "@downloadLossyFormat": {
     "description": "Setting title to pick output format for lossy downloads"
@@ -2018,46 +1994,6 @@
   "downloadAutoConvertOpusSubtitle": "Best efficiency for modern players",
   "@downloadAutoConvertOpusSubtitle": {
     "description": "Opus automatic conversion option description"
-  },
-  "downloadLossy320Format": "Lossy 320kbps Format",
-  "@downloadLossy320Format": {
-    "description": "Title of the lossy format picker bottom sheet"
-  },
-  "downloadLossy320FormatDesc": "Choose the output format for 320kbps lossy downloads. The original stream will be converted to your selected format when needed.",
-  "@downloadLossy320FormatDesc": {
-    "description": "Description in the lossy format picker"
-  },
-  "downloadLossyMp3": "MP3 320kbps",
-  "@downloadLossyMp3": {
-    "description": "Lossy format option - MP3 320kbps"
-  },
-  "downloadLossyMp3Subtitle": "Best compatibility, ~10MB per track",
-  "@downloadLossyMp3Subtitle": {
-    "description": "Subtitle for MP3 320kbps lossy option"
-  },
-  "downloadLossyAac": "AAC/M4A 320kbps",
-  "@downloadLossyAac": {
-    "description": "Lossy format option - AAC in M4A container at 320kbps"
-  },
-  "downloadLossyAacSubtitle": "Best mobile compatibility, M4A container",
-  "@downloadLossyAacSubtitle": {
-    "description": "Subtitle for AAC/M4A 320kbps lossy option"
-  },
-  "downloadLossyOpus256": "Opus 256kbps",
-  "@downloadLossyOpus256": {
-    "description": "Lossy format option - Opus 256kbps"
-  },
-  "downloadLossyOpus256Subtitle": "Best quality Opus, ~8MB per track",
-  "@downloadLossyOpus256Subtitle": {
-    "description": "Subtitle for Opus 256kbps lossy option"
-  },
-  "downloadLossyOpus128": "Opus 128kbps",
-  "@downloadLossyOpus128": {
-    "description": "Lossy format option - Opus 128kbps"
-  },
-  "downloadLossyOpus128Subtitle": "Smallest size, ~4MB per track",
-  "@downloadLossyOpus128Subtitle": {
-    "description": "Subtitle for Opus 128kbps lossy option"
   },
   "downloadAskBeforeDownload": "Ask Before Download",
   "@downloadAskBeforeDownload": {
@@ -2391,15 +2327,6 @@
       }
     }
   },
-  "discographySelectedCount": "{count} selected",
-  "@discographySelectedCount": {
-    "description": "Selection count badge",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "discographyDownloadSelected": "Download Selected",
   "@discographyDownloadSelected": {
     "description": "Button - download selected albums"
@@ -2544,7 +2471,7 @@
   "@libraryRemoveFolder": {
     "description": "Action to remove one indexed library source"
   },
-  "libraryRemoveFolderMessage": "Remove this folder and its indexed tracks from Mosix? Audio files on the storage will not be deleted.",
+  "libraryRemoveFolderMessage": "Remove this folder and its indexed tracks from Mornye? Audio files on the storage will not be deleted.",
   "@libraryRemoveFolderMessage": {
     "description": "Confirmation shown before removing a library source"
   },
@@ -2700,17 +2627,13 @@
   "@libraryStorageAccessRequired": {
     "description": "Dialog title for storage permission"
   },
-  "libraryStorageAccessMessage": "Mosix needs storage access to scan your music library. Please grant permission in settings.",
+  "libraryStorageAccessMessage": "Mornye needs storage access to scan your music library. Please grant permission in settings.",
   "@libraryStorageAccessMessage": {
     "description": "Dialog message for storage permission"
   },
-  "libraryFolderNotExist": "Selected folder does not exist",
-  "@libraryFolderNotExist": {
-    "description": "Error when folder doesn't exist"
-  },
   "librarySourceDownloaded": "Downloaded",
   "@librarySourceDownloaded": {
-    "description": "Badge for tracks downloaded via Mosix"
+    "description": "Badge for tracks downloaded via Mornye"
   },
   "librarySourceLocal": "Local",
   "@librarySourceLocal": {
@@ -2838,11 +2761,11 @@
       }
     }
   },
-  "tutorialWelcomeTitle": "Welcome to Mosix!",
+  "tutorialWelcomeTitle": "Welcome to Mornye!",
   "@tutorialWelcomeTitle": {
     "description": "Tutorial welcome page title"
   },
-  "tutorialWelcomeDesc": "Learn how to find music with extensions, choose the quality you want, and manage downloads in Mosix.",
+  "tutorialWelcomeDesc": "Learn how to find music with extensions, choose the quality you want, and manage downloads in Mornye.",
   "@tutorialWelcomeDesc": {
     "description": "Tutorial welcome page description"
   },
@@ -3171,10 +3094,6 @@
   "trackReEnrich": "Re-enrich",
   "@trackReEnrich": {
     "description": "Menu action - re-embed metadata into audio file"
-  },
-  "trackReEnrichOnlineSubtitle": "Search metadata online and embed into file",
-  "@trackReEnrichOnlineSubtitle": {
-    "description": "Subtitle for re-enrich metadata action for local items"
   },
   "trackReEnrichFieldCover": "Cover Art",
   "@trackReEnrichFieldCover": {
@@ -3739,10 +3658,6 @@
       }
     }
   },
-  "selectionShareNoFiles": "No shareable files found",
-  "@selectionShareNoFiles": {
-    "description": "Snackbar when no selected files exist on disk"
-  },
   "selectionConvertCount": "Convert {count} {count, plural, =1{track} other{tracks}}",
   "@selectionConvertCount": {
     "description": "Convert button text with count in selection mode",
@@ -3905,7 +3820,7 @@
   "@safMigrationTitle": {
     "description": "Title of SAF migration dialog"
   },
-  "safMigrationMessage1": "Mosix now uses Android Storage Access Framework (SAF) for downloads. This fixes \"permission denied\" errors on Android 10+.",
+  "safMigrationMessage1": "Mornye now uses Android Storage Access Framework (SAF) for downloads. This fixes \"permission denied\" errors on Android 10+.",
   "@safMigrationMessage1": {
     "description": "First paragraph of SAF migration dialog"
   },
@@ -3973,10 +3888,6 @@
   "@backupRestoreConfirmTitle": {
     "description": "Confirmation dialog title before restoring a backup"
   },
-  "backupRestoreConfirmMessage": "This will replace your current settings, download history, liked tracks, wishlist and playlists with the contents of the backup. This cannot be undone.",
-  "@backupRestoreConfirmMessage": {
-    "description": "Confirmation dialog message before restoring a backup"
-  },
   "backupRestoreConfirmButton": "Restore",
   "@backupRestoreConfirmButton": {
     "description": "Confirm button to proceed with restore"
@@ -3989,7 +3900,7 @@
   "@backupRestoreFailed": {
     "description": "Snackbar when restore fails"
   },
-  "backupInvalidFile": "This file is not a valid Mosix backup",
+  "backupInvalidFile": "This file is not a valid Mornye backup",
   "@backupInvalidFile": {
     "description": "Snackbar when the chosen file is not a valid backup"
   },
@@ -4163,22 +4074,6 @@
   "downloadLocationSubtitle": "Choose where to save your downloaded tracks",
   "@downloadLocationSubtitle": {
     "description": "Subtitle shown in the download location picker sheet"
-  },
-  "storageModeAppFolder": "App Folder (Recommended)",
-  "@storageModeAppFolder": {
-    "description": "Storage mode option - app-managed folder"
-  },
-  "storageModeAppFolderSubtitle": "Saves to Music/Mosix by default",
-  "@storageModeAppFolderSubtitle": {
-    "description": "Subtitle for app folder storage mode"
-  },
-  "storageModeSaf": "Custom Folder (SAF)",
-  "@storageModeSaf": {
-    "description": "Storage mode option - Storage Access Framework"
-  },
-  "storageModeSafSubtitle": "Pick any folder, including SD card",
-  "@storageModeSafSubtitle": {
-    "description": "Subtitle for SAF storage mode"
   },
   "downloadFolderAccessLostTitle": "Download folder access lost",
   "@downloadFolderAccessLostTitle": {
@@ -4467,10 +4362,6 @@
       }
     }
   },
-  "editMetadataAutoFillFetch": "Fetch & Fill",
-  "@editMetadataAutoFillFetch": {
-    "description": "Button label to fetch online metadata and fill selected fields"
-  },
   "editMetadataAutoFillSearching": "Searching online...",
   "@editMetadataAutoFillSearching": {
     "description": "Snackbar shown while searching for online metadata"
@@ -4478,15 +4369,6 @@
   "editMetadataAutoFillNoResults": "No matching metadata found online",
   "@editMetadataAutoFillNoResults": {
     "description": "Snackbar when online metadata search returns no results"
-  },
-  "editMetadataAutoFillDone": "Filled {count} {count, plural, =1{field} other{fields}} from online metadata",
-  "@editMetadataAutoFillDone": {
-    "description": "Snackbar confirming how many fields were auto-filled",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "editMetadataAutoFillNoneSelected": "Select at least one field to auto-fill",
   "@editMetadataAutoFillNoneSelected": {
@@ -4998,7 +4880,7 @@
   "@notifLibraryScanStopped": {
     "description": "Notification body when library scan is cancelled"
   },
-  "notifDownloadingUpdate": "Downloading Mosix v{version}",
+  "notifDownloadingUpdate": "Downloading Mornye v{version}",
   "@notifDownloadingUpdate": {
     "description": "Notification title while downloading an app update",
     "placeholders": {
@@ -5026,7 +4908,7 @@
   "@notifUpdateReady": {
     "description": "Notification title when app update download is complete"
   },
-  "notifUpdateReadyBody": "Mosix v{version} downloaded. Tap to install.",
+  "notifUpdateReadyBody": "Mornye v{version} downloaded. Tap to install.",
   "@notifUpdateReadyBody": {
     "description": "Notification body when app update is ready to install",
     "placeholders": {
@@ -5705,10 +5587,6 @@
       }
     }
   },
-  "actionGo": "Go",
-  "@actionGo": {
-    "description": "Generic action button label"
-  },
   "logIssueSummary": "Issue Summary",
   "@logIssueSummary": {
     "description": "Header for log issue analysis summary"
@@ -5798,7 +5676,7 @@
   "@extensionCustomUrlHandlingSubtitle": {
     "description": "Extension detail subtitle for custom URL handling"
   },
-  "extensionCustomUrlHandlingShareHint": "Share links from these sites to Mosix and this extension will handle them.",
+  "extensionCustomUrlHandlingShareHint": "Share links from these sites to Mornye and this extension will handle them.",
   "@extensionCustomUrlHandlingShareHint": {
     "description": "Extension detail hint explaining share-to-app URL handling"
   },
@@ -6004,17 +5882,13 @@
   "@libraryExternalPlayerSubtitle": {
     "description": "Subtitle for external player option"
   },
-  "libraryBuiltInPreviewPlayer": "Built-in preview player",
+  "libraryBuiltInPreviewPlayer": "Built-in player",
   "@libraryBuiltInPreviewPlayer": {
     "description": "Setting option to use the built-in preview player"
   },
-  "libraryBuiltInPreviewPlayerSubtitle": "Quick local previews inside Mosix",
+  "libraryBuiltInPreviewPlayerSubtitle": "Play your music right inside Mornye",
   "@libraryBuiltInPreviewPlayerSubtitle": {
     "description": "Subtitle for built-in preview player option"
-  },
-  "libraryBuiltInPlayerInfo": "The built-in player is a preview tool for checking local tracks quickly. Use an external music player for actual listening.",
-  "@libraryBuiltInPlayerInfo": {
-    "description": "Info note explaining the built-in player is for previews only"
   },
   "nowPlayingTitle": "Now Playing",
   "@nowPlayingTitle": {
@@ -6394,11 +6268,11 @@
   "@extensionVerificationHelpTitleWaiting": {
     "description": "Dialog title when verification is taking longer than expected"
   },
-  "extensionVerificationHelpMessageManual": "Mosix could not open the browser automatically. Open this link in your browser, or copy it manually.",
+  "extensionVerificationHelpMessageManual": "Mornye could not open the browser automatically. Open this link in your browser, or copy it manually.",
   "@extensionVerificationHelpMessageManual": {
     "description": "Dialog message when automatic browser launch for verification fails"
   },
-  "extensionVerificationHelpMessageWaiting": "If the browser did not open, or verification finished but did not return to Mosix, open this link again or copy it manually.",
+  "extensionVerificationHelpMessageWaiting": "If the browser did not open, or verification finished but did not return to Mornye, open this link again or copy it manually.",
   "@extensionVerificationHelpMessageWaiting": {
     "description": "Dialog message when verification may need manual browser help"
   },
@@ -6430,26 +6304,6 @@
         "type": "String"
       }
     }
-  },
-  "settingsGroupInterface": "Extensions & appearance",
-  "@settingsGroupInterface": {
-    "description": "Settings group covering look and feel"
-  },
-  "settingsGroupContent": "Content & metadata",
-  "@settingsGroupContent": {
-    "description": "Settings group covering the library, metadata and lyrics"
-  },
-  "settingsGroupDownloads": "Downloads & files",
-  "@settingsGroupDownloads": {
-    "description": "Settings group covering download behaviour and storage"
-  },
-  "settingsGroupSystem": "System",
-  "@settingsGroupSystem": {
-    "description": "Settings group covering app-level data, cache and logs"
-  },
-  "settingsGroupHelp": "About & support",
-  "@settingsGroupHelp": {
-    "description": "Settings group covering the about page and donations"
   },
   "libraryFilterMetadataMissingLyrics": "Missing lyrics",
   "@libraryFilterMetadataMissingLyrics": {

@@ -1,4 +1,8 @@
 //! Extension JavaScript execution and host services, isolated from mobile UI code.
+//!
+//! Comments that mention "Go" describe the retired Go backend, whose observable
+//! behavior (wire formats, parsing quirks, file layouts) remains a compatibility
+//! contract.
 
 pub mod auth;
 pub mod backend;
@@ -32,5 +36,8 @@ pub mod storage;
 pub mod transfer_policy;
 mod url_host;
 mod utility_host;
+// Pure path checks, so host tests cover them on every platform.
+#[cfg(any(not(unix), test))]
+mod windows_path;
 
 pub use runtime::{ExtensionError, ExtensionRuntime, ExtensionServices, RuntimeLimits};

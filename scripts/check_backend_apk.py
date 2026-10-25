@@ -16,7 +16,7 @@ ABI_LAYOUT = {
     "armeabi-v7a": (1, 40),
 }
 CORE_LIBRARIES = ("libapp.so", "libflutter.so")
-DISCORD_LIBRARIES = ("libspotiflac_discord.so", "libdiscord_partner_sdk.so")
+DISCORD_LIBRARIES = ("libmornye_discord.so", "libdiscord_partner_sdk.so")
 
 
 class AuditError(Exception):
@@ -119,9 +119,9 @@ def check_backend_markers(
             if marker is not None:
                 raise AuditError(f"Rust APK DEX {info.filename} contains {marker.decode()}")
     elif any(
-        name.rsplit("/", 1)[-1] == "libspotiflac_mobile.so" for name in names
+        name.rsplit("/", 1)[-1] == "libmornye_mobile.so" for name in names
     ):
-        raise AuditError("Go APK contains forbidden libspotiflac_mobile.so")
+        raise AuditError("Go APK contains forbidden libmornye_mobile.so")
 
 
 def audit(path: Path, backend: str, abis: Sequence[str], discord_sdk: bool = False) -> str:
@@ -141,7 +141,7 @@ def audit(path: Path, backend: str, abis: Sequence[str], discord_sdk: bool = Fal
             check_abi_directories(names, abis)
             check_backend_markers(zf, infos, backend)
             backend_library = (
-                "libspotiflac_mobile.so" if backend == "rust" else "libgojni.so"
+                "libmornye_mobile.so" if backend == "rust" else "libgojni.so"
             )
             libraries = CORE_LIBRARIES + (backend_library,)
             if backend == "rust":

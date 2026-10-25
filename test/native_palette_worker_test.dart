@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/theme/cover_palette.dart';
+import 'package:mornye/theme/cover_palette.dart';
 
 void main() {
   test('native ordered counts retain the pinned Material palette seeds', () {

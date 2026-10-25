@@ -13,7 +13,19 @@ class MornyePlayerSlider extends StatelessWidget {
     this.inactiveColor = const Color(0x2EFFFFFF),
     this.onChangeStart,
     this.onChangeEnd,
+    this.trackHeight = 6,
+    this.height = 44,
+    this.inset = horizontalInset,
   });
+
+  /// The track thickness; the desktop capsule uses a hairline, as Music.
+  final double trackHeight;
+
+  /// The touch band around the track.
+  final double height;
+
+  /// Horizontal padding before and after the track.
+  final double inset;
 
   final double value;
   final double max;
@@ -25,10 +37,10 @@ class MornyePlayerSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: 44,
+    height: height,
     child: SliderTheme(
       data: SliderTheme.of(context).copyWith(
-        trackHeight: 6,
+        trackHeight: trackHeight,
         trackGap: 0,
         trackShape: const RoundedRectSliderTrackShape(),
         thumbShape: SliderComponentShape.noThumb,
@@ -36,7 +48,7 @@ class MornyePlayerSlider extends StatelessWidget {
         showValueIndicator: ShowValueIndicator.never,
       ),
       child: Slider(
-        padding: const EdgeInsets.symmetric(horizontal: horizontalInset),
+        padding: EdgeInsets.symmetric(horizontal: inset),
         value: value,
         max: max,
         activeColor: activeColor,

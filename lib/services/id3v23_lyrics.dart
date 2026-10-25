@@ -4,7 +4,7 @@ import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
-import 'package:mosix/services/platform_bridge.dart';
+import 'package:mornye/services/platform_bridge.dart';
 
 /// Minimal ID3v2.3 USLT writer used after FFmpeg metadata embedding.
 ///
@@ -68,7 +68,7 @@ class Id3v23Lyrics {
       await input.close();
     }
 
-    final staging = await file.parent.createTemp('.spotiflac-lyrics-');
+    final staging = await file.parent.createTemp('.mornye-lyrics-');
     try {
       final output = File('${staging.path}${Platform.pathSeparator}audio.mp3');
       final sink = output.openWrite();

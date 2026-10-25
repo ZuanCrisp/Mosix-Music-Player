@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/verification_notification.dart';
+import 'package:mornye/services/verification_notification.dart';
 
 void main() {
   const target = VerificationNotification(

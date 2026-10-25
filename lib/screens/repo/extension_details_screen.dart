@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:mornye/widgets/app_snack_bar.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/repo_provider.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/services/extension_storage_service.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/utils/nav_bar_inset.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/widgets/extension_repo_card.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/repo_provider.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mornye/widgets/extension_repo_card.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/expressive_button.dart';
 
 class ExtensionDetailsScreen extends ConsumerStatefulWidget {
   final RepoExtension extension;
@@ -133,12 +134,10 @@ class _ExtensionDetailsScreenState
       ),
       leadingWidth: kToolbarHeight + edgeInset,
       leading: Padding(
-        padding: EdgeInsets.only(left: edgeInset),
-        child: IconButton(
+        padding: EdgeInsetsDirectional.only(start: edgeInset),
+        child: AppIconButton(
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          icon: Icon(
-            context.isMornye ? CupertinoIcons.chevron_back : Icons.arrow_back,
-          ),
+          icon: Icon(context.isMornye ? CupertinoIcons.back : Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -206,15 +205,16 @@ class _ExtensionDetailsScreenState
                   spacing: 8,
                   runSpacing: 8,
                   children: [
+                    // Only the installed state is emphasized.
                     _Badge(
                       label: 'v${ext.version}',
-                      color: colorScheme.secondaryContainer,
-                      textColor: colorScheme.onSecondaryContainer,
+                      color: colorScheme.surfaceContainerHighest,
+                      textColor: colorScheme.onSurfaceVariant,
                     ),
                     _Badge(
                       label: _getCategoryName(context, ext.category),
-                      color: colorScheme.tertiaryContainer,
-                      textColor: colorScheme.onTertiaryContainer,
+                      color: colorScheme.surfaceContainerHighest,
+                      textColor: colorScheme.onSurfaceVariant,
                     ),
                     if (ext.isInstalled)
                       _Badge(
@@ -229,22 +229,15 @@ class _ExtensionDetailsScreenState
                 const SizedBox(height: 24),
 
                 if (isDownloading)
-                  Center(
-                    child: CircularProgressIndicator(
-                      color: colorScheme.primary,
-                    ),
-                  )
+                  Center(child: AppLoadingIndicator(color: colorScheme.primary))
                 else ...[
                   if (ext.hasUpdate)
-                    FilledButton.icon(
+                    ExpressiveButton(
                       onPressed: () => _updateExtension(ext),
                       icon: Icon(
                         context.isMornye
                             ? CupertinoIcons.arrow_clockwise
                             : Icons.update,
-                      ),
-                      label: Text(
-                        '${context.l10n.storeUpdate} v${ext.version}',
                       ),
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(52),
@@ -252,29 +245,33 @@ class _ExtensionDetailsScreenState
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
+                      child: Text(
+                        '${context.l10n.storeUpdate} v${ext.version}',
+                      ),
                     )
                   else if (ext.isInstalled)
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton.icon(
+                          child: ExpressiveButton(
+                            outlined: true,
                             onPressed: null,
                             icon: Icon(
                               context.isMornye
                                   ? CupertinoIcons.check_mark
                                   : Icons.check,
                             ),
-                            label: Text(context.l10n.storeInstalled),
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size(0, 52),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
+                            child: Text(context.l10n.storeInstalled),
                           ),
                         ),
                         const SizedBox(width: 12),
-                        IconButton.filled(
+                        AppIconButton.filled(
                           onPressed: () => _uninstallExtension(ext),
                           icon: Icon(
                             context.isMornye
@@ -294,20 +291,20 @@ class _ExtensionDetailsScreenState
                       ],
                     )
                   else
-                    FilledButton.icon(
+                    ExpressiveButton(
                       onPressed: () => _installExtension(ext),
                       icon: Icon(
                         context.isMornye
                             ? CupertinoIcons.arrow_down_circle
                             : Icons.download,
                       ),
-                      label: Text(context.l10n.storeInstall),
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(52),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
+                      child: Text(context.l10n.storeInstall),
                     ),
                 ],
               ],
@@ -569,12 +566,9 @@ class _ExtensionDetailsScreenState
   }
 
   Future<void> _installExtension(RepoExtension ext) async {
-    final tempDir = await getTemporaryDirectory();
-    final storage = await ExtensionStorageService.prepare();
-
     final success = await ref
         .read(repoProvider.notifier)
-        .installExtension(ext.id, tempDir.path, storage.extensionsDir);
+        .installExtensionToDefaultPaths(ext.id);
 
     if (mounted) {
       showAppSnackBar(
@@ -590,11 +584,9 @@ class _ExtensionDetailsScreenState
   }
 
   Future<void> _updateExtension(RepoExtension ext) async {
-    final tempDir = await getTemporaryDirectory();
-
     final success = await ref
         .read(repoProvider.notifier)
-        .updateExtension(ext.id, tempDir.path);
+        .updateExtensionToDefaultPaths(ext.id);
 
     if (mounted) {
       showAppSnackBar(
@@ -731,7 +723,8 @@ class _MetadataRow extends StatelessWidget {
             ],
           ),
         ),
-        if (!isLast)
+        // Material groups rows by the card alone; dividers are Mornye's.
+        if (!isLast && context.isMornye)
           Divider(
             height: 1,
             thickness: 1,
@@ -791,7 +784,7 @@ class _CapabilityRow extends StatelessWidget {
             ],
           ),
         ),
-        if (!isLast)
+        if (!isLast && context.isMornye)
           Divider(
             height: 1,
             thickness: 1,

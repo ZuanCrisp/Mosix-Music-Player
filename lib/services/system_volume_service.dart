@@ -1,9 +1,13 @@
 import 'dart:async';
 
+import 'package:mornye/services/playback_deck.dart';
+import 'package:mornye/services/playback_output_volume.dart';
+import 'package:mornye/utils/desktop_platform.dart';
 import 'package:volume_controller/volume_controller.dart';
 
 /// The volume plugin owns one listener. Share it between background playback
 /// and volume sliders so opening or closing a player cannot replace it.
+/// On desktop the stream follows [playbackOutputVolume] instead.
 class SystemVolumeService {
   SystemVolumeService({Stream<double>? source}) : _source = source;
 
@@ -18,7 +22,13 @@ class SystemVolumeService {
     _listeners.add(listener);
     if (_latest case final value?) listener.add(value);
     if (_subscription == null) {
-      final source = _source;
+      // Desktop never changes the system volume; it reports the in-app gain,
+      // restored from the previous launch.
+      if (_source == null && isDesktopPlatform) {
+        unawaited(PlaybackOutputVolumeStore.ensureRestored());
+      }
+      final source =
+          _source ?? (isDesktopPlatform ? playbackOutputVolumeChanges() : null);
       _subscription = source == null
           ? VolumeController.instance.addListener(_publish)
           : source.listen(_publish);

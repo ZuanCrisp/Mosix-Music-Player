@@ -1,11 +1,19 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/l10n/l10n.dart';
+import 'package:mornye/theme/app_motion.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/widgets/desktop/detail_header.dart'
+    show desktopDetailBottomInset;
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/expressive_icon_button.dart';
+import 'package:mornye/l10n/l10n.dart';
 
 /// Hosts selection bars above the shell navigation while keeping modal routes
 /// above the bar. A raw entry in the root [Overlay] stays above routes pushed
@@ -179,19 +187,29 @@ class _AnimatedSelectionBottomBarState extends State<AnimatedSelectionBottomBar>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 240),
+    _controller = AnimationController(vsync: this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_controller.duration != null) return;
+    // Expressive: the bar springs into place while fading without overshoot.
+    const fallback = AppMotionSpec(
+      Duration(milliseconds: 240),
+      Curves.easeOutCubic,
     );
-    final curve = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-    );
+    final slide = AppMotion.spatial(context, fallback);
+    final fade = AppMotion.effects(context, fallback);
+    _controller.duration = slide.duration;
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.08),
       end: Offset.zero,
-    ).animate(curve);
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(curve);
+    ).animate(CurvedAnimation(parent: _controller, curve: slide.curve));
+    _fadeAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: fade.curve));
     _controller.forward();
   }
 
@@ -263,13 +281,12 @@ class SelectionBottomBar extends StatelessWidget {
               ),
             )
           else
-            IconButton.filledTonal(
+            ExpressiveIconButton(
               onPressed: onClose,
               tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
               icon: const Icon(Icons.close),
-              style: IconButton.styleFrom(
-                backgroundColor: colorScheme.surfaceContainerHighest,
-              ),
+              foregroundColor: colorScheme.onSecondaryContainer,
+              backgroundColor: colorScheme.surfaceContainerHighest,
             ),
           const SizedBox(width: 12),
 
@@ -283,15 +300,18 @@ class SelectionBottomBar extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  allSelected
-                      ? allSelectedLabel ?? context.l10n.selectionAllSelected
-                      : tapToSelectLabel ??
-                            context.l10n.downloadedAlbumTapToSelect,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+                // The tap hint describes touch selection; desktop rows select
+                // with the pointer and modifiers, and the toolbar stays short.
+                if (!isDesktopPlatform)
+                  Text(
+                    allSelected
+                        ? allSelectedLabel ?? context.l10n.selectionAllSelected
+                        : tapToSelectLabel ??
+                              context.l10n.downloadedAlbumTapToSelect,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -311,51 +331,132 @@ class SelectionBottomBar extends StatelessWidget {
                       ),
                     ),
                   )
-                : TextButton.icon(
+                : ExpressiveButton(
+                    text: true,
                     onPressed: onToggleSelectAll,
                     icon: Icon(
                       allSelected ? Icons.deselect : Icons.select_all,
                       size: 20,
                     ),
-                    label: Text(
+                    style: TextButton.styleFrom(
+                      foregroundColor: colorScheme.primary,
+                    ),
+                    child: Text(
                       allSelected
                           ? context.l10n.actionDeselect
                           : context.l10n.actionSelectAll,
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: colorScheme.primary,
                     ),
                   ),
           ),
         ],
       ),
     );
-    return _SelectionPanelDrag(
-      onClose: onClose,
-      header: header,
-      bottomPadding: bottomPadding,
-      children: children,
-      surfaceBuilder: (content) {
-        if (context.isMornye) {
-          return MornyeGlassPanel.overlay(child: content);
-        }
-        return Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(tokens.radiusSheet),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.shadow.withValues(alpha: 0.15),
-                blurRadius: 12,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
+    const floatingMargin = 12.0;
+    Widget surface(Widget content) {
+      if (context.isMornye) {
+        return MornyeGlassPanel.overlay(child: content);
+      }
+      final toolbar = Material(
+        color: colorScheme.surfaceContainerHigh,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: colorScheme.shadow,
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(tokens.radiusSheet),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: MediaQuery.removePadding(
+          context: context,
+          removeBottom: true,
           child: content,
+        ),
+      );
+      if (isDesktopPlatform) {
+        // No navigation bar sits under a desktop page, so the toolbar
+        // floats on its own without the backdrop.
+        return Padding(
+          padding: const EdgeInsets.all(floatingMargin),
+          child: toolbar,
         );
-      },
+      }
+      // Expressive floating toolbar: detached from the screen edges and
+      // fully rounded. The faded backdrop hides and blocks the navigation
+      // bar underneath, so a tap beside the toolbar cannot switch tabs.
+      final backdrop = colorScheme.surface;
+      return Listener(
+        behavior: HitTestBehavior.opaque,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [backdrop.withValues(alpha: 0), backdrop],
+              stops: const [0, 0.4],
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              floatingMargin,
+              0,
+              floatingMargin,
+              floatingMargin + MediaQuery.viewPaddingOf(context).bottom,
+            ),
+            child: toolbar,
+          ),
+        ),
+      );
+    }
+
+    if (!isDesktopPlatform) {
+      return _SelectionPanelDrag(
+        onClose: onClose,
+        header: header,
+        bottomPadding: bottomPadding,
+        floatingMargin: context.isMornye ? 0 : floatingMargin,
+        surfaceBuilder: surface,
+        children: children,
+      );
+    }
+    // Desktop: a bounded toolbar over the page, clear of Mornye's floating
+    // player, rather than a sheet across the whole pane. There is no drag
+    // handle, since pointer input has no gesture to tuck the actions away;
+    // the close button ends the selection.
+    return Align(
+      alignment: Alignment.bottomCenter,
+      heightFactor: 1,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 640),
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: context.isMornye ? desktopDetailBottomInset : 0,
+          ),
+          child: surface(
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.6,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    header,
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [const SizedBox(height: 12), ...children],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -370,11 +471,16 @@ class _SelectionPanelDrag extends StatefulWidget {
     required this.bottomPadding,
     required this.children,
     required this.surfaceBuilder,
+    this.floatingMargin = 0,
   });
 
   final VoidCallback onClose;
   final Widget header;
   final double bottomPadding;
+
+  /// Bottom margin the surface already places below a floating panel. The
+  /// content gives up the same space so the panel keeps its docked height.
+  final double floatingMargin;
   final List<Widget> children;
   final Widget Function(Widget) surfaceBuilder;
 
@@ -458,12 +564,19 @@ class _SelectionPanelDragState extends State<_SelectionPanelDrag>
   void _setExpanded(bool expanded) {
     setState(() => _expanded = expanded);
     if (!expanded && _scroll.hasClients) _scroll.jumpTo(0);
+    final motion = AppMotion.spatialSlow(
+      context,
+      AppMotionSpec(
+        MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 220),
+        Curves.easeOutCubic,
+      ),
+    );
     _expansion.animateTo(
       expanded ? 1 : 0,
-      duration: MediaQuery.disableAnimationsOf(context)
-          ? Duration.zero
-          : const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
+      duration: motion.duration,
+      curve: motion.curve,
     );
     _animateToRest(0);
   }
@@ -520,7 +633,10 @@ class _SelectionPanelDragState extends State<_SelectionPanelDrag>
               16,
               16,
               16,
-              widget.bottomPadding > 0 ? 8 : 16,
+              math.max(
+                0,
+                (widget.bottomPadding > 0 ? 8 : 16) - widget.floatingMargin,
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,

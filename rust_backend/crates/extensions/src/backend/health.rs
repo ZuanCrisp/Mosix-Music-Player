@@ -3,14 +3,14 @@
 use super::Backend;
 use crate::manager::ExtensionManager;
 use crate::manifest::{ExtensionManifest, HealthCheck};
-use serde::Serialize;
-use serde_json::Value;
-use spotiflac_core::app_version::AppVersion;
-use spotiflac_network::{
+use mornye_core::app_version::AppVersion;
+use mornye_network::{
     HttpRequest, NetworkService, policy::NetworkPermissions, policy::private_literal_or_local,
     url::UrlParts,
 };
-use spotiflac_providers::resolver::Check;
+use mornye_providers::resolver::Check;
+use serde::Serialize;
+use serde_json::Value;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -540,8 +540,8 @@ mod tests {
     use crate::RuntimeLimits;
     use crate::backend::MetadataOptions;
     use crate::environment::ExtensionEnvironment;
+    use mornye_network::{Lookup, LookupFuture, NetworkOptions};
     use serde_json::json;
-    use spotiflac_network::{Lookup, LookupFuture, NetworkOptions};
     use std::sync::atomic::AtomicUsize;
 
     struct PendingLookup(Arc<AtomicUsize>);

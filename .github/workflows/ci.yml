@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -15,6 +18,7 @@ jobs:
     name: Detect changed paths
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       pull-requests: read
     outputs:
       dart: ${{ steps.filter.outputs.dart }}
@@ -32,9 +36,10 @@ jobs:
           filters: |
             dart:
               - 'third_party/audio_service/**'
-              - 'third_party/spotiflac_discord/**'
+              - 'third_party/mornye_discord/**'
               - 'lib/**'
               - 'test/**'
+              - 'integration_test/**'
               - 'android/app/src/test/resources/**'
               - 'assets/**'
               - 'pubspec.yaml'
@@ -42,16 +47,20 @@ jobs:
               - 'analysis_options.yaml'
               - 'l10n.yaml'
               - '.fvmrc'
+              - 'scripts/prepare_flutter_sdk.dart'
+              - 'patches/flutter/**'
               - '.github/workflows/ci.yml'
             rust:
               - 'rust_backend/**'
+              - 'test/fixtures/**'
+              - 'android/app/src/test/resources/lyrics_usability_cases.tsv'
               - 'scripts/*rust*.sh'
               - 'android/gradlew'
               - 'android/gradle/wrapper/**'
               - '.github/workflows/ci.yml'
             ios:
               - 'third_party/audio_service/**'
-              - 'third_party/spotiflac_discord/**'
+              - 'third_party/mornye_discord/**'
               - 'scripts/setup_discord_sdk.sh'
               - 'scripts/prepare_discord_sdk.py'
               - 'scripts/test_prepare_discord_sdk.py'
@@ -59,6 +68,8 @@ jobs:
               - 'third_party/discord/*.zip.gpg'
               - 'ios/**'
               - 'scripts/build_ios.sh'
+              - 'scripts/prepare_flutter_sdk.dart'
+              - 'patches/flutter/**'
               - 'scripts/check_backend_ios.py'
               - 'scripts/test_check_backend_ios.py'
               - 'lib/**'
@@ -70,7 +81,7 @@ jobs:
               - '.github/workflows/ci.yml'
             android:
               - 'third_party/audio_service/**'
-              - 'third_party/spotiflac_discord/**'
+              - 'third_party/mornye_discord/**'
               - 'scripts/setup_discord_sdk.sh'
               - 'scripts/prepare_discord_sdk.py'
               - 'scripts/test_prepare_discord_sdk.py'
@@ -79,6 +90,8 @@ jobs:
               - 'android/**'
               - 'rust_backend/**'
               - 'scripts/build_android.sh'
+              - 'scripts/prepare_flutter_sdk.dart'
+              - 'patches/flutter/**'
               - 'scripts/build_rust_backend.sh'
               - 'scripts/check_backend_apk.py'
               - 'scripts/test_check_backend_apk.py'
@@ -114,8 +127,14 @@ jobs:
           key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
           restore-keys: pub-${{ runner.os }}-
 
+      - name: Prepare Flutter framework patch
+        run: dart scripts/prepare_flutter_sdk.dart
+
       - name: Get Flutter dependencies
         run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test integration_test scripts/prepare_flutter_sdk.dart
 
       - name: Analyze
         run: flutter analyze
@@ -140,29 +159,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Setup Java for Android SDK tools
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
-        with:
-          distribution: "temurin"
-          java-version: "25"
-
       - name: Activate pinned Rust toolchain
         working-directory: rust_backend
         run: rustup show
+
+      - name: Cache Cargo registry and build output
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            rust_backend/target
+          key: cargo-${{ runner.os }}-rust-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-${{ hashFiles('rust_backend/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-rust-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-
 
       - name: Install C binding generator dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libclang-dev
 
+      # The Android libraries are built once, by Gradle in the android job.
       - name: Rust formatting, Clippy and unit tests
         run: bash scripts/check_rust_backend.sh
-
-      - name: Install Android NDK
-        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;30.0.16248370"'
-
-      - name: Build Android ARM32 and ARM64 libraries
-        run: ANDROID_NDK_HOME="$ANDROID_HOME/ndk/30.0.16248370" bash scripts/build_rust_backend.sh android
 
   rust-ios:
     name: Rust iOS libraries & release application
@@ -170,7 +189,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ios == 'true'
     env:
-      MOSIX_DISCORD_SDK: "0"
+      MORNYE_DISCORD_SDK: "0"
 
     steps:
       - name: Checkout repository
@@ -179,6 +198,17 @@ jobs:
       - name: Activate pinned Rust toolchain
         working-directory: rust_backend
         run: rustup show
+
+      - name: Cache Cargo registry and build output
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            rust_backend/target
+          key: cargo-${{ runner.os }}-rust-ios-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-${{ hashFiles('rust_backend/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-rust-ios-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-
 
       - name: Build iOS device and universal simulator XCFramework
         run: bash scripts/build_rust_backend.sh ios
@@ -189,6 +219,9 @@ jobs:
           channel: "stable"
           flutter-version-file: .fvmrc
           cache: true
+
+      - name: Prepare Flutter framework patch
+        run: dart scripts/prepare_flutter_sdk.dart
 
       - name: Prepare pinned Discord SDK
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
@@ -206,9 +239,9 @@ jobs:
         run: |
           python3 -m unittest discover -s scripts -p 'test_check_backend_ios.py'
           flutter build ios --release --no-codesign --target lib/main.dart
-          if [[ "$MOSIX_DISCORD_SDK" == "1" ]]; then
+          if [[ "$MORNYE_DISCORD_SDK" == "1" ]]; then
             test -f build/ios/iphoneos/Runner.app/Frameworks/discord_partner_sdk.framework/discord_partner_sdk
-            test -f build/ios/iphoneos/Runner.app/Frameworks/spotiflac_discord.framework/Discord-License-Notices.txt
+            test -f build/ios/iphoneos/Runner.app/Frameworks/mornye_discord.framework/Discord-License-Notices.txt
           fi
           python3 scripts/check_backend_ios.py build/ios/iphoneos/Runner.app \
             --backend rust --archs arm64 --platform ios --release
@@ -219,7 +252,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.android == 'true'
     env:
-      MOSIX_DISCORD_SDK: "0"
+      MORNYE_DISCORD_SDK: "0"
 
     steps:
       - name: Checkout repository
@@ -237,6 +270,9 @@ jobs:
           channel: "stable"
           flutter-version-file: .fvmrc
           cache: true
+
+      - name: Prepare Flutter framework patch
+        run: dart scripts/prepare_flutter_sdk.dart
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
@@ -283,14 +319,25 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libclang-dev ffmpeg
           ffmpeg -version
-          echo "MOSIX_TEST_FFMPEG=$(command -v ffmpeg)" >> "$GITHUB_ENV"
+          echo "MORNYE_TEST_FFMPEG=$(command -v ffmpeg)" >> "$GITHUB_ENV"
+
+      - name: Cache Cargo registry and build output
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            rust_backend/target
+          key: cargo-${{ runner.os }}-android-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-${{ hashFiles('rust_backend/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-android-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-
 
       - name: Package Rust application and run native unit tests
         run: gradle -p android :app:assembleDebug :app:testDebugUnitTest
 
       - name: Build Rust release application
         run: |
-          if [[ "$MOSIX_DISCORD_SDK" == "1" ]]; then
+          if [[ "$MORNYE_DISCORD_SDK" == "1" ]]; then
             bash scripts/build_android.sh --production --target lib/main.dart
           else
             bash scripts/build_android.sh --lite --target lib/main.dart
@@ -299,7 +346,7 @@ jobs:
       - name: Verify Rust release APK payloads
         run: |
           audit_flags=()
-          if [[ "$MOSIX_DISCORD_SDK" == "1" ]]; then
+          if [[ "$MORNYE_DISCORD_SDK" == "1" ]]; then
             audit_flags+=(--discord-sdk)
           fi
           python3 scripts/check_backend_apk.py \

@@ -1,0 +1,14 @@
+PRODUCT_NAME = Mornye
+
+PRODUCT_BUNDLE_IDENTIFIER = com.zarz.mornye
+
+PRODUCT_COPYRIGHT = Copyright © 2026 zarz. All rights reserved.
+
+// Code signing: ad hoc, unless scripts/setup_macos_signing.sh wrote a stable
+// self-signed identity. A stable identity keeps keychain access across
+// rebuilds and updates.
+MORNYE_CODE_SIGN_IDENTITY = -
+#include? "LocalSigning.xcconfig"
+CODE_SIGN_IDENTITY = $(MORNYE_CODE_SIGN_IDENTITY)
+// Manual signing would otherwise add the debugger entitlement to releases.
+CODE_SIGN_INJECT_BASE_ENTITLEMENTS[config=Release] = NO

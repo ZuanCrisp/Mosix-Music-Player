@@ -121,13 +121,11 @@ extension _DownloadQueueVerificationGate on DownloadQueueNotifier {
       _log.e(
         'Verification was already completed once for ${item.track.name} on $targetService; not opening another challenge',
       );
-      updateItemStatus(
+      _recordFailedDownload(
         item.id,
-        DownloadStatus.failed,
         error: errorMsg,
         errorType: DownloadErrorType.verificationRequired,
       );
-      _failedInSession++;
       return true;
     }
     _log.i(
@@ -198,13 +196,11 @@ extension _DownloadQueueVerificationGate on DownloadQueueNotifier {
     }
 
     _log.e('Verification did not complete for $targetService');
-    updateItemStatus(
+    _recordFailedDownload(
       item.id,
-      DownloadStatus.failed,
       error: errorMsg,
       errorType: DownloadErrorType.verificationRequired,
     );
-    _failedInSession++;
     return true;
   }
 

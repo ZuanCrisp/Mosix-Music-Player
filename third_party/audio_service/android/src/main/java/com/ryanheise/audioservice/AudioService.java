@@ -433,7 +433,7 @@ public class AudioService extends MediaBrowserServiceCompat {
 
     private Intent customActionActivity(MediaControl control) {
         Bundle extras = mapToBundle(control.customAction.extras);
-        String activityClass = extras == null ? null : extras.getString("spotiflac.activity");
+        String activityClass = extras == null ? null : extras.getString("mornye.activity");
         if (activityClass == null) return null;
         // setClassName keeps the component inside this application's package.
         return new Intent(control.customAction.name)
@@ -669,10 +669,8 @@ public class AudioService extends MediaBrowserServiceCompat {
                 builder.setContentText(description.getSubtitle());
             if (description.getDescription() != null)
                 builder.setSubText(description.getDescription());
-            synchronized (this) {
-                if (artBitmap != null)
-                    builder.setLargeIcon(artBitmap);
-            }
+            if (artBitmap != null)
+                builder.setLargeIcon(artBitmap);
         }
         if (config.androidNotificationClickStartsActivity)
             builder.setContentIntent(mediaSession.getController().getSessionActivity());
@@ -832,37 +830,53 @@ public class AudioService extends MediaBrowserServiceCompat {
      *  - https://9to5google.com/2020/08/02/android-11-lockscreen-art/
      */
     synchronized void setMetadata(MediaMetadataCompat mediaMetadata) {
-        synchronized (mediaMetadataCache) {
-            if (destroyed) throw new IllegalStateException("Audio service is no longer attached");
-            mediaMetadataCache.setCurrent(mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID), mediaMetadata);
-        }
+        if (destroyed) throw new IllegalStateException("Audio service is no longer attached");
+        Bitmap bitmap = null;
         String artCacheFilePath = mediaMetadata.getString("artCacheFile");
         if (artCacheFilePath != null) {
             // Load local files and network images, cached in files
-            artBitmap = loadArtBitmap(artCacheFilePath, null);
-            mediaMetadata = putArtToMetadata(mediaMetadata);
+            bitmap = loadArtBitmap(artCacheFilePath, null);
+            mediaMetadata = putArtToMetadata(mediaMetadata, bitmap);
         } else {
             // Load content:// URIs
             String artUri = mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI);
             if (artUri != null && artUri.startsWith("content:")) {
                 String loadThumbnailUri = mediaMetadata.getString("loadThumbnailUri");
-                artBitmap = loadArtBitmap(artUri, loadThumbnailUri);
-                mediaMetadata = putArtToMetadata(mediaMetadata);
-            } else {
-                artBitmap = null;
+                bitmap = loadArtBitmap(artUri, loadThumbnailUri);
+                mediaMetadata = putArtToMetadata(mediaMetadata, bitmap);
             }
         }
         if (destroyed) throw new IllegalStateException("Audio service is no longer attached");
-        this.mediaMetadata = mediaMetadata;
-        mediaSession.setMetadata(mediaMetadata);
-        handler.removeCallbacksAndMessages(null);
-        handler.post(this::updateNotification);
+        final MediaMetadataCompat preparedMetadata = mediaMetadata;
+        final Bitmap preparedBitmap = bitmap;
+        handler.post(() -> publishMetadata(preparedMetadata, preparedBitmap));
     }
 
-    private MediaMetadataCompat putArtToMetadata(MediaMetadataCompat mediaMetadata) {
+    private void publishMetadata(MediaMetadataCompat mediaMetadata, Bitmap bitmap) {
+        // Publish on the same looper as setState. Artwork preparation can finish
+        // after the new track is already playing, so refresh the latest state
+        // with its new media ID without changing playback or its position clock.
+        if (destroyed || mediaSession == null) return;
+        synchronized (mediaMetadataCache) {
+            mediaMetadataCache.setCurrent(mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID), mediaMetadata);
+        }
+        this.mediaMetadata = mediaMetadata;
+        artBitmap = bitmap;
+        mediaSession.setMetadata(mediaMetadata);
+        PlaybackStateCompat state = mediaSession.getController().getPlaybackState();
+        if (state != null) {
+            Bundle extras = state.getExtras() == null ? new Bundle() : new Bundle(state.getExtras());
+            extras.putString(MediaConstants.PLAYBACK_STATE_EXTRAS_KEY_MEDIA_ID,
+                    mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID));
+            mediaSession.setPlaybackState(new PlaybackStateCompat.Builder(state).setExtras(extras).build());
+        }
+        updateNotification();
+    }
+
+    private MediaMetadataCompat putArtToMetadata(MediaMetadataCompat mediaMetadata, Bitmap bitmap) {
         return new MediaMetadataCompat.Builder(mediaMetadata)
-                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, artBitmap)
-                .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, artBitmap)
+                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bitmap)
+                .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, bitmap)
                 .build();
     }
 

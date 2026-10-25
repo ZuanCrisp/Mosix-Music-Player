@@ -3,16 +3,17 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/providers/track_provider.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/extension_auth_launcher.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/providers/track_provider.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/extension_auth_launcher.dart';
+
+import 'support/fixed_settings.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const channel = MethodChannel('plugins.flutter.io/url_launcher');
-  const backend = MethodChannel('com.zuancrisp.mosix/backend');
+  const backend = MethodChannel('com.zarz.mornye/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   final uri = Uri.parse('https://example.invalid/verify?state=sample');
@@ -114,7 +115,7 @@ void main() {
         return true;
       });
       final container = ProviderContainer(
-        overrides: [settingsProvider.overrideWith(_Settings.new)],
+        overrides: [settingsProvider.overrideWith(FixedSettingsNotifier.new)],
       );
       addTearDown(container.dispose);
       await container
@@ -129,9 +130,4 @@ void main() {
       expect(launches, 2);
     },
   );
-}
-
-class _Settings extends SettingsNotifier {
-  @override
-  AppSettings build() => const AppSettings();
 }

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/utils/artist_utils.dart';
+import 'package:mornye/utils/artist_utils.dart';
 
 void main() {
   test('featured variants and confirmed conjunction credits are clickable', () {

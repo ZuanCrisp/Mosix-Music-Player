@@ -3,17 +3,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mosix/theme/material_expressive.dart';
-import 'package:mosix/widgets/app_switch.dart';
-import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mornye/theme/app_motion.dart';
+import 'package:mornye/theme/material_expressive.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_switch.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
 
-/// Background fill for grouped cards, matching the Settings group look. Blends a
-/// translucent overlay over the surface so it stays visible on AMOLED (pure
-/// black) dark themes as well as normal light/dark themes.
+/// The neutral grouped fill used in Settings, including AMOLED themes.
 Color settingsGroupColor(BuildContext context) {
   final colorScheme = Theme.of(context).colorScheme;
   if (context.isMornye) return colorScheme.surfaceContainer;
@@ -172,12 +172,16 @@ class _SettingsSearchTargetState extends State<SettingsSearchTarget> {
     if (!_handled) return widget.child;
 
     final colorScheme = Theme.of(context).colorScheme;
+    final motion = AppMotion.effects(
+      context,
+      AppMotionSpec(context.tokens.motionMedium, Curves.easeOutCubic),
+    );
     return Semantics(
       selected: _highlighted,
       child: AnimatedContainer(
         key: ValueKey('settings-highlight:${widget.label}'),
-        duration: context.tokens.motionMedium,
-        curve: Curves.easeOutCubic,
+        duration: motion.duration,
+        curve: motion.curve,
         color: _highlighted
             ? colorScheme.primaryContainer.withValues(alpha: 0.3)
             : Colors.transparent,
@@ -187,16 +191,56 @@ class _SettingsSearchTargetState extends State<SettingsSearchTarget> {
   }
 }
 
+/// Whether rows sit in an expressive connected [SettingsGroup], where the gaps
+/// between row surfaces replace dividers. Custom rows check this to hide
+/// their own dividers.
+bool settingsRowsConnected(BuildContext context) =>
+    context.dependOnInheritedWidgetOfExactType<_ConnectedRowsScope>() != null;
+
+/// Horizontal margin of settings content on a surface [maxWidth] wide: the
+/// 16dp edge plus the wide-layout centering inset. Groups, section headers,
+/// info cards and page-level buttons share it so their edges line up.
+double settingsHorizontalInset(double maxWidth) =>
+    16 + (maxWidth.isFinite ? wideInsetForWidth(maxWidth) : 0);
+
+/// Corners of one row in an expressive connected list: the card radius at the
+/// [first] and [last] ends of the run, tight corners between rows.
+BorderRadius connectedRowRadius(
+  BuildContext context, {
+  required bool first,
+  required bool last,
+}) {
+  final outer = Radius.circular(context.tokens.radiusCard);
+  const inner = Radius.circular(4);
+  return BorderRadius.vertical(
+    top: first ? outer : inner,
+    bottom: last ? outer : inner,
+  );
+}
+
+class _ConnectedRowsScope extends InheritedWidget {
+  const _ConnectedRowsScope({required super.child});
+
+  @override
+  bool updateShouldNotify(_ConnectedRowsScope oldWidget) => false;
+}
+
 class SettingsGroup extends StatelessWidget {
   final List<Widget> children;
   final EdgeInsetsGeometry? margin;
   final bool glass;
+
+  /// Connects custom [children] that are each one complete row, such as
+  /// extension rows. Groups of [SettingsItem], [SettingsSwitchItem] and [ListTile]
+  /// connect without it.
+  final bool connected;
 
   const SettingsGroup({
     super.key,
     required this.children,
     this.margin,
     this.glass = false,
+    this.connected = false,
   });
 
   @override
@@ -238,7 +282,63 @@ class SettingsGroup extends StatelessWidget {
       );
     }
 
-    if (materialExpressiveEnabled(context)) {
+    final expressive = materialExpressiveEnabled(context);
+    // Only groups of standard rows split into connected tiles. Forms and
+    // custom content keep one card, so spacers never become empty tiles.
+    final standardRows =
+        children.isNotEmpty &&
+        (connected ||
+            children.every(
+              (child) =>
+                  child is SettingsItem ||
+                  child is SettingsSwitchItem ||
+                  child is ListTile,
+            ));
+    // Connected surfaces are static layout, so reduced motion keeps the gaps.
+    if (!context.isMornye && standardRows) {
+      // Expressive connected list: every row is its own surface separated by
+      // a 2dp gap. The group's ends keep the card radius, inner corners stay
+      // tight, and the gaps replace row dividers.
+      final last = children.length - 1;
+      return LayoutBuilder(
+        builder: (context, constraints) => Padding(
+          padding:
+              margin ??
+              EdgeInsets.symmetric(
+                horizontal:
+                    16 +
+                    (constraints.hasBoundedWidth
+                        ? wideInsetForWidth(constraints.maxWidth)
+                        : 0),
+                vertical: 4,
+              ),
+          child: _ConnectedRowsScope(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final (index, row) in children.indexed) ...[
+                  if (index > 0) const SizedBox(height: 2),
+                  Material(
+                    color: cardColor,
+                    clipBehavior: Clip.antiAlias,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: connectedRowRadius(
+                        context,
+                        first: index == 0,
+                        last: index == last,
+                      ),
+                    ),
+                    child: row,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (expressive) {
       return LayoutBuilder(
         builder: (context, constraints) => Padding(
           padding:
@@ -293,6 +393,51 @@ class SettingsGroup extends StatelessWidget {
   }
 }
 
+/// The grouped list appearance with rows built only near the viewport.
+class SliverSettingsGroup extends StatelessWidget {
+  const SliverSettingsGroup({
+    super.key,
+    required this.itemCount,
+    required this.itemBuilder,
+    required this.margin,
+  });
+
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+  final EdgeInsetsGeometry margin;
+
+  @override
+  Widget build(BuildContext context) => SliverPadding(
+    padding: margin,
+    sliver: SliverList.builder(
+      itemCount: itemCount,
+      itemBuilder: (context, index) {
+        final first = index == 0;
+        final last = index == itemCount - 1;
+        final mornye = context.isMornye;
+        final radius = mornye
+            ? BorderRadius.vertical(
+                top: first ? const Radius.circular(28) : Radius.zero,
+                bottom: last ? const Radius.circular(28) : Radius.zero,
+              )
+            : connectedRowRadius(context, first: first, last: last);
+        final row = Material(
+          color: settingsGroupColor(context),
+          clipBehavior: Clip.antiAlias,
+          borderRadius: radius,
+          child: itemBuilder(context, index),
+        );
+        return mornye
+            ? row
+            : Padding(
+                padding: EdgeInsets.only(top: first ? 0 : 2),
+                child: _ConnectedRowsScope(child: row),
+              );
+      },
+    ),
+  );
+}
+
 class SettingsItem extends StatelessWidget {
   final IconData? icon;
   final Color? iconColor;
@@ -307,6 +452,10 @@ class SettingsItem extends StatelessWidget {
   final VoidCallback? onTap;
   final bool showDivider;
 
+  /// Announces a checkmark choice's state to screen readers; null for rows
+  /// that are not choices.
+  final bool? selected;
+
   const SettingsItem({
     super.key,
     this.icon,
@@ -319,6 +468,7 @@ class SettingsItem extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.showDivider = true,
+    this.selected,
   });
 
   @override
@@ -329,89 +479,95 @@ class SettingsItem extends StatelessWidget {
     final content = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        InkWell(
-          onTap: onTap,
-          splashColor: colorScheme.primary.withValues(alpha: 0.12),
-          highlightColor: Colors.transparent,
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: context.tokens.rowPaddingH,
-              vertical: context.tokens.rowPaddingV,
-            ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: context.tokens.rowMinHeight,
+        Semantics(
+          selected: selected,
+          inMutuallyExclusiveGroup: selected != null,
+          child: InkWell(
+            onTap: onTap,
+            splashColor: colorScheme.primary.withValues(alpha: 0.12),
+            highlightColor: Colors.transparent,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.tokens.rowPaddingH,
+                vertical: context.tokens.rowPaddingV,
               ),
-              child: Row(
-                children: [
-                  if (showIcon) ...[
-                    Icon(
-                      context.adaptiveIcon(icon!),
-                      color: iconColor ?? colorScheme.onSurfaceVariant,
-                      size: 24,
-                    ),
-                    SizedBox(width: context.tokens.rowIconGap),
-                  ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                title,
-                                style: Theme.of(context).textTheme.bodyLarge,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: context.tokens.rowMinHeight,
+                ),
+                child: Row(
+                  children: [
+                    if (showIcon) ...[
+                      AppIcon.adaptive(
+                        icon!,
+                        color: iconColor ?? colorScheme.onSurfaceVariant,
+                        size: 24,
+                      ),
+                      SizedBox(width: context.tokens.rowIconGap),
+                    ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  title,
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
                               ),
-                            ),
-                            if (titleTrailing != null) ...[
-                              const SizedBox(width: 8),
-                              titleTrailing!,
+                              if (titleTrailing != null) ...[
+                                const SizedBox(width: 8),
+                                titleTrailing!,
+                              ],
                             ],
-                          ],
-                        ),
-                        if (subtitle != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            subtitle!,
-                            style:
-                                (context.isMornye
-                                        ? Theme.of(context).textTheme.bodySmall
-                                        : Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium)
-                                    ?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
                           ),
+                          if (subtitle != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle!,
+                              style:
+                                  (context.isMornye
+                                          ? Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall
+                                          : Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium)
+                                      ?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                            ),
+                          ],
+                          if (footer != null) ...[
+                            const SizedBox(height: 8),
+                            footer!,
+                          ],
                         ],
-                        if (footer != null) ...[
-                          const SizedBox(height: 8),
-                          footer!,
-                        ],
-                      ],
+                      ),
                     ),
-                  ),
-                  if (trailing != null) ...[
-                    const SizedBox(width: 8),
-                    trailing!,
-                  ] else if (onTap != null) ...[
-                    const SizedBox(width: 8),
-                    Icon(
-                      context.isMornye
-                          ? CupertinoIcons.chevron_forward
-                          : Icons.chevron_right,
-                      size: context.tokens.rowChevronSize,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                    if (trailing != null) ...[
+                      const SizedBox(width: 8),
+                      trailing!,
+                    ] else if (onTap != null) ...[
+                      const SizedBox(width: 8),
+                      AppIcon(
+                        context.isMornye
+                            ? CupertinoIcons.forward
+                            : Icons.chevron_right,
+                        size: context.tokens.rowChevronSize,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
         ),
-        if (showDivider)
+        if (showDivider && !settingsRowsConnected(context))
           Divider(
             height: 1,
             indent: showIcon
@@ -459,80 +615,82 @@ class SettingsSwitchItem extends StatelessWidget {
     final content = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Opacity(
-          opacity: isDisabled ? 0.5 : 1.0,
-          child: InkWell(
-            onTap: isDisabled ? null : () => onChanged!(!value),
-            splashColor: colorScheme.primary.withValues(alpha: 0.12),
-            highlightColor: Colors.transparent,
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: context.tokens.rowPaddingH,
-                vertical: context.tokens.rowPaddingVCompact,
-              ),
-              child: Row(
-                children: [
-                  if (showIcon) ...[
-                    Icon(
-                      icon,
-                      color: isDisabled
-                          ? colorScheme.outline
-                          : colorScheme.onSurfaceVariant,
-                      size: 24,
-                    ),
-                    SizedBox(width: context.tokens.rowIconGap),
-                  ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                title,
-                                style: Theme.of(context).textTheme.bodyLarge
-                                    ?.copyWith(
-                                      color: isDisabled
-                                          ? colorScheme.outline
-                                          : null,
-                                    ),
-                              ),
-                            ),
-                            if (titleTrailing != null) ...[
-                              const SizedBox(width: 8),
-                              titleTrailing!,
-                            ],
-                          ],
-                        ),
-                        if (subtitle != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            subtitle!,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: isDisabled
-                                      ? colorScheme.outline
-                                      : colorScheme.onSurfaceVariant,
+        // One focus stop that reads the title, subtitle and on/off state.
+        MergeSemantics(
+          child: Opacity(
+            opacity: isDisabled ? 0.5 : 1.0,
+            child: InkWell(
+              onTap: isDisabled ? null : () => onChanged!(!value),
+              splashColor: colorScheme.primary.withValues(alpha: 0.12),
+              highlightColor: Colors.transparent,
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.tokens.rowPaddingH,
+                  vertical: context.tokens.rowPaddingVCompact,
+                ),
+                child: Row(
+                  children: [
+                    if (showIcon) ...[
+                      AppIcon(
+                        icon,
+                        color: isDisabled
+                            ? colorScheme.outline
+                            : colorScheme.onSurfaceVariant,
+                        size: 24,
+                      ),
+                      SizedBox(width: context.tokens.rowIconGap),
+                    ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  title,
+                                  style: Theme.of(context).textTheme.bodyLarge
+                                      ?.copyWith(
+                                        color: isDisabled
+                                            ? colorScheme.outline
+                                            : null,
+                                      ),
                                 ),
+                              ),
+                              if (titleTrailing != null) ...[
+                                const SizedBox(width: 8),
+                                titleTrailing!,
+                              ],
+                            ],
                           ),
+                          if (subtitle != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle!,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: isDisabled
+                                        ? colorScheme.outline
+                                        : colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  AppSwitch(
-                    value: value,
-                    semanticLabel: title,
-                    onChanged: isDisabled ? null : onChanged,
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    AppSwitch(
+                      value: value,
+                      onChanged: isDisabled ? null : onChanged,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-        if (showDivider)
+        if (showDivider && !settingsRowsConnected(context))
           Divider(
             height: 1,
             indent: showIcon
@@ -556,21 +714,28 @@ class SettingsSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = Padding(
-      padding: const EdgeInsets.fromLTRB(32, 24, 32, 8),
-      child: Text(
-        title,
-        style:
-            (context.isMornye
-                    ? Theme.of(context).textTheme.bodyLarge
-                    : Theme.of(context).textTheme.titleSmall)
-                ?.copyWith(
-                  color: context.isMornye
-                      ? Theme.of(context).colorScheme.onSurfaceVariant
-                      : Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-      ),
+    final label = Text(
+      title,
+      style:
+          (context.isMornye
+                  ? Theme.of(context).textTheme.bodyLarge
+                  : Theme.of(context).textTheme.titleSmall)
+              ?.copyWith(
+                color: context.isMornye
+                    ? Theme.of(context).colorScheme.onSurfaceVariant
+                    : Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+    );
+    // Aligned with the row content of the groups below at any width.
+    final content = LayoutBuilder(
+      builder: (context, constraints) {
+        final inset = settingsHorizontalInset(constraints.maxWidth) + 16;
+        return Padding(
+          padding: EdgeInsets.fromLTRB(inset, 24, inset, 8),
+          child: Semantics(header: true, child: label),
+        );
+      },
     );
     return SettingsSearchTarget(label: title, child: content);
   }
@@ -611,16 +776,11 @@ class SettingsChoiceChip extends StatelessWidget {
     final tokens = context.tokens;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
     final borderRadius = BorderRadius.circular(tokens.radiusCover);
 
+    // One solid tier above a settings group in light, dark and AMOLED.
     final unselectedColor = context.isMornye
         ? Colors.transparent
-        : isDark
-        ? Color.alphaBlend(
-            Colors.white.withValues(alpha: 0.05),
-            colorScheme.surface,
-          )
         : colorScheme.surfaceContainerHigh;
     final foreground = context.isMornye && isSelected
         ? colorScheme.primary
@@ -635,7 +795,11 @@ class SettingsChoiceChip extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: theme.textTheme.bodyMedium?.copyWith(
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-        color: foreground,
+        // Like an iOS segment, the filled chip marks the choice; accent text
+        // on Mornye's grey fill falls below readable contrast.
+        color: context.isMornye && isSelected
+            ? colorScheme.onSurface
+            : foreground,
       ),
     );
 
@@ -646,7 +810,7 @@ class SettingsChoiceChip extends StatelessWidget {
       content = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(context.adaptiveIcon(icon!), color: foreground),
+          AppIcon.adaptive(icon!, color: foreground),
           SizedBox(height: tokens.gapXs + 2),
           labelText,
         ],
@@ -655,7 +819,7 @@ class SettingsChoiceChip extends StatelessWidget {
       content = Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(context.adaptiveIcon(icon!), size: 18, color: foreground),
+          AppIcon.adaptive(icon!, size: 18, color: foreground),
           SizedBox(width: tokens.gapSm),
           Flexible(child: labelText),
         ],
@@ -669,24 +833,128 @@ class SettingsChoiceChip extends StatelessWidget {
                 : colorScheme.primaryContainer)
           : unselectedColor,
       borderRadius: borderRadius,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: borderRadius,
-        child: ConstrainedBox(
-          // Keeps every chip a comfortable tap target regardless of layout.
-          constraints: BoxConstraints(minHeight: tokens.minTouchTarget),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: tokens.gapMd,
-              horizontal: tokens.gapMd,
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        inMutuallyExclusiveGroup: true,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: borderRadius,
+          child: ConstrainedBox(
+            // Keeps every chip a comfortable tap target regardless of layout.
+            constraints: BoxConstraints(minHeight: tokens.minTouchTarget),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: tokens.gapMd,
+                horizontal: tokens.gapMd,
+              ),
+              child: content,
             ),
-            child: content,
           ),
         ),
       ),
     );
 
     return expand ? Expanded(child: chip) : chip;
+  }
+}
+
+/// One option of a [SettingsSegmentedChoice].
+class SettingsSegmentOption<T> {
+  const SettingsSegmentOption({
+    required this.value,
+    required this.label,
+    this.icon,
+  });
+
+  final T value;
+  final String label;
+  final IconData? icon;
+}
+
+/// Single-select row of two to four related options that fits on one line.
+///
+/// Material 3 Expressive replaces the segmented button with a connected
+/// button group spanning the row; reduced motion keeps the static
+/// [SegmentedButton]. Mornye keeps its equal-width chips. Option sets that
+/// wrap belong in a [SettingsChoiceGrid] instead.
+class SettingsSegmentedChoice<T> extends StatelessWidget {
+  const SettingsSegmentedChoice({
+    super.key,
+    required this.options,
+    required this.selected,
+    required this.onChanged,
+    this.semanticLabel,
+  });
+
+  final List<SettingsSegmentOption<T>> options;
+  final T selected;
+  final ValueChanged<T> onChanged;
+  final String? semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    if (materialExpressiveEnabled(context)) {
+      final index = options.indexWhere((option) => option.value == selected);
+      return MaterialExpressiveScope(
+        skipAutofocus: true,
+        child: M3EButtonGroup(
+          type: M3EButtonGroupType.connected,
+          style: M3EButtonStyle.filled,
+          // Connected segments get no inflated target; keep 48 dp.
+          size: M3EButtonSize.sm.copyWith(height: 48),
+          selectedIndex: index < 0 ? null : index,
+          selectionRequired: true,
+          onSelectedIndexChanged: (index) {
+            if (index != null) onChanged(options[index].value);
+          },
+          semanticLabel: semanticLabel,
+          actions: [
+            for (final option in options)
+              M3EButtonGroupAction(
+                icon: option.icon == null
+                    ? null
+                    : AppIcon.adaptive(option.icon!, size: 18, fill: 0),
+                selectedIcon: option.icon == null
+                    ? null
+                    : AppIcon.adaptive(option.icon!, size: 18, fill: 1),
+                label: Text(option.label),
+              ),
+          ],
+        ),
+      );
+    }
+    if (!context.isMornye) {
+      return SegmentedButton<T>(
+        showSelectedIcon: false,
+        expandedInsets: EdgeInsets.zero,
+        segments: [
+          for (final option in options)
+            ButtonSegment(
+              value: option.value,
+              label: Text(option.label),
+              icon: option.icon == null ? null : AppIcon(option.icon!),
+            ),
+        ],
+        selected: {selected},
+        onSelectionChanged: (value) => onChanged(value.first),
+      );
+    }
+    return Row(
+      children: [
+        for (final (index, option) in options.indexed) ...[
+          if (index > 0) SizedBox(width: context.tokens.gapSm),
+          SettingsChoiceChip(
+            expand: true,
+            layout: SettingsChipLayout.column,
+            icon: option.icon,
+            label: option.label,
+            isSelected: option.value == selected,
+            onTap: () => onChanged(option.value),
+          ),
+        ],
+      ],
+    );
   }
 }
 
@@ -752,22 +1020,31 @@ class SettingsInfoCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    // Material uses the solid container with its paired on-color, so the
+    // text keeps its contrast; Mornye keeps its softer fills.
+    final mornye = context.isMornye;
     final (background, foreground) = switch (tone) {
       SettingsInfoTone.neutral => (
-        colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        mornye
+            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+            : colorScheme.surfaceContainerHigh,
         colorScheme.onSurfaceVariant,
       ),
       SettingsInfoTone.warning => (
-        colorScheme.tertiaryContainer.withValues(alpha: 0.5),
+        mornye
+            ? colorScheme.tertiaryContainer.withValues(alpha: 0.5)
+            : colorScheme.tertiaryContainer,
         colorScheme.onTertiaryContainer,
       ),
       SettingsInfoTone.error => (
-        colorScheme.errorContainer.withValues(alpha: 0.6),
+        mornye
+            ? colorScheme.errorContainer.withValues(alpha: 0.6)
+            : colorScheme.errorContainer,
         colorScheme.onErrorContainer,
       ),
     };
 
-    final useGlass = glass && context.isMornye;
+    final useGlass = glass && mornye;
     final textColor = useGlass ? colorScheme.onSurface : foreground;
     final content = Padding(
       padding: EdgeInsets.all(tokens.gapLg),
@@ -775,7 +1052,7 @@ class SettingsInfoCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (icon != null) ...[
-            Icon(
+            AppIcon(
               useGlass ? mornyeIconFor(icon!) : icon,
               size: 20,
               color: useGlass ? colorScheme.primary : foreground,
@@ -803,7 +1080,10 @@ class SettingsInfoCard extends StatelessWidget {
                 ),
                 if (action != null) ...[
                   SizedBox(height: tokens.gapSm),
-                  Align(alignment: Alignment.centerLeft, child: action!),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: action!,
+                  ),
                 ],
               ],
             ),
@@ -811,22 +1091,34 @@ class SettingsInfoCard extends StatelessWidget {
         ],
       ),
     );
-    return Padding(
-      padding:
-          margin ??
-          EdgeInsets.symmetric(
-            horizontal: tokens.gapLg,
-            vertical: tokens.gapXs,
-          ),
-      child: useGlass
-          ? MornyeGlassPanel.overlay(child: content)
-          : DecoratedBox(
-              decoration: BoxDecoration(
-                color: background,
-                borderRadius: tokens.borderRadiusCard,
-              ),
-              child: content,
+    final card = useGlass
+        ? MornyeGlassPanel.overlay(child: content)
+        : DecoratedBox(
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: tokens.borderRadiusCard,
             ),
+            child: content,
+          );
+    final resolved =
+        (margin ??
+                EdgeInsets.symmetric(
+                  horizontal: tokens.gapLg,
+                  vertical: tokens.gapXs,
+                ))
+            .resolve(Directionality.of(context));
+    // Wide layouts center groups; the card keeps the same edges.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = settingsHorizontalInset(constraints.maxWidth) - 16;
+        return Padding(
+          padding: resolved.copyWith(
+            left: resolved.left + wide,
+            right: resolved.right + wide,
+          ),
+          child: card,
+        );
+      },
     );
   }
 }

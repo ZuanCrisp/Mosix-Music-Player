@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/theme_settings.dart';
-import 'package:mosix/providers/theme_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/utils/lyrics_parser.dart';
-import 'package:mosix/widgets/lyrics_size_setting.dart';
-import 'package:mosix/widgets/lyrics_text_scale.dart';
-import 'package:mosix/widgets/player_lyrics.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/theme_settings.dart';
+import 'package:mornye/providers/theme_provider.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/lyrics_parser.dart';
+import 'package:mornye/widgets/app_slider.dart';
+import 'package:mornye/widgets/lyrics_size_setting.dart';
+import 'package:mornye/widgets/lyrics_text_scale.dart';
+import 'package:mornye/widgets/player_lyrics.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -40,7 +41,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    final slider = tester.widget<Slider>(find.byType(Slider));
+    final slider = tester.widget<AppSlider>(find.byType(AppSlider));
     slider.onChanged!(1.3);
     await tester.pump();
     expect(find.text('130%'), findsOneWidget);
@@ -102,7 +103,7 @@ void main() {
         expect(scales.map((widget) => widget.scale), containsAll([1.0, 0.96]));
         expect(
           scales.first.duration,
-          reduced ? Duration.zero : const Duration(milliseconds: 280),
+          reduced ? Duration.zero : const Duration(milliseconds: 420),
         );
         final sizes = find
             .byType(AnimatedScale)

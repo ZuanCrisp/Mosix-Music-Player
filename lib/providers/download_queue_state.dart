@@ -1,7 +1,7 @@
 import 'dart:collection';
 
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/utils/chunked_list.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/utils/chunked_list.dart';
 
 /// Shares the stable key-to-position index across progress snapshots. Values
 /// come from the current immutable items, so old lookups keep their old values.
@@ -284,6 +284,22 @@ class DownloadQueueState {
   Iterable<DownloadItem> get queuedItems => identical(items, lookup._items)
       ? lookup._queuedPositions.indices.map((index) => items[index])
       : items.where((item) => item.status == DownloadStatus.queued);
+
+  /// Replaces items and updates their lookup from this same queue snapshot.
+  DownloadQueueState withItemReplacements(Map<int, DownloadItem> replacements) {
+    if (replacements.isEmpty) return this;
+    final nextItems = ChunkedList<DownloadItem>.from(
+      items,
+    ).updated(replacements);
+    return copyWith(
+      items: nextItems,
+      lookup: lookup.updatedForIndices(
+        previousItems: items,
+        nextItems: nextItems,
+        changedIndices: replacements.keys,
+      ),
+    );
+  }
 
   DownloadQueueState withoutItem(String id) {
     final index = lookup.indexByItemId[id];

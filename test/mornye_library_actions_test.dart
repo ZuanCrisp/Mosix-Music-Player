@@ -8,23 +8,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/unified_library_item.dart';
-import 'package:mosix/providers/download_history_provider.dart';
-import 'package:mosix/screens/track_metadata_screen.dart';
-import 'package:mosix/services/batch_metadata_re_enrich.dart';
-import 'package:mosix/services/batch_track_actions.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/app_action_button.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/widgets/app_switch.dart';
-import 'package:mosix/widgets/batch_convert_sheet.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/re_enrich_field_dialog.dart';
-import 'package:mosix/widgets/selection_action_button.dart';
-import 'package:mosix/widgets/selection_bottom_bar.dart';
-import 'package:mosix/widgets/destructive_selection_button.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/unified_library_item.dart';
+import 'package:mornye/providers/download_history_provider.dart';
+import 'package:mornye/screens/track_metadata_screen.dart';
+import 'package:mornye/services/batch_metadata_re_enrich.dart';
+import 'package:mornye/services/batch_track_actions.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_action_button.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_switch.dart';
+import 'package:mornye/widgets/batch_convert_sheet.dart';
+import 'package:mornye/widgets/mornye_context_menu.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/widgets/re_enrich_field_dialog.dart';
+import 'package:mornye/widgets/selection_action_button.dart';
+import 'package:mornye/widgets/selection_bottom_bar.dart';
+import 'package:mornye/widgets/destructive_selection_button.dart';
 
 Widget _app(
   Widget child, {
@@ -47,7 +47,7 @@ Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
 }
 
 void _mockMetadataFile(WidgetTester tester) {
-  const channel = MethodChannel('com.zuancrisp.mosix/backend');
+  const channel = MethodChannel('com.zarz.mornye/backend');
   final messenger = tester.binding.defaultBinaryMessenger;
   messenger.setMockMethodCallHandler(
     channel,

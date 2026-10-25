@@ -100,7 +100,7 @@ pub fn analyze_automix_pcm(
     }
     let first_audible = energy
         .iter()
-        .position(|value| *value > 0.00001_f64.max(peak_energy * 0.01))
+        .position(|value| *value > 0.00001_f64.max(peak_energy * 0.0001))
         .unwrap_or(0);
     let first_sound = first_audible as f64 / FPS;
     let mut prefix = vec![0.0; frames + 1];
@@ -119,6 +119,19 @@ pub fn analyze_automix_pcm(
             first_sound,
             ..AutoMixBeatGrid::default()
         });
+    }
+    // Match the bounded local onset normalization in analyzeAutoMixPcm.
+    let mut power = vec![0.0; frames + 1];
+    for index in 0..frames {
+        power[index + 1] = power[index] + onset[index] * onset[index];
+    }
+    let floor = total / frames as f64 * 0.01;
+    for (index, value) in onset.iter_mut().enumerate() {
+        check()?;
+        let begin = index.saturating_sub(43);
+        let end = frames.min(index + 44);
+        let local = (power[end] - power[begin]) / (end - begin) as f64;
+        *value = (*value / floor.max(local).sqrt()).min(6.0);
     }
     let correlation = |lag: f64| {
         let (mut dot, mut left, mut right) = (0.0_f64, 0.0_f64, 0.0_f64);
@@ -147,6 +160,20 @@ pub fn analyze_automix_pcm(
     }
     if best_bpm == 0.0 {
         return Ok(AutoMixBeatGrid::default());
+    }
+    let coarse_bpm = best_bpm;
+    for step in -25..=25 {
+        check()?;
+        let bpm = coarse_bpm + f64::from(step) * 0.01;
+        if !(60.0..=180.0).contains(&bpm) {
+            continue;
+        }
+        let score = correlation(FPS * 60.0 / bpm);
+        let weighted = score * (0.96 + 0.04 * (-((bpm - 120.0) / 45.0).powf(2.0)).exp());
+        if weighted > best_score {
+            best_score = weighted;
+            best_bpm = bpm;
+        }
     }
     let period = FPS * 60.0 / best_bpm;
     let (mut best_phase, mut phase_score) = (0.0, 0.0);
@@ -409,10 +436,10 @@ mod tests {
     #[test]
     fn automix_matches_shared_dart_drum_vectors() {
         let expected = [
-            (90.0, 90.0, 0.16834467120181407, 0.7756543130516005),
-            (120.0, 120.0, 0.16834467120181407, 0.9871132152944309),
-            (124.0, 123.75, 0.156734693877551, 0.62),
-            (160.0, 160.25, 0.18575963718820862, 0.8267400495158962),
+            (90.0, 90.0, 0.16834467120181407, 0.8021635512174413),
+            (120.0, 119.99, 0.16834467120181407, 0.9844533705342401),
+            (124.0, 123.88, 0.156734693877551, 0.8467090068250587),
+            (160.0, 160.15, 0.1799546485260771, 0.8319336271448226),
         ];
         for (input_bpm, bpm, phase, confidence) in expected {
             let mut pcm = Vec::new();
@@ -433,6 +460,44 @@ mod tests {
             assert!((grid.confidence - confidence).abs() < 1e-12);
             assert_eq!(grid.first_sound, 0.16253968253968254);
         }
+    }
+
+    #[test]
+    fn automix_keeps_quiet_beats_in_changing_dynamics() {
+        for bpm in [90.0, 120.0, 124.0, 160.0] {
+            let mut pcm = Vec::new();
+            for i in 0..11_025 * 24 {
+                let time = i as f64 / 11_025.0;
+                let since = (time - 0.17) % (60.0 / bpm);
+                let transient = if time < 0.17 {
+                    0.0
+                } else {
+                    (-since * 50.0).exp()
+                };
+                let gain = 0.03 + 0.97 * (time / 24.0).powi(3);
+                let value =
+                    0.75 * gain * transient * (time * 2.0 * std::f64::consts::PI * 100.0).sin();
+                pcm.extend_from_slice(&((value * 32767.0).round() as i16).to_le_bytes());
+            }
+            let grid = analyze_automix_pcm(&pcm, &|| Ok(())).unwrap();
+            assert!(grid.confidence >= 0.55, "{bpm}: {}", grid.confidence);
+            assert!((grid.bpm - bpm).abs() < 0.4);
+            assert!(grid.first_sound < 0.3);
+        }
+    }
+
+    #[test]
+    fn automix_noise_does_not_invent_a_reliable_beat() {
+        let mut seed = 11_u32;
+        let mut pcm = Vec::new();
+        for _ in 0..11_025 * 24 {
+            seed ^= seed << 13;
+            seed ^= seed >> 17;
+            seed ^= seed << 5;
+            pcm.extend_from_slice(&(seed as i16).to_le_bytes());
+        }
+        let grid = analyze_automix_pcm(&pcm, &|| Ok(())).unwrap();
+        assert!(grid.confidence < 0.55);
     }
 
     #[test]

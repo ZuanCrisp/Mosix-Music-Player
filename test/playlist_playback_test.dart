@@ -3,21 +3,24 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/library_collections_provider.dart';
-import 'package:mosix/providers/local_library_provider.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/providers/playback_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/screens/library_tracks_folder_screen.dart';
-import 'package:mosix/services/music_player_service.dart';
-import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/track_card.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/providers/library_collections_provider.dart';
+import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/playback_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/screens/library_tracks_folder_screen.dart';
+import 'package:mornye/services/music_player_service.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/album_detail_header.dart';
+import 'package:mornye/widgets/track_card.dart';
+
+import 'support/app_icon_finder.dart';
 
 final _tracks = [
   for (final name in ['First', 'Unavailable', 'Selected', 'Last'])
@@ -43,9 +46,13 @@ class _Handler extends Fake implements MusicPlayerHandler {}
 class _Player extends MusicPlayerController {
   List<PlayableMedia> queue = [];
   int? index;
+  bool? shuffle;
 
   @override
   Future<MusicPlayerHandler?> ensureInitialized() async => _Handler();
+
+  @override
+  Future<void> setShuffle(bool enabled) async => shuffle = enabled;
 
   @override
   Future<void> playAll(
@@ -96,6 +103,36 @@ class _Collections extends LibraryCollectionsNotifier {
 
   @override
   Future<void> ensurePlaylistLoaded(String playlistId) async {}
+}
+
+class _LocalCollections extends _Collections {
+  @override
+  LibraryCollectionsState build() => LibraryCollectionsState(
+    isLoaded: true,
+    playlists: [
+      UserPlaylistCollection(
+        id: 'playlist',
+        name: 'Local playlist',
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+        tracks: [
+          for (var i = 0; i < 620; i++)
+            CollectionTrackEntry(
+              key: 'local:$i',
+              track: Track(
+                id: 'local_$i',
+                name: 'Local song $i',
+                artistName: 'Local artist',
+                albumName: 'Local album',
+                source: 'local',
+                duration: 180,
+              ),
+              addedAt: DateTime(2026),
+            ),
+        ],
+      ),
+    ],
+  );
 }
 
 class _RemovalCollections extends _Collections {
@@ -186,6 +223,54 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   for (final mornye in [false, true]) {
+    testWidgets('large local playlist renders and scrolls ($mornye)', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(400, 850);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            settingsProvider.overrideWith(_Settings.new),
+            libraryCollectionsProvider.overrideWith(_LocalCollections.new),
+            localLibraryProvider.overrideWith(_Library.new),
+            downloadHistoryProvider.overrideWith(_History.new),
+            downloadHistoryVisibleBatchExistsProvider.overrideWith(
+              (ref, request) => const {},
+            ),
+            localLibraryCoverProvider.overrideWith(
+              (ref, request) async => null,
+            ),
+            localLibraryFirstCoverProvider.overrideWith(
+              (ref, request) async => null,
+            ),
+          ],
+          child: MaterialApp(
+            theme: mornye
+                ? MornyeTheme.build(Brightness.dark)
+                : AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const LibraryTracksFolderScreen(
+              mode: LibraryTracksFolderMode.playlist,
+              playlistId: 'playlist',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('620 tracks'), findsOneWidget);
+      expect(find.text('Local song 0'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Local song 619'),
+        1000,
+        maxScrolls: 100,
+      );
+      expect(find.text('Local song 619'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('Wishlist enqueues one selection (Mornye: $mornye)', (
       tester,
     ) async {
@@ -247,7 +332,7 @@ void main() {
       expect(calls, hasLength(1));
       expect(calls.single.$1, [_tracks[0], _tracks[1]]);
       expect(calls.single.$2, 'example');
-      expect(find.byIcon(Icons.remove_circle_outline), findsNothing);
+      expect(findAppIcon(Icons.remove_circle_outline), findsNothing);
       expect(find.text(l10n.selectionSelected(2)), findsOneWidget);
       expect(find.text('First'), findsOneWidget);
       expect(find.text('Unavailable'), findsOneWidget);
@@ -306,14 +391,14 @@ void main() {
           await tester.ensureVisible(find.text('Unavailable'));
           await tester.tap(find.text('Unavailable'));
           await tester.pumpAndSettle();
-          await tester.tap(find.byIcon(Icons.remove_circle_outline));
+          await tester.tap(findAppIcon(Icons.remove_circle_outline));
           await tester.pumpAndSettle();
           expect(calls, hasLength(1));
           expect(calls.single.$1, mode.name);
           expect(calls.single.$2, ['First', 'Unavailable']);
           expect(find.text('First'), findsNothing);
           expect(find.text('Unavailable'), findsNothing);
-          expect(find.byIcon(Icons.remove_circle_outline), findsNothing);
+          expect(findAppIcon(Icons.remove_circle_outline), findsNothing);
           final l10n = AppLocalizations.of(
             tester.element(find.byType(LibraryTracksFolderScreen)),
           );
@@ -371,7 +456,7 @@ void main() {
       );
       await tester.scrollUntilVisible(row, 200);
       await tester.tap(
-        find.descendant(of: row, matching: find.byIcon(Icons.play_arrow)),
+        find.descendant(of: row, matching: findAppIcon(Icons.play_arrow)),
       );
       await tester.pumpAndSettle();
 
@@ -381,6 +466,116 @@ void main() {
         'Last',
       ]);
       expect(player.index, 1);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('playlist header shuffles every song (Mornye: $mornye)', (
+      tester,
+    ) async {
+      // A narrow phone, so Play, Shuffle and Download all must share it.
+      tester.view.physicalSize = const Size(360, 780);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final player = _Player();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            settingsProvider.overrideWith(_Settings.new),
+            musicPlayerControllerProvider.overrideWithValue(player),
+            playbackProvider.overrideWith(_Playback.new),
+            libraryCollectionsProvider.overrideWith(_Collections.new),
+            localLibraryProvider.overrideWith(_Library.new),
+            downloadHistoryProvider.overrideWith(_History.new),
+            localLibraryCoverProvider.overrideWith(
+              (ref, request) async => null,
+            ),
+            localLibraryFirstCoverProvider.overrideWith(
+              (ref, request) async => null,
+            ),
+          ],
+          child: MaterialApp(
+            theme: mornye
+                ? MornyeTheme.build(Brightness.dark)
+                : AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const LibraryTracksFolderScreen(
+              mode: LibraryTracksFolderMode.playlist,
+              playlistId: 'playlist',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('collection-shuffle')));
+      await tester.pumpAndSettle();
+
+      expect(player.shuffle, isTrue);
+      // The unresolved song drops out; the rest play from a random one.
+      expect(player.queue.map((item) => item.title), [
+        'First',
+        'Selected',
+        'Last',
+      ]);
+      expect(player.index, inInclusiveRange(0, 2));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('playlist header mirrors in Arabic (Mornye: $mornye)', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(360, 780);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            settingsProvider.overrideWith(_Settings.new),
+            musicPlayerControllerProvider.overrideWithValue(_Player()),
+            playbackProvider.overrideWith(_Playback.new),
+            libraryCollectionsProvider.overrideWith(_Collections.new),
+            localLibraryProvider.overrideWith(_Library.new),
+            downloadHistoryProvider.overrideWith(_History.new),
+            localLibraryCoverProvider.overrideWith(
+              (ref, request) async => null,
+            ),
+            localLibraryFirstCoverProvider.overrideWith(
+              (ref, request) async => null,
+            ),
+          ],
+          child: MaterialApp(
+            locale: const Locale('ar'),
+            theme: mornye
+                ? MornyeTheme.build(Brightness.dark)
+                : AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const LibraryTracksFolderScreen(
+              mode: LibraryTracksFolderMode.playlist,
+              playlistId: 'playlist',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final width = tester.view.physicalSize.width;
+      // Back sits at the reading start, the right edge in Arabic.
+      expect(
+        tester.getCenter(find.byTooltip('رجوع').first).dx,
+        greaterThan(width / 2),
+      );
+      // Download All, Play and Shuffle run from the right, and only Play
+      // carries a label.
+      final download = tester.getCenter(
+        find.byKey(const ValueKey('collection-download-all')),
+      );
+      final play = tester.getCenter(find.byType(HeaderFilledButton));
+      final shuffle = tester.getCenter(
+        find.byKey(const ValueKey('collection-shuffle')),
+      );
+      expect(download.dx, greaterThan(play.dx));
+      expect(play.dx, greaterThan(shuffle.dx));
       expect(tester.takeException(), isNull);
     });
   }
@@ -475,7 +670,7 @@ void main() {
   test('external mode opens only the selected available file', () async {
     container.read(settingsProvider.notifier).setPlayerMode('external');
     final calls = <MethodCall>[];
-    const channel = MethodChannel('com.zuancrisp.mosix/backend');
+    const channel = MethodChannel('com.zarz.mornye/backend');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(channel, (call) async {
@@ -501,7 +696,7 @@ void main() {
   test('external mode skips unavailable and CUE candidates lazily', () async {
     container.read(settingsProvider.notifier).setPlayerMode('external');
     playback.paths['Selected'] = '/album.cue#track02';
-    const channel = MethodChannel('com.zuancrisp.mosix/backend');
+    const channel = MethodChannel('com.zarz.mornye/backend');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     final calls = <MethodCall>[];

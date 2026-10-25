@@ -1,4 +1,4 @@
-import 'package:mosix/utils/artist_utils.dart';
+import 'package:mornye/utils/artist_utils.dart';
 
 /// Pure metadata-key conversion used by the different audio containers.
 ///
@@ -237,13 +237,17 @@ class AudioMetadataMapper {
       entries,
       'ARTIST',
       vorbis['ARTIST'],
-      artistTagMode: artistTagMode,
+      artistTagMode: (metadata['artist_separator'] ?? '').isEmpty
+          ? artistTagMode
+          : artistTagModeJoined,
     );
     _appendVorbisArtistEntries(
       entries,
       'ALBUMARTIST',
       vorbis['ALBUMARTIST'],
-      artistTagMode: artistTagMode,
+      artistTagMode: (metadata['album_artist_separator'] ?? '').isEmpty
+          ? artistTagMode
+          : artistTagModeJoined,
     );
 
     return entries;
@@ -254,6 +258,7 @@ class AudioMetadataMapper {
     final m4a = <String, String>{};
 
     for (final entry in metadata.entries) {
+      if (entry.key.endsWith('_separator')) continue;
       final key = _normalizeKey(entry.key);
       final value = entry.value;
 
@@ -333,6 +338,7 @@ class AudioMetadataMapper {
     final id3 = <String, String>{};
 
     for (final entry in metadata.entries) {
+      if (entry.key.endsWith('_separator')) continue;
       final originalKey = entry.key.toUpperCase();
       final key = _normalizeKey(originalKey);
       final value = entry.value;

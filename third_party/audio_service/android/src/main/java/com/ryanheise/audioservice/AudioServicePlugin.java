@@ -61,6 +61,16 @@ import android.util.Log;
  */
 public class AudioServicePlugin implements FlutterPlugin, ActivityAware {
     private static String flutterEngineId = "audio_service_engine";
+    private static String[] flutterEngineArguments;
+
+    /** Configure renderer flags in Application.onCreate, before the shared engine exists. */
+    public static synchronized void setFlutterEngineArguments(String[] arguments) {
+        if (FlutterEngineCache.getInstance().get(flutterEngineId) != null) {
+            throw new IllegalStateException("Flutter engine arguments must be set before engine creation");
+        }
+        flutterEngineArguments = arguments.clone();
+    }
+
     /** Must be called BEFORE any FlutterEngine is created. e.g. in Application class. */
     public static void setFlutterEngineId(String id) {
         flutterEngineId = id;
@@ -73,7 +83,7 @@ public class AudioServicePlugin implements FlutterPlugin, ActivityAware {
         if (flutterEngine == null) {
             // XXX: The constructor triggers onAttachedToEngine so this variable doesn't help us.
             // Maybe need a boolean flag to tell us we're currently loading the main flutter engine.
-            flutterEngine = new FlutterEngine(context.getApplicationContext());
+            flutterEngine = new FlutterEngine(context.getApplicationContext(), flutterEngineArguments);
             String initialRoute = null;
             if (context instanceof FlutterActivity) {
                 final FlutterActivity activity = (FlutterActivity)context;

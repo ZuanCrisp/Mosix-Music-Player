@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/utils/logger.dart';
 
 final _log = AppLogger('AutoplayLearning');
 const _modelKey = 'autoplay_learning_model_v1';
@@ -383,6 +384,7 @@ class AutoplayPersonalization {
     }
   }
 
+  @visibleForTesting
   double adjustment(
     AutoplayLearningTrack track,
     AutoplayLearningTrack seed,

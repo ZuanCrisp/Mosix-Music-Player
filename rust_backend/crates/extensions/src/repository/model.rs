@@ -1,8 +1,11 @@
+//! Repository index models: extension entries, tags, checksums, download URLs, and index parsing.
+
 use super::{RepositoryError, error};
 use crate::environment::compare_versions;
+use mornye_core::json::field_name;
+use mornye_core::matching::lowercase;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Value, json};
-use spotiflac_core::matching::lowercase;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
@@ -47,14 +50,10 @@ impl NullField for Tags {
     }
 }
 
-fn field_matches(key: &str, wire: &str) -> bool {
-    key.chars()
-        .map(|value| match value {
-            'ſ' => 's',
-            'K' => 'k',
-            value => value.to_ascii_lowercase(),
-        })
-        .eq(wire.chars().map(|value| value.to_ascii_lowercase()))
+// `folded_key` comes from `field_name`, which leaves no ASCII uppercase, so an
+// ASCII case-insensitive comparison equals comparing it with the lowercased wire.
+fn field_matches(folded_key: &str, wire: &str) -> bool {
+    folded_key.eq_ignore_ascii_case(wire)
 }
 
 macro_rules! wire_struct {
@@ -77,6 +76,7 @@ macro_rules! wire_struct {
                     fn visit_map<A: serde::de::MapAccess<'de>>(self, mut map: A) -> Result<Self::Value, A::Error> {
                         let mut result = $name::default();
                         while let Some(key) = map.next_key::<String>()? {
+                            let key = field_name(&key);
                             $(if field_matches(&key, $wire) {
                                 match map.next_value::<Option<$kind>>()? {
                                     Some(value) => result.$field = value,
@@ -222,5 +222,83 @@ impl Registry {
                     })
             })
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn previous_field_matches(key: &str, wire: &str) -> bool {
+        key.chars()
+            .map(|value| match value {
+                'ſ' => 's',
+                '\u{212A}' => 'k',
+                value => value.to_ascii_lowercase(),
+            })
+            .eq(wire.chars().map(|value| value.to_ascii_lowercase()))
+    }
+
+    #[test]
+    fn field_matching_with_core_folding_equals_previous_matcher() {
+        let keys = [
+            "",
+            "id",
+            "ID",
+            "Id",
+            "displayName",
+            "DISPLAYNAME",
+            "display_name",
+            "DISPLAY_NAME",
+            "checkſum_sha256",
+            "CHECKSUMSHA256",
+            "\u{212A}ey",
+            "Key",
+            "sha256",
+            "SHA256",
+            "s\u{0301}ha256",
+            "\u{017F}",
+            "\u{212A}",
+            "\u{00C9}tag",
+            "\u{00E9}tag",
+            "tags ",
+            "\u{FEFF}tags",
+            "updated_at\u{0000}",
+        ];
+        let wires = [
+            "",
+            "id",
+            "display_name",
+            "displayName",
+            "checksum_sha256",
+            "checksumSha256",
+            "key",
+            "sha256",
+            "s",
+            "k",
+            "\u{00E9}tag",
+            "tags",
+            "updated_at",
+        ];
+        for key in keys {
+            let folded = field_name(key);
+            for wire in wires {
+                assert_eq!(
+                    field_matches(&folded, wire),
+                    previous_field_matches(key, wire),
+                    "key {key:?} wire {wire:?}"
+                );
+            }
+        }
+
+        let registry: Registry = serde_json::from_str(
+            r#"{"VERSION":2,"updated_at":"old","UPDATED_AT":null,"Extensions":[{"ID":"a","DisplayName":"A","checkſum_sha256":"x"}]}"#,
+        )
+        .unwrap();
+        assert_eq!(registry.version, 2);
+        assert_eq!(registry.updated_at, "old");
+        assert_eq!(registry.extensions[0].id, "a");
+        assert_eq!(registry.extensions[0].display_name_alt, "A");
+        assert_eq!(registry.extensions[0].checksum_sha256, "x");
     }
 }

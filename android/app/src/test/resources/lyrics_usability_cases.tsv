@@ -3,7 +3,7 @@
 empty	false	
 whitespace	false	 \t\r\n 
 metadata_only	false	[ar:Artist]\n[ti:Title]\n[offset:0]
-metadata_case	false	[AR:Artist]\n[BY:Mosix]
+metadata_case	false	[AR:Artist]\n[BY:Mornye]
 instrumental	true	 [Instrumental:TRUE] 
 timestamps_only	false	[00:01.00]\n<00:01.10>
 multiple_timestamps	false	[00:01.00][01:02:500] 

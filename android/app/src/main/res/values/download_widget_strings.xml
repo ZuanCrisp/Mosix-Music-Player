@@ -1,0 +1,11 @@
+<resources>
+    <string name="download_widget_name">Mosix Downloads</string>
+    <string name="download_widget_description">Progress of the track downloading now.</string>
+    <string name="download_widget_downloading">Downloading…</string>
+    <string name="download_widget_idle">No active downloads</string>
+    <string name="download_widget_idle_title">All caught up</string>
+    <string name="download_widget_status_active">Downloading</string>
+    <string name="download_widget_status_idle">Done</string>
+    <string name="download_widget_percent">%1$d%%</string>
+    <string name="download_widget_queue">%1$d in queue</string>
+</resources>

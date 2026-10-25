@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/services/playback_deck.dart';
+import 'package:mornye/utils/logger.dart';
 
 final _log = AppLogger('PreviewPlayer');
 
@@ -50,8 +50,10 @@ class PreviewPlayerState {
   }
 }
 
+/// Plays previews through the runtime's preview deck, so desktop previews
+/// use the same engine and in-app volume as the main player.
 class PreviewPlayerController extends Notifier<PreviewPlayerState> {
-  AudioPlayer? _player;
+  PlaybackDeck? _player;
   final List<StreamSubscription<dynamic>> _subscriptions = [];
   AppLifecycleListener? _lifecycleListener;
 
@@ -85,20 +87,26 @@ class PreviewPlayerController extends Notifier<PreviewPlayerState> {
     }
   }
 
-  AudioPlayer _ensurePlayer() {
+  PlaybackDeck _ensurePlayer() {
     final existing = _player;
     if (existing != null) return existing;
 
-    final player = AudioPlayer(playerId: 'preview-player');
-    player.setReleaseMode(ReleaseMode.stop);
+    final player = ref
+        .read(musicPlayerRuntimeProvider)
+        .dependencies
+        .createPreviewDeck('preview-player');
+    player.startPositionUpdates(const Duration(milliseconds: 200));
     _attachListeners(player);
     _player = player;
     return player;
   }
 
-  void _attachListeners(AudioPlayer player) {
+  void _attachListeners(PlaybackDeck player) {
     _subscriptions.add(
-      player.onPlayerStateChanged.listen(_handlePlayerStateChanged),
+      player.onPlayerStateChanged.listen(
+        _handlePlayerStateChanged,
+        onError: (Object error) => _log.w('Preview playback error: $error'),
+      ),
     );
     _subscriptions.add(
       player.onPositionChanged.listen((position) {
@@ -128,26 +136,28 @@ class PreviewPlayerController extends Notifier<PreviewPlayerState> {
     final player = _player;
     _player = null;
     if (player != null) {
-      try {
-        player.dispose();
-      } catch (_) {}
+      unawaited(
+        player.dispose().catchError(
+          (Object error) => _log.w('Failed to release preview: $error'),
+        ),
+      );
     }
   }
 
-  void _handlePlayerStateChanged(PlayerState playerState) {
+  void _handlePlayerStateChanged(PlaybackDeckState playerState) {
     switch (playerState) {
-      case PlayerState.playing:
+      case PlaybackDeckState.playing:
         state = state.copyWith(status: PreviewStatus.playing);
         break;
-      case PlayerState.paused:
+      case PlaybackDeckState.paused:
         if (state.isActive) {
           state = state.copyWith(status: PreviewStatus.paused);
         }
         break;
-      case PlayerState.stopped:
-      case PlayerState.completed:
+      case PlaybackDeckState.stopped:
+      case PlaybackDeckState.completed:
         break;
-      case PlayerState.disposed:
+      case PlaybackDeckState.disposed:
         break;
     }
   }
@@ -197,9 +207,11 @@ class PreviewPlayerController extends Notifier<PreviewPlayerState> {
     }
   }
 
-  Future<void> _playOnPlayer(AudioPlayer player, String url) async {
-    await player.stop();
-    await player.play(UrlSource(url));
+  Future<void> _playOnPlayer(PlaybackDeck player, String url) async {
+    // Applies the in-app volume; previews have no normalization gain.
+    await player.setVolume(1);
+    await player.setNetworkSource(url);
+    await player.resume();
   }
 
   Future<void> pause() async {

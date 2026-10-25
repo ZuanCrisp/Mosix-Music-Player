@@ -1,4 +1,8 @@
-use spotiflac_core::tags::{
+//! Integration tests for tag reading I/O efficiency and failure handling: buffered reads on a
+//! densely tagged synthetic M4A, and combined FLAC metadata and cover reads compared with
+//! separate reads.
+
+use mornye_core::tags::{
     AudioMetadata, extract_cover, read_audio_tags, read_library_metadata,
     read_library_metadata_with_cover,
 };

@@ -1,0 +1,10 @@
+# Flutter-related
+**/Flutter/ephemeral/
+**/Pods/
+
+# Xcode-related
+**/dgph
+**/xcuserdata/
+
+# Written by scripts/setup_macos_signing.sh
+Runner/Configs/LocalSigning.xcconfig

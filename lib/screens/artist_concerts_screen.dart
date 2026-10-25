@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/artist_concert.dart';
-import 'package:mosix/screens/concert_detail_screen.dart';
-import 'package:mosix/services/shell_navigation_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/utils/nav_bar_inset.dart';
-import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/widgets/cached_cover_image.dart';
-import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/artist_concert.dart';
+import 'package:mornye/screens/concert_detail_screen.dart';
+import 'package:mornye/services/shell_navigation_service.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/widgets/album_detail_header.dart';
+import 'package:mornye/widgets/app_shape.dart';
+import 'package:mornye/widgets/cached_cover_image.dart';
+import 'package:mornye/widgets/animation_utils.dart';
 
 class ArtistConcertsScreen extends StatefulWidget {
   const ArtistConcertsScreen({
@@ -65,7 +66,7 @@ class _ArtistConcertsScreenState extends State<ArtistConcertsScreen> {
             surfaceTintColor: Colors.transparent,
             leadingWidth: 64,
             leading: Padding(
-              padding: const EdgeInsets.only(left: 12),
+              padding: const EdgeInsetsDirectional.only(start: 12),
               child: HeaderCircleButton(
                 icon: Icons.arrow_back,
                 tooltip: MaterialLocalizations.of(context).backButtonTooltip,
@@ -78,7 +79,8 @@ class _ArtistConcertsScreenState extends State<ArtistConcertsScreen> {
             sliver: SliverToBoxAdapter(
               child: Row(
                 children: [
-                  ClipOval(
+                  AppShapeClip(
+                    kind: AppShapes.artist,
                     child: SizedBox.square(
                       dimension: 96,
                       child: widget.coverUrl == null || widget.coverUrl!.isEmpty
@@ -186,9 +188,7 @@ class _ArtistConcertsScreenState extends State<ArtistConcertsScreen> {
                                       ).format(concert.date),
                                       maxLines: 1,
                                       style: TextStyle(
-                                        color: context.isMornye
-                                            ? scheme.primary
-                                            : scheme.error,
+                                        color: scheme.primary,
                                         fontSize: 10,
                                         fontWeight: FontWeight.w600,
                                       ),

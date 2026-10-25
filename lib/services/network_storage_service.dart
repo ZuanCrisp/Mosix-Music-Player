@@ -11,17 +11,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:html/parser.dart' as html;
-import 'package:mosix/services/network_certificate.dart';
-import 'package:mosix/services/network_smb_client.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/secure_storage_options.dart';
+import 'package:mornye/services/local_network_access.dart';
+import 'package:mornye/services/network_certificate.dart';
+import 'package:mornye/services/network_smb_client.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/secure_storage_options.dart';
 import 'package:xml/xml.dart';
 
 part 'network_storage_upload.dart';
 part 'network_storage_delete.dart';
+part 'network_storage_subsonic.dart';
 
 typedef _SmbListingInput = ({
-  List<({String name, bool directory, int size})> files,
+  List<({String name, bool directory, int size, int modifiedTime})> files,
   String path,
 });
 
@@ -34,6 +36,7 @@ List<NetworkEntry> _prepareSmbListingInBackground(_SmbListingInput input) =>
             file.name,
             directory: file.directory,
             size: file.size,
+            modifiedTime: file.modifiedTime,
           ),
     ]);
 
@@ -61,10 +64,14 @@ List<NetworkEntry> _hydrateNetworkEntriesInBackground(List<dynamic> entries) =>
           raw['name'] as String,
           directory: raw['directory'] as bool,
           size: (raw['size'] as num?)?.toInt(),
+          modifiedTime: (raw['modifiedTime'] as num?)?.toInt(),
+          etag: raw['etag'] as String?,
         ),
     ];
 
-enum NetworkProtocol { smb, webdav, http }
+enum NetworkProtocol { smb, webdav, http, subsonic }
+
+enum SubsonicAuth { saltedToken, password, apiKey }
 
 class NetworkConnection {
   const NetworkConnection({
@@ -76,10 +83,16 @@ class NetworkConnection {
     this.password = '',
     this.domain = '',
     this.trustedCertificateSha256,
+    this.subsonicAuth = SubsonicAuth.saltedToken,
+    this.apiKey = '',
   });
   final String id, name, address, username, password, domain;
   final NetworkProtocol protocol;
   final String? trustedCertificateSha256;
+  final SubsonicAuth subsonicAuth;
+  final String apiKey;
+  bool get writable =>
+      protocol == NetworkProtocol.smb || protocol == NetworkProtocol.webdav;
   Uri get root => Uri.parse(address);
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -89,6 +102,10 @@ class NetworkConnection {
     'username': username,
     'password': password,
     'domain': domain,
+    if (protocol == NetworkProtocol.subsonic) ...{
+      'subsonicAuth': subsonicAuth.name,
+      'apiKey': apiKey,
+    },
     if (trustedCertificateSha256 != null)
       'trustedCertificateSha256': trustedCertificateSha256,
   };
@@ -102,6 +119,10 @@ class NetworkConnection {
         password: json['password'] as String? ?? '',
         domain: json['domain'] as String? ?? '',
         trustedCertificateSha256: json['trustedCertificateSha256'] as String?,
+        subsonicAuth: SubsonicAuth.values.byName(
+          json['subsonicAuth'] as String? ?? 'saltedToken',
+        ),
+        apiKey: json['apiKey'] as String? ?? '',
       );
 
   void validate() {
@@ -122,26 +143,38 @@ class NetworkConnection {
 }
 
 class NetworkEntry {
-  const NetworkEntry(this.path, this.name, {this.directory = false, this.size});
+  const NetworkEntry(
+    this.path,
+    this.name, {
+    this.directory = false,
+    this.size,
+    this.modifiedTime,
+    this.etag,
+    this.song,
+  });
   final String path, name;
   final bool directory;
   final int? size;
-  String get extension => name.split('.').last.toLowerCase();
+  final int? modifiedTime;
+  final String? etag;
+  final SubsonicSong? song;
+  String get extension => song?.format ?? name.split('.').last.toLowerCase();
   bool get audio =>
       !directory &&
-      const {
-        'flac',
-        'mp3',
-        'm4a',
-        'mp4',
-        'aac',
-        'ogg',
-        'opus',
-        'wav',
-        'aiff',
-        'aif',
-        'alac',
-      }.contains(extension);
+      (song != null ||
+          const {
+            'flac',
+            'mp3',
+            'm4a',
+            'mp4',
+            'aac',
+            'ogg',
+            'opus',
+            'wav',
+            'aiff',
+            'aif',
+            'alac',
+          }.contains(extension));
 }
 
 /// Paths remain relative to the selected root, never credential-bearing URLs.
@@ -193,15 +226,19 @@ class NetworkStorageService {
   NetworkStorageService({
     Future<String?> Function()? read,
     Future<void> Function(String)? write,
+    Future<void> Function(Uri)? ensureAccess,
   }) : _read = read ?? (() => _storage.read(key: _key)),
-       _write = write ?? ((value) => _storage.write(key: _key, value: value));
+       _write = write ?? ((value) => _storage.write(key: _key, value: value)),
+       _ensureAccess = ensureAccess ?? LocalNetworkAccess.instance.ensureAccess;
   static final instance = NetworkStorageService();
   static const _storage = FlutterSecureStorage(
     aOptions: secureStorageAndroidOptions,
+    mOptions: secureStorageMacOsOptions,
   );
   static const _key = 'network_storage_connections_v1';
   final Future<String?> Function() _read;
   final Future<void> Function(String) _write;
+  final Future<void> Function(Uri) _ensureAccess;
   static const timeout = Duration(seconds: 20);
   Future<List<NetworkConnection>>? _loading;
   List<NetworkConnection>? _connections;
@@ -215,6 +252,8 @@ class NetworkStorageService {
           String address,
           String username,
           String password,
+          SubsonicAuth auth,
+          String apiKey,
           String? certificate,
         }),
         HttpClient
@@ -287,6 +326,49 @@ class NetworkStorageService {
     pathSegments: networkPath(path).split('/'),
   ).toString();
 
+  /// Identity of a remote file across saved connections to the same NAS root.
+  /// Resolve relative paths before comparing; connection IDs are aliases, not
+  /// physical storage identities. Credentials never leave this service.
+  static String? physicalFileKey(
+    String source,
+    Map<String, NetworkConnection> connections,
+  ) {
+    final uri = Uri.tryParse(source);
+    if (uri == null ||
+        uri.scheme != 'network' ||
+        uri.userInfo.isNotEmpty ||
+        uri.hasQuery ||
+        uri.hasFragment) {
+      return null;
+    }
+    final connection = connections[uri.host];
+    if (connection == null) return null;
+    try {
+      connection.validate();
+      final target = networkTarget(
+        connection,
+        networkPath(uri.pathSegments.join('/')),
+      );
+      // Accounts can expose different virtual trees at an identical address.
+      // Keep them separate and preserve path case, including on WebDAV.
+      final identity = jsonEncode([
+        connection.protocol.name,
+        target.host,
+        connection.protocol == NetworkProtocol.smb && !target.hasPort
+            ? 445
+            : target.port,
+        connection.username,
+        connection.protocol == NetworkProtocol.subsonic
+            ? connection.id
+            : connection.domain,
+        target.pathSegments,
+      ]);
+      return 'network-file:${sha256.convert(utf8.encode(identity))}';
+    } on FormatException {
+      return null;
+    }
+  }
+
   Future<String> resolve(String source) async {
     final uri = Uri.parse(source);
     if (uri.scheme != 'network' ||
@@ -296,7 +378,8 @@ class NetworkStorageService {
       throw const FormatException('Invalid network source');
     }
     final path = networkPath(uri.pathSegments.join('/'));
-    await connection(uri.host);
+    final c = await connection(uri.host);
+    await _ensureAccess(networkTarget(c, path));
     _server ??= HttpServer.bind(InternetAddress.loopbackIPv4, 0).then((server) {
       server.listen((request) => unawaited(_serve(request)));
       return server;
@@ -317,6 +400,7 @@ class NetworkStorageService {
   }
 
   Future<NetworkSmbClient> _smb(NetworkConnection c, Uri target) async {
+    await _ensureAccess(target);
     var expired = false;
     final pending = NetworkSmbClient.connect(
       target,
@@ -354,6 +438,8 @@ class NetworkStorageService {
       address: connection.address,
       username: connection.username,
       password: connection.password,
+      auth: connection.subsonicAuth,
+      apiKey: connection.apiKey,
       certificate: connection.trustedCertificateSha256,
     );
     final client =
@@ -390,6 +476,7 @@ class NetworkStorageService {
     void Function()? checkpoint,
     void Function(int)? progress,
   }) async {
+    await _ensureAccess(uri);
     NetworkCertificateException? rejectedCertificate;
     client.badCertificateCallback = (certificate, host, port) {
       if (uri.scheme != 'https' ||
@@ -426,7 +513,8 @@ class NetworkStorageService {
     }
     request.followRedirects = false;
     request.headers.set(HttpHeaders.acceptEncodingHeader, 'identity');
-    if (c.username.isNotEmpty || c.password.isNotEmpty) {
+    if (c.protocol != NetworkProtocol.subsonic &&
+        (c.username.isNotEmpty || c.password.isNotEmpty)) {
       request.headers.set(
         HttpHeaders.authorizationHeader,
         'Basic ${base64Encode(utf8.encode('${c.username}:${c.password}'))}',
@@ -459,7 +547,8 @@ class NetworkStorageService {
       );
       request.write(
         '<?xml version="1.0"?><d:propfind xmlns:d="DAV:"><d:prop>'
-        '<d:resourcetype/><d:getcontentlength/></d:prop></d:propfind>',
+        '<d:resourcetype/><d:getcontentlength/>'
+        '<d:getlastmodified/><d:getetag/></d:prop></d:propfind>',
       );
     }
     final HttpClientResponse response;
@@ -516,9 +605,18 @@ class NetworkStorageService {
     String path = '',
   ]) async {
     c.validate();
+    if (c.protocol == NetworkProtocol.subsonic) {
+      final client = openSubsonic(c);
+      try {
+        return await client.list(path);
+      } finally {
+        client.close();
+      }
+    }
     final target = networkTarget(c, path);
     if (c.protocol == NetworkProtocol.smb) {
       if (target.pathSegments.every((s) => s.isEmpty)) {
+        await _ensureAccess(target);
         final shares = await NetworkSmbClient.shares(
           target,
           username: c.username,
@@ -589,7 +687,7 @@ class NetworkStorageService {
   }
 
   /// Large SMB listings arrive from native I/O as plain stat objects. Transfer
-  /// only fields used by the browser, avoiding copies of unused timestamps.
+  /// only fields used by browsing and incremental Library scans.
   static Future<List<NetworkEntry>> prepareSmbEntries(
     List<Smb2DirEntry> files,
     String path,
@@ -602,6 +700,7 @@ class NetworkStorageService {
             name: file.name,
             directory: file.stat.isDirectory,
             size: file.stat.size,
+            modifiedTime: file.stat.modified.millisecondsSinceEpoch,
           ),
       ],
     );
@@ -641,7 +740,13 @@ class NetworkStorageService {
       baseSegments.removeLast();
     }
     final found = <String, NetworkEntry>{};
-    void add(String href, bool directory, int? size) {
+    void add(
+      String href,
+      bool directory,
+      int? size, {
+      int? modifiedTime,
+      String? etag,
+    }) {
       final uri = base.resolve(href);
       if (uri.origin != base.origin ||
           uri.hasQuery ||
@@ -676,6 +781,8 @@ class NetworkStorageService {
         name,
         directory: directory,
         size: size,
+        modifiedTime: modifiedTime,
+        etag: etag,
       );
     }
 
@@ -705,16 +812,26 @@ class NetworkStorageService {
           continue;
         }
         if (href != null && props.isNotEmpty) {
+          String? property(String name) => values
+              .where((element) => element.name.local == name)
+              .firstOrNull
+              ?.innerText
+              .trim();
+          int? modifiedTime;
+          try {
+            final date = property('getlastmodified');
+            if (date != null) {
+              modifiedTime = HttpDate.parse(date).millisecondsSinceEpoch;
+            }
+          } on HttpException {
+            // Missing or malformed validators require a fresh metadata read.
+          }
           add(
             href,
             values.any((e) => e.name.local == 'collection'),
-            int.tryParse(
-              values
-                      .where((e) => e.name.local == 'getcontentlength')
-                      .firstOrNull
-                      ?.innerText ??
-                  '',
-            ),
+            int.tryParse(property('getcontentlength') ?? ''),
+            modifiedTime: modifiedTime,
+            etag: property('getetag'),
           );
         }
       }
@@ -771,7 +888,9 @@ class NetworkStorageService {
         return;
       }
       final c = await connection(route.id);
-      final target = networkTarget(c, route.path);
+      final target = c.protocol == NetworkProtocol.subsonic
+          ? _subsonicMediaTarget(c, route.path)
+          : networkTarget(c, route.path);
       final range = request.headers.value(HttpHeaders.rangeHeader);
       if (c.protocol == NetworkProtocol.smb) {
         smb = await _smb(c, target);
@@ -812,10 +931,19 @@ class NetworkStorageService {
         final response = await _request(
           client,
           c,
-          request.method,
+          c.protocol == NetworkProtocol.subsonic ? 'GET' : request.method,
           target,
           range: range,
         );
+        if (c.protocol == NetworkProtocol.subsonic &&
+            const {
+              'application/json',
+              'application/xml',
+              'text/xml',
+            }.contains(response.headers.contentType?.mimeType)) {
+          await _discardResponse(response);
+          throw const HttpException('Subsonic media unavailable');
+        }
         request.response.statusCode =
             response.statusCode >= 300 && response.statusCode < 400
             ? HttpStatus.badGateway
@@ -831,6 +959,8 @@ class NetworkStorageService {
         }
         if (request.method == 'GET') {
           await request.response.addStream(response.timeout(timeout));
+        } else if (c.protocol == NetworkProtocol.subsonic) {
+          await _discardResponse(response);
         } else {
           await response.drain<void>().timeout(timeout);
         }

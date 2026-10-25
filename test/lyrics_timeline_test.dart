@@ -1,8 +1,84 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/utils/lyrics_parser.dart';
-import 'package:mosix/utils/lyrics_timeline.dart';
+import 'package:mornye/utils/lyrics_parser.dart';
+import 'package:mornye/utils/lyrics_timeline.dart';
 
 void main() {
+  test('indexed active voices match the timeline contract across seeks', () {
+    final random = Random(412);
+    final lines = List.generate(600, (index) {
+      final start = Duration(milliseconds: index ~/ 3 * 400);
+      return LyricLine(
+        time: start,
+        end: index % 4 == 0
+            ? null
+            : start + Duration(milliseconds: random.nextInt(10000)),
+        text: index % 11 == 0 ? '' : 'Line $index',
+        isBackground: index % 5 == 0,
+        voice: index % 7 == 0 ? const LyricVoice(id: 'v2', index: 1) : null,
+      );
+    });
+    final timeline = LyricTimelineIndex(lines);
+    expect(timeline.starts, lines.map((line) => line.time));
+    for (var sample = 0; sample < 2000; sample++) {
+      final position = Duration(milliseconds: random.nextInt(100000) - 1000);
+      final current = LyricsParser.activeIndex(lines, position);
+      expect(
+        timeline.activeIndices(position, current),
+        activeLyricIndices(lines, position, current),
+        reason: 'Position $position, current line $current',
+      );
+    }
+    expect(
+      LyricTimelineIndex(const []).activeIndices(Duration.zero, -1),
+      isEmpty,
+    );
+  });
+
+  group('display ends for an unanchored final word', () {
+    List<LyricLine> display(String lrc) => lyricsWithDisplayEnds(
+      lyricsTimelineWithGaps(LyricsParser.parse(lrc).lines),
+    );
+
+    test('a close next line receives the remaining time', () {
+      final lines = display('''
+[00:01.00]<00:01.00>Hold <00:01.40>on
+[00:04.50]<00:04.50>Next<00:05.00>
+''');
+      expect(lines.first.words.last.end, const Duration(milliseconds: 4500));
+      expect(lines.first.end, const Duration(milliseconds: 4500));
+    });
+
+    test('a distant next line ends the word from the line pace', () {
+      final lines = display('''
+[00:01.00]<00:01.00>Hold <00:01.40>on
+[00:20.00]<00:20.00>Next<00:21.00>
+''');
+      // 400 ms per word, held 2.5 times as long as a typical word.
+      expect(lines.first.words.last.end, const Duration(milliseconds: 2400));
+    });
+
+    test('explicit word and line ends are kept', () {
+      final lines = display('''
+[00:01.00]<00:01.00>Hold <00:01.40>on<00:02.00>
+[00:03.00]<00:03.00>Next<00:03.50>
+''');
+      expect(lines.first.words.last.end, const Duration(seconds: 2));
+      expect(lines.first.end, const Duration(seconds: 2));
+    });
+
+    test('a blank timestamp bounds the final word', () {
+      final lines = display('''
+[00:01.00]<00:01.00>Hold <00:01.40>on
+[00:03.00]
+[00:12.00]<00:12.00>Next<00:13.00>
+''');
+      expect(lines[0].words.last.end, const Duration(seconds: 3));
+      expect(lines[1].text, isEmpty);
+    });
+  });
+
   test('simultaneous untimed singers share highlighting and scroll focus', () {
     final lines = LyricsParser.parse('''
 [00:01.00]v1:Lead

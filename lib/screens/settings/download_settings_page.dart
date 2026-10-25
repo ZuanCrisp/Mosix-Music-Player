@@ -2,15 +2,19 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/screens/settings/download_fallback_extensions_page.dart';
-import 'package:mosix/utils/audio_format_utils.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
-import 'package:mosix/widgets/app_search_field.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/screens/settings/download_fallback_extensions_page.dart';
+import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mornye/widgets/app_search_field.dart';
+
+part 'download_settings_page_widgets.dart';
 
 class DownloadSettingsPage extends ConsumerStatefulWidget {
   const DownloadSettingsPage({super.key});
@@ -57,6 +61,7 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
             ),
             SliverToBoxAdapter(
               child: SettingsGroup(
+                connected: true,
                 children: [
                   _ServiceSelector(
                     currentService: settings.defaultService,
@@ -75,6 +80,7 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
             ),
             SliverToBoxAdapter(
               child: SettingsGroup(
+                connected: true,
                 children: [
                   SettingsSwitchItem(
                     icon: Icons.tune,
@@ -240,6 +246,7 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
             ),
             SliverToBoxAdapter(
               child: SettingsGroup(
+                connected: true,
                 children: [
                   const _MetadataSourceSelector(),
                   const _DefaultSearchTabSelector(),
@@ -301,6 +308,7 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const NavBarSliverSpacer(),
           ],
         ),
       ),
@@ -404,44 +412,41 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
     String current,
   ) {
     final normalizedCurrent = normalizeAutoConvertFormat(current);
-    showAppBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
       title: context.l10n.downloadAutoConvertFormat,
       subtitle: context.l10n.downloadAutoConvertFormatSubtitle,
-      builder: (sheetContext) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final format in autoConvertFormats)
-            AppSheetOption(
-              leading: Icon(
-                format == 'opus'
-                    ? Icons.graphic_eq
-                    : format == 'aac'
-                    ? Icons.album_outlined
-                    : Icons.audiotrack,
+      builder: (sheetContext, controller) => SingleChildScrollView(
+        controller: controller,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final format in autoConvertFormats)
+              AppSheetOption.choice(
+                leading: AppIcon(
+                  format == 'opus'
+                      ? Icons.graphic_eq
+                      : format == 'aac'
+                      ? Icons.album_outlined
+                      : Icons.audiotrack,
+                ),
+                title: Text(autoConvertFormatLabel(format)),
+                subtitle: Text(switch (format) {
+                  'aac' => context.l10n.downloadAutoConvertM4aSubtitle,
+                  'opus' => context.l10n.downloadAutoConvertOpusSubtitle,
+                  _ => context.l10n.downloadAutoConvertMp3Subtitle,
+                }),
+                selected: normalizedCurrent == format,
+                onTap: () {
+                  ref
+                      .read(settingsProvider.notifier)
+                      .setAutoConvertFormat(format);
+                  Navigator.pop(sheetContext);
+                },
               ),
-              title: Text(autoConvertFormatLabel(format)),
-              subtitle: Text(switch (format) {
-                'aac' => context.l10n.downloadAutoConvertM4aSubtitle,
-                'opus' => context.l10n.downloadAutoConvertOpusSubtitle,
-                _ => context.l10n.downloadAutoConvertMp3Subtitle,
-              }),
-              trailing: normalizedCurrent == format
-                  ? Icon(
-                      Icons.check,
-                      color: Theme.of(sheetContext).colorScheme.primary,
-                    )
-                  : null,
-              onTap: () {
-                ref
-                    .read(settingsProvider.notifier)
-                    .setAutoConvertFormat(format);
-                Navigator.pop(sheetContext);
-              },
-            ),
-          const SizedBox(height: 8),
-        ],
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
@@ -452,33 +457,30 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
     String current,
   ) {
     final normalizedCurrent = normalizeAutoConvertBitrate(current);
-    showAppBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
       title: context.l10n.downloadAutoConvertBitrate,
       subtitle: context.l10n.downloadAutoConvertBitrateSubtitle,
-      builder: (sheetContext) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final bitrate in autoConvertBitrates)
-            AppSheetOption(
-              leading: const Icon(Icons.speed_outlined),
-              title: Text(bitrate.replaceAll('k', ' kbps')),
-              trailing: normalizedCurrent == bitrate
-                  ? Icon(
-                      Icons.check,
-                      color: Theme.of(sheetContext).colorScheme.primary,
-                    )
-                  : null,
-              onTap: () {
-                ref
-                    .read(settingsProvider.notifier)
-                    .setAutoConvertBitrate(bitrate);
-                Navigator.pop(sheetContext);
-              },
-            ),
-          const SizedBox(height: 8),
-        ],
+      builder: (sheetContext, controller) => SingleChildScrollView(
+        controller: controller,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final bitrate in autoConvertBitrates)
+              AppSheetOption.choice(
+                leading: const AppIcon(Icons.speed_outlined),
+                title: Text(bitrate.replaceAll('k', ' kbps')),
+                selected: normalizedCurrent == bitrate,
+                onTap: () {
+                  ref
+                      .read(settingsProvider.notifier)
+                      .setAutoConvertBitrate(bitrate);
+                  Navigator.pop(sheetContext);
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
@@ -488,41 +490,21 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
     WidgetRef ref,
     String current,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    showAppModalBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      builder: (context) => SafeArea(
+      title: context.l10n.settingsDownloadNetwork,
+      subtitle: context.l10n.settingsDownloadNetworkSubtitle,
+      builder: (context, controller) => SingleChildScrollView(
+        controller: controller,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-              child: Text(
-                context.l10n.settingsDownloadNetwork,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: Text(
-                context.l10n.settingsDownloadNetworkSubtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            AppSheetOption(
-              leading: const Icon(Icons.signal_cellular_alt),
+            AppSheetOption.choice(
+              leading: const AppIcon(Icons.signal_cellular_alt),
               title: Text(context.l10n.settingsDownloadNetworkAny),
               subtitle: Text(context.l10n.downloadNetworkAnySubtitle),
-              trailing: current == 'any'
-                  ? Icon(Icons.check, color: colorScheme.primary)
-                  : null,
+              selected: current == 'any',
               onTap: () {
                 ref
                     .read(settingsProvider.notifier)
@@ -530,13 +512,11 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
                 Navigator.pop(context);
               },
             ),
-            AppSheetOption(
-              leading: const Icon(Icons.wifi),
+            AppSheetOption.choice(
+              leading: const AppIcon(Icons.wifi),
               title: Text(context.l10n.settingsDownloadNetworkWifiOnly),
               subtitle: Text(context.l10n.downloadNetworkWifiOnlySubtitle),
-              trailing: current == 'wifi_only'
-                  ? Icon(Icons.check, color: colorScheme.primary)
-                  : null,
+              selected: current == 'wifi_only',
               onTap: () {
                 ref
                     .read(settingsProvider.notifier)
@@ -556,37 +536,19 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
     WidgetRef ref,
     int current,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    showAppModalBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      builder: (context) => SafeArea(
+      title: context.l10n.settingsConcurrentDownloads,
+      subtitle: context.l10n.settingsConcurrentDownloadsSubtitle,
+      builder: (context, controller) => SingleChildScrollView(
+        controller: controller,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-              child: Text(
-                context.l10n.settingsConcurrentDownloads,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: Text(
-                context.l10n.settingsConcurrentDownloadsSubtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
             for (final count in const [1, 2, 3])
-              AppSheetOption(
-                leading: Icon(
+              AppSheetOption.choice(
+                leading: AppIcon(
                   count == 1
                       ? Icons.looks_one_outlined
                       : count == 2
@@ -598,9 +560,7 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
                       ? context.l10n.concurrentDownloadsOne
                       : context.l10n.concurrentDownloadsCount(count),
                 ),
-                trailing: current == count
-                    ? Icon(Icons.check, color: colorScheme.primary)
-                    : null,
+                selected: current == count,
                 onTap: () {
                   ref
                       .read(settingsProvider.notifier)
@@ -805,14 +765,13 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
       'ZM',
       'ZW',
     ];
-    final colorScheme = Theme.of(context).colorScheme;
     final normalizedCurrent = current.trim().toUpperCase();
-    showAppModalBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      isScrollControlled: true,
-      builder: (context) => _RegionPickerSheet(
+      title: context.l10n.downloadSongLinkRegion,
+      subtitle: context.l10n.downloadSongLinkRegionDesc,
+      builder: (context, controller) => _RegionPickerSheet(
+        scrollController: controller,
         regions: regions,
         selected: normalizedCurrent,
         countryNameOf: (context, code) => _regionCountryName(context, code),
@@ -821,389 +780,6 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
           Navigator.pop(context);
         },
       ),
-    );
-  }
-}
-
-/// Searchable region list.
-class _RegionPickerSheet extends StatefulWidget {
-  const _RegionPickerSheet({
-    required this.regions,
-    required this.selected,
-    required this.countryNameOf,
-    required this.onSelected,
-  });
-
-  final List<String> regions;
-  final String selected;
-  final String Function(BuildContext context, String code) countryNameOf;
-  final ValueChanged<String> onSelected;
-
-  @override
-  State<_RegionPickerSheet> createState() => _RegionPickerSheetState();
-}
-
-class _RegionPickerSheetState extends State<_RegionPickerSheet> {
-  final TextEditingController _searchController = TextEditingController();
-  String _query = '';
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final query = _query.trim().toLowerCase();
-    final matches = query.isEmpty
-        ? widget.regions
-        : widget.regions.where((code) {
-            if (code.toLowerCase().contains(query)) return true;
-            return widget
-                .countryNameOf(context, code)
-                .toLowerCase()
-                .contains(query);
-          }).toList();
-
-    return SafeArea(
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.7,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-              child: Text(
-                context.l10n.downloadSongLinkRegion,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-              child: Text(
-                context.l10n.downloadSongLinkRegionDesc,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: AppSearchField(
-                controller: _searchController,
-                onChanged: (value) => setState(() => _query = value),
-                hintText: MaterialLocalizations.of(context).searchFieldLabel,
-                clearTooltip: context.l10n.dialogClear,
-                onClear: () => setState(() => _query = ''),
-              ),
-            ),
-            Expanded(
-              child: matches.isEmpty
-                  ? Center(
-                      child: Text(
-                        context.l10n.searchEmptyResultSubtitle,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: matches.length,
-                      itemBuilder: (context, index) {
-                        final code = matches[index];
-                        final isSelected = code == widget.selected;
-                        final countryName = widget.countryNameOf(context, code);
-                        return AppSheetOption(
-                          title: Text(countryName != code ? countryName : code),
-                          subtitle: countryName != code ? Text(code) : null,
-                          trailing: isSelected
-                              ? Icon(Icons.check, color: colorScheme.primary)
-                              : null,
-                          onTap: () => widget.onSelected(code),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _QualityOption extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-  final bool showDivider;
-
-  const _QualityOption({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-    this.showDivider = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return SettingsItem(
-      icon: icon,
-      title: title,
-      subtitle: subtitle,
-      trailing: isSelected
-          ? Icon(Icons.check, color: colorScheme.primary)
-          : null,
-      onTap: onTap,
-      showDivider: showDivider,
-    );
-  }
-}
-
-class _ServiceSelector extends ConsumerWidget {
-  final String currentService;
-  final ValueChanged<String> onChanged;
-  const _ServiceSelector({
-    required this.currentService,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final extState = ref.watch(extensionProvider);
-
-    final extensionProviders = extState.extensions
-        .where((e) => e.enabled && e.hasDownloadProvider)
-        .toList();
-
-    final effectiveService =
-        extensionProviders.any((extension) => extension.id == currentService)
-        ? currentService
-        : '';
-
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: extensionProviders.isEmpty
-          ? Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 18,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    context.l10n.extensionsNoDownloadProvider,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-            )
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                const spacing = 8.0;
-                final columns = (constraints.maxWidth / 320).floor().clamp(
-                  2,
-                  4,
-                );
-                final chipWidth =
-                    (constraints.maxWidth - spacing * (columns - 1)) / columns;
-                return Wrap(
-                  spacing: spacing,
-                  runSpacing: spacing,
-                  children: [
-                    for (final extension in extensionProviders)
-                      SizedBox(
-                        width: chipWidth,
-                        child: SettingsChoiceChip(
-                          layout: SettingsChipLayout.column,
-                          icon: Icons.extension,
-                          label: extension.displayName,
-                          isSelected: effectiveService == extension.id,
-                          onTap: () => onChanged(extension.id),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-    );
-  }
-}
-
-class _MetadataSourceSelector extends ConsumerWidget {
-  const _MetadataSourceSelector();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final settings = ref.watch(settingsProvider);
-    final extState = ref.watch(extensionProvider);
-
-    final rawSearchProvider = settings.searchProvider?.trim() ?? '';
-    final primarySearchExtension = defaultSearchExtension(extState.extensions);
-    final defaultProviderTarget =
-        primarySearchExtension?.displayName ??
-        context.l10n.extensionsNoCustomSearch;
-    final defaultProviderLabel =
-        '${context.l10n.extensionsHomeFeedAuto} ($defaultProviderTarget)';
-    final searchProvider =
-        extState.extensions.any(
-          (e) => e.enabled && e.hasCustomSearch && e.id == rawSearchProvider,
-        )
-        ? rawSearchProvider
-        : '';
-
-    Extension? activeExtension;
-    if (searchProvider.isNotEmpty) {
-      activeExtension = extState.extensions
-          .where((e) => e.id == searchProvider && e.enabled)
-          .firstOrNull;
-    }
-    final hasNonDefaultProvider = activeExtension != null;
-
-    String subtitle;
-    if (activeExtension != null) {
-      subtitle = context.l10n.optionsUsingExtension(
-        activeExtension.displayName,
-      );
-    } else {
-      subtitle = context.l10n.optionsPrimaryProviderSubtitle;
-    }
-
-    final content = Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.optionsPrimaryProvider,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: hasNonDefaultProvider
-                  ? colorScheme.primary
-                  : colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SettingsChoiceGrid(
-            children: [
-              SettingsChoiceChip(
-                icon: Icons.auto_awesome,
-                label: defaultProviderLabel,
-                isSelected: searchProvider.isEmpty,
-                onTap: () =>
-                    ref.read(settingsProvider.notifier).setSearchProvider(''),
-              ),
-              for (final ext in extState.extensions.where(
-                (e) => e.enabled && e.hasCustomSearch,
-              ))
-                SettingsChoiceChip(
-                  icon: Icons.extension,
-                  label: ext.displayName,
-                  isSelected: searchProvider == ext.id,
-                  onTap: () => ref
-                      .read(settingsProvider.notifier)
-                      .setSearchProvider(ext.id),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-    return SettingsSearchTarget(
-      label: context.l10n.optionsPrimaryProvider,
-      child: content,
-    );
-  }
-}
-
-class _DefaultSearchTabSelector extends ConsumerWidget {
-  const _DefaultSearchTabSelector();
-
-  String _labelForTab(BuildContext context, String tab) {
-    return switch (tab) {
-      'track' => context.l10n.searchTracks,
-      'artist' => context.l10n.searchArtists,
-      'album' => context.l10n.searchAlbums,
-      'playlist' => context.l10n.searchPlaylists,
-      _ => context.l10n.historyFilterAll,
-    };
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider);
-    final current = settings.defaultSearchTab;
-
-    final content = Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.optionsDefaultSearchTab,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            context.l10n.optionsDefaultSearchTabSubtitle,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SettingsChoiceGrid(
-            children: [
-              for (final tab in const [
-                'all',
-                'track',
-                'artist',
-                'album',
-                'playlist',
-              ])
-                SettingsChoiceChip(
-                  icon: switch (tab) {
-                    'track' => Icons.music_note,
-                    'artist' => Icons.person,
-                    'album' => Icons.album,
-                    'playlist' => Icons.queue_music,
-                    _ => Icons.grid_view,
-                  },
-                  label: _labelForTab(context, tab),
-                  isSelected: current == tab,
-                  onTap: () => ref
-                      .read(settingsProvider.notifier)
-                      .setDefaultSearchTab(tab),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-    return SettingsSearchTarget(
-      label: context.l10n.optionsDefaultSearchTab,
-      child: content,
     );
   }
 }

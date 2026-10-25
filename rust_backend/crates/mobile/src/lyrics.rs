@@ -1,6 +1,6 @@
 use crate::cancellation::RequestLease;
 use crate::manager::{ExtensionManager, ExtensionManagerError};
-use spotiflac_extensions::backend::LyricsRequest as CoreRequest;
+use mornye_extensions::backend::LyricsRequest as CoreRequest;
 use std::sync::Arc;
 
 #[derive(uniffi::Record)]
@@ -68,6 +68,24 @@ impl ExtensionManager {
             .map_err(ExtensionManagerError::Operation)
     }
 
+    /// One enabled provider's lyrics, for choosing between providers.
+    pub fn get_lyrics_from_provider(
+        &self,
+        provider: String,
+        request: LyricsRequest,
+        lease: Option<Arc<RequestLease>>,
+    ) -> Result<String, ExtensionManagerError> {
+        self.inner
+            .get_lyrics_from_provider(&provider, &request.into(), &|| check(&lease))
+            .map_err(ExtensionManagerError::Operation)
+    }
+
+    pub fn get_enabled_lyrics_providers_json(&self) -> Result<String, ExtensionManagerError> {
+        self.inner
+            .get_enabled_lyrics_providers_json()
+            .map_err(ExtensionManagerError::Operation)
+    }
+
     pub fn fetch_and_save_lyrics(
         &self,
         request: LyricsRequest,
@@ -85,12 +103,6 @@ impl ExtensionManager {
     ) -> Result<(), ExtensionManagerError> {
         self.inner
             .set_lyrics_providers_json(&providers_json)
-            .map_err(ExtensionManagerError::Operation)
-    }
-
-    pub fn get_available_lyrics_providers_json(&self) -> Result<String, ExtensionManagerError> {
-        self.inner
-            .get_available_lyrics_providers_json()
             .map_err(ExtensionManagerError::Operation)
     }
 

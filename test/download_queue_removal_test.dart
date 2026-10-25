@@ -1,10 +1,10 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_state.dart';
-import 'package:mosix/utils/chunked_list.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_state.dart';
+import 'package:mornye/utils/chunked_list.dart';
 
 DownloadItem _item(int i, {String? requestId}) => DownloadItem(
   id: requestId ?? 'request-$i',
@@ -86,20 +86,12 @@ void main() {
         expect(state.withoutItem('absent'), same(state));
         if (state.items.isNotEmpty && tick % 3 == 0) {
           final changed = random.nextInt(state.items.length);
-          final next = ChunkedList<DownloadItem>.from(state.items).updated({
+          state = state.withItemReplacements({
             changed: state.items[changed].copyWith(
               status: DownloadStatus.values[random.nextInt(6)],
               progress: tick / 270,
             ),
           });
-          state = state.copyWith(
-            items: next,
-            lookup: state.lookup.updatedForIndices(
-              previousItems: state.items,
-              nextItems: next,
-              changedIndices: [changed],
-            ),
-          );
           _check(state);
         }
       }

@@ -5,9 +5,12 @@ import 'dart:io';
 // ignore: implementation_imports
 import 'package:dart_smb2/src/ffi/native_lib.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/network_storage_service.dart';
+import 'package:mornye/services/network_smb_client.dart';
+import 'package:mornye/services/network_storage_service.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  HttpOverrides.global = null;
   test(
     'SMB uploads, reconciles retries and deletes only the selected file',
     () async {
@@ -55,6 +58,63 @@ void main() {
         },
       );
       expect(lastProgress, await audio.length());
+      final verifier = await NetworkSmbClient.connect(
+        networkTarget(c, Uri.parse(target).pathSegments.join('/')),
+        username: c.username,
+        password: c.password,
+        domain: c.domain,
+        timeout: NetworkStorageService.timeout,
+      );
+      try {
+        expect(
+          await verifier.matchesFile(
+            audio,
+            await audio.length(),
+            checkpoint: () {},
+          ),
+          isTrue,
+        );
+        final corrupted = await File(
+          '${temp.path}/corrupted.flac',
+        ).writeAsBytes(List.generate(700000, (i) => (i + 1) % 251));
+        expect(
+          await verifier.matchesFile(
+            corrupted,
+            await audio.length(),
+            checkpoint: () {},
+          ),
+          isFalse,
+        );
+        expect(
+          await verifier.matchesFile(
+            audio,
+            await audio.length() + 1,
+            checkpoint: () {},
+          ),
+          isFalse,
+        );
+        var checks = 0;
+        await expectLater(
+          verifier.matchesFile(
+            audio,
+            await audio.length(),
+            checkpoint: () {
+              if (++checks == 3) throw StateError('Verification cancelled');
+            },
+          ),
+          throwsStateError,
+        );
+        expect(
+          await verifier.matchesFile(
+            audio,
+            await audio.length(),
+            checkpoint: () {},
+          ),
+          isTrue,
+        );
+      } finally {
+        await verifier.close();
+      }
       // Existing identical content is adopted without overwriting the file.
       await storage.publishUpload(
         target,

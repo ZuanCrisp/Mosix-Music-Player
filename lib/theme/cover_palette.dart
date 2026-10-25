@@ -6,10 +6,12 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_color_utilities/hct/hct.dart';
 import 'package:material_color_utilities/quantize/quantizer_celebi.dart';
 import 'package:material_color_utilities/score/score.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/widgets/cached_cover_image.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/cached_cover_image.dart';
 
 Future<List<List<int>>> _quantizePaletteInIsolate(Uint8List bytes) async {
   final result = await QuantizerCelebi().quantize(
@@ -34,7 +36,14 @@ int paletteSeedFromColorCounts(List<List<int>> colors) {
   return Score.score(populations, desired: 1).first;
 }
 
-/// Colour scheme derived from cover art, used to theme detail-screen headers.
+/// Whether a cover whose [coverSourceColor] is [source] reads as black and
+/// white: its HCT chroma is at most 12. Score would still pick a seed hue for
+/// it (or Material's blue fallback), which tints the whole scheme.
+bool isNearGrayscaleCover(Color source) =>
+    Hct.fromInt(source.toARGB32()).chroma <= 12;
+
+/// Colour scheme derived from cover art, used to theme detail-screen headers
+/// and the Material player surfaces (`PlayerArtworkTheme`).
 ///
 /// The generated scheme follows app brightness and supplies contrasting
 /// on-colours for the artwork-derived surface.
@@ -50,6 +59,10 @@ class CoverPalette {
   static final Map<String, String> _sourceKeys = {};
   static final List<String> _cacheOrder = <String>[];
   static const int _maxEntries = 32;
+
+  /// The neutral scheme of a near-grayscale cover, keyed by its cached tonal
+  /// scheme so both leave the cache together.
+  static final Expando<ColorScheme> _neutralSchemes = Expando();
 
   static bool _isNetworkSource(String source) =>
       source.startsWith('http://') || source.startsWith('https://');
@@ -76,8 +89,21 @@ class CoverPalette {
   }
 
   /// Cached scheme for [source], or null when it has not been resolved yet.
-  static ColorScheme? peek(String source, Brightness brightness) =>
-      _cache[_sourceKeys['$source|${brightness.name}']];
+  ///
+  /// With [neutralGrayscale], a near-grayscale cover ([isNearGrayscaleCover])
+  /// gets a monochrome scheme instead of a tinted one. Material surfaces opt
+  /// in; Mornye derives its own neutral shading from [sourceColor].
+  static ColorScheme? peek(
+    String source,
+    Brightness brightness, {
+    bool neutralGrayscale = false,
+  }) {
+    final scheme = _cache[_sourceKeys['$source|${brightness.name}']];
+    return neutralGrayscale ? _neutralFor(scheme) : scheme;
+  }
+
+  static ColorScheme? _neutralFor(ColorScheme? scheme) =>
+      scheme == null ? null : _neutralSchemes[scheme] ?? scheme;
 
   /// Average cover colour before Material's accent selection or tonal mapping.
   /// Near-monochrome covers stay neutral instead of acquiring a seed hue.
@@ -85,8 +111,19 @@ class CoverPalette {
       _sourceColors[_sourceKeys['$source|${brightness.name}']];
 
   /// Resolves the scheme for [source] (a network URL or a local file path).
-  /// Returns null when the image cannot be decoded.
+  /// Returns null when the image cannot be decoded. [neutralGrayscale] works
+  /// as in [peek] and shares the same palette job.
   static Future<ColorScheme?> resolve(
+    String source,
+    Brightness brightness, {
+    String? cacheKey,
+    bool neutralGrayscale = false,
+  }) {
+    final scheme = _resolveTonal(source, brightness, cacheKey: cacheKey);
+    return neutralGrayscale ? scheme.then(_neutralFor) : scheme;
+  }
+
+  static Future<ColorScheme?> _resolveTonal(
     String source,
     Brightness brightness, {
     String? cacheKey,
@@ -159,7 +196,16 @@ class CoverPalette {
       );
       final scheme = await _schemeFromSample(sample, brightness);
       final sourceColor = await _sampleSourceColor(sample);
-      if (sourceColor != null) _sourceColors[key] = sourceColor;
+      if (sourceColor != null) {
+        _sourceColors[key] = sourceColor;
+        if (isNearGrayscaleCover(sourceColor)) {
+          _neutralSchemes[scheme] = ColorScheme.fromSeed(
+            seedColor: sourceColor,
+            brightness: brightness,
+            dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
+          );
+        }
+      }
       _cache[key] = scheme;
       _cacheOrder.add(key);
       while (_cacheOrder.length > _maxEntries) {
@@ -263,42 +309,7 @@ class CoverPalette {
           final data = await info.image.toByteData(
             format: ui.ImageByteFormat.rawStraightRgba,
           );
-          if (data == null) {
-            result.complete(null);
-            return;
-          }
-          var red = 0.0;
-          var green = 0.0;
-          var blue = 0.0;
-          var weight = 0.0;
-          for (var index = 0; index < data.lengthInBytes; index += 4) {
-            final alpha = data.getUint8(index + 3) / 255;
-            red += data.getUint8(index) * alpha;
-            green += data.getUint8(index + 1) * alpha;
-            blue += data.getUint8(index + 2) * alpha;
-            weight += alpha;
-          }
-          if (weight == 0) {
-            result.complete(null);
-            return;
-          }
-          red /= weight;
-          green /= weight;
-          blue /= weight;
-          // A very dark navy pixel can have high HSL saturation despite being
-          // visually black. Compare channel differences before using its hue.
-          final spread =
-              math.max(red, math.max(green, blue)) -
-              math.min(red, math.min(green, blue));
-          if (spread < 16) {
-            final gray = (red * 0.2126 + green * 0.7152 + blue * 0.0722)
-                .round();
-            result.complete(Color.fromARGB(255, gray, gray, gray));
-          } else {
-            result.complete(
-              Color.fromARGB(255, red.round(), green.round(), blue.round()),
-            );
-          }
+          result.complete(data == null ? null : coverSourceColor(data));
         } catch (_) {
           result.complete(null);
         } finally {
@@ -313,6 +324,91 @@ class CoverPalette {
     stream.addListener(listener);
     return result.future;
   }
+}
+
+/// The colour a cover reads as, from straight RGBA pixels.
+///
+/// A plain average turns a dark cover with one clear colour into gray: black
+/// pixels outweigh a pale avocado strip covering a third of the art. When at
+/// least [minimumCoverage] of the pixels share a visible hue, that hue's
+/// average wins, weighted by colourfulness. Otherwise the average is used,
+/// and near-monochrome art stays neutral instead of acquiring a seed hue.
+@visibleForTesting
+Color? coverSourceColor(ByteData data, {double minimumCoverage = 0.12}) {
+  const bins = 24;
+  final binWeight = List<double>.filled(bins, 0);
+  final binRed = List<double>.filled(bins, 0);
+  final binGreen = List<double>.filled(bins, 0);
+  final binBlue = List<double>.filled(bins, 0);
+  var red = 0.0;
+  var green = 0.0;
+  var blue = 0.0;
+  var weight = 0.0;
+  var chromatic = 0.0;
+  for (var index = 0; index + 3 < data.lengthInBytes; index += 4) {
+    final alpha = data.getUint8(index + 3) / 255;
+    if (alpha == 0) continue;
+    final r = data.getUint8(index);
+    final g = data.getUint8(index + 1);
+    final b = data.getUint8(index + 2);
+    red += r * alpha;
+    green += g * alpha;
+    blue += b * alpha;
+    weight += alpha;
+    final high = math.max(r, math.max(g, b));
+    final chroma = high - math.min(r, math.min(g, b));
+    // Dark pixels have unstable hues, as in the navy-black case below.
+    if (chroma < 20 || high < 48) continue;
+    chromatic += alpha;
+    final hue = HSVColor.fromColor(Color.fromARGB(255, r, g, b)).hue;
+    final bin = (hue / (360 / bins)).floor() % bins;
+    final w = alpha * chroma;
+    binWeight[bin] += w;
+    binRed[bin] += r * w;
+    binGreen[bin] += g * w;
+    binBlue[bin] += b * w;
+  }
+  if (weight == 0) return null;
+  if (chromatic / weight >= minimumCoverage) {
+    var best = 0;
+    var bestWeight = -1.0;
+    for (var bin = 0; bin < bins; bin++) {
+      final total =
+          binWeight[(bin + bins - 1) % bins] +
+          binWeight[bin] +
+          binWeight[(bin + 1) % bins];
+      if (total > bestWeight) {
+        best = bin;
+        bestWeight = total;
+      }
+    }
+    var r = 0.0, g = 0.0, b = 0.0, w = 0.0;
+    for (final bin in [(best + bins - 1) % bins, best, (best + 1) % bins]) {
+      r += binRed[bin];
+      g += binGreen[bin];
+      b += binBlue[bin];
+      w += binWeight[bin];
+    }
+    return Color.fromARGB(
+      255,
+      (r / w).round(),
+      (g / w).round(),
+      (b / w).round(),
+    );
+  }
+  red /= weight;
+  green /= weight;
+  blue /= weight;
+  // A very dark navy pixel can have high HSL saturation despite being
+  // visually black. Compare channel differences before using its hue.
+  final spread =
+      math.max(red, math.max(green, blue)) -
+      math.min(red, math.min(green, blue));
+  if (spread < 16) {
+    final gray = (red * 0.2126 + green * 0.7152 + blue * 0.0722).round();
+    return Color.fromARGB(255, gray, gray, gray);
+  }
+  return Color.fromARGB(255, red.round(), green.round(), blue.round());
 }
 
 /// Exposes the header's effective [ColorScheme] to descendants.
@@ -355,6 +451,7 @@ class _CoverPaletteBuilderState extends State<CoverPaletteBuilder> {
   ColorScheme? _scheme;
   String? _resolvedSource;
   Brightness? _resolvedBrightness;
+  bool? _resolvedNeutral;
   int _resolveGeneration = 0;
 
   @override
@@ -374,21 +471,37 @@ class _CoverPaletteBuilderState extends State<CoverPaletteBuilder> {
   void _maybeResolve() {
     final source = widget.imageSource;
     final brightness = Theme.of(context).brightness;
+    // Material headers give black and white covers a neutral scheme. Mornye
+    // keeps the tonal one and shades neutral covers from the source colour.
+    final neutral = !context.isMornye;
     if (source == null || source.isEmpty) {
       _resolveGeneration++;
       _resolvedSource = null;
       _resolvedBrightness = null;
+      _resolvedNeutral = null;
       _scheme = null;
       return;
     }
     final requestGeneration = ++_resolveGeneration;
-    if (_resolvedSource != source || _resolvedBrightness != brightness) {
+    if (_resolvedSource != source ||
+        _resolvedBrightness != brightness ||
+        _resolvedNeutral != neutral) {
       _resolvedSource = source;
       _resolvedBrightness = brightness;
-      _scheme = CoverPalette.peek(source, brightness);
+      _resolvedNeutral = neutral;
+      _scheme = CoverPalette.peek(
+        source,
+        brightness,
+        neutralGrayscale: neutral,
+      );
     }
 
-    CoverPalette.resolve(source, brightness).then((scheme) {
+    final resolved = CoverPalette.resolve(
+      source,
+      brightness,
+      neutralGrayscale: neutral,
+    );
+    resolved.then((scheme) {
       if (!mounted) return;
       if (_resolveGeneration != requestGeneration) {
         return;

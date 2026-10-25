@@ -8,10 +8,11 @@ import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/hires_check_card.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/hires_check_card.dart';
 
 const _limitedResult = <String, dynamic>{
   'supported': true,
@@ -25,7 +26,7 @@ const _limitedResult = <String, dynamic>{
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zuancrisp.mosix/backend');
+  const channel = MethodChannel('com.zarz.mornye/backend');
   final capture = GlobalKey();
   var calls = 0;
 
@@ -103,7 +104,7 @@ void main() {
       final image = await boundary.toImage(pixelRatio: 2);
       final data = await image.toByteData(format: ui.ImageByteFormat.png);
       await File(
-        '/tmp/spotiflac-hires-$name.png',
+        '/tmp/mornye-hires-$name.png',
       ).writeAsBytes(data!.buffer.asUint8List());
       image.dispose();
     });
@@ -121,7 +122,7 @@ void main() {
           of: find.text('Check'),
           matching: mornye
               ? find.byType(CupertinoButton)
-              : find.bySubtype<FilledButton>(),
+              : find.byType(ExpressiveButton),
         );
         expect(button, findsOneWidget);
         expect(tester.getSize(button).width, greaterThan(300));

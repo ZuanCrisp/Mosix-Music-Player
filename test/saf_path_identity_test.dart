@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/providers/download_history_provider.dart';
-import 'package:mosix/utils/path_match_keys.dart';
+import 'package:mornye/providers/download_history_provider.dart';
+import 'package:mornye/utils/path_match_keys.dart';
 
 String _document(String authority, String id, {String? tree}) => Uri(
   scheme: 'content',

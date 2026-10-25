@@ -2,22 +2,38 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dart_smb2/dart_smb2.dart';
-import 'package:mosix/services/network_certificate.dart';
+import 'package:mornye/services/local_network_access.dart';
+import 'package:mornye/services/network_certificate.dart';
+import 'package:mornye/services/network_storage_service.dart';
 
 enum NetworkStorageError {
   unreachable,
   timeout,
   authentication,
   permission,
+  localNetworkPermission,
   missingShare,
   incompatible,
   invalidAddress,
   certificate,
+  serverApi,
   unknown,
 }
 
 /// Classify transport failures without exposing URLs, usernames or passwords.
 NetworkStorageError classifyNetworkStorageError(Object error) {
+  if (error is SubsonicException) {
+    return switch (error.code) {
+      40 || 44 => NetworkStorageError.authentication,
+      20 || 30 || 41 || 42 || 43 => NetworkStorageError.serverApi,
+      50 || 60 => NetworkStorageError.permission,
+      70 => NetworkStorageError.missingShare,
+      _ => NetworkStorageError.unknown,
+    };
+  }
+  if (error is LocalNetworkPermissionException) {
+    return NetworkStorageError.localNetworkPermission;
+  }
   if (error is NetworkCertificateException || error is HandshakeException) {
     return NetworkStorageError.certificate;
   }

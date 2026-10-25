@@ -3,26 +3,25 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/services/app_state_database.dart';
-import 'package:mosix/services/autoplay_personalization.dart';
-import 'package:mosix/services/listening_statistics.dart';
-import 'package:mosix/services/music_playback_deck.dart';
-import 'package:mosix/services/music_player_service.dart';
-import 'package:mosix/services/playback_notification.dart';
-import 'package:mosix/services/source_deletion_events.dart';
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/services/app_state_database.dart';
+import 'package:mornye/services/autoplay_personalization.dart';
+import 'package:mornye/services/listening_statistics.dart';
+import 'package:mornye/services/music_player_service.dart';
+import 'package:mornye/services/playback_deck.dart';
+import 'package:mornye/services/playback_notification.dart';
+import 'package:mornye/services/source_deletion_events.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/logger.dart';
 
-class _Deck implements MusicPlaybackDeck {
+class _Deck implements PlaybackDeck {
   @override
-  PlayerState state = PlayerState.stopped;
+  PlaybackDeckState state = PlaybackDeckState.stopped;
   final volumes = <double>[];
   Map<String, bool>? outputOptions;
   Duration position = Duration.zero;
@@ -34,7 +33,7 @@ class _Deck implements MusicPlaybackDeck {
   @override
   bool get needsSourceReload => false;
   @override
-  Stream<PlayerState> get onPlayerStateChanged => const Stream.empty();
+  Stream<PlaybackDeckState> get onPlayerStateChanged => const Stream.empty();
   @override
   Stream<Duration> get onPositionChanged => const Stream.empty();
   @override
@@ -42,11 +41,9 @@ class _Deck implements MusicPlaybackDeck {
   @override
   Stream<void> get onPlayerComplete => const Stream.empty();
   @override
-  set positionUpdater(PositionUpdater updater) {}
+  void startPositionUpdates(Duration interval) {}
   @override
-  Future<void> setReleaseMode(ReleaseMode mode) async {}
-  @override
-  Future<void> setAudioContext(AudioContext context) async {}
+  Future<void> configureOutput() async {}
   @override
   Future<void> setVolume(double volume) async => volumes.add(volume);
   @override
@@ -54,13 +51,13 @@ class _Deck implements MusicPlaybackDeck {
   @override
   Future<void> stop() async {
     if (failStop) throw StateError('Transport failed');
-    state = PlayerState.stopped;
+    state = PlaybackDeckState.stopped;
   }
 
   @override
-  Future<void> pause() async => state = PlayerState.paused;
+  Future<void> pause() async => state = PlaybackDeckState.paused;
   @override
-  Future<void> resume() async => state = PlayerState.playing;
+  Future<void> resume() async => state = PlaybackDeckState.playing;
   @override
   Future<void> seek(Duration value) async => position = value;
   @override
@@ -70,8 +67,8 @@ class _Deck implements MusicPlaybackDeck {
   @override
   Future<void> dispose() async => disposals++;
   @override
-  Future<void> setSource(
-    DeviceFileSource source, {
+  Future<void> setFileSource(
+    String path, {
     bool preferBitPerfect = false,
     bool directUsb = false,
     bool allowDop = false,
@@ -178,7 +175,7 @@ MusicPlayerRuntime _runtime({
   Future<MusicPlayerHandler> Function(MusicPlayerHandler Function())?
   initialize,
   List<_Deck>? decks,
-  MusicPlaybackDeck Function(String)? createDeck,
+  PlaybackDeck Function(String)? createDeck,
   Stream<double> volumeChanges = const Stream.empty(),
   SourceDeletionEvents? sourceDeletionEvents,
   ListeningRecorder? recorder,
@@ -766,7 +763,7 @@ void main() {
       final cached = await File(
         '${directory.path}/copy.flac',
       ).writeAsString('audio');
-      const channel = MethodChannel('com.zuancrisp.mosix/backend');
+      const channel = MethodChannel('com.zarz.mornye/backend');
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       messenger.setMockMethodCallHandler(
@@ -837,7 +834,7 @@ void main() {
       ).writeAsString('new');
       final copying = Completer<void>();
       final release = Completer<String>();
-      const channel = MethodChannel('com.zuancrisp.mosix/backend');
+      const channel = MethodChannel('com.zarz.mornye/backend');
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       var copies = 0;
@@ -881,6 +878,56 @@ void main() {
       expect(await replacement.exists(), isTrue);
       expect(handler.mediaItem.value?.id, 'removed');
       expect(handler.playbackState.value.playing, isTrue);
+    },
+  );
+
+  test(
+    'player metadata follows playback after restoring the last session',
+    () async {
+      final runtime = _runtime();
+      final container = ProviderContainer(
+        overrides: [musicPlayerRuntimeProvider.overrideWithValue(runtime)],
+      );
+      addTearDown(container.dispose);
+      final titles = <String?>[];
+      final subscription = container.listen(currentMediaItemProvider, (
+        _,
+        next,
+      ) {
+        if (next.hasValue) titles.add(next.value?.title);
+      });
+      addTearDown(subscription.close);
+      await container.read(currentMediaItemProvider.future);
+      final handler = await runtime.initialize();
+      const second = PlayableMedia(
+        id: 'two',
+        source: '/two.flac',
+        title: 'Two',
+        artist: 'Other',
+        duration: Duration(seconds: 60),
+      );
+      await handler.restoreSession(
+        items: [_track, second],
+        index: 0,
+        position: const Duration(seconds: 15),
+        shuffle: false,
+      );
+      await container.pump();
+      expect(titles.last, 'One');
+      final controller = container.read(musicPlayerControllerProvider);
+      await controller.next();
+      await container.pump();
+      expect(handler.playbackState.value.playing, isTrue);
+      expect(titles.last, 'Two');
+
+      await controller.playSingle(_track);
+      await container.pump();
+      expect(handler.playbackState.value.playing, isTrue);
+      expect(titles.last, 'One');
+      expect(
+        container.read(currentMediaItemProvider).value?.extras?['source'],
+        _track.source,
+      );
     },
   );
 
@@ -1157,8 +1204,8 @@ void main() {
         addTearDown(container.dispose);
         await container.read(musicPlayerControllerProvider).playSingle(_track);
       }
-      expect(firstDecks.single.state, PlayerState.playing);
-      expect(secondDecks.single.state, PlayerState.playing);
+      expect(firstDecks.single.state, PlaybackDeckState.playing);
+      expect(secondDecks.single.state, PlaybackDeckState.playing);
       expect(firstDecks.single.volumes.last, closeTo(0.501, 0.001));
       expect(secondDecks.single.volumes.last, 1);
       expect(firstDecks.single.outputOptions!.values, everyElement(isFalse));
@@ -1191,6 +1238,10 @@ void main() {
         second.handler!.playbackState.value.controls.first.label,
         'Favorite',
       );
+      // A pre-amp change reaches the playing track without a restart.
+      first.configure(first.settings.copyWith(playbackNormalizationPreamp: -6));
+      await _settle();
+      expect(firstDecks.single.volumes.last, closeTo(0.251, 0.001));
       first.configure(first.settings.copyWith(playbackNormalization: false));
       await _settle();
       expect(firstDecks.single.volumes.last, 1);

@@ -2,7 +2,7 @@ import Foundation
 import CryptoKit
 import Darwin
 import ffmpegkit
-import MosixBackend
+import MornyeBackend
 import Flutter
 
 struct CoreFFmpegCommand: Decodable {
@@ -62,7 +62,7 @@ final class CoreFFmpegExecution {
 private enum CoreFFmpegStaging {
     static let lock = NSLock()
     static var directories = Set<String>()
-    static let prefix = ".spotiflac-ffmpeg-\(Bundle.main.bundleIdentifier ?? "spotiflac")-"
+    static let prefix = ".mornye-ffmpeg-\(Bundle.main.bundleIdentifier ?? "mornye")-"
 
     static func create(for target: URL) throws -> URL {
         let directory = target.deletingLastPathComponent().resolvingSymlinksInPath()
@@ -151,10 +151,9 @@ final class CoreDirectoryScope {
     deinit { close() }
 }
 
-/// Native migration boundary; each process selects one stateful backend.
+/// Native boundary to the Rust backend; each process holds one stateful instance.
 protocol CoreBackend {
     var implementation: String { get }
-    var routesApplication: Bool { get }
     func prepareApplicationArguments(method: String, arguments: Any?) throws -> Any?
     func invokeApplication(method: String, arguments: Any?) throws -> Any?
     func completeAuthCallback(state: String, code: String, sessionGrant: Bool, onResolved: (String) -> Void) throws
@@ -189,21 +188,9 @@ protocol CoreBackend {
     func releaseMemoryUnderPressure() throws
 }
 
-extension CoreBackend {
-    var routesApplication: Bool { false }
-
-    func prepareApplicationArguments(method: String, arguments: Any?) throws -> Any? { arguments }
-
-    func invokeApplication(method: String, arguments: Any?) throws -> Any? {
-        throw NSError(domain: "CoreBackend", code: 1, userInfo: [NSLocalizedDescriptionKey: "Application routing is unavailable for \(method)"])
-    }
-}
-
-
 final class RustCoreBackend: CoreBackend {
     static let shared = RustCoreBackend()
     let implementation = "rust"
-    let routesApplication = true
     private let root = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("rust-core-pilot", isDirectory: true)
     private let ownerLock = NSLock()
     private var manager: ExtensionManager?
@@ -250,6 +237,12 @@ final class RustCoreBackend: CoreBackend {
         ownerLock.lock()
         defer { ownerLock.unlock() }
         guard let manager = manager else { throw failure("Rust backend is not initialized") }
+        return manager
+    }
+
+    private func managerSnapshot() -> ExtensionManager? {
+        ownerLock.lock()
+        defer { ownerLock.unlock() }
         return manager
     }
 
@@ -322,7 +315,7 @@ final class RustCoreBackend: CoreBackend {
                 return try current.runNativeDataJob(requestJson: encoded, bytes: bytes, lease: lease)
             }
         }
-        return try MosixBackend.runNativeDataJob(requestJson: raw, bytes: bytes, lease: lease)
+        return try MornyeBackend.runNativeDataJob(requestJson: raw, bytes: bytes, lease: lease)
     }
 
     private func repositoryOwner() throws -> ExtensionRepository {
@@ -432,30 +425,22 @@ final class RustCoreBackend: CoreBackend {
     }
 
     func getLibraryScanProgress() throws -> String {
-        ownerLock.lock()
-        let current = manager
-        ownerLock.unlock()
+        let current = managerSnapshot()
         return try current?.getLibraryScanProgress() ?? "{}"
     }
 
     func cancelLibraryScan() throws {
-        ownerLock.lock()
-        let current = manager
-        ownerLock.unlock()
+        let current = managerSnapshot()
         try current?.cancelLibraryScan()
     }
 
     func pauseLibraryScan() throws {
-        ownerLock.lock()
-        let current = manager
-        ownerLock.unlock()
+        let current = managerSnapshot()
         try current?.pauseLibraryScan()
     }
 
     func resumeLibraryScan() throws {
-        ownerLock.lock()
-        let current = manager
-        ownerLock.unlock()
+        let current = managerSnapshot()
         try current?.resumeLibraryScan()
     }
 
@@ -563,11 +548,11 @@ final class RustCoreBackend: CoreBackend {
     func fileMetadataImplementation(path: String) -> String { "rust" }
 
     func readFileMetadata(path: String, hint: String) throws -> String {
-        try MosixBackend.readFileMetadata(path: path, hint: hint, lease: nil)
+        try MornyeBackend.readFileMetadata(path: path, hint: hint, lease: nil)
     }
 
     func checkHiResAuthenticity(path: String, optionsJson: String) throws -> String {
-        try MosixBackend.checkHiresAuthenticity(path: path, optionsJson: optionsJson, lease: nil)
+        try MornyeBackend.checkHiresAuthenticity(path: path, optionsJson: optionsJson, lease: nil)
     }
 
     func editFileMetadata(path: String, metadataJson: String) throws -> String {
@@ -835,6 +820,16 @@ final class RustCoreBackend: CoreBackend {
             }
             return nil
         case "getExtensionPendingAuth": return try current.getExtensionPendingAuthJson(extensionId: string("extension_id"))
+        case "getLyricsFromProvider":
+            let request = LyricsRequest(
+                spotifyId: string("spotify_id"),
+                track: string("track_name"),
+                artist: string("artist_name"),
+                filePath: "",
+                durationMs: (args["duration_ms"] as? NSNumber)?.int64Value ?? 0
+            )
+            return try current.getLyricsFromProvider(provider: string("provider"), request: request, lease: nil)
+        case "getEnabledLyricsProviders": return try current.getEnabledLyricsProvidersJson()
         case "completeExtensionSessionGrant":
             try completeSessionGrant(current, id: string("extension_id"), grant: string("grant"))
             return true
@@ -870,17 +865,16 @@ final class RustCoreBackend: CoreBackend {
             let priorities = try JSONSerialization.jsonObject(with: Data(current.providerPriorities().utf8)) as! [String: Any]
             let value = priorities[method == "getProviderPriority" ? "download" : "metadata"] as? [String] ?? []
             return String(decoding: try JSONSerialization.data(withJSONObject: value), as: UTF8.self)
-        case "getAvailableLyricsProviders": return try current.getAvailableLyricsProvidersJson()
         default: throw failure("Rust application method is not connected yet: \(method)")
         }
     }
 
     func buildFilename(template: String, metadataJson: String) throws -> String {
-        try MosixBackend.buildFilename(template: template, metadataJson: metadataJson)
+        try MornyeBackend.buildFilename(template: template, metadataJson: metadataJson)
     }
 
     func sanitizeFilename(filename: String) -> String {
-        MosixBackend.sanitizeFilename(filename: filename)
+        MornyeBackend.sanitizeFilename(filename: filename)
     }
 }
 
@@ -889,7 +883,7 @@ func requireSuccessfulExtensionAction(extensionId: String, actionName: String, r
     guard let data = text.data(using: .utf8),
           let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
         throw NSError(
-            domain: "Mosix",
+            domain: "Mornye",
             code: 1,
             userInfo: [NSLocalizedDescriptionKey: "Extension \(actionName) for \(extensionId) returned invalid JSON: \(String(text.prefix(240)))"]
         )
@@ -900,7 +894,7 @@ func requireSuccessfulExtensionAction(extensionId: String, actionName: String, r
         (obj["message"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ??
         String(text.prefix(240))
     throw NSError(
-        domain: "Mosix",
+        domain: "Mornye",
         code: 2,
         userInfo: [NSLocalizedDescriptionKey: "Extension \(actionName) failed for \(extensionId): \(error)"]
     )

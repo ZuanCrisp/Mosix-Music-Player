@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
 
 DownloadHistoryItem _historyItem({
   required String id,
@@ -18,6 +18,37 @@ DownloadHistoryItem _historyItem({
     spotifyId: 'source-track-same',
     isrc: 'SAMEISRC',
   );
+}
+
+class _CountingHistoryItem extends Fake implements DownloadHistoryItem {
+  _CountingHistoryItem(this.item);
+
+  final DownloadHistoryItem item;
+  int keyReads = 0;
+
+  @override
+  String? get spotifyId {
+    keyReads++;
+    return item.spotifyId;
+  }
+
+  @override
+  String? get isrc {
+    keyReads++;
+    return item.isrc;
+  }
+
+  @override
+  String get trackName {
+    keyReads++;
+    return item.trackName;
+  }
+
+  @override
+  String get artistName {
+    keyReads++;
+    return item.artistName;
+  }
 }
 
 void main() {
@@ -64,7 +95,7 @@ void main() {
       expect(historyItemsReferToSameStoredFile(original, converted), isTrue);
     });
 
-    test('duplicate track identities keep the newest lookup item', () {
+    test('duplicate track identities keep the first lookup item', () {
       final newest = _historyItem(
         id: 'newest',
         filePath: '/music/New Album/Same Song.flac',
@@ -84,11 +115,20 @@ void main() {
         totalCount: 2,
       );
 
-      expect(state.getBySpotifyId('source-track-same')?.id, 'newest');
-      expect(state.getByIsrc('SAMEISRC')?.id, 'newest');
+      for (final current in [state, state.copyWith(loadedIndexVersion: 1)]) {
+        expect(current.getBySpotifyId('source-track-same'), same(newest));
+        expect(current.getByIsrc('SAMEISRC'), same(newest));
+        expect(
+          current.findByTrackAndArtist('  SAME SONG ', ' same artist  '),
+          same(newest),
+        );
+      }
+      final reordered = state.copyWith(lookupItems: [older, newest]);
+      expect(reordered.getBySpotifyId('source-track-same'), same(older));
+      expect(reordered.getByIsrc('SAMEISRC'), same(older));
       expect(
-        state.findByTrackAndArtist('Same Song', 'Same Artist')?.id,
-        'newest',
+        reordered.findByTrackAndArtist('Same Song', 'Same Artist'),
+        same(older),
       );
       expect(state.items, hasLength(2));
     });
@@ -174,6 +214,145 @@ void main() {
         ),
         '24-bit/192kHz',
       );
+    });
+  });
+
+  group('download history state copies', () {
+    test('unchanged lookup snapshots do not reread index keys', () {
+      final item = _CountingHistoryItem(
+        _historyItem(
+          id: 'indexed',
+          filePath: '/music/Same Song.flac',
+          downloadedAt: DateTime.utc(2026, 7, 23),
+        ),
+      );
+      final state = DownloadHistoryState(items: [item], totalCount: 1);
+      final initialReads = item.keyReads;
+      expect(initialReads, greaterThan(0));
+
+      final revisionOnly = state.copyWith(loadedIndexVersion: 2);
+      final countOnly = revisionOnly.copyWith(totalCount: 10);
+      final visibleItems = <DownloadHistoryItem>[];
+      final itemsOnly = countOnly.copyWith(items: visibleItems);
+      final sameLookup = itemsOnly.copyWith(lookupItems: state.lookupItems);
+
+      for (final current in [revisionOnly, countOnly, itemsOnly, sameLookup]) {
+        expect(current.lookupItems, same(state.lookupItems));
+        expect(current.isDownloaded('source-track-same'), isTrue);
+        expect(current.getBySpotifyId('source-track-same'), same(item));
+        expect(current.getByIsrc('SAMEISRC'), same(item));
+        expect(
+          current.findByTrackAndArtist(' Same Song ', 'SAME ARTIST'),
+          same(item),
+        );
+      }
+      expect(item.keyReads, initialReads);
+      expect(revisionOnly.totalCount, 1);
+      expect(revisionOnly.items, same(state.items));
+      expect(countOnly.loadedIndexVersion, 2);
+      expect(countOnly.items, same(state.items));
+      expect(itemsOnly.totalCount, 10);
+      expect(itemsOnly.loadedIndexVersion, 2);
+      expect(itemsOnly.items, same(visibleItems));
+      expect(state.totalCount, 1);
+      expect(state.loadedIndexVersion, 0);
+
+      visibleItems.add(item);
+      expect(itemsOnly.items, [item]);
+      expect(item.keyReads, initialReads);
+    });
+
+    test('constructor lookup snapshots survive mutable input changes', () {
+      final original = _historyItem(
+        id: 'original',
+        filePath: '/music/Same Song.flac',
+        downloadedAt: DateTime.utc(2026, 7, 23),
+      );
+      final replacement = original.copyWith(
+        spotifyId: 'replacement',
+        isrc: 'REPLACEMENT',
+        trackName: 'Replacement',
+      );
+
+      for (final explicitLookup in [false, true]) {
+        final input = [original];
+        final state = DownloadHistoryState(
+          items: input,
+          lookupItems: explicitLookup ? input : null,
+        );
+        input[0] = replacement;
+
+        expect(state.items, same(input));
+        expect(state.items, [replacement]);
+        expect(state.lookupItems, [original]);
+        expect(() => state.lookupItems.clear(), throwsUnsupportedError);
+        final copied = state.copyWith(totalCount: 2);
+        expect(copied.lookupItems, same(state.lookupItems));
+        expect(copied.getBySpotifyId('source-track-same'), same(original));
+        expect(copied.getBySpotifyId('replacement'), isNull);
+        expect(copied.getByIsrc('SAMEISRC'), same(original));
+        expect(copied.getByIsrc('REPLACEMENT'), isNull);
+        expect(
+          copied.findByTrackAndArtist('Same Song', 'Same Artist'),
+          same(original),
+        );
+        expect(
+          copied.findByTrackAndArtist('Replacement', 'Same Artist'),
+          isNull,
+        );
+      }
+    });
+
+    test('replacement lookup rebuilds all indexes from a new snapshot', () {
+      final original = _historyItem(
+        id: 'original',
+        filePath: '/music/Same Song.flac',
+        downloadedAt: DateTime.utc(2026, 7, 23),
+      );
+      final replacement = original.copyWith(
+        spotifyId: 'replacement',
+        isrc: 'REPLACEMENT',
+        trackName: '  Replacement  ',
+        artistName: ' NEW ARTIST ',
+      );
+      final state = DownloadHistoryState(items: [original], totalCount: 1);
+      final input = [replacement];
+      final copied = state.copyWith(
+        lookupItems: input,
+        totalCount: 2,
+        loadedIndexVersion: 3,
+      );
+      input.clear();
+
+      expect(copied.items, same(state.items));
+      expect(copied.totalCount, 2);
+      expect(copied.loadedIndexVersion, 3);
+      expect(copied.lookupItems, [replacement]);
+      expect(() => copied.lookupItems.clear(), throwsUnsupportedError);
+      expect(copied.isDownloaded('source-track-same'), isFalse);
+      expect(copied.isDownloaded('replacement'), isTrue);
+      expect(copied.getBySpotifyId('replacement'), same(replacement));
+      expect(copied.getByIsrc('SAMEISRC'), isNull);
+      expect(copied.getByIsrc('REPLACEMENT'), same(replacement));
+      expect(copied.findByTrackAndArtist('Same Song', 'Same Artist'), isNull);
+      expect(
+        copied.findByTrackAndArtist('replacement', 'new artist'),
+        same(replacement),
+      );
+      expect(state.lookupItems, [original]);
+      expect(state.getBySpotifyId('source-track-same'), same(original));
+      expect(state.getByIsrc('SAMEISRC'), same(original));
+      expect(
+        state.findByTrackAndArtist('Same Song', 'Same Artist'),
+        same(original),
+      );
+
+      final cleared = copied.copyWith(lookupItems: []);
+      expect(cleared.items, same(state.items));
+      expect(cleared.lookupItems, isEmpty);
+      expect(cleared.isDownloaded('replacement'), isFalse);
+      expect(cleared.getByIsrc('REPLACEMENT'), isNull);
+      expect(cleared.findByTrackAndArtist('replacement', 'new artist'), isNull);
     });
   });
 

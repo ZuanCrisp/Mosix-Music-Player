@@ -1,11 +1,13 @@
 //! Go-compatible successful-lyrics cache with bounded, atomic persistence.
 
+use mornye_core::fs::{
+    DEFAULT_TEMP_PREFIX, DirBuilderPortableExt, OpenOptionsPortableExt, write_atomic,
+};
+use mornye_core::lyrics::LyricsResponse;
 use serde::{Deserialize, Serialize};
-use spotiflac_core::lyrics::LyricsResponse;
 use std::collections::BTreeMap;
 use std::fs::{self, OpenOptions};
 use std::io::{Read, Write};
-use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -13,7 +15,9 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 pub const MAX_ENTRIES: usize = 500;
 pub const TTL: Duration = Duration::from_secs(24 * 60 * 60);
 const MAX_PERSISTED_BYTES: u64 = 64 << 20;
-const SNAPSHOT_VERSION: u32 = 5;
+const APPLE_TIMING_VERSION: u32 = 6;
+const LRC_RED_RECORDING_VERSION: u32 = 7;
+const SNAPSHOT_VERSION: u32 = LRC_RED_RECORDING_VERSION;
 
 #[derive(Clone)]
 struct Entry {
@@ -145,10 +149,12 @@ impl LyricsCache {
                 let Some(response) = entry.response else {
                     continue;
                 };
-                // Older versions lost Apple supplements or collapsed group vocals
-                // into the second singer instead of preserving the vocal side.
-                // Refetch once, preserving other providers' caches.
-                if loaded.version < SNAPSHOT_VERSION && response.provider == "Apple Music" {
+                // Refetch results whose recording selection or timing changed,
+                // preserving the independent revisions of other providers.
+                if (loaded.version < APPLE_TIMING_VERSION && response.provider == "Apple Music")
+                    || (loaded.version < LRC_RED_RECORDING_VERSION
+                        && response.provider == "lrc.red")
+                {
                     continue;
                 }
                 let Some(expires_at) = u64::try_from(entry.expires_at)
@@ -213,7 +219,7 @@ impl Drop for LyricsCache {
 fn read_snapshot(path: &Path) -> Option<Snapshot> {
     let file = OpenOptions::new()
         .read(true)
-        .custom_flags((rustix::fs::OFlags::NOFOLLOW | rustix::fs::OFlags::NONBLOCK).bits() as i32)
+        .nofollow_nonblock()
         .open(path)
         .ok()?;
     let metadata = file.metadata().ok()?;
@@ -291,7 +297,7 @@ fn write_snapshot(path: &Path, entries: &BTreeMap<String, Entry>) -> std::io::Re
         .unwrap_or(Path::new("."));
     fs::DirBuilder::new()
         .recursive(true)
-        .mode(0o700)
+        .unix_mode(0o700)
         .create(parent)?;
     let bytes = serde_json::to_vec(&snapshot)?;
     if bytes.len() as u64 > MAX_PERSISTED_BYTES {
@@ -299,10 +305,14 @@ fn write_snapshot(path: &Path, entries: &BTreeMap<String, Entry>) -> std::io::Re
             "lyrics cache exceeds persistence size limit",
         ));
     }
-    let mut temporary = tempfile::NamedTempFile::new_in(parent)?;
-    temporary.write_all(&bytes)?;
-    temporary.as_file().sync_all()?;
-    temporary.persist(path).map_err(|error| error.error)?;
+    write_atomic(
+        parent,
+        path,
+        DEFAULT_TEMP_PREFIX,
+        |file| file.write_all(&bytes),
+        || Ok(()),
+        false,
+    )?;
     Ok(())
 }
 
@@ -316,7 +326,7 @@ mod tests {
         let now = UNIX_EPOCH + Duration::from_secs(100);
         let apple = LyricsResponse::from_text("[00:01.00]Original", "Apple Music", "Apple Music");
         let other = LyricsResponse::from_text("[00:01.00]Original", "LRCLIB", "LRCLIB");
-        for version in 1..SNAPSHOT_VERSION {
+        for version in 1..APPLE_TIMING_VERSION {
             let snapshot = serde_json::json!({"version": version, "entries": {
                 "apple": {"response": apple, "expires_at": 200},
                 "other": {"response": other, "expires_at": 200}
@@ -330,14 +340,41 @@ mod tests {
     }
 
     #[test]
+    fn legacy_recording_cache_refetches_lrc_red_without_discarding_current_apple() {
+        let file = tempfile::NamedTempFile::new().unwrap();
+        let now = UNIX_EPOCH + Duration::from_secs(100);
+        let red = LyricsResponse::from_text("[00:01.00]Solo", "lrc.red", "lrc.red");
+        let apple = LyricsResponse::from_text("[00:01.00]Original", "Apple Music", "Apple Music");
+        for version in 1..=SNAPSHOT_VERSION {
+            let snapshot = serde_json::json!({"version": version, "entries": {
+                "red": {"response": red, "expires_at": 200},
+                "apple": {"response": apple, "expires_at": 200}
+            }});
+            fs::write(file.path(), serde_json::to_vec(&snapshot).unwrap()).unwrap();
+            let cache = LyricsCache::default();
+            cache.set_persistence_path(file.path(), now);
+            assert_eq!(
+                cache.get("red", now).is_some(),
+                version >= LRC_RED_RECORDING_VERSION,
+                "lrc.red snapshot {version}"
+            );
+            assert_eq!(
+                cache.get("apple", now).is_some(),
+                version >= APPLE_TIMING_VERSION,
+                "Apple snapshot {version}"
+            );
+        }
+    }
+
+    #[test]
     fn current_snapshot_restores_supplementary_text() {
         let file = tempfile::NamedTempFile::new().unwrap();
         let now = UNIX_EPOCH + Duration::from_secs(100);
         let mut lyrics =
-            LyricsResponse::from_text("[00:01.009]Original", "Apple Music", "Apple Music");
+            LyricsResponse::from_text("[00:01.009]Original", "Apple Music", "Zarz-LRC");
         let line = &mut lyrics.lines.as_mut().unwrap()[0];
         line.romanization = Some("Romanized".into());
-        line.romanization_words = Some(vec![spotiflac_core::lyrics::LyricsWord {
+        line.romanization_words = Some(vec![mornye_core::lyrics::LyricsWord {
             text: "Romanized".into(),
             start_time_ms: 1009,
             end_time_ms: 1307,

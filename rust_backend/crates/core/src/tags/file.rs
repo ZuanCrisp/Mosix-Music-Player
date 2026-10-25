@@ -1,7 +1,9 @@
 //! Application metadata JSON, preserving the distinct legacy tag-reader JSON.
 
 use super::{AudioMetadata, read_audio_tags, read_container_format};
-use crate::media::{mp3_quality, ogg_quality, probe_mp4_quality, probe_quality, riff_quality};
+use crate::media::{
+    adts_quality, mp3_quality, ogg_quality, probe_mp4_quality, probe_quality, riff_quality,
+};
 use serde_json::{Map, Value};
 use std::io::{self, Read, Seek, SeekFrom};
 
@@ -35,6 +37,7 @@ fn read_metadata(file: &mut (impl Read + Seek), path: &str, hint: &str) -> Resul
     let (mut format, mut codec) = match container {
         "flac" => ("flac", "flac"),
         "m4a" | "mp4" | "aac" => ("m4a", ""),
+        "adts" => ("aac", "aac"),
         "mp3" => ("mp3", "mp3"),
         "ogg" | "opus" => ("opus", "opus"),
         "ape" => ("ape", "ape"),
@@ -75,6 +78,7 @@ fn read_metadata(file: &mut (impl Read + Seek), path: &str, hint: &str) -> Resul
         "flac" => probe_quality(file, &|| Ok(())),
         "m4a" => probe_mp4_quality(file, &|| Ok(())),
         "mp3" => mp3_quality(file, size),
+        "aac" => adts_quality(file, size),
         "opus" => ogg_quality(file, size, path),
         "wav" | "aiff" => riff_quality(file, size, format == "aiff"),
         _ => return Ok(result.into()),
@@ -120,7 +124,7 @@ fn read_metadata(file: &mut (impl Read + Seek), path: &str, hint: &str) -> Resul
                     None
                 }
             }
-            "mp3" | "opus" if quality.bitrate > 0 => Some(quality.bitrate / 1000),
+            "mp3" | "aac" | "opus" if quality.bitrate > 0 => Some(quality.bitrate / 1000),
             _ => None,
         };
         if let Some(bitrate) = bitrate {
@@ -200,16 +204,26 @@ impl<R> ObservedReader<'_, R> {
 
 impl<R: Read> Read for ObservedReader<'_, R> {
     fn read(&mut self, data: &mut [u8]) -> io::Result<usize> {
-        self.check()?;
-        let result = self.file.read(data);
-        self.record(result)
+        loop {
+            self.check()?;
+            // A signal during a provider or FUSE read is not a failed read.
+            // Parsers with their own read loops would otherwise give up.
+            match self.file.read(data) {
+                Err(error) if error.kind() == io::ErrorKind::Interrupted => {}
+                result => return self.record(result),
+            }
+        }
     }
 }
 
 impl<R: Seek> Seek for ObservedReader<'_, R> {
     fn seek(&mut self, offset: SeekFrom) -> io::Result<u64> {
-        self.check()?;
-        let result = self.file.seek(offset);
-        self.record(result)
+        loop {
+            self.check()?;
+            match self.file.seek(offset) {
+                Err(error) if error.kind() == io::ErrorKind::Interrupted => {}
+                result => return self.record(result),
+            }
+        }
     }
 }

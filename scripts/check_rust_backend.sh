@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Check the production Rust workspace without local migration archives.
+# Check the production Rust workspace that routes the app on Android and iOS.
 
 set -euo pipefail
 

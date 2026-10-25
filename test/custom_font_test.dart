@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/models/theme_settings.dart';
-import 'package:mosix/providers/theme_provider.dart';
-import 'package:mosix/services/custom_font_service.dart';
-import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/models/theme_settings.dart';
+import 'package:mornye/providers/theme_provider.dart';
+import 'package:mornye/services/custom_font_service.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/theme/mornye_theme.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

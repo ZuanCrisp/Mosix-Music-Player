@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/screens/now_playing_screen.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/screens/now_playing_screen.dart';
+import 'package:mornye/theme/mornye_theme.dart';
 
 const _sheet = Key('player-sheet');
 
@@ -153,8 +153,8 @@ void main() {
             key: capture,
             child: ProviderScope(
               overrides: [
-                currentMediaItemProvider.overrideWith(
-                  (ref) => Stream.value(null),
+                currentMediaItemProvider.overrideWithBuild(
+                  (ref, notifier) => Stream.value(null),
                 ),
               ],
               child: MaterialApp(

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/cover_download_service.dart';
-import 'package:mosix/utils/string_utils.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/cover_download_service.dart';
+import 'package:mornye/utils/string_utils.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
 
 /// Adds the app-wide long-press-to-save behavior to a remote cover image.
 ///
@@ -100,10 +101,7 @@ class _DownloadableCoverState extends ConsumerState<DownloadableCover> {
                 child: ColoredBox(
                   color: Color(0x33000000),
                   child: Center(
-                    child: SizedBox.square(
-                      dimension: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
+                    child: AppLoadingIndicator(size: 22, strokeWidth: 2),
                   ),
                 ),
               ),

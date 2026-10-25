@@ -1,7 +1,7 @@
 part of 'download_queue_provider.dart';
 
 // Per-track fake Hi-Res check (AppSettings.redownloadFakeHiRes), ported from
-// Mosix-Module-Version's --redownload-fake-hires.
+// a Python reference checker's --redownload-fake-hires.
 //
 // Runs inside one _DownloadRun, right after the file is decoded and before
 // anything is published, tagged or converted: the verdict decides which file

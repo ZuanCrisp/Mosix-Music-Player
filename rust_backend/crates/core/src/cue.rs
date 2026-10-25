@@ -1,3 +1,5 @@
+//! CUE sheet parsing into sheets and tracks.
+
 use serde::Serialize;
 use std::io::Read;
 

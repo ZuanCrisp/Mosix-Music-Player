@@ -1,9 +1,165 @@
-use spotiflac_core::tags::{embed_flac_metadata, read_audio_tags, rewrite_audio_tags};
+use mornye_core::tags::{embed_flac_metadata, extract_cover, read_audio_tags, rewrite_audio_tags};
 use std::collections::BTreeMap;
 use std::io::Cursor;
 
 const PAYLOAD: &[u8] = b"\xff\xf8\x12\x34unchanged audio payload";
 const CREDITS: &str = "Artist A, Artist B & Artist C";
+
+#[test]
+fn high_resolution_artwork_replaces_embedded_thumbnails_without_changing_audio() {
+    let image = |size| {
+        let mut output = Cursor::new(Vec::new());
+        image::DynamicImage::new_rgb8(size, size)
+            .write_to(&mut output, image::ImageFormat::Png)
+            .unwrap();
+        output.into_inner()
+    };
+    let thumbnail = image(300);
+    let full_size = image(1200);
+    let fields = BTreeMap::from([("title".into(), "Example".into())]);
+    for format in ["flac", "mp3", "m4a", "opus", "ogg", "wav", "aiff"] {
+        let original = source(if format == "ogg" { "opus" } else { format });
+        let mut low_resolution = Vec::new();
+        rewrite_audio_tags(
+            &mut Cursor::new(original),
+            &mut low_resolution,
+            format,
+            &fields,
+            Some(&thumbnail),
+            &|| Ok(()),
+        )
+        .unwrap();
+        let mut output = Vec::new();
+        rewrite_audio_tags(
+            &mut Cursor::new(low_resolution),
+            &mut output,
+            format,
+            &fields,
+            Some(&full_size),
+            &|| Ok(()),
+        )
+        .unwrap();
+        let cover = extract_cover(&mut Cursor::new(&output), format, &|| Ok(())).unwrap();
+        assert_eq!(cover.data.len(), full_size.len(), "{format}");
+        assert_eq!(cover.data, full_size, "{format}");
+        let decoded = image::load_from_memory(&cover.data).unwrap();
+        assert_eq!(
+            (decoded.width(), decoded.height()),
+            (1200, 1200),
+            "{format}"
+        );
+        assert_eq!(
+            read_audio_tags(&mut Cursor::new(&output), format, &|| Ok(()))
+                .unwrap()
+                .title,
+            "Example"
+        );
+        assert!(
+            output.windows(PAYLOAD.len()).any(|chunk| chunk == PAYLOAD),
+            "{format}"
+        );
+    }
+}
+
+#[test]
+fn custom_separators_round_trip_all_tag_writers_without_touching_audio() {
+    for format in ["flac", "mp3", "m4a", "opus", "ape", "wav", "aiff"] {
+        let fields = BTreeMap::from([
+            ("title".into(), "Title, unchanged".into()),
+            ("artist".into(), "A, B".into()),
+            ("album_artist".into(), "C; D".into()),
+            ("composer".into(), "E, F".into()),
+            ("genre".into(), "Rock, Pop".into()),
+            ("artist_tag_mode".into(), "split_vorbis".into()),
+            ("artist_separator".into(), " / ".into()),
+            ("album_artist_separator".into(), "; ".into()),
+            ("composer_separator".into(), " | ".into()),
+            ("genre_separator".into(), "; ".into()),
+        ]);
+        let mut output = Vec::new();
+        rewrite_audio_tags(
+            &mut Cursor::new(source(format)),
+            &mut output,
+            format,
+            &fields,
+            None,
+            &|| Ok(()),
+        )
+        .unwrap();
+        let metadata = read_audio_tags(&mut Cursor::new(&output), format, &|| Ok(())).unwrap();
+        assert_eq!(metadata.artist, "A / B", "{format}");
+        assert_eq!(metadata.album_artist, "C; D", "{format}");
+        assert_eq!(metadata.composer, "E | F", "{format}");
+        assert_eq!(metadata.genre, "Rock; Pop", "{format}");
+        assert_eq!(metadata.title, "Title, unchanged", "{format}");
+        assert!(
+            output.windows(PAYLOAD.len()).any(|chunk| chunk == PAYLOAD),
+            "{format}"
+        );
+        assert!(
+            !output
+                .windows(b"_separator".len())
+                .any(|chunk| chunk == b"_separator")
+        );
+    }
+}
+
+#[test]
+fn download_embed_honors_separators_and_primary_artist_mode() {
+    for mode in ["joined", "split_vorbis", "primary"] {
+        let fields = BTreeMap::from([
+            ("ARTIST".into(), "A, B".into()),
+            ("COMPOSER".into(), "C, D".into()),
+            ("artist_separator".into(), " / ".into()),
+            ("composer_separator".into(), "; ".into()),
+        ]);
+        let mut output = Vec::new();
+        embed_flac_metadata(
+            &mut Cursor::new(source("flac")),
+            &mut output,
+            &fields,
+            mode,
+            None,
+            &|| Ok(()),
+        )
+        .unwrap();
+        let metadata = read_audio_tags(&mut Cursor::new(&output), "flac", &|| Ok(())).unwrap();
+        assert_eq!(
+            metadata.artist,
+            if mode == "primary" { "A" } else { "A / B" }
+        );
+        assert_eq!(metadata.composer, "C; D");
+        assert!(output.ends_with(PAYLOAD));
+        assert!(
+            !output
+                .windows(b"_separator".len())
+                .any(|chunk| chunk == b"_separator")
+        );
+    }
+}
+
+#[test]
+fn separator_preferences_decode_without_changing_download_names() {
+    let request = mornye_core::downloads::DownloadRequest::parse(
+        r#"{"artist_name":"A, B","metadata_separators":{"artist":" / ","genre":"; "}}"#,
+    )
+    .unwrap();
+    assert_eq!(request.artist_name, "A, B");
+    assert_eq!(
+        request.metadata_separators.as_ref().unwrap()["artist"],
+        " / "
+    );
+    let restored =
+        mornye_core::downloads::DownloadRequest::parse(&serde_json::to_string(&request).unwrap())
+            .unwrap();
+    assert_eq!(restored.metadata_separators, request.metadata_separators);
+    assert!(
+        mornye_core::downloads::DownloadRequest::parse("{}")
+            .unwrap()
+            .metadata_separators
+            .is_none()
+    );
+}
 
 fn atom(kind: &[u8; 4], body: &[u8]) -> Vec<u8> {
     [

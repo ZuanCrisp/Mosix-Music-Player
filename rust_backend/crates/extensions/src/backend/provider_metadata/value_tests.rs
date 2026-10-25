@@ -294,7 +294,7 @@ fn metadata_value_bridge_preserves_album_playlist_and_public_json() {
         assert_eq!(scalar_value.to_string(), scalar);
         assert_eq!(scalar_value["tracks"].as_array().unwrap().len(), 12);
     }
-    if std::env::var_os("SPOTIFLAC_METADATA_BRIDGE_BENCH").is_some() {
+    if std::env::var_os("MOSIX_METADATA_BRIDGE_BENCH").is_some() {
         measure_removed_roundtrip(&backend);
     }
     backend.shutdown();

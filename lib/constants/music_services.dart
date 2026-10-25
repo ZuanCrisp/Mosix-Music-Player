@@ -1,6 +1,6 @@
 /// Canonical service / provider identifiers shared across the app.
 ///
-/// These values must stay in sync with the provider ids reported by the Go
+/// These values must stay in sync with the provider ids reported by the native
 /// backend and by extensions; use them instead of raw string literals when
 /// comparing or dispatching on a service id.
 abstract final class MusicServices {

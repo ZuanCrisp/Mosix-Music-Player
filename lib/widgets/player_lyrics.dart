@@ -1,29 +1,64 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:ui' show BoxHeightStyle, ImageFilter;
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show ValueListenable, listEquals;
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter/rendering.dart'
     show OverflowBoxFit, RenderAbstractViewport, ScrollDirection;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/providers/runtime_profile_provider.dart';
-import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/utils/lyrics_parser.dart';
-import 'package:mosix/utils/lyrics_timeline.dart';
-import 'package:mosix/utils/synced_lyrics_scroll.dart';
-import 'package:mosix/widgets/aligned_lyric_pronunciation.dart';
-import 'package:mosix/widgets/lyric_supplement_transition.dart';
-import 'package:mosix/widgets/lyric_scroll_motion.dart';
-import 'package:mosix/widgets/lyric_gap_indicator.dart';
-import 'package:mosix/widgets/mornye_player_slider.dart';
-import 'package:mosix/widgets/lyrics_text_scale.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/runtime_profile_provider.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/lyrics_parser.dart';
+import 'package:mornye/utils/lyrics_timeline.dart';
+import 'package:mornye/utils/synced_lyrics_scroll.dart';
+import 'package:mornye/widgets/aligned_lyric_pronunciation.dart';
+import 'package:mornye/widgets/lyric_supplement_transition.dart';
+import 'package:mornye/widgets/lyric_scroll_motion.dart';
+import 'package:mornye/widgets/lyric_gap_indicator.dart';
+import 'package:mornye/widgets/mornye_player_slider.dart';
+import 'package:mornye/widgets/lyrics_text_scale.dart';
+
+part 'player_lyrics_line_style.dart';
+part 'player_lyrics_word_sweep.dart';
 
 const _mornyeLyricFontSize = 34.0;
+
+/// Material lyric sizes on desktop, where the lyrics panel is far wider than
+/// a phone. Null keeps the text theme's size (phones and tablets).
+double? get _materialLyricFontSize => isDesktopPlatform ? 32 : null;
+double get _materialBackgroundLyricFontSize => isDesktopPlatform ? 24 : 18;
 const mornyeLyricsContentInset = 28.0 + MornyePlayerSlider.horizontalInset;
+
+/// How much of the lyrics area's bottom the player's controls cover. The
+/// Mornye phone player lays lyrics out under its controls so they can grow
+/// when the controls hide; content that is not a scrolling lyric list keeps
+/// clear of this part.
+class LyricsCoveredBottom extends InheritedWidget {
+  const LyricsCoveredBottom({
+    super.key,
+    required this.height,
+    required super.child,
+  });
+
+  final double height;
+
+  static double of(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<LyricsCoveredBottom>()
+          ?.height ??
+      0;
+
+  @override
+  bool updateShouldNotify(LyricsCoveredBottom oldWidget) =>
+      height != oldWidget.height;
+}
 
 class SyncedLyricsView extends ConsumerStatefulWidget {
   final ParsedLyrics lyrics;
@@ -34,6 +69,12 @@ class SyncedLyricsView extends ConsumerStatefulWidget {
   final bool showPronunciation;
   final bool showTranslation;
 
+  /// Hidden retained panels keep line positions current without word frames.
+  final bool animateWords;
+
+  /// Long-pressing a sung line starts sharing it.
+  final ValueChanged<LyricLine>? onLongPressLine;
+
   const SyncedLyricsView({
     super.key,
     required this.lyrics,
@@ -43,6 +84,8 @@ class SyncedLyricsView extends ConsumerStatefulWidget {
     required this.isActive,
     required this.showPronunciation,
     required this.showTranslation,
+    this.animateWords = true,
+    this.onLongPressLine,
   });
 
   @override
@@ -50,7 +93,7 @@ class SyncedLyricsView extends ConsumerStatefulWidget {
 }
 
 class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final ScrollController _scroll = ScrollController();
   ProviderSubscription<Duration>? _positionSubscription;
   ProviderSubscription<bool>? _playingSubscription;
@@ -58,20 +101,47 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
   Timer? _lineBoundaryTimer;
   Timer? _userScrollIdleTimer;
   late List<LyricLine> _lines;
+  late LyricTimelineIndex _timeline;
   late LyricDisplayLayout _displayLayout;
   late List<GlobalKey> _lineKeys;
   int _active = -1;
   Set<int> _activeLines = {};
+
+  /// The line the view scrolls to; see [_focusFor].
+  int _focus = -1;
   Duration _activeTransitionPosition = Duration.zero;
   bool _playing = false;
   bool _loading = false;
   bool _hasStarted = false;
   bool _userScrolling = false;
+
+  /// Hides the list until it first lands on the playing line. A view that
+  /// opens on screen would otherwise paint the start of the lyrics, then an
+  /// estimated offset, before settling on the line.
+  bool _awaitingFirstScroll = false;
+  bool _tickerEnabled = true;
+  // An inactive app is still on screen: a desktop window behind another
+  // app's window, or a phone under a system overlay.
+  bool get _visible =>
+      widget.isActive &&
+      _tickerEnabled &&
+      switch (WidgetsBinding.instance.lifecycleState) {
+        null || AppLifecycleState.resumed || AppLifecycleState.inactive => true,
+        _ => false,
+      };
   static const double _estimatedLyricExtent = 64;
-  List<double>? _lineExtents;
+  _LyricExtentSnapshot? _lineExtents;
   List<(double, double, double)> _lineMeasurements = [];
   List<LyricPronunciationLayout?> _pronunciationLayouts = [];
   Object? _lineLayoutKey;
+  final Set<int> _unmeasuredRows = {};
+  final Set<int> _changedMeasurementRows = {};
+  TextPainter? _measurementPainter;
+  void Function(int)? _measureRow;
+  Timer? _measurementTimer;
+  int _measurementRevision = 0;
+  int _layoutMeasurementRevision = 0;
+  bool _measurementFramePending = false;
   double? _viewportHeight;
   Offset? _layoutVisibility;
   late final AnimationController _rowReveal = AnimationController(
@@ -80,8 +150,9 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
   )..addListener(_revealTick);
   List<double> _revealFrom = [];
   List<double> _revealTo = [];
-  List<double>? _layoutRowVisibility;
-  List<double>? _targetLineExtents;
+  _LyricExtentSnapshot? _targetLineExtents;
+  _LyricExtentGeometry? _extentGeometry;
+  Object? _extentGeometryKey;
   bool _preserveRevealAnchor = false;
   late final AnimationController _scrollMotion = AnimationController(
     vsync: this,
@@ -116,12 +187,8 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
 
   List<double> get _rowVisibility {
     final progress = Curves.easeInOutCubic.transform(_rowReveal.value);
-    return List.generate(
-      _lines.length,
-      (index) =>
-          _revealFrom[index] +
-          (_revealTo[index] - _revealFrom[index]) * progress,
-    );
+    if (progress == 1 || identical(_revealFrom, _revealTo)) return _revealTo;
+    return _LyricRowVisibility(_revealFrom, _revealTo, progress);
   }
 
   void _updateRowVisibility({bool immediate = false, bool sameFocus = false}) {
@@ -139,7 +206,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
       return;
     }
     if (listEquals(target, _revealTo)) return;
-    _revealFrom = _rowVisibility;
+    _revealFrom = List.of(_rowVisibility);
     _revealTo = target;
     _rowReveal.forward(from: 0);
   }
@@ -152,6 +219,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _resetLineKeys();
     widget.seekPreview.addListener(_previewChanged);
   }
@@ -162,9 +230,19 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     // Appearance can rebuild when transport controls fade (for example with
     // custom glass clarity). Keep the existing playback subscription and the
     // user's scroll ownership; only new lyrics/page activation should reset it.
-    if (_positionSubscription == null && widget.isActive) {
-      _syncPositionSubscription();
+    _tickerEnabled = TickerMode.valuesOf(context).enabled;
+    if ((_positionSubscription != null) != _visible) {
+      _syncPositionSubscription(resetUserScroll: false);
     }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Focus moving between windows keeps the lyrics running as they are.
+    if ((_positionSubscription != null) != _visible) {
+      _syncPositionSubscription(resetUserScroll: false);
+    }
+    if (mounted) setState(() {});
   }
 
   @override
@@ -195,17 +273,26 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
 
   void _resetLineKeys() {
     _stopScrollMotion();
+    _measurementTimer?.cancel();
+    _measurementTimer = null;
+    _measurementPainter?.dispose();
+    _measurementPainter = null;
+    _measureRow = null;
+    _unmeasuredRows.clear();
+    _changedMeasurementRows.clear();
     _hasStarted = false;
     _lineExtents = null;
     _lineLayoutKey = null;
-    _lines = lyricsTimelineWithGaps(widget.lyrics.lines);
+    _lines = lyricsWithDisplayEnds(lyricsTimelineWithGaps(widget.lyrics.lines));
+    _timeline = LyricTimelineIndex(_lines);
     _rowReveal.stop();
     _revealFrom = _revealTo = [
       for (final line in _lines)
         if (line.isBackground || line.text.isEmpty) 0.0 else 1.0,
     ];
-    _layoutRowVisibility = null;
     _targetLineExtents = null;
+    _extentGeometry = null;
+    _extentGeometryKey = null;
     _displayLayout = LyricDisplayLayout(_lines);
     _lineKeys = List<GlobalKey>.generate(
       _lines.length,
@@ -214,7 +301,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     );
   }
 
-  void _syncPositionSubscription() {
+  void _syncPositionSubscription({bool resetUserScroll = true}) {
     _positionSubscription?.close();
     _playingSubscription?.close();
     _loadingSubscription?.close();
@@ -222,22 +309,36 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     _positionSubscription = null;
     _playingSubscription = null;
     _loadingSubscription = null;
-    if (!widget.isActive) {
+    if (!_visible) {
+      _userScrollIdleTimer?.cancel();
+      _measurementTimer?.cancel();
+      _measurementTimer = null;
       _stopScrollMotion();
+      _rowReveal.stop();
       return;
     }
     _userScrollIdleTimer?.cancel();
-    _userScrolling = false;
+    if (resetUserScroll) _userScrolling = false;
+    if (_userScrolling) _scheduleUserScrollReturn();
+    _scheduleLineMeasurements();
 
     final position = _displayPosition;
     _playing = ref.read(playbackPlayingProvider);
     _loading = ref.read(playbackLoadingProvider);
     _active = _activeIndexAt(position);
-    _activeLines = activeLyricIndices(_lines, position, _active);
+    _activeLines = _timeline.activeIndices(position, _active);
+    _focus = _focusFor(_active, _activeLines, position);
     _updateRowVisibility(immediate: true);
     _activeTransitionPosition = position;
+    // Only before the first layout: a list already on screen keeps its
+    // lines while it moves.
+    _awaitingFirstScroll = !_scroll.hasClients && _focus >= 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) unawaited(_maybeAutoScroll(_active, immediate: true));
+      if (!mounted) return;
+      final scrolled = _visible
+          ? _maybeAutoScroll(_active, immediate: true)
+          : Future<void>.value();
+      unawaited(scrolled.whenComplete(_endFirstScroll));
     });
     _scheduleNextLine(position);
     _positionSubscription = ref.listenManual<Duration>(
@@ -269,11 +370,28 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     });
   }
 
+  void _endFirstScroll() {
+    if (!mounted || !_awaitingFirstScroll) return;
+    setState(() => _awaitingFirstScroll = false);
+  }
+
   Duration get _displayPosition =>
-      widget.seekPreview.value ?? ref.read(playbackPositionProvider);
+      widget.seekPreview.value ??
+      ref.read(playbackStateProvider).value?.position ??
+      Duration.zero;
+
+  void _scheduleUserScrollReturn() {
+    _userScrollIdleTimer?.cancel();
+    if (!_visible) return;
+    _userScrollIdleTimer = Timer(const Duration(seconds: 4), () {
+      if (!mounted || !_visible) return;
+      _userScrolling = false;
+      unawaited(_maybeAutoScroll(_active));
+    });
+  }
 
   void _previewChanged() {
-    if (!mounted || !widget.isActive) return;
+    if (!mounted || !_visible) return;
     final position = _displayPosition;
     final wasUserScrolling = _userScrolling;
     _userScrolling = false;
@@ -306,39 +424,56 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     return LyricsParser.activeIndex(_lines, position);
   }
 
+  /// The scroll anchor for [active]. When the next line starts while the
+  /// previous one is still being sung, the view holds on the earlier line
+  /// until its timed end, so both stay fully visible instead of the unfinished
+  /// one scrolling away. Only the directly preceding lead line can hold.
+  int _focusFor(int active, Set<int> activeLines, Duration position) {
+    if (active < 0) return -1;
+    final focus = _displayLayout.focusForLine[active];
+    final start = _lines[focus].time;
+    for (var i = focus - 1; i >= 0; i--) {
+      final line = _lines[i];
+      if (line.isBackground || line.time >= start) continue;
+      if (line.text.isEmpty) return focus;
+      final end = line.end;
+      final held = _displayLayout.focusForLine[i];
+      return activeLines.contains(i) && end != null && end > position
+          ? held
+          : focus;
+    }
+    return focus;
+  }
+
   void _setActiveLine(int active, {required Duration position}) {
     if (!mounted) return;
-    final activeLines = activeLyricIndices(_lines, position, active);
+    final activeLines = _timeline.activeIndices(position, active);
     final indexChanged = active != _active;
-    final previousFocus = _active < 0
-        ? -1
-        : _displayLayout.focusForLine[_active];
+    final previousFocus = _focus;
     if (!indexChanged &&
         activeLines.length == _activeLines.length &&
         activeLines.containsAll(_activeLines)) {
       return;
     }
+    final focus = _focusFor(active, activeLines, position);
     setState(() {
       _active = active;
       _activeLines = activeLines;
+      _focus = focus;
       _activeTransitionPosition = position;
-      _updateRowVisibility(
-        sameFocus:
-            active >= 0 && _displayLayout.focusForLine[active] == previousFocus,
-      );
+      _updateRowVisibility(sameFocus: focus >= 0 && focus == previousFocus);
     });
-    if (!indexChanged ||
-        (active >= 0 && _displayLayout.focusForLine[active] == previousFocus)) {
-      return;
-    }
+    if (focus == previousFocus) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && active == _active) unawaited(_maybeAutoScroll(active));
+      if (mounted && _visible && active == _active) {
+        unawaited(_maybeAutoScroll(active));
+      }
     });
   }
 
   void _scheduleNextLine(Duration position) {
     _lineBoundaryTimer?.cancel();
-    if (!widget.isActive ||
+    if (!_visible ||
         !_playing ||
         _loading ||
         widget.seekPreview.value != null) {
@@ -347,7 +482,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
 
     final lines = _lines;
     final dueIndex = syncedLyricsDueLineIndex(
-      lineStarts: lines.map((line) => line.time).toList(growable: false),
+      lineStarts: _timeline.starts,
       currentIndex: _active,
       position: position,
     );
@@ -370,20 +505,30 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     }
     if (nextBoundary == null) return;
     final boundary = nextBoundary;
-    _lineBoundaryTimer = Timer(boundary - position, () {
-      if (!mounted || !widget.isActive || !_playing || _loading) return;
-      _scheduleNextLine(boundary);
+    final remaining = boundary - position;
+    final speed = ref.read(playbackStateProvider).value?.speed ?? 1.0;
+    final delay = speed.isFinite && speed > 0
+        ? Duration(microseconds: (remaining.inMicroseconds / speed).ceil())
+        : remaining;
+    _lineBoundaryTimer = Timer(delay, () {
+      if (!mounted || !_visible || !_playing || _loading) return;
+      // A delayed callback must catch up to the audio clock, rather than
+      // treating its scheduled boundary as the current playback position.
+      _scheduleNextLine(_displayPosition);
     });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.seekPreview.removeListener(_previewChanged);
     _positionSubscription?.close();
     _playingSubscription?.close();
     _loadingSubscription?.close();
     _lineBoundaryTimer?.cancel();
     _userScrollIdleTimer?.cancel();
+    _measurementTimer?.cancel();
+    _measurementPainter?.dispose();
     _scroll.dispose();
     _rowReveal.dispose();
     _scrollMotion.dispose();
@@ -391,29 +536,49 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
   }
 
   void _measureMornyeLines(BuildContext context, double width) {
-    final style = _mornyeLyricStyle(context);
+    final style = _primaryLyricStyle(context);
     final scaler = MediaQuery.textScalerOf(context);
     final direction = Directionality.of(context);
     final locale = Localizations.maybeLocaleOf(context);
     final key = (width, style, scaler, direction, locale);
-    if (_lineLayoutKey == key) return;
+    if (_lineLayoutKey == key) {
+      _measureVisibleRows();
+      _scheduleLineMeasurements();
+      return;
+    }
     _lineLayoutKey = key;
-    final painter = TextPainter(
+    _measurementTimer?.cancel();
+    _measurementTimer = null;
+    _measurementPainter?.dispose();
+    final painter = _measurementPainter = TextPainter(
       textDirection: direction,
       textScaler: scaler,
       locale: locale,
     );
-    final measurements = <(double, double, double)>[];
-    final layouts = List<LyricPronunciationLayout?>.filled(_lines.length, null);
-    for (final index in _displayLayout.lineOrder) {
+    _lineMeasurements = List.filled(_lines.length, (
+      _estimatedLyricExtent,
+      0.0,
+      0.0,
+    ));
+    _pronunciationLayouts = List.filled(_lines.length, null);
+    _unmeasuredRows
+      ..clear()
+      ..addAll(Iterable.generate(_lines.length));
+    _changedMeasurementRows.clear();
+    _measurementRevision++;
+    _measureRow = (row) {
+      if (!_unmeasuredRows.remove(row)) return;
+      _changedMeasurementRows.add(row);
+      final index = _displayLayout.lineOrder[row];
       final line = _lines[index];
       if (line.text.isEmpty) {
-        measurements.add((56, 0, 0));
-        continue;
+        _lineMeasurements[row] = (56, 0, 0);
+        _measurementRevision++;
+        return;
       }
       painter.text = TextSpan(
         text: line.text,
-        style: _mornyeLyricStyle(context, background: line.isBackground),
+        style: _primaryLyricStyle(context, background: line.isBackground),
       );
       painter.layout(maxWidth: width);
       final padding = _linePadding(index).vertical;
@@ -433,7 +598,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
           pronunciationHeight = 6 + painter.height;
           final aligned = LyricPronunciationLayout.measure(
             line: line,
-            primaryStyle: _mornyeLyricStyle(
+            primaryStyle: _primaryLyricStyle(
               context,
               background: line.isBackground,
             ),
@@ -450,34 +615,151 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
           }
         }
       }
-      measurements.add((height, pronunciationHeight, translationHeight));
-      layouts[index] = pronunciationLayout;
+      _lineMeasurements[row] = (height, pronunciationHeight, translationHeight);
+      _pronunciationLayouts[index] = pronunciationLayout;
+      _measurementRevision++;
+    };
+    if (_lines.length <= 128) {
+      while (_unmeasuredRows.isNotEmpty) {
+        _measureRow!(_unmeasuredRows.first);
+      }
+    } else {
+      _measureVisibleRows();
     }
-    _lineMeasurements = measurements;
-    _pronunciationLayouts = layouts;
-    painter.dispose();
+    _scheduleLineMeasurements();
+  }
+
+  void _measureVisibleRows() {
+    final measure = _measureRow;
+    if (measure == null || _unmeasuredRows.isEmpty) return;
+    final extents = _lineExtents;
+    final anchor = _scroll.hasClients && extents != null
+        ? _rowAtScrollOffset(extents, _scroll.offset)
+        : _focus < 0
+        ? 0
+        : _displayLayout.rowForLine[_focus];
+    // Exact geometry for the viewport and a small overscan. The rest is
+    // prepared in bounded idle batches, including hidden supplements.
+    final first = (anchor - 4).clamp(0, _lines.length);
+    final last = (anchor + 28).clamp(0, _lines.length);
+    for (var row = first; row < last; row++) {
+      measure(row);
+    }
+  }
+
+  void _scheduleLineMeasurements() {
+    if (!_visible || _measurementTimer != null || _unmeasuredRows.isEmpty) {
+      return;
+    }
+    _measurementTimer = Timer(const Duration(milliseconds: 16), () {
+      _measurementTimer = null;
+      if (!mounted || !_visible || _unmeasuredRows.isEmpty) return;
+      if ((_scroll.hasClients && _scroll.position.isScrollingNotifier.value) ||
+          _rowReveal.isAnimating ||
+          _scrollMotion.isAnimating) {
+        _scheduleLineMeasurements();
+        return;
+      }
+      final budget = Stopwatch()..start();
+      var measured = 0;
+      while (_unmeasuredRows.isNotEmpty &&
+          measured < 32 &&
+          (measured == 0 || budget.elapsedMicroseconds < 2000)) {
+        _measureRow!(_unmeasuredRows.first);
+        measured++;
+      }
+      setState(() {});
+      _scheduleLineMeasurements();
+    });
+  }
+
+  void _scheduleVisibleMeasurements(double offset) {
+    final extents = _lineExtents;
+    if (_unmeasuredRows.isEmpty ||
+        extents == null ||
+        _measurementFramePending ||
+        !_visible) {
+      return;
+    }
+    final first = _rowAtScrollOffset(extents, offset);
+    final last = (first + 28).clamp(0, _lines.length);
+    if (!Iterable.generate(
+      last - first,
+      (index) => first + index,
+    ).any(_unmeasuredRows.contains)) {
+      return;
+    }
+    _measurementFramePending = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measurementFramePending = false;
+      if (mounted && _visible) setState(() {});
+    });
+  }
+
+  int _rowAtScrollOffset(_LyricExtentSnapshot extents, double offset) =>
+      extents.rowAtOffset((offset - _focusInset).clamp(0.0, double.infinity));
+
+  /// Jumps a viewport at a time toward the line at [index] until the list
+  /// builds it. Rows taller than the estimate, such as lines with
+  /// pronunciation or translation, leave an estimated jump short of a far
+  /// line, which would otherwise stay off screen. Returns whether it is
+  /// built.
+  Future<bool> _scrollUntilBuilt(int index) async {
+    final target = _displayLayout.rowForLine[index];
+    for (var step = 0; step < 32; step++) {
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted || _userScrolling || !_scroll.hasClients) return false;
+      if (_lineKeys[index].currentContext != null) return true;
+      int? first;
+      int? last;
+      for (var line = 0; line < _lineKeys.length; line++) {
+        if (_lineKeys[line].currentContext == null) continue;
+        final row = _displayLayout.rowForLine[line];
+        if (first == null || row < first) first = row;
+        if (last == null || row > last) last = row;
+      }
+      if (first == null || last == null) return false;
+      final position = _scroll.position;
+      final next =
+          (position.pixels +
+                  (target > last
+                      ? position.viewportDimension
+                      : -position.viewportDimension))
+              .clamp(position.minScrollExtent, position.maxScrollExtent);
+      if (next == position.pixels) return false;
+      _scroll.jumpTo(next);
+    }
+    return false;
   }
 
   Future<void> _maybeAutoScroll(int index, {bool immediate = false}) async {
     // A short intro may have no countdown row. Still return to the first
     // upcoming lyric when the user scrubs back before any vocals.
     if (index < 0 && widget.seekPreview.value != null) index = 0;
-    if (_userScrolling ||
+    if (!_visible ||
+        _userScrolling ||
         index < 0 ||
         index >= _lines.length ||
         !_scroll.hasClients) {
       return;
     }
-    index = _displayLayout.focusForLine[index];
+    index = index == _active && _focus >= 0
+        ? _focus
+        : _displayLayout.focusForLine[index];
     final row = _displayLayout.rowForLine[index];
+    final seeking = widget.seekPreview.value != null;
     final duration = immediate || MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
-        : Duration(milliseconds: widget.seekPreview.value != null ? 220 : 380);
+        : seeking
+        ? const Duration(milliseconds: 220)
+        : LyricScrollMotion.scrollDuration;
+    // Scrubbing follows the finger quickly; playback eases between lines.
+    final curve = seeking ? Curves.easeOutCubic : LyricScrollMotion.scrollCurve;
     if (duration == Duration.zero) _stopScrollMotion();
     final extents = _targetLineExtents;
     if (context.isMornye && extents != null && row < extents.length) {
       final position = _scroll.position;
-      final target = extents.take(row).fold(0.0, (sum, extent) => sum + extent);
+      final target = extents.offsetForRow(row);
       final offset = target.clamp(
         position.minScrollExtent,
         position.maxScrollExtent,
@@ -486,11 +768,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
         _scroll.jumpTo(offset);
       } else {
         _startScrollMotion(row, offset - position.pixels);
-        await _scroll.animateTo(
-          offset,
-          duration: duration,
-          curve: Curves.easeOutCubic,
-        );
+        await _scroll.animateTo(offset, duration: duration, curve: curve);
       }
       return;
     }
@@ -512,7 +790,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
           alignment: 0.5,
           alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
           duration: duration,
-          curve: Curves.easeOutCubic,
+          curve: curve,
         );
         return;
       }
@@ -534,13 +812,14 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
       await _scroll.animateTo(
         clamped.toDouble(),
         duration: duration,
-        curve: Curves.easeOutCubic,
+        curve: curve,
       );
     }
     if (!mounted ||
         _userScrolling ||
-        (_active >= 0 && index != _displayLayout.focusForLine[_active]) ||
-        index >= _lineKeys.length) {
+        (_active >= 0 && index != _focus) ||
+        index >= _lineKeys.length ||
+        !await _scrollUntilBuilt(index)) {
       return;
     }
     final lineContext = _lineKeys[index].currentContext;
@@ -578,7 +857,9 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     final lines = _lines;
     final active = _active;
     final rowVisibility = _rowVisibility;
-    final loading = ref.watch(playbackLoadingProvider);
+    final loading = _visible
+        ? ref.watch(playbackLoadingProvider)
+        : ref.read(playbackLoadingProvider);
     final mornye = context.isMornye;
     final highContrast = MediaQuery.highContrastOf(context);
     final blurLyrics =
@@ -586,15 +867,20 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
         !highContrast &&
         // Every defocused line is filtered again on each playback frame.
         ref.watch(mornyeLiquidGlassProvider);
+    // Line emphasis eases over most of the scroll, so the new line brightens
+    // as it arrives instead of switching ahead of the movement.
     final motion = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
-        : const Duration(milliseconds: 280);
+        : const Duration(milliseconds: 420);
 
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         if (notification.depth != 0 ||
             notification.metrics.axis != Axis.vertical) {
           return false;
+        }
+        if (notification is ScrollUpdateNotification) {
+          _scheduleVisibleMeasurements(notification.metrics.pixels);
         }
         final dragging =
             (notification is ScrollStartNotification &&
@@ -611,12 +897,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
           // Start the return-to-playback timeout only after the drag and its
           // momentum finish. A direction notification is not an idle event:
           // a long drag can keep that direction while controls fade in/out.
-          _userScrollIdleTimer?.cancel();
-          _userScrollIdleTimer = Timer(const Duration(seconds: 4), () {
-            if (!mounted || !widget.isActive) return;
-            _userScrolling = false;
-            unawaited(_maybeAutoScroll(_active));
-          });
+          _scheduleUserScrollReturn();
         }
         return false;
       },
@@ -639,61 +920,76 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
               : 1.0;
           if (mornye) {
             final previousExtents = _lineExtents;
+            final previousScrollAnchor =
+                previousExtents != null && _scroll.hasClients
+                ? _rowAtScrollOffset(previousExtents, _scroll.offset)
+                : 0;
+            final focusAnchor = _focus < 0
+                ? 0
+                : _displayLayout.rowForLine[_focus];
+            final previousScrollOffset =
+                previousExtents?.offsetForRow(previousScrollAnchor) ?? 0;
+            final previousFocusOffset =
+                previousExtents?.offsetForRow(focusAnchor) ?? 0;
             _measureMornyeLines(context, layoutWidth);
             // Reuse text measurements; only interpolate row heights as the
             // supplements fade. Scrolling follows the same animation clock.
-            final fullExtents = List.generate(_lineMeasurements.length, (row) {
-              final (primary, pronunciation, translation) =
-                  _lineMeasurements[row];
-              final index = _displayLayout.lineOrder[row];
-              if (_lines[index].text.isEmpty) return primary;
-              final padding = _linePadding(index).vertical;
-              return padding +
-                  (primary -
-                          padding +
-                          pronunciation * visibility.dx +
-                          translation * visibility.dy) *
-                      lyricScale;
-            });
-            _lineExtents = List.generate(fullExtents.length, (row) {
-              return fullExtents[row] *
-                  rowVisibility[_displayLayout.lineOrder[row]];
-            });
-            _targetLineExtents = List.generate(fullExtents.length, (row) {
-              return fullExtents[row] *
-                  _revealTo[_displayLayout.lineOrder[row]];
-            });
+            final geometryKey = (
+              _lineMeasurements,
+              lyricScale,
+              _revealFrom,
+              _revealTo,
+            );
+            if (_extentGeometryKey != geometryKey) {
+              _extentGeometryKey = geometryKey;
+              _extentGeometry = _LyricExtentGeometry(
+                _lineMeasurements,
+                _displayLayout.lineOrder,
+                _revealFrom,
+                _revealTo,
+                (index) => _lines[index].text.isEmpty ? 1.0 : lyricScale,
+                (index) => _linePadding(index).vertical,
+              );
+            } else {
+              for (final row in _changedMeasurementRows) {
+                _extentGeometry!.updateRow(row, _lineMeasurements[row]);
+              }
+            }
+            _changedMeasurementRows.clear();
+            _lineExtents = _LyricExtentSnapshot(
+              _extentGeometry!,
+              visibility,
+              Curves.easeInOutCubic.transform(_rowReveal.value),
+            );
+            _targetLineExtents = _LyricExtentSnapshot(
+              _extentGeometry!,
+              visibility,
+              1,
+            );
             if (previousExtents != null &&
-                ((_layoutVisibility != null &&
+                ((_layoutMeasurementRevision != _measurementRevision) ||
+                    (_layoutVisibility != null &&
                         _layoutVisibility != visibility) ||
                     (_preserveRevealAnchor &&
-                        _layoutRowVisibility != null &&
-                        !listEquals(_layoutRowVisibility, rowVisibility))) &&
+                        previousExtents.progress != _lineExtents!.progress)) &&
                 previousExtents.length == _lineExtents!.length &&
                 _scroll.hasClients) {
-              var anchor = _active < 0
-                  ? 0
-                  : _displayLayout.rowForLine[_displayLayout
-                        .focusForLine[_active]];
-              if (_userScrolling) {
-                anchor = 0;
-                var extent = 0.0;
-                while (anchor < previousExtents.length &&
-                    extent + previousExtents[anchor] <= _scroll.offset) {
-                  extent += previousExtents[anchor++];
-                }
-              }
-              var correction = 0.0;
-              for (var i = 0; i < anchor; i++) {
-                correction += _lineExtents![i] - previousExtents[i];
-              }
+              final preserveScroll =
+                  _userScrolling ||
+                  _layoutMeasurementRevision != _measurementRevision;
+              final anchor = preserveScroll
+                  ? previousScrollAnchor
+                  : focusAnchor;
+              final correction =
+                  _lineExtents!.offsetForRow(anchor) -
+                  (preserveScroll ? previousScrollOffset : previousFocusOffset);
               // Correct before the ListView lays out/paints. A post-frame
               // jump leaves every painted frame one animation step behind.
               if (correction != 0) _scroll.position.correctBy(correction);
             }
           }
           _layoutVisibility = visibility;
-          _layoutRowVisibility = rowVisibility;
+          _layoutMeasurementRevision = _measurementRevision;
           if (_viewportHeight != constraints.maxHeight) {
             _viewportHeight = constraints.maxHeight;
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -716,7 +1012,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                   double.infinity,
                 )
               : topPadding;
-          return ListView.builder(
+          final list = ListView.builder(
             controller: _scroll,
             itemExtentBuilder: mornye
                 ? (index, _) => index < lines.length
@@ -762,11 +1058,11 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                       height: 24,
                       child: Align(
                         alignment: mornye
-                            ? Alignment.centerLeft
+                            ? AlignmentDirectional.centerStart
                             : Alignment.center,
                         child:
                             isActive &&
-                                widget.isActive &&
+                                _visible &&
                                 (!loading || widget.seekPreview.value != null)
                             ? ValueListenableBuilder<Duration?>(
                                 valueListenable: widget.seekPreview,
@@ -794,7 +1090,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                 content = _WordHighlightedLyricLine(
                   line: line,
                   colorScheme: widget.colorScheme,
-                  animate: widget.isActive,
+                  animate: _visible && widget.animateWords,
                   initialPosition: _activeTransitionPosition,
                   seekPreview: widget.seekPreview,
                   supplementVisibility: visibility,
@@ -807,22 +1103,10 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                 content = Text(
                   line.text,
                   textAlign: textAlign,
-                  style:
-                      (mornye || isActive
-                              ? Theme.of(context).textTheme.headlineSmall
-                              : Theme.of(context).textTheme.titleLarge)
-                          ?.copyWith(
-                            height: context.tokens.lyricsLineHeight,
-                            fontSize: line.isBackground
-                                ? (mornye ? _mornyeLyricFontSize * 0.68 : 18)
-                                : mornye
-                                ? _mornyeLyricFontSize
-                                : null,
-                            fontWeight: mornye || isActive
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                            color: color,
-                          ),
+                  style: _primaryLyricStyle(
+                    context,
+                    background: line.isBackground,
+                  ).copyWith(color: color),
                 );
                 content = _withLyricSupplements(
                   context,
@@ -847,9 +1131,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                 ),
               );
               if (mornye) {
-                final activeLead = active < 0
-                    ? -1
-                    : _displayLayout.focusForLine[active];
+                final activeLead = active < 0 ? -1 : _focus;
                 final distance = activeLead < 0
                     ? row + 1
                     : (_displayLayout.rowForLine[leadIndex] -
@@ -869,6 +1151,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                 content = TweenAnimationBuilder<double>(
                   tween: Tween(end: sigma),
                   duration: motion,
+                  curve: Curves.easeInOutCubic,
                   child: RepaintBoundary(child: content),
                   builder: (context, value, child) => ImageFiltered(
                     enabled: value > 0,
@@ -878,7 +1161,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                 );
                 content = FittedBox(
                   fit: BoxFit.scaleDown,
-                  alignment: Alignment.topLeft,
+                  alignment: AlignmentDirectional.topStart,
                   child: SizedBox(width: layoutWidth, child: content),
                 );
               }
@@ -899,13 +1182,22 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                   child: GestureDetector(
                     onTap: () =>
                         ref.read(musicPlayerControllerProvider).seek(line.time),
+                    onLongPress: widget.onLongPressLine == null
+                        ? null
+                        : () {
+                            HapticFeedback.mediumImpact();
+                            widget.onLongPressLine!(line);
+                          },
                     child: AnimatedScale(
+                      // Focus changes paint scale, never font metrics or
+                      // wrapping shared by the plain and word-timed line.
                       scale: isActive ? 1.0 : 0.96,
                       alignment: !mornye
                           ? Alignment.center
-                          : textAlign == TextAlign.right
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
+                          : (textAlign == TextAlign.end
+                                    ? AlignmentDirectional.centerEnd
+                                    : AlignmentDirectional.centerStart)
+                                .resolve(Directionality.of(context)),
                       duration: motion,
                       curve: Curves.easeOutCubic,
                       child: AnimatedOpacity(
@@ -913,6 +1205,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                             ? (isActive || highContrast ? 1 : 0.48)
                             : (isActive ? 1.0 : (isPast ? 0.55 : 0.85)),
                         duration: motion,
+                        curve: Curves.easeInOutCubic,
                         child: content,
                       ),
                     ),
@@ -921,6 +1214,8 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
               );
             },
           );
+          // Laid out but not painted while it finds the playing line.
+          return Opacity(opacity: _awaitingFirstScroll ? 0 : 1, child: list);
         },
       ),
     );
@@ -932,29 +1227,37 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     TextAlign align,
     Widget child,
   ) {
+    final AlignmentGeometry alignment = align == TextAlign.end
+        ? AlignmentDirectional.topEnd
+        : align == TextAlign.center
+        ? Alignment.topCenter
+        : AlignmentDirectional.topStart;
+    // A fixed-extent row is already shrinking. Measure its contents at full
+    // height so fitting does not scale it twice.
+    final fullHeight = OverflowBox(
+      minHeight: 0,
+      maxHeight: double.infinity,
+      fit: OverflowBoxFit.deferToChild,
+      alignment: Alignment.topCenter,
+      child: child,
+    );
     return KeyedSubtree(
       key: _lineKeys[index],
       child: !_lines[index].isBackground && _lines[index].text.isNotEmpty
           ? child
           : IgnorePointer(
               ignoring: visibility < 1,
-              child: LyricSupplementTransition(
-                visibility: visibility,
-                alignment: align == TextAlign.right
-                    ? Alignment.topRight
-                    : align == TextAlign.center
-                    ? Alignment.topCenter
-                    : Alignment.topLeft,
-                // A fixed-extent row is already shrinking. Measure its
-                // contents at full height so fitting does not scale it twice.
-                child: OverflowBox(
-                  minHeight: 0,
-                  maxHeight: double.infinity,
-                  fit: OverflowBoxFit.deferToChild,
-                  alignment: Alignment.topCenter,
-                  child: child,
-                ),
-              ),
+              child: _lines[index].isBackground
+                  ? LyricBackingTransition(
+                      visibility: visibility,
+                      alignment: alignment,
+                      child: fullHeight,
+                    )
+                  : LyricSupplementTransition(
+                      visibility: visibility,
+                      alignment: alignment,
+                      child: fullHeight,
+                    ),
             ),
     );
   }
@@ -972,6 +1275,186 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
       bottom: hasBackingBelow ? 0 : context.tokens.lyricsLinePaddingV,
     );
   }
+}
+
+class _LyricRowVisibility extends ListBase<double> {
+  _LyricRowVisibility(this.from, this.to, this.progress);
+
+  final List<double> from;
+  final List<double> to;
+  final double progress;
+
+  @override
+  int get length => from.length;
+
+  @override
+  set length(int value) => throw UnsupportedError('Immutable lyric visibility');
+
+  @override
+  double operator [](int index) =>
+      from[index] + (to[index] - from[index]) * progress;
+
+  @override
+  void operator []=(int index, double value) =>
+      throw UnsupportedError('Immutable lyric visibility');
+}
+
+/// Prefix coefficients separate text geometry from the three animation values.
+/// Row reads are constant time; a Fenwick tree updates measured rows and finds
+/// anchor offsets without copying the entire document on each frame/batch.
+class _LyricExtentGeometry {
+  _LyricExtentGeometry(
+    List<(double, double, double)> measurements,
+    this.order,
+    this.revealFrom,
+    this.revealTo,
+    this.scaleForLine,
+    this.paddingForLine,
+  ) : starts = List.filled(measurements.length, (0, 0, 0)),
+      changes = List.filled(measurements.length, (0, 0, 0)),
+      prefixStarts = List.filled(measurements.length + 1, (0, 0, 0)),
+      prefixChanges = List.filled(measurements.length + 1, (0, 0, 0)) {
+    for (var row = 0; row < measurements.length; row++) {
+      updateRow(row, measurements[row], updatePrefix: false);
+      prefixStarts[row + 1] = starts[row];
+      prefixChanges[row + 1] = changes[row];
+    }
+    for (var node = 1; node < prefixStarts.length; node++) {
+      final parent = node + (node & -node);
+      if (parent >= prefixStarts.length) continue;
+      for (final tree in [prefixStarts, prefixChanges]) {
+        final value = tree[node];
+        final previous = tree[parent];
+        tree[parent] = (
+          previous.$1 + value.$1,
+          previous.$2 + value.$2,
+          previous.$3 + value.$3,
+        );
+      }
+    }
+  }
+
+  final List<int> order;
+  final List<double> revealFrom;
+  final List<double> revealTo;
+  final double Function(int) scaleForLine;
+  final double Function(int) paddingForLine;
+  final List<(double, double, double)> starts;
+  final List<(double, double, double)> changes;
+  final List<(double, double, double)> prefixStarts;
+  final List<(double, double, double)> prefixChanges;
+
+  void updateRow(
+    int row,
+    (double, double, double) measurement, {
+    bool updatePrefix = true,
+  }) {
+    final index = order[row];
+    final (primary, pronunciation, translation) = measurement;
+    final scale = scaleForLine(index);
+    final padding = paddingForLine(index);
+    final base = padding + (primary - padding) * scale;
+    final from = revealFrom[index];
+    final delta = revealTo[index] - from;
+    final start = (
+      base * from,
+      pronunciation * scale * from,
+      translation * scale * from,
+    );
+    final change = (
+      base * delta,
+      pronunciation * scale * delta,
+      translation * scale * delta,
+    );
+    if (updatePrefix) {
+      _updatePrefix(prefixStarts, row, starts[row], start);
+      _updatePrefix(prefixChanges, row, changes[row], change);
+    }
+    starts[row] = start;
+    changes[row] = change;
+  }
+
+  void _updatePrefix(
+    List<(double, double, double)> tree,
+    int row,
+    (double, double, double) previous,
+    (double, double, double) next,
+  ) {
+    for (var node = row + 1; node < tree.length; node += node & -node) {
+      final value = tree[node];
+      tree[node] = (
+        value.$1 + next.$1 - previous.$1,
+        value.$2 + next.$2 - previous.$2,
+        value.$3 + next.$3 - previous.$3,
+      );
+    }
+  }
+
+  (double, double, double) prefix(
+    List<(double, double, double)> tree,
+    int row,
+  ) {
+    var result = (0.0, 0.0, 0.0);
+    for (var node = row; node > 0; node -= node & -node) {
+      final value = tree[node];
+      result = (
+        result.$1 + value.$1,
+        result.$2 + value.$2,
+        result.$3 + value.$3,
+      );
+    }
+    return result;
+  }
+}
+
+class _LyricExtentSnapshot extends ListBase<double> {
+  _LyricExtentSnapshot(this.geometry, this.visibility, this.progress);
+
+  final _LyricExtentGeometry geometry;
+  final Offset visibility;
+  final double progress;
+
+  double _value(
+    (double, double, double) from,
+    (double, double, double) change,
+  ) =>
+      from.$1 +
+      change.$1 * progress +
+      (from.$2 + change.$2 * progress) * visibility.dx +
+      (from.$3 + change.$3 * progress) * visibility.dy;
+
+  double offsetForRow(int row) => _value(
+    geometry.prefix(geometry.prefixStarts, row),
+    geometry.prefix(geometry.prefixChanges, row),
+  );
+
+  int rowAtOffset(double offset) {
+    var low = 0;
+    var high = length;
+    while (low < high) {
+      final middle = (low + high + 1) ~/ 2;
+      if (offsetForRow(middle) <= offset) {
+        low = middle;
+      } else {
+        high = middle - 1;
+      }
+    }
+    return low;
+  }
+
+  @override
+  int get length => geometry.starts.length;
+
+  @override
+  set length(int value) => throw UnsupportedError('Immutable lyric extents');
+
+  @override
+  double operator [](int index) =>
+      _value(geometry.starts[index], geometry.changes[index]);
+
+  @override
+  void operator []=(int index, double value) =>
+      throw UnsupportedError('Immutable lyric extents');
 }
 
 class LyricsCredits extends StatelessWidget {
@@ -1009,686 +1492,4 @@ class LyricsCredits extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 16),
     child: Text(_text(context), style: _style(context)),
   );
-}
-
-Iterable<(String, TextStyle, List<LyricWord>, bool)> _lyricSupplements(
-  BuildContext context,
-  LyricLine line,
-) sync* {
-  final base = Theme.of(context).textTheme.bodyMedium ?? const TextStyle();
-  for (final (text, translation) in [
-    (line.romanization, false),
-    (line.translation, true),
-  ]) {
-    if (text == null || text.trim().isEmpty) continue;
-    yield (
-      text,
-      base.copyWith(
-        fontSize:
-            (context.isMornye
-                ? (translation ? 18.0 : 22.0)
-                : (translation ? 14.0 : 16.0)) *
-            (line.isBackground ? 0.8 : 1),
-        height: 1.35,
-        fontWeight: context.isMornye
-            ? (translation ? FontWeight.w600 : FontWeight.bold)
-            : FontWeight.w500,
-      ),
-      translation ? const <LyricWord>[] : line.romanizationWords,
-      translation,
-    );
-  }
-}
-
-TextStyle _mornyeLyricStyle(BuildContext context, {bool background = false}) =>
-    (Theme.of(context).textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      fontSize: _mornyeLyricFontSize * (background ? 0.68 : 1),
-      height: context.tokens.lyricsLineHeight,
-      fontWeight: FontWeight.bold,
-    );
-
-TextAlign _lyricTextAlign(BuildContext context, LyricLine line) {
-  final voice = line.voice;
-  if (voice == null) {
-    return context.isMornye ? TextAlign.start : TextAlign.center;
-  }
-  if (voice.isGroup) return TextAlign.left;
-  // Provider declarations can be missing or ordered by first appearance.
-  // The standard V labels retain their meaning regardless of that order.
-  switch (voice.id.toLowerCase()) {
-    case 'v1':
-    case 'v3':
-      return TextAlign.left;
-    case 'v2':
-      return TextAlign.right;
-  }
-  return voice.index.isEven ? TextAlign.left : TextAlign.right;
-}
-
-Widget _withLyricSupplements(
-  BuildContext context,
-  LyricLine line,
-  Widget primary,
-  Color color, {
-  required Offset visibility,
-  required LyricPronunciationLayout? pronunciationLayout,
-  required TextAlign textAlign,
-  Widget Function(String, List<LyricWord>, TextStyle)? timedText,
-  Widget Function(String, List<LyricWord>, TextStyle)? timedSupplementText,
-}) {
-  if (line.romanization == null && line.translation == null) return primary;
-  final alignment = switch (textAlign) {
-    TextAlign.right => Alignment.topRight,
-    TextAlign.center => Alignment.topCenter,
-    _ => Alignment.topLeft,
-  };
-  final supplements = _lyricSupplements(context, line).toList();
-  Widget withSupplements(Widget primary, {bool aligned = false}) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      primary,
-      for (final (text, style, words, translation) in supplements)
-        if ((translation || !aligned) &&
-            (translation ? visibility.dy : visibility.dx) > 0)
-          LyricSupplementTransition(
-            alignment: alignment,
-            visibility: translation ? visibility.dy : visibility.dx,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: words.isNotEmpty && timedSupplementText != null
-                  ? timedSupplementText(text, words, style)
-                  : Text(
-                      text,
-                      textAlign: textAlign,
-                      style: style.copyWith(
-                        color: color.withValues(alpha: color.a * 0.8),
-                      ),
-                    ),
-            ),
-          ),
-    ],
-  );
-  if (!context.isMornye ||
-      line.romanizationWords.isEmpty ||
-      line.romanization?.trim().isNotEmpty != true) {
-    return withSupplements(primary);
-  }
-  final primaryStyle = _mornyeLyricStyle(
-    context,
-    background: line.isBackground,
-  );
-  final pronunciationStyle = supplements
-      .firstWhere((supplement) => !supplement.$4)
-      .$2;
-  final layout = pronunciationLayout;
-  if (layout == null) return withSupplements(primary);
-  return withSupplements(
-    AlignedLyricPronunciation(
-      layout: layout,
-      visibility: visibility.dx,
-      primaryStyle: primaryStyle,
-      pronunciationStyle: pronunciationStyle,
-      textAlign: textAlign,
-      pronunciationBuilder: timedSupplementText,
-      textBuilder:
-          timedText ??
-          (text, words, style) => Text(
-            text,
-            textAlign: textAlign,
-            style: style.copyWith(color: color),
-          ),
-    ),
-    aligned: true,
-  );
-}
-
-class _WordHighlightedLyricLine extends ConsumerStatefulWidget {
-  final LyricLine line;
-  final ColorScheme colorScheme;
-  final bool animate;
-  final Duration initialPosition;
-  final ValueListenable<Duration?> seekPreview;
-  final Offset supplementVisibility;
-  final LyricPronunciationLayout? pronunciationLayout;
-  final TextAlign textAlign;
-
-  const _WordHighlightedLyricLine({
-    required this.line,
-    required this.colorScheme,
-    required this.animate,
-    required this.initialPosition,
-    required this.seekPreview,
-    required this.supplementVisibility,
-    required this.pronunciationLayout,
-    required this.textAlign,
-  });
-
-  @override
-  ConsumerState<_WordHighlightedLyricLine> createState() =>
-      _WordHighlightedLyricLineState();
-}
-
-class _WordHighlightedLyricLineState
-    extends ConsumerState<_WordHighlightedLyricLine>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _animationClock;
-  final Stopwatch _elapsedClock = Stopwatch();
-  ProviderSubscription<Duration>? _positionSubscription;
-  ProviderSubscription<bool>? _playingSubscription;
-  ProviderSubscription<bool>? _loadingSubscription;
-
-  late Duration _anchorPosition;
-  Duration _anchorElapsed = Duration.zero;
-  bool _playing = false;
-  bool _loading = false;
-
-  bool get _shouldAnimate =>
-      widget.animate &&
-      _playing &&
-      !_loading &&
-      widget.seekPreview.value == null;
-
-  Duration _positionAt({required bool advance}) {
-    return interpolatedSyncedLyricsPosition(
-      anchorPosition: _anchorPosition,
-      elapsedSinceAnchor: _elapsedClock.elapsed - _anchorElapsed,
-      isPlaying: advance,
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _elapsedClock.start();
-    _anchorElapsed = _elapsedClock.elapsed;
-    _anchorPosition = widget.initialPosition;
-    _playing = ref.read(playbackPlayingProvider);
-    _loading = ref.read(playbackLoadingProvider);
-    _animationClock = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    );
-    widget.seekPreview.addListener(_previewChanged);
-    _positionSubscription = ref.listenManual<Duration>(
-      playbackPositionProvider,
-      (previous, next) => _updateReportedPosition(next),
-    );
-    _playingSubscription = ref.listenManual<bool>(
-      playbackPlayingProvider,
-      (previous, next) => _updateTransportState(playing: next),
-    );
-    _loadingSubscription = ref.listenManual<bool>(
-      playbackLoadingProvider,
-      (previous, next) => _updateTransportState(loading: next),
-    );
-    _syncAnimationClock();
-  }
-
-  @override
-  void didUpdateWidget(covariant _WordHighlightedLyricLine oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.seekPreview != widget.seekPreview) {
-      oldWidget.seekPreview.removeListener(_previewChanged);
-      widget.seekPreview.addListener(_previewChanged);
-      _previewChanged();
-    }
-    if (oldWidget.line != widget.line ||
-        oldWidget.initialPosition != widget.initialPosition) {
-      _anchorAt(widget.initialPosition);
-    }
-    if (oldWidget.animate != widget.animate) {
-      _anchorAt(
-        _positionAt(advance: oldWidget.animate && _playing && !_loading),
-      );
-      _syncAnimationClock();
-    }
-  }
-
-  Duration _currentPosition() =>
-      widget.seekPreview.value ?? _positionAt(advance: _shouldAnimate);
-
-  void _previewChanged() {
-    if (!mounted) return;
-    _anchorAt(widget.seekPreview.value ?? ref.read(playbackPositionProvider));
-    _syncAnimationClock();
-    setState(() {});
-  }
-
-  void _anchorAt(Duration position) {
-    _anchorPosition = position;
-    _anchorElapsed = _elapsedClock.elapsed;
-  }
-
-  void _updateReportedPosition(Duration position) {
-    if (!mounted || widget.seekPreview.value != null) return;
-    final predicted = _currentPosition();
-    _anchorAt(
-      _shouldAnimate
-          ? reconcileSyncedLyricsPosition(
-              predictedPosition: predicted,
-              reportedPosition: position,
-            )
-          : position,
-    );
-    if (!_shouldAnimate) setState(() {});
-  }
-
-  void _updateTransportState({bool? playing, bool? loading}) {
-    if (!mounted) return;
-    final position = _currentPosition();
-    if (playing != null) _playing = playing;
-    if (loading != null) _loading = loading;
-    _anchorAt(
-      widget.seekPreview.value ??
-          (_shouldAnimate ? position : ref.read(playbackPositionProvider)),
-    );
-    _syncAnimationClock();
-    setState(() {});
-  }
-
-  void _syncAnimationClock() {
-    if (_shouldAnimate) {
-      if (!_animationClock.isAnimating) {
-        _animationClock.repeat();
-      }
-    } else {
-      _animationClock.stop();
-    }
-  }
-
-  Duration _segmentEnd(List<LyricWord> words, int index) {
-    final word = words[index];
-    final start = word.time;
-    if (word.end != null && word.end! >= start) return word.end!;
-    if (index + 1 < words.length) {
-      final next = words[index + 1].time;
-      if (next > start) return next;
-    }
-    final lineEnd = widget.line.end;
-    if (lineEnd != null && lineEnd > start) return lineEnd;
-    return start + const Duration(milliseconds: 650);
-  }
-
-  @override
-  void dispose() {
-    widget.seekPreview.removeListener(_previewChanged);
-    _positionSubscription?.close();
-    _playingSubscription?.close();
-    _loadingSubscription?.close();
-    _animationClock.dispose();
-    _elapsedClock.stop();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final style = context.isMornye
-        ? _mornyeLyricStyle(context, background: widget.line.isBackground)
-        : (Theme.of(context).textTheme.headlineSmall ?? const TextStyle())
-              .copyWith(
-                fontSize: widget.line.isBackground ? 18 : null,
-                height: context.tokens.lyricsLineHeight,
-                fontWeight: FontWeight.bold,
-              );
-    final primary = widget.line.hasWordTiming
-        ? _buildTimedText(widget.line.text, widget.line.words, style)
-        : Text(
-            widget.line.text,
-            textAlign: widget.textAlign,
-            style: style.copyWith(color: widget.colorScheme.onSurface),
-          );
-    // Both scripts share this state's position interpolation and animation
-    // clock, including pause, seek and track changes.
-    return _withLyricSupplements(
-      context,
-      widget.line,
-      primary,
-      widget.colorScheme.onSurface,
-      timedText: _buildTimedText,
-      timedSupplementText: (text, words, style) =>
-          _buildTimedText(text, words, style, lift: false),
-      visibility: widget.supplementVisibility,
-      pronunciationLayout: widget.pronunciationLayout,
-      textAlign: widget.textAlign,
-    );
-  }
-
-  Widget _buildTimedText(
-    String text,
-    List<LyricWord> words,
-    TextStyle style, {
-    bool lift = true,
-  }) {
-    final highlightedColor = widget.colorScheme.onSurface;
-    final mornye = context.isMornye;
-    final pendingColor = mornye
-        ? Colors.white.withValues(alpha: 0.4)
-        : widget.colorScheme.onSurfaceVariant.withValues(alpha: 0.6);
-    return _SweepingTimedLyricText(
-      segments: [for (final word in words) word.text],
-      starts: [for (final word in words) word.time],
-      ends: [
-        for (var index = 0; index < words.length; index++)
-          _segmentEnd(words, index),
-      ],
-      currentPosition: _currentPosition,
-      repaint: _animationClock,
-      style: style,
-      textAlign: widget.textAlign,
-      pendingColor: pendingColor,
-      highlightedColor: highlightedColor,
-      semanticsLabel: text,
-      liftEnabled: lift && mornye && !MediaQuery.disableAnimationsOf(context),
-    );
-  }
-}
-
-class _SweepingTimedLyricText extends StatefulWidget {
-  final List<String> segments;
-  final List<Duration> starts;
-  final List<Duration> ends;
-  final Duration Function() currentPosition;
-  final Listenable repaint;
-  final TextStyle style;
-  final TextAlign textAlign;
-  final Color pendingColor;
-  final Color highlightedColor;
-  final String semanticsLabel;
-  final bool liftEnabled;
-
-  const _SweepingTimedLyricText({
-    required this.segments,
-    required this.starts,
-    required this.ends,
-    required this.currentPosition,
-    required this.repaint,
-    required this.style,
-    required this.textAlign,
-    required this.pendingColor,
-    required this.highlightedColor,
-    required this.semanticsLabel,
-    required this.liftEnabled,
-  });
-
-  @override
-  State<_SweepingTimedLyricText> createState() =>
-      _SweepingTimedLyricTextState();
-}
-
-class _SweepingTimedLyricTextState extends State<_SweepingTimedLyricText> {
-  TextPainter? _pendingPainter;
-  TextPainter? _highlightedPainter;
-  String? _cachedText;
-  TextStyle? _cachedStyle;
-  TextAlign? _cachedAlignment;
-  TextDirection? _cachedDirection;
-  TextScaler? _cachedScaler;
-  Locale? _cachedLocale;
-  Color? _cachedPendingColor;
-  Color? _cachedHighlightedColor;
-
-  void _ensurePainters(
-    String text,
-    TextDirection textDirection,
-    TextScaler textScaler,
-    Locale? locale,
-  ) {
-    if (_cachedText == text &&
-        _cachedStyle == widget.style &&
-        _cachedAlignment == widget.textAlign &&
-        _cachedDirection == textDirection &&
-        _cachedScaler == textScaler &&
-        _cachedLocale == locale &&
-        _cachedPendingColor == widget.pendingColor &&
-        _cachedHighlightedColor == widget.highlightedColor) {
-      return;
-    }
-
-    _pendingPainter?.dispose();
-    _highlightedPainter?.dispose();
-    _pendingPainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: widget.style.copyWith(color: widget.pendingColor),
-      ),
-      textAlign: widget.textAlign,
-      textDirection: textDirection,
-      textScaler: textScaler,
-      locale: locale,
-    );
-    _highlightedPainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: widget.style.copyWith(color: widget.highlightedColor),
-      ),
-      textAlign: widget.textAlign,
-      textDirection: textDirection,
-      textScaler: textScaler,
-      locale: locale,
-    );
-    _cachedText = text;
-    _cachedStyle = widget.style;
-    _cachedAlignment = widget.textAlign;
-    _cachedDirection = textDirection;
-    _cachedScaler = textScaler;
-    _cachedLocale = locale;
-    _cachedPendingColor = widget.pendingColor;
-    _cachedHighlightedColor = widget.highlightedColor;
-  }
-
-  @override
-  void dispose() {
-    _pendingPainter?.dispose();
-    _highlightedPainter?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textDirection = Directionality.of(context);
-    final textScaler = MediaQuery.textScalerOf(context);
-    final locale = Localizations.maybeLocaleOf(context);
-    final text = widget.segments.join();
-    _ensurePainters(text, textDirection, textScaler, locale);
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final maxWidth = constraints.hasBoundedWidth
-            ? constraints.maxWidth
-            : double.infinity;
-        final pendingPainter = _pendingPainter!
-          ..layout(
-            minWidth: constraints.hasBoundedWidth ? maxWidth : 0,
-            maxWidth: maxWidth,
-          );
-        final highlightedPainter = _highlightedPainter!
-          ..layout(
-            minWidth: constraints.hasBoundedWidth ? maxWidth : 0,
-            maxWidth: maxWidth,
-          );
-        final width = constraints.hasBoundedWidth
-            ? constraints.maxWidth
-            : pendingPainter.width;
-        final height = pendingPainter.height;
-        final segmentBoxes = <List<Rect>>[];
-        var segmentOffset = 0;
-        for (final segment in widget.segments) {
-          final segmentEnd = segmentOffset + segment.length;
-          // Select the whole timed word, keeping paragraph shaping and wrapping
-          // intact. All of its text runs share the same vertical movement.
-          final boxes = highlightedPainter
-              .getBoxesForSelection(
-                TextSelection(
-                  baseOffset: segmentOffset,
-                  extentOffset: segmentEnd,
-                ),
-                boxHeightStyle: BoxHeightStyle.max,
-              )
-              .map((box) => box.toRect())
-              .toList();
-          boxes.sort((a, b) {
-            final row = a.top.compareTo(b.top);
-            return row == 0 ? a.left.compareTo(b.left) : row;
-          });
-          segmentBoxes.add(boxes);
-          segmentOffset = segmentEnd;
-        }
-
-        return Semantics(
-          label: widget.semanticsLabel,
-          child: CustomPaint(
-            size: Size(width, height),
-            painter: _TimedLyricSweepPainter(
-              segmentBoxes: segmentBoxes,
-              starts: widget.starts,
-              ends: widget.ends,
-              currentPosition: widget.currentPosition,
-              repaint: widget.repaint,
-              pendingPainter: pendingPainter,
-              highlightedPainter: highlightedPainter,
-              highlightLift: widget.liftEnabled
-                  ? (textScaler.scale(widget.style.fontSize ?? 24) * 0.05)
-                        .clamp(0.0, 2.0)
-                  : 0,
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _TimedLyricSweepPainter extends CustomPainter {
-  final List<List<Rect>> segmentBoxes;
-  final List<Duration> starts;
-  final List<Duration> ends;
-  final Duration Function() currentPosition;
-  final TextPainter pendingPainter;
-  final TextPainter highlightedPainter;
-  final double highlightLift;
-
-  _TimedLyricSweepPainter({
-    required this.segmentBoxes,
-    required this.starts,
-    required this.ends,
-    required this.currentPosition,
-    required Listenable repaint,
-    required this.pendingPainter,
-    required this.highlightedPainter,
-    required this.highlightLift,
-  }) : super(repaint: repaint);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final pendingPaths = <double, Path>{};
-    final completedPaths = <double, Path>{};
-    final partialBoxes = <(Rect, double, double, double)>[];
-    final position = currentPosition();
-    for (var index = 0; index < segmentBoxes.length; index++) {
-      final timed = index < starts.length && index < ends.length;
-      final value = timed
-          ? syncedLyricSegmentProgress(
-              position: position,
-              start: starts[index],
-              end: ends[index],
-            )
-          : 0.0;
-      final boxes = segmentBoxes[index];
-      final width = boxes.fold<double>(0, (sum, box) => sum + box.width);
-      final lift = highlightLift > 0 && timed
-          ? highlightLift *
-                syncedLyricSegmentLift(
-                  position: position,
-                  start: starts[index],
-                  end: ends[index],
-                )
-          : 0.0;
-      var consumed = 0.0;
-      for (final box in boxes) {
-        if (box.width <= 0) continue;
-        if (highlightLift > 0) {
-          pendingPaths.putIfAbsent(lift, Path.new).addRect(box);
-        }
-        // Keep the color sweep continuous across wrapping and font fallback,
-        // independently of the movement shared by the whole word.
-        final revealWidth = width * value - consumed;
-        final feather = ((highlightLift > 0 ? width : box.width) * 0.18).clamp(
-          3.0,
-          10.0,
-        );
-        if (value > 0 && revealWidth >= box.width) {
-          completedPaths.putIfAbsent(lift, Path.new).addRect(box);
-        } else if (value > 0 && revealWidth > -feather) {
-          partialBoxes.add((box, revealWidth / box.width, lift, feather));
-        }
-        consumed += box.width;
-      }
-    }
-
-    // Move both colors together, so a raised highlight never leaves a dim
-    // duplicate behind. Most words share the resting or completed position.
-    if (highlightLift > 0) {
-      for (final entry in pendingPaths.entries) {
-        _paintLiftedText(canvas, pendingPainter, entry.value, entry.key);
-      }
-    } else {
-      pendingPainter.paint(canvas, Offset.zero);
-    }
-    for (final entry in completedPaths.entries) {
-      _paintLiftedText(canvas, highlightedPainter, entry.value, entry.key);
-    }
-
-    for (final (box, value, lift, feather) in partialBoxes) {
-      // Feather the leading edge so the highlight flows through each letter
-      // while the word rises as a single unit.
-      final boundary = box.left + box.width * value;
-      final revealRight = (boundary + feather).clamp(box.left, box.right);
-      final revealRect = Rect.fromLTRB(
-        box.left,
-        box.top,
-        revealRight,
-        box.bottom,
-      );
-      canvas.save();
-      canvas.translate(0, -lift);
-      canvas.clipRect(revealRect);
-      canvas.saveLayer(revealRect, Paint());
-      highlightedPainter.paint(canvas, Offset.zero);
-      final mask = Paint()
-        ..blendMode = BlendMode.dstIn
-        ..shader =
-            LinearGradient(
-              colors: const [Colors.white, Colors.transparent],
-            ).createShader(
-              Rect.fromLTRB(boundary, box.top, boundary + feather, box.bottom),
-            );
-      canvas.drawRect(revealRect, mask);
-      canvas.restore();
-      canvas.restore();
-    }
-  }
-
-  void _paintLiftedText(
-    Canvas canvas,
-    TextPainter painter,
-    Path clip,
-    double lift,
-  ) {
-    canvas.save();
-    canvas.translate(0, -lift);
-    canvas.clipPath(clip, doAntiAlias: false);
-    painter.paint(canvas, Offset.zero);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _TimedLyricSweepPainter oldDelegate) {
-    return oldDelegate.segmentBoxes != segmentBoxes ||
-        oldDelegate.starts != starts ||
-        oldDelegate.ends != ends ||
-        oldDelegate.currentPosition != currentPosition ||
-        oldDelegate.highlightLift != highlightLift ||
-        oldDelegate.pendingPainter != pendingPainter ||
-        oldDelegate.highlightedPainter != highlightedPainter;
-  }
 }

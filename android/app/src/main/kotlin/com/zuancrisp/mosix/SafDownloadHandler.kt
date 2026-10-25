@@ -16,7 +16,6 @@ import java.util.Locale
 object SafDownloadHandler {
     private val safDirLock = Any()
     private const val MAX_SAF_DISPLAY_NAME_UTF8_BYTES = 180
-    private const val STAGED_SAF_MIME_TYPE = "application/octet-stream"
 
     // Serializes the exists-check/create/write/publish sequence per target
     // file so concurrent downloads that sanitize to the same display name
@@ -112,7 +111,9 @@ object SafDownloadHandler {
         val finalizerPromotesStaged = req.optBoolean("stage_saf_output", false) && !deferSafPublish
         val useStagedOutput = !deferSafPublish
         val stagedFileName = if (useStagedOutput) buildStagedSafFileName(fileName) else fileName
-        val stagedMimeType = if (useStagedOutput) STAGED_SAF_MIME_TYPE else mimeType
+        // Providers may retain the creation MIME after rename. A temporary
+        // name must not turn completed audio into an unclassified file.
+        val stagedMimeType = mimeType
 
         val existingDir = findDocumentDir(context, treeUri, relativeDir)
         if (existingDir != null && req.optString("album_folder_template", "").isBlank()) {
@@ -184,30 +185,19 @@ object SafDownloadHandler {
         var document = createOrReuseDocumentFile(context, targetDir, stagedMimeType, stagedFileName)
             ?: return errorJson("Failed to create SAF file")
 
-        var pfd: android.os.ParcelFileDescriptor? = null
-        var detachedFd: Int? = null
         var workingFile: File? = null
         try {
-            if (backend.supportsOutputDescriptors) {
-                val descriptor = context.contentResolver.openFileDescriptor(document.uri, "rw")
-                    ?: throw IllegalStateException("Failed to open SAF file")
-                pfd = descriptor
-                detachedFd = descriptor.detachFd()
-                req.put("output_path", "")
-                req.put("output_fd", detachedFd)
-            } else {
-                // The OS adapter retains descriptor ownership. A path-based
-                // backend writes into its granted staging directory, then the
-                // existing SAF copy/promotion publishes the completed output.
-                val staged = backend.createTemporaryMediaFile(
-                    context,
-                    "native_saf_work_",
-                    outputExt.ifBlank { ".tmp" },
-                )
-                workingFile = staged
-                req.put("output_path", staged.absolutePath)
-                req.remove("output_fd")
-            }
+            // The OS adapter retains descriptor ownership. The backend writes
+            // into its granted staging directory, then the existing SAF
+            // copy/promotion publishes the completed output.
+            val staged = backend.createTemporaryMediaFile(
+                context,
+                "native_saf_work_",
+                outputExt.ifBlank { ".tmp" },
+            )
+            workingFile = staged
+            req.put("output_path", staged.absolutePath)
+            req.remove("output_fd")
             req.put("output_ext", outputExt)
             val response = backend.downloadByStrategy(req.toString())
             val respObj = JSONObject(response)
@@ -248,7 +238,7 @@ object SafDownloadHandler {
                             val replacement = createOrReuseDocumentFile(
                                 context,
                                 targetDir,
-                                if (useStagedOutput) STAGED_SAF_MIME_TYPE else actualMimeType,
+                                actualMimeType,
                                 actualStagedFileName
                             ) ?: throw IllegalStateException(
                                 "failed to create SAF output with actual extension"
@@ -300,12 +290,6 @@ object SafDownloadHandler {
             return errorJson("SAF download failed: ${e.message}")
         } finally {
             workingFile?.delete()
-            if (detachedFd == null) {
-                try {
-                    pfd?.close()
-                } catch (_: Exception) {
-                }
-            }
         }
     }
 
@@ -390,7 +374,7 @@ object SafDownloadHandler {
             try {
                 val targetDir = ensureDocumentDir(context, Uri.parse(treeUriStr), relativeDir)
                     ?: return@withSafNameLock null
-                writeFileToSafLocked(context, targetDir, finalName, srcPath)
+                writeFileToSafLocked(context, targetDir, finalName, mimeType, srcPath)
             } catch (e: Exception) {
                 android.util.Log.w("Mosix", "Failed to write file to SAF: ${e.message}")
                 null
@@ -426,6 +410,7 @@ object SafDownloadHandler {
                 context,
                 targetDir,
                 availableName,
+                mimeType,
                 srcPath,
                 trace,
             ) ?: return@withSafNameLock null
@@ -466,6 +451,7 @@ object SafDownloadHandler {
                 context,
                 targetDir,
                 selectedName,
+                mimeType,
                 srcPath,
                 trace,
             ) ?: return@withSafNameLock null
@@ -504,6 +490,7 @@ object SafDownloadHandler {
                 context,
                 targetDir,
                 finalName,
+                mimeType,
                 srcPath,
                 trace,
             ) ?: return@withSafNameLock null
@@ -591,6 +578,7 @@ object SafDownloadHandler {
         context: Context,
         targetDir: DocumentFile,
         finalName: String,
+        mimeType: String,
         srcPath: String,
         trace: PublishTrace = PublishTrace(),
     ): String? {
@@ -600,7 +588,7 @@ object SafDownloadHandler {
             val stagedName = buildStagedSafFileName(finalName)
             deleteStaleStagedFiles(context, targetDir, finalName, ext)
             trace.mark("cleanup")
-            val document = createOrReuseDocumentFile(context, targetDir, STAGED_SAF_MIME_TYPE, stagedName)
+            val document = createOrReuseDocumentFile(context, targetDir, mimeType, stagedName)
                 ?: return null
             trace.mark("create")
             stagedDocument = document
@@ -644,11 +632,9 @@ object SafDownloadHandler {
         }
     }
 
-    internal fun normalizeExt(ext: String?): String {
-        val trimmed = ext?.trim().orEmpty()
-        if (trimmed.isEmpty()) return ""
-        return if (trimmed.startsWith(".")) trimmed.lowercase(Locale.ROOT) else ".${trimmed.lowercase(Locale.ROOT)}"
-    }
+    // Same result for every input; pinned by ExtensionMimeTablesTest.
+    internal fun normalizeExt(ext: String?): String =
+        NativeFinalizationPolicy.normalizeExtension(ext)
 
     internal fun mimeTypeForExt(ext: String?): String {
         return when (normalizeExt(ext)) {
@@ -679,8 +665,9 @@ object SafDownloadHandler {
     }
 
     private fun buildStagedSafFileName(fileName: String): String {
-        val safeName = sanitizeFilename(fileName)
-        return "$safeName.partial"
+        // Filesystem providers append an audio extension when it does not
+        // match the MIME. Keep that extension last on the temporary name.
+        return buildLegacyStagedSafFileName(fileName, "")
     }
 
     private fun buildLegacyStagedSafFileName(fileName: String, outputExt: String): String {
@@ -701,6 +688,7 @@ object SafDownloadHandler {
     private fun deleteStaleStagedFiles(context: Context, parent: DocumentFile, fileName: String, outputExt: String) {
         val stagedNames = linkedSetOf(
             buildStagedSafFileName(fileName),
+            "${sanitizeFilename(fileName)}.partial",
             buildLegacyStagedSafFileName(fileName, outputExt),
             buildReplacedSafFileName(fileName)
         )
@@ -879,13 +867,5 @@ object SafDownloadHandler {
         val artistName = req.optString("artist_name", "")
         val baseName = if (artistName.isNotBlank()) "$artistName - $trackName" else trackName
         return forceFilenameExt(baseName, outputExt)
-    }
-
-    private fun errorJson(message: String): String {
-        val obj = JSONObject()
-        obj.put("success", false)
-        obj.put("error", message)
-        obj.put("message", message)
-        return obj.toString()
     }
 }

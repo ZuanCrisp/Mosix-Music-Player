@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:material_ui/material_ui.dart' as material_ui;
-import 'package:mosix/providers/theme_provider.dart';
-import 'package:mosix/providers/custom_font_provider.dart';
-import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/models/theme_settings.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/providers/theme_provider.dart';
+import 'package:mornye/providers/custom_font_provider.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/models/theme_settings.dart';
+import 'package:mornye/theme/mornye_theme.dart';
 
 class DynamicColorWrapper extends ConsumerWidget {
   final Widget Function(ThemeData light, ThemeData dark, ThemeMode mode)
@@ -19,30 +19,33 @@ class DynamicColorWrapper extends ConsumerWidget {
     final themeSettings = ref.watch(themeProvider);
     final fontFamily = ref.watch(customFontFamilyProvider).asData?.value;
 
-    if (themeSettings.style == AppThemeStyle.mornye) {
-      return builder(
-        MornyeTheme.build(
-          Brightness.light,
-          accent: themeSettings.mornyeAccent,
-          useSystemFont: themeSettings.useSystemFont,
-          fontFamily: fontFamily,
-          glassClarity: themeSettings.mornyeGlassClarity,
-          glassOutlines: themeSettings.mornyeGlassOutlines,
-        ),
-        MornyeTheme.build(
-          Brightness.dark,
-          accent: themeSettings.mornyeAccent,
-          useSystemFont: themeSettings.useSystemFont,
-          fontFamily: fontFamily,
-          glassClarity: themeSettings.mornyeGlassClarity,
-          glassOutlines: themeSettings.mornyeGlassOutlines,
-        ),
-        themeSettings.themeMode,
-      );
-    }
-
+    // Both styles build below the same DynamicColorBuilder. Switching styles
+    // must update the app in place: a different parent remounted the whole
+    // app, losing its state and briefly mounting a second macOS menu bar.
     return DynamicColorBuilder(
       builder: (lightDynamic, darkDynamic) {
+        if (themeSettings.style == AppThemeStyle.mornye) {
+          return builder(
+            MornyeTheme.build(
+              Brightness.light,
+              accent: themeSettings.mornyeAccent,
+              useSystemFont: themeSettings.useSystemFont,
+              fontFamily: fontFamily,
+              glassClarity: themeSettings.mornyeGlassClarity,
+              glassOutlines: themeSettings.mornyeGlassOutlines,
+            ),
+            MornyeTheme.build(
+              Brightness.dark,
+              accent: themeSettings.mornyeAccent,
+              useSystemFont: themeSettings.useSystemFont,
+              fontFamily: fontFamily,
+              glassClarity: themeSettings.mornyeGlassClarity,
+              glassOutlines: themeSettings.mornyeGlassOutlines,
+            ),
+            themeSettings.themeMode,
+          );
+        }
+
         ColorScheme lightScheme;
         ColorScheme darkScheme;
 
@@ -124,16 +127,20 @@ class DynamicColorWrapper extends ConsumerWidget {
     );
   }
 
-  /// Apply AMOLED colors - pure black background with adjusted surface colors
+  /// Apply AMOLED colors: a pure black page with a neutral container ladder.
+  ///
+  /// The tiers keep the M3 dark tone steps around the container (low -2,
+  /// high +5, highest +10), anchored near tone 7 so the lowest raised tier,
+  /// used by menus, still reads against black where shadows do not show.
   ColorScheme _applyAmoledColors(ColorScheme scheme) {
     return scheme.copyWith(
       surface: Colors.black,
       onSurface: Colors.white,
       surfaceContainerLowest: Colors.black,
-      surfaceContainerLow: const Color(0xFF0A0A0A),
-      surfaceContainer: const Color(0xFF121212),
-      surfaceContainerHigh: const Color(0xFF1A1A1A),
-      surfaceContainerHighest: const Color(0xFF222222),
+      surfaceContainerLow: const Color(0xFF111111),
+      surfaceContainer: const Color(0xFF161616),
+      surfaceContainerHigh: const Color(0xFF1F1F1F),
+      surfaceContainerHighest: const Color(0xFF2A2A2A),
       inverseSurface: Colors.white,
       onInverseSurface: Colors.black,
     );

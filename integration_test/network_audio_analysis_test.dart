@@ -9,11 +9,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/services/hires_check_service.dart';
-import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/widgets/audio_analysis_widget.dart';
-import 'package:mosix/widgets/hires_check_card.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/services/hires_check_service.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/widgets/audio_analysis_widget.dart';
+import 'package:mornye/widgets/hires_check_card.dart';
 
 Uint8List _hiResWav() {
   const sampleRate = 96000;

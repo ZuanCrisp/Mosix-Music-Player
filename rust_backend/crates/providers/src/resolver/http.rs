@@ -1,5 +1,5 @@
 use super::{Check, ResolverError, check_active};
-use spotiflac_network::{HttpRequest, NetworkService, NetworkSession, url::UrlParts};
+use mornye_network::{HttpRequest, NetworkService, NetworkSession, url::UrlParts};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -125,7 +125,7 @@ impl ResolverHttp {
                     user_agent: if language.is_some() {
                         "Go-http-client/1.1".into()
                     } else {
-                        spotiflac_network::random_user_agent()
+                        mornye_network::random_user_agent()
                     },
                 },
                 self.timeout,
@@ -166,23 +166,10 @@ impl ResolverHttp {
         } else {
             2 << 20
         };
-        let mut body = Vec::new();
-        let mut buffer = [0; 16 << 10];
-        loop {
-            let capacity = buffer.len().min(limit + 1 - body.len());
-            let read = stream
-                .read(&mut buffer[..capacity], check)
-                .map_err(failure)?;
-            if read == 0 {
-                break;
-            }
-            body.extend_from_slice(&buffer[..read]);
-            if body.len() > limit {
-                return Err(ResolverError::Failed(format!(
-                    "response exceeds {limit} bytes"
-                )));
-            }
-        }
+        let body = stream
+            .read_limited(limit, &mut [0; 16 << 10], check)
+            .map_err(failure)?
+            .ok_or_else(|| ResolverError::Failed(format!("response exceeds {limit} bytes")))?;
         check_active(check)?;
         if body.is_empty() && language.is_none() {
             return Err(ResolverError::Failed("response body is empty".into()));

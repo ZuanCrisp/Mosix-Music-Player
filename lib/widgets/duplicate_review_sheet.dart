@@ -1,19 +1,30 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/expressive_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/download_history_provider.dart';
-import 'package:mosix/providers/local_library_provider.dart';
-import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/utils/duplicate_cleanup_policy.dart';
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/widgets/audio_quality_badges.dart';
-import 'package:mosix/widgets/settings_group.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/download_history_provider.dart';
+import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/utils/duplicate_cleanup_policy.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/widgets/audio_quality_badges.dart';
+import 'package:mornye/widgets/settings_group.dart';
+
+final duplicateReviewGroupsLoaderProvider =
+    Provider<Future<List<IsrcDuplicateGroup>> Function()>(
+      (ref) => LibraryDatabase.instance.findIsrcDuplicateGroups,
+    );
+
+final _log = AppLogger('DuplicateReview');
 
 /// Bottom sheet listing tracks that exist more than once (same ISRC) across
 /// download history and the local library, with keep-best and per-copy
@@ -48,7 +59,7 @@ class _DuplicateReviewSheetState extends ConsumerState<DuplicateReviewSheet> {
   void initState() {
     super.initState();
     _localLibraryNotifier = ref.read(localLibraryProvider.notifier);
-    _groupsFuture = LibraryDatabase.instance.findIsrcDuplicateGroups();
+    _groupsFuture = _loadGroups();
   }
 
   @override
@@ -61,8 +72,17 @@ class _DuplicateReviewSheetState extends ConsumerState<DuplicateReviewSheet> {
 
   void _reload() {
     setState(() {
-      _groupsFuture = LibraryDatabase.instance.findIsrcDuplicateGroups();
+      _groupsFuture = _loadGroups();
     });
+  }
+
+  Future<List<IsrcDuplicateGroup>> _loadGroups() async {
+    try {
+      return await ref.read(duplicateReviewGroupsLoaderProvider)();
+    } catch (error, stack) {
+      _log.e('Could not load duplicate copies', error, stack);
+      rethrow;
+    }
   }
 
   String _qualityLabel(IsrcDuplicateEntry entry) {
@@ -232,7 +252,28 @@ class _DuplicateReviewSheetState extends ConsumerState<DuplicateReviewSheet> {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Padding(
             padding: EdgeInsets.all(32),
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(child: AppLoadingIndicator()),
+          );
+        }
+        if (snapshot.hasError) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  context.friendlyError(snapshot.error!),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ExpressiveButton(
+                  onPressed: _reload,
+                  child: Text(context.l10n.dialogRetry),
+                ),
+              ],
+            ),
           );
         }
         final groups = snapshot.data ?? const [];
@@ -275,7 +316,7 @@ class _DuplicateReviewSheetState extends ConsumerState<DuplicateReviewSheet> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: SizedBox(
         width: double.infinity,
-        child: FilledButton.icon(
+        child: ExpressiveButton(
           onPressed: _deleteActionInProgress
               ? null
               : () => _keepBestAll(groups),
@@ -284,15 +325,13 @@ class _DuplicateReviewSheetState extends ConsumerState<DuplicateReviewSheet> {
             foregroundColor: colorScheme.onError,
           ),
           icon: _deleteActionInProgress
-              ? SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: colorScheme.onError,
-                  ),
+              ? AppLoadingIndicator(
+                  size: 18,
+                  strokeWidth: 2,
+                  color: colorScheme.onError,
                 )
               : const Icon(Icons.delete_sweep_outlined),
-          label: Text(context.l10n.duplicatesKeepBestAll),
+          child: Text(context.l10n.duplicatesKeepBestAll),
         ),
       ),
     );
@@ -305,9 +344,10 @@ class _DuplicateReviewSheetState extends ConsumerState<DuplicateReviewSheet> {
   ) {
     final first = group.entries.first;
     return SettingsGroup(
+      connected: true,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 8, 4),
           child: Row(
             children: [
               Expanded(
@@ -334,7 +374,8 @@ class _DuplicateReviewSheetState extends ConsumerState<DuplicateReviewSheet> {
                   ],
                 ),
               ),
-              TextButton(
+              ExpressiveButton(
+                text: true,
                 onPressed: _deleteActionInProgress
                     ? null
                     : () => _keepBest(group),
@@ -363,7 +404,7 @@ class _DuplicateReviewSheetState extends ConsumerState<DuplicateReviewSheet> {
                 ),
               ],
             ),
-            trailing: IconButton(
+            trailing: AppIconButton(
               tooltip: context.l10n.dialogDelete,
               icon: Icon(Icons.delete_outline, color: colorScheme.error),
               onPressed: _deleteActionInProgress

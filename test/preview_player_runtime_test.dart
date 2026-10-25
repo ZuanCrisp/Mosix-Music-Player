@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/providers/preview_player_provider.dart';
-import 'package:mosix/services/music_player_service.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/preview_player_provider.dart';
+import 'package:mornye/services/music_player_service.dart';
+import 'package:mornye/services/playback_deck.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -48,4 +51,116 @@ void main() {
     expect(runtime.exclusiveAudioHook, isNull);
     await runtime.dispose();
   });
+
+  test('previews play through the runtime preview deck', () async {
+    final decks = <_PreviewDeck>[];
+    final runtime = MusicPlayerRuntime(
+      dependencies: PlaybackDependencies(
+        createPreviewDeck: (id) {
+          expect(id, 'preview-player');
+          final deck = _PreviewDeck();
+          decks.add(deck);
+          return deck;
+        },
+      ),
+    );
+    final container = previews(runtime);
+    final controller = container.read(previewPlayerProvider.notifier);
+
+    await controller.play('https://example.com/preview.mp3');
+    final deck = decks.single;
+    expect(deck.calls, [
+      'positions',
+      'volume 1.0',
+      'network https://example.com/preview.mp3',
+      'resume',
+    ]);
+    deck.states.add(PlaybackDeckState.playing);
+    deck.positions.add(const Duration(seconds: 4));
+    deck.durations.add(const Duration(seconds: 30));
+    await Future<void>.delayed(Duration.zero);
+    var state = container.read(previewPlayerProvider);
+    expect(state.status, PreviewStatus.playing);
+    expect(state.position, const Duration(seconds: 4));
+    expect(state.duration, const Duration(seconds: 30));
+
+    await controller.toggle('https://example.com/preview.mp3');
+    expect(deck.calls.last, 'pause');
+    expect(container.read(previewPlayerProvider).status, PreviewStatus.paused);
+
+    deck.completions.add(null);
+    await Future<void>.delayed(Duration.zero);
+    state = container.read(previewPlayerProvider);
+    expect(state.isActive, isFalse);
+
+    container.dispose();
+    await Future<void>.delayed(Duration.zero);
+    expect(deck.calls.last, 'dispose');
+    await runtime.dispose();
+  });
+}
+
+class _PreviewDeck implements PlaybackDeck {
+  final calls = <String>[];
+  final states = StreamController<PlaybackDeckState>.broadcast();
+  final durations = StreamController<Duration>.broadcast();
+  final positions = StreamController<Duration>.broadcast();
+  final completions = StreamController<void>.broadcast();
+
+  @override
+  PlaybackDeckState state = PlaybackDeckState.stopped;
+  @override
+  bool get isDirect => false;
+  @override
+  bool get needsSourceReload => false;
+  @override
+  Stream<PlaybackDeckState> get onPlayerStateChanged => states.stream;
+  @override
+  Stream<Duration> get onDurationChanged => durations.stream;
+  @override
+  Stream<Duration> get onPositionChanged => positions.stream;
+  @override
+  Stream<void> get onPlayerComplete => completions.stream;
+  @override
+  void startPositionUpdates(Duration interval) => calls.add('positions');
+  @override
+  Future<void> configureOutput() async => calls.add('configure');
+  @override
+  Future<void> setVolume(double volume) async => calls.add('volume $volume');
+  @override
+  Future<void> setPlaybackRate(double rate) async => calls.add('rate $rate');
+  @override
+  Future<void> setNetworkSource(String url) async => calls.add('network $url');
+  @override
+  Future<void> setFileSource(
+    String path, {
+    bool preferBitPerfect = false,
+    bool directUsb = false,
+    bool allowDop = false,
+    bool requiresDsd = false,
+    bool allowFixedVolume = false,
+    bool dapExclusive = false,
+  }) async => calls.add('file $path');
+  @override
+  Future<void> cancelPreparation() async {}
+  @override
+  Future<void> resume() async => calls.add('resume');
+  @override
+  Future<void> pause() async => calls.add('pause');
+  @override
+  Future<void> seek(Duration position) async => calls.add('seek');
+  @override
+  Future<void> stop() async => calls.add('stop');
+  @override
+  Future<Duration?> getCurrentPosition() async => Duration.zero;
+  @override
+  Future<Duration?> getDuration() async => null;
+  @override
+  Future<void> dispose() async {
+    calls.add('dispose');
+    await states.close();
+    await durations.close();
+    await positions.close();
+    await completions.close();
+  }
 }

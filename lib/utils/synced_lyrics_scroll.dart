@@ -109,3 +109,25 @@ double syncedLyricSegmentLift({
   final settle = ease((duration - elapsed) / 600);
   return normalLift + 1.3 * heldStrength * rise * settle;
 }
+
+/// Glow strength from 0 to 1 for a word held for a long time. Short words
+/// never glow; a held word brightens while it is sung, then fades shortly
+/// after its end instead of switching off with the sweep.
+double syncedLyricSegmentGlow({
+  required Duration position,
+  required Duration start,
+  required Duration end,
+}) {
+  final duration = (end - start).inMicroseconds / 1000;
+  final strength = ((duration - 900) / 1100).clamp(0.0, 1.0);
+  if (strength == 0) return 0;
+  final elapsed = (position - start).inMicroseconds / 1000;
+  double ease(double value) {
+    final t = value.clamp(0.0, 1.0);
+    return t * t * (3 - 2 * t);
+  }
+
+  final rise = ease((elapsed - 250) / math.min(900, duration * 0.5));
+  final fade = ease((duration + 500 - elapsed) / 500);
+  return strength * rise * fade;
+}

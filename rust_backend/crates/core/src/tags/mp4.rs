@@ -62,14 +62,7 @@ pub(super) fn read(file: &mut (impl Read + Seek)) -> Result<AudioMetadata, Strin
         }
         position = atom.end;
     }
-    if metadata.title.is_empty()
-        && metadata.artist.is_empty()
-        && metadata.album.is_empty()
-        && metadata.album_artist.is_empty()
-        && metadata.lyrics.is_empty()
-        && metadata.track_number == 0
-        && metadata.disc_number == 0
-    {
+    if metadata == AudioMetadata::default() {
         Err("no M4A tags found".into())
     } else {
         Ok(metadata)

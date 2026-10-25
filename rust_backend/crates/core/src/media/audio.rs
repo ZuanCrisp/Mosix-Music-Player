@@ -122,6 +122,66 @@ pub(crate) fn mp3_quality(
     Ok(quality)
 }
 
+const ADTS_RATES: [i64; 13] = [
+    96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350,
+];
+
+/// The 12-bit ADTS sync word followed by layer 0.
+pub(crate) fn is_adts_frame(header: &[u8]) -> bool {
+    header.len() >= 2 && header[0] == 0xff && header[1] & 0xf6 == 0xf0
+}
+
+/// Raw AAC in ADTS frames, often behind an ID3v2 tag. The first frames give
+/// the sample rate and an average frame size for the duration and bitrate.
+pub(crate) fn adts_quality(
+    file: &mut (impl Read + Seek),
+    size: i64,
+) -> Result<AudioQuality, String> {
+    let header = read::<10>(file)?;
+    let start = crate::tags::v2_tag_length(&header).unwrap_or(0);
+    seek(file, SeekFrom::Start(start))?;
+    let mut reader = BufReader::new(&mut *file);
+    let (mut frames, mut bytes, mut samples, mut sample_rate) = (0, 0_i64, 0_i64, 0);
+    while frames < 256 {
+        let Ok(frame) = read::<7>(&mut reader) else {
+            break;
+        };
+        let rate = ADTS_RATES
+            .get(usize::from((frame[2] >> 2) & 0x0f))
+            .copied()
+            .unwrap_or(0);
+        let length = (i64::from(frame[3] & 0x03) << 11)
+            | (i64::from(frame[4]) << 3)
+            | i64::from(frame[5] >> 5);
+        if !is_adts_frame(&frame)
+            || rate == 0
+            || length < 7
+            || (sample_rate != 0 && rate != sample_rate)
+        {
+            break;
+        }
+        sample_rate = rate;
+        samples += 1024 * (i64::from(frame[6] & 0x03) + 1);
+        bytes += length;
+        frames += 1;
+        reader
+            .seek_relative(length - 7)
+            .map_err(|error| error.to_string())?;
+    }
+    if frames == 0 {
+        return Err("no ADTS frames found".into());
+    }
+    let seconds = samples as f64 / sample_rate as f64;
+    let bitrate = (bytes as f64 * 8.0 / seconds) as i64;
+    Ok(AudioQuality {
+        sample_rate,
+        duration: ((size - start as i64) as f64 * 8.0 / bitrate as f64).round() as i64,
+        bitrate,
+        codec: "aac".into(),
+        ..AudioQuality::default()
+    })
+}
+
 pub(crate) fn ogg_quality(
     file: &mut (impl Read + Seek),
     size: i64,

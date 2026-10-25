@@ -348,7 +348,7 @@ mod tests {
         PendingAuthRequest {
             extension_id: "example.auth".into(),
             auth_url: "https://example.test/verify".into(),
-            callback_url: "spotiflac://session-grant".into(),
+            callback_url: "mornye://session-grant".into(),
             state: nonce.into(),
             created_at: (1000 - age_seconds) * SECOND,
         }
@@ -498,7 +498,7 @@ mod tests {
             auth.register_pending(PendingAuthRequest {
                 extension_id: "example.auth".into(),
                 auth_url: url.into(),
-                callback_url: "spotiflac://callback".into(),
+                callback_url: "mornye://callback".into(),
                 state: "state".into(),
                 created_at: (1000 - age) * SECOND,
             })

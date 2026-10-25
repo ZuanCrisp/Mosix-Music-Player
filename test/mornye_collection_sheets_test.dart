@@ -6,17 +6,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/library_collections_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/app_action_button.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/playlist_picker_sheet.dart';
-import 'package:mosix/widgets/track_collection_quick_actions.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/library_collections_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_action_button.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/widgets/playlist_picker_sheet.dart';
+import 'package:mornye/widgets/track_collection_quick_actions.dart';
 
 const _track = Track(
   id: 'example-track',
@@ -76,7 +77,7 @@ class _PopObserver extends NavigatorObserver {
 
 VoidCallback? _doneAction(WidgetTester tester, bool mornye) => mornye
     ? tester.widget<AppActionButton>(find.byType(AppActionButton)).onPressed
-    : tester.widget<FilledButton>(find.byType(FilledButton)).onPressed;
+    : tester.widget<ExpressiveButton>(find.byType(ExpressiveButton)).onPressed;
 
 PlaylistPickerSummary _playlist(String name, {bool contains = false}) =>
     PlaylistPickerSummary(

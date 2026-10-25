@@ -54,13 +54,11 @@ extension _TrackMetadataFileActions on _TrackMetadataScreenState {
 
     if (!context.mounted) return;
 
-    final saved = await showModalBottomSheet<bool>(
+    final saved = await showAppModalBottomSheet<bool>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
-      backgroundColor: context.isMornye
-          ? colorScheme.surfaceContainerLow
-          : colorScheme.surface,
+      dialogSize: AppDialogSize.wide,
       builder: (sheetContext) => EditMetadataSheet(
         colorScheme: colorScheme,
         initialValues: initialValues,
@@ -198,6 +196,7 @@ extension _TrackMetadataFileActions on _TrackMetadataScreenState {
           normalizeOptionalString(_embeddedCoverPreviewPath) ??
           normalizeOptionalString(_coverUrl) ??
           '';
+      final durationSeconds = duration;
       await ref
           .read(playbackProvider.notifier)
           .playLocalPath(
@@ -206,6 +205,13 @@ extension _TrackMetadataFileActions on _TrackMetadataScreenState {
             artist: artistName,
             album: albumName,
             coverUrl: playbackCover,
+            duration: durationSeconds != null && durationSeconds > 0
+                ? Duration(seconds: durationSeconds)
+                : null,
+            bitDepth: bitDepth,
+            sampleRate: sampleRate,
+            bitrate: _audioBitrate,
+            format: _storedAudioFormat,
             explicit: isExplicit,
           );
     } catch (e) {
@@ -280,19 +286,6 @@ extension _TrackMetadataFileActions on _TrackMetadataScreenState {
         return Icons.shopping_cart;
       default:
         return Icons.cloud_download;
-    }
-  }
-
-  Color _getServiceColor(String service, ColorScheme colorScheme) {
-    switch (service.toLowerCase()) {
-      case MusicServices.tidal:
-        return const Color(0xFF0077B5);
-      case MusicServices.qobuz:
-        return const Color(0xFF0052CC);
-      case MusicServices.amazon:
-        return const Color(0xFFFF9900);
-      default:
-        return colorScheme.primary;
     }
   }
 }

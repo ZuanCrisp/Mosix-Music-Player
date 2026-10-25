@@ -17,6 +17,10 @@ type Check<'a> = &'a (dyn Fn() -> Result<(), String> + Sync);
 /// How often a paused scan re-checks backend shutdown and its request lease.
 const PAUSE_POLL: Duration = Duration::from_millis(250);
 
+/// How many failed files a finished scan lists with their reason. The error
+/// count still includes the rest.
+const REPORTED_FAILURES: usize = 100;
+
 #[derive(Default)]
 pub(in crate::backend) struct ScanState {
     current: Mutex<Option<Arc<Run>>>,
@@ -42,6 +46,10 @@ struct Progress {
     error_count: usize,
     progress_pct: f64,
     is_complete: bool,
+    /// `{path, message}` for each failed file; reported once complete so
+    /// progress updates stay small.
+    #[serde(skip)]
+    failures: Vec<Value>,
 }
 
 struct AudioFile {
@@ -61,11 +69,15 @@ impl Backend {
     pub fn get_library_scan_progress(&self) -> Result<Value, String> {
         let _operation = self.enter()?;
         let current = self.library_scan.current.lock().expect("library scan lock");
-        let value = match current.as_ref() {
-            Some(run) => serde_json::to_value(&*run.progress.lock().expect("scan progress lock")),
-            None => serde_json::to_value(Progress::default()),
+        let Some(run) = current.as_ref() else {
+            return serde_json::to_value(Progress::default()).map_err(|error| error.to_string());
         };
-        value.map_err(|error| error.to_string())
+        let progress = run.progress.lock().expect("scan progress lock");
+        let mut value = serde_json::to_value(&*progress).map_err(|error| error.to_string())?;
+        if progress.is_complete && !progress.failures.is_empty() {
+            value["failures"] = progress.failures.clone().into();
+        }
+        Ok(value)
     }
 
     pub fn cancel_library_scan(&self) -> Result<(), String> {
@@ -484,7 +496,7 @@ impl Backend {
                 .map(|value| value.as_array().expect("cue track array").clone());
                 check()?;
                 completed += 1;
-                update(&run, completed, &file.path, result.is_err());
+                update(&run, completed, &file.path, result.as_ref().err());
                 if let Ok(tracks) = result {
                     if ordered {
                         results.insert(index, tracks);
@@ -496,7 +508,7 @@ impl Backend {
                 }
             } else if referenced.contains(&file.path) {
                 completed += 1;
-                update(&run, completed, &file.path, false);
+                update(&run, completed, &file.path, None);
             } else {
                 audio.push((index, *file));
             }
@@ -547,7 +559,7 @@ impl Backend {
             let mut failure = None;
             for (index, path, result) in receiver {
                 completed += 1;
-                update(&run, completed, path, result.is_err());
+                update(&run, completed, path, result.as_ref().err());
                 if failure.is_none() {
                     let emit = check().and_then(|()| {
                         if let Ok(value) = result {
@@ -636,7 +648,7 @@ fn staging(path: &str) -> bool {
             .is_some_and(|(stem, _)| stem.ends_with(".partial"))
 }
 
-fn update(run: &Run, completed: usize, path: &str, error: bool) {
+fn update(run: &Run, completed: usize, path: &str, error: Option<&String>) {
     let mut progress = run.progress.lock().expect("scan progress lock");
     progress.scanned_files = completed;
     progress.current_file = Path::new(path)
@@ -644,7 +656,14 @@ fn update(run: &Run, completed: usize, path: &str, error: bool) {
         .unwrap_or_default()
         .to_string_lossy()
         .into_owned();
-    progress.error_count += usize::from(error);
+    if let Some(error) = error {
+        progress.error_count += 1;
+        if progress.failures.len() < REPORTED_FAILURES {
+            progress
+                .failures
+                .push(json!({"path": path, "message": error}));
+        }
+    }
     if progress.total_files > 0 {
         progress.progress_pct = completed as f64 / progress.total_files as f64 * 100.0;
     }
@@ -713,6 +732,7 @@ mod tests {
         }
     }
 
+    #[cfg(unix)]
     #[test]
     fn walk_still_rejects_nested_symlinks() {
         let root = tempfile::tempdir().unwrap();
@@ -784,6 +804,35 @@ mod tests {
         let progress = backend.get_library_scan_progress().unwrap();
         assert_eq!(progress["scanned_files"], 3);
         assert_eq!(progress["is_complete"], true);
+    }
+
+    #[test]
+    fn finished_scan_lists_each_unreadable_file_with_its_reason() {
+        use std::os::unix::fs::PermissionsExt;
+        let root = tempfile::tempdir().unwrap();
+        let library = fs::canonicalize(root.path()).unwrap().join("library");
+        fs::create_dir_all(&library).unwrap();
+        fs::write(library.join("readable.mp3"), b"not audio").unwrap();
+        let locked = library.join("locked.flac");
+        fs::write(&locked, b"fLaC").unwrap();
+        fs::set_permissions(&locked, fs::Permissions::from_mode(0o000)).unwrap();
+        if fs::File::open(&locked).is_ok() {
+            // Running as root: nothing on this host is unreadable.
+            return;
+        }
+        let backend = backend(root.path(), &library);
+
+        let result = backend
+            .scan_library_folder_incremental(&library.to_string_lossy(), "{}", &|| Ok(()))
+            .unwrap();
+
+        assert_eq!(result["totalFiles"], 2);
+        let progress = backend.get_library_scan_progress().unwrap();
+        assert_eq!(progress["error_count"], 1);
+        let failures = progress["failures"].as_array().unwrap();
+        assert_eq!(failures.len(), 1);
+        assert_eq!(failures[0]["path"], locked.to_string_lossy().as_ref());
+        assert!(!failures[0]["message"].as_str().unwrap().is_empty());
     }
 
     #[test]

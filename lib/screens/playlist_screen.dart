@@ -1,33 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
-import 'package:mosix/screens/track_history_snapshot.dart';
-import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/screens/selection_mode_mixin.dart';
-import 'package:mosix/widgets/collection_scaffold.dart';
-import 'package:mosix/widgets/selection_bottom_bar.dart';
-import 'package:mosix/widgets/selection_action_button.dart';
+import 'package:mornye/screens/track_history_snapshot.dart';
+import 'package:mornye/widgets/album_detail_header.dart';
+import 'package:mornye/widgets/expressive_button_group.dart';
+import 'package:mornye/screens/selection_mode_mixin.dart';
+import 'package:mornye/widgets/collection_scaffold.dart';
+import 'package:mornye/widgets/selection_bottom_bar.dart';
+import 'package:mornye/widgets/selection_action_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/library_collections_provider.dart';
-import 'package:mosix/utils/image_cache_utils.dart';
-import 'package:mosix/utils/cover_art_utils.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/utils/provider_resource_ids.dart';
-import 'package:mosix/widgets/playlist_picker_sheet.dart';
-import 'package:mosix/widgets/animation_utils.dart';
-import 'package:mosix/widgets/cached_cover_image.dart';
-import 'package:mosix/widgets/motion_header_banner.dart';
-import 'package:mosix/widgets/track_list_tile.dart';
-import 'package:mosix/widgets/track_detail_actions.dart';
-import 'package:mosix/screens/collapsing_header_scroll_mixin.dart';
-import 'package:mosix/widgets/error_card.dart';
-import 'package:mosix/widgets/downloadable_cover.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/providers/library_collections_provider.dart';
+import 'package:mornye/utils/image_cache_utils.dart';
+import 'package:mornye/utils/cover_art_utils.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/provider_resource_ids.dart';
+import 'package:mornye/widgets/playlist_picker_sheet.dart';
+import 'package:mornye/widgets/animation_utils.dart';
+import 'package:mornye/widgets/cached_cover_image.dart';
+import 'package:mornye/widgets/motion_header_banner.dart';
+import 'package:mornye/widgets/track_list_tile.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/widgets/desktop/desktop_selection.dart';
+import 'package:mornye/widgets/desktop/track_list_table.dart';
+import 'package:mornye/widgets/track_detail_actions.dart';
+import 'package:mornye/screens/collapsing_header_scroll_mixin.dart';
+import 'package:mornye/widgets/error_card.dart';
+import 'package:mornye/widgets/downloadable_cover.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/mornye_artist_header.dart';
 
 class PlaylistScreen extends ConsumerStatefulWidget {
   final String playlistName;
@@ -58,6 +62,9 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
         SelectionModeMixin<PlaylistScreen>,
         CollapsingHeaderScrollMixin<PlaylistScreen> {
   final _historySnapshot = TrackHistorySnapshot();
+
+  /// Double click and Enter actions of the desktop table rows, by row id.
+  final Map<String, VoidCallback> _desktopActivations = {};
   List<Track>? _fetchedTracks;
   bool _isLoading = false;
   String? _error;
@@ -276,20 +283,30 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
         _trackSelectionId(_tracks[index], index),
     });
 
-    return CollectionScaffold(
-      scrollController: scrollController,
-      isSelectionMode: isSelectionMode,
-      onExitSelectionMode: exitSelectionMode,
-      selectionBar: _buildSelectionBottomBar(
-        context,
-        colorScheme,
-        bottomPadding,
+    return DesktopListScope(
+      onSelectAll: _tracks.isEmpty
+          ? null
+          : () => selectAll([
+              for (var index = 0; index < _tracks.length; index++)
+                _trackSelectionId(_tracks[index], index),
+            ]),
+      onClearSelection: isSelectionMode ? exitSelectionMode : null,
+      onActivate: () => _desktopActivations[selectionAnchorId]?.call(),
+      child: CollectionScaffold(
+        scrollController: scrollController,
+        isSelectionMode: isSelectionMode,
+        onExitSelectionMode: exitSelectionMode,
+        selectionBar: _buildSelectionBottomBar(
+          context,
+          colorScheme,
+          bottomPadding,
+        ),
+        appBar: _buildAppBar(context, colorScheme),
+        slivers: [
+          _buildTrackList(context, colorScheme),
+          _buildPlaylistFooter(context, colorScheme),
+        ],
       ),
-      appBar: _buildAppBar(context, colorScheme),
-      slivers: [
-        _buildTrackList(context, colorScheme),
-        _buildPlaylistFooter(context, colorScheme),
-      ],
     );
   }
 
@@ -356,29 +373,40 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
           ),
         ],
       ),
-      actions: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (context.isMornye) ...[
-            _buildLoveAllButton(),
-            const SizedBox(width: 16),
-            Flexible(
-              child: SizedBox(
-                width: 172,
-                child: _buildDownloadAllCenterButton(context),
-              ),
+      actions: isDesktopPlatform
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 10,
+              children: [
+                _buildLoveAllButton(),
+                _buildDownloadAllCenterButton(context),
+                _buildAddToPlaylistButton(context),
+              ],
+            )
+          : context.isMornye
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildLoveAllButton(),
+                const SizedBox(width: 16),
+                Flexible(
+                  child: SizedBox(
+                    width: 172,
+                    child: _buildDownloadAllCenterButton(context),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                _buildAddToPlaylistButton(context),
+              ],
+            )
+          : ExpressiveButtonGroup(
+              flexible: const {1},
+              children: [
+                _buildLoveAllButton(),
+                _buildDownloadAllCenterButton(context),
+                _buildAddToPlaylistButton(context),
+              ],
             ),
-            const SizedBox(width: 16),
-            _buildAddToPlaylistButton(context),
-          ] else ...[
-            _buildLoveAllButton(),
-            const SizedBox(width: 12),
-            Flexible(child: _buildDownloadAllCenterButton(context)),
-            const SizedBox(width: 12),
-            _buildAddToPlaylistButton(context),
-          ],
-        ],
-      ),
     );
   }
 
@@ -392,14 +420,8 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
 
   Widget _buildTrackList(BuildContext context, ColorScheme colorScheme) {
     if (_isLoading) {
-      return SliverToBoxAdapter(
-        child: Padding(
-          padding: context.isMornye
-              ? EdgeInsets.zero
-              : const EdgeInsets.all(16),
-          child: const TrackListSkeleton(itemCount: 8),
-        ),
-      );
+      // The skeleton rows carry the list's own inset.
+      return const SliverToBoxAdapter(child: TrackListSkeleton(itemCount: 8));
     }
 
     if (_error != null) {
@@ -434,6 +456,44 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
     final existingHistoryKeys = ref.watch(
       downloadHistoryVisibleBatchExistsProvider(_historySnapshot.request),
     );
+    if (isDesktopPlatform) {
+      final ids = [
+        for (var i = 0; i < _tracks.length; i++)
+          _trackSelectionId(_tracks[i], i),
+      ];
+      final inHistory = [
+        for (final lookup in historyLookups)
+          existingHistoryKeys.contains(lookup.lookupKey),
+      ];
+      final tracks = _tracks;
+      void activate(int index) => TrackListTile.activate(
+        context,
+        ref,
+        tracks[index],
+        isInHistory: inHistory[index],
+        onDownload: ({bool forceQualityPicker = false}) => _downloadTrack(
+          context,
+          tracks[index],
+          playlistPosition: index + 1,
+          forceQualityPicker: forceQualityPicker,
+        ),
+      );
+      _desktopActivations
+        ..clear()
+        ..addAll({
+          for (var i = 0; i < ids.length; i++) ids[i]: () => activate(i),
+        });
+      return TrackListTable(
+        tracks: tracks,
+        ids: ids,
+        isInHistory: inHistory,
+        selectedIds: selectedIds,
+        onSelect: applyDesktopClick,
+        onActivate: activate,
+        showArtwork: true,
+        showAlbum: true,
+      );
+    }
     return SliverPadding(
       padding: EdgeInsets.symmetric(horizontal: wideListInset(context)),
       sliver: SliverList(
@@ -461,6 +521,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
                       playlistPosition: index + 1,
                       forceQualityPicker: forceQualityPicker,
                     ),
+                leadingArtwork: true,
                 leading: track.coverUrl != null
                     ? DownloadableCover(
                         coverUrl: track.coverUrl,

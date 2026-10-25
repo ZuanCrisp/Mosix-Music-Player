@@ -1,8 +1,8 @@
 #![cfg(unix)]
+use mornye_core::cancellation::{CancellationDomain, CancellationRegistry};
+use mornye_extensions::RuntimeLimits;
+use mornye_extensions::environment::ExtensionEnvironment;
 use serde_json::{Value, json};
-use spotiflac_core::cancellation::{CancellationDomain, CancellationRegistry};
-use spotiflac_extensions::RuntimeLimits;
-use spotiflac_extensions::environment::ExtensionEnvironment;
 use std::fs;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};

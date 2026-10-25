@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mornye/l10n/app_localizations.dart';
 
 void main() {
   group('setup and tutorial copy', () {
@@ -12,9 +12,10 @@ void main() {
 
         expect(
           strings.tutorialWelcomeTitle,
-          contains('Mosix'),
+          contains('Mornye'),
           reason: 'Unexpected app name for $locale',
         );
+        expect(strings.appName, 'Mornye', reason: 'App name for $locale');
         expect(
           setupTagline,
           isNot(contains('spotify')),

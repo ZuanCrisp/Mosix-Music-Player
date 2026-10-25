@@ -11,4 +11,6 @@
     <string name="player_widget_dark">Gelap</string>
     <string name="player_widget_show_artist">Tampilkan nama artis</string>
     <string name="player_widget_save">Simpan widget</string>
+    <string name="player_widget_customize">Pilih tampilan widget ini di layar utama.</string>
+    <string name="player_widget_style">Gaya</string>
 </resources>

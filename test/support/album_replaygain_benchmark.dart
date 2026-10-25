@@ -1,8 +1,8 @@
 import 'dart:isolate';
 
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_state.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_state.dart';
 
 String legacyAlbumReplayGainKey(Track track) {
   if (track.albumId != null && track.albumId!.isNotEmpty) {

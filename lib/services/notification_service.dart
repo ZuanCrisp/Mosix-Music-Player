@@ -4,18 +4,24 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:mosix/constants/app_info.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/verification_notification.dart';
+import 'package:mornye/constants/app_info.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/verification_notification.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/string_utils.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
-  NotificationService._internal();
+  NotificationService._internal()
+    : _notifications = FlutterLocalNotificationsPlugin();
 
-  final FlutterLocalNotificationsPlugin _notifications =
-      FlutterLocalNotificationsPlugin();
+  @visibleForTesting
+  NotificationService.forTesting(FlutterLocalNotificationsPlugin notifications)
+    : _notifications = notifications;
+
+  final FlutterLocalNotificationsPlugin _notifications;
   bool _isInitialized = false;
   Future<void>? _initialization;
   final verificationNotifications = VerificationNotificationRouter();
@@ -30,6 +36,10 @@ class NotificationService {
 
   String get embeddingMetadataLabel =>
       _l10n?.notifEmbeddingMetadata ?? 'Embedding metadata...';
+
+  String get libraryScanInterruptedMessage =>
+      _l10n?.notifLibraryScanInterruptedBody ??
+      'The previous library scan was interrupted. Scan the folder again to continue. Your indexed tracks are still available.';
 
   static const String libraryScanWorkKind = 'library_scan';
   static const String updateDownloadWorkKind = 'app_update';
@@ -113,6 +123,17 @@ class NotificationService {
   static const String libraryChannelDescription =
       'Shows local library scan progress';
 
+  /// Windows toast identity. Keep both values stable: Windows ties the
+  /// notification settings and activation callback to them.
+  static const String windowsAppUserModelId = 'com.zarz.mornye';
+  static const String windowsNotificationGuid =
+      '1a458cb1-f396-4430-8ee3-23d66b56e12f';
+
+  /// Desktop windows already show live progress, and desktop notification
+  /// servers pop a new banner for each update, so only results are posted.
+  bool get _showsProgressNotifications => !isDesktopPlatform;
+  bool? _macOSPermissionGranted;
+
   Future<void> initialize() {
     if (_isInitialized) return Future.value();
     return _initialization ??= _initialize().whenComplete(() {
@@ -121,18 +142,31 @@ class NotificationService {
   }
 
   Future<void> _initialize() async {
+    // System UI draws only the small icon's alpha, so use the brand mark
+    // rather than the opaque launcher icon.
     const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
+      '@drawable/ic_launcher_monochrome',
     );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
       requestSoundPermission: false,
     );
+    const linuxSettings = LinuxInitializationSettings(
+      defaultActionName: 'Open',
+    );
+    const windowsSettings = WindowsInitializationSettings(
+      appName: AppInfo.appName,
+      appUserModelId: windowsAppUserModelId,
+      guid: windowsNotificationGuid,
+    );
 
     const initSettings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
+      macOS: iosSettings,
+      linux: linuxSettings,
+      windows: windowsSettings,
     );
 
     await _notifications.initialize(
@@ -141,9 +175,15 @@ class NotificationService {
         verificationNotifications.receive(response.payload);
       },
     );
-    final launch = await _notifications.getNotificationAppLaunchDetails();
-    if (launch?.didNotificationLaunchApp == true) {
-      verificationNotifications.receive(launch?.notificationResponse?.payload);
+    // Linux delivers launch responses through initialize's callback and does
+    // not implement the separate launch-details query.
+    if (defaultTargetPlatform != TargetPlatform.linux) {
+      final launch = await _notifications.getNotificationAppLaunchDetails();
+      if (launch?.didNotificationLaunchApp == true) {
+        verificationNotifications.receive(
+          launch?.notificationResponse?.payload,
+        );
+      }
     }
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
@@ -189,6 +229,15 @@ class NotificationService {
   }
 
   Future<bool> _ensureNotificationPermission() async {
+    if (isDesktopPlatform && Platform.isMacOS) {
+      return _macOSPermissionGranted ??=
+          await _notifications
+              .resolvePlatformSpecificImplementation<
+                MacOSFlutterLocalNotificationsPlugin
+              >()
+              ?.requestPermissions(alert: true, badge: true, sound: true) ??
+          false;
+    }
     if (!Platform.isIOS) return true;
 
     final status = await Permission.notification.status;
@@ -284,9 +333,14 @@ class NotificationService {
         playSound: playSound,
         enableVibration: !inProgress,
         onlyAlertOnce: inProgress,
-        icon: '@mipmap/ic_launcher',
+        icon: '@drawable/ic_launcher_monochrome',
       ),
       iOS: DarwinNotificationDetails(
+        presentAlert: !inProgress,
+        presentBadge: presentBadge,
+        presentSound: presentSound,
+      ),
+      macOS: DarwinNotificationDetails(
         presentAlert: !inProgress,
         presentBadge: presentBadge,
         presentSound: presentSound,
@@ -300,6 +354,7 @@ class NotificationService {
     required int progress,
     required int total,
   }) async {
+    if (!_showsProgressNotifications) return;
     if (!_isInitialized) await initialize();
 
     final percentage = total > 0 ? (progress * 100 ~/ total) : 0;
@@ -317,6 +372,7 @@ class NotificationService {
     required String trackName,
     required String artistName,
   }) async {
+    if (!_showsProgressNotifications) return;
     if (!_isInitialized) await initialize();
 
     await _showSafely(
@@ -455,6 +511,7 @@ class NotificationService {
     required int totalFiles,
     String? currentFile,
   }) async {
+    if (!_showsProgressNotifications) return;
     if (!_isInitialized) await initialize();
 
     // Network scans read tags while discovering folders, so their total is
@@ -568,11 +625,12 @@ class NotificationService {
     required int received,
     required int total,
   }) async {
+    if (!_showsProgressNotifications) return;
     if (!_isInitialized) await initialize();
 
     final percentage = total > 0 ? (received * 100 ~/ total) : 0;
-    final receivedMB = (received / 1024 / 1024).toStringAsFixed(1);
-    final totalMB = (total / 1024 / 1024).toStringAsFixed(1);
+    final receivedMB = formatMegabytes(received);
+    final totalMB = formatMegabytes(total);
     final title =
         _l10n?.notifDownloadingUpdate(version) ??
         'Downloading ${AppInfo.appName} v$version';
@@ -622,7 +680,6 @@ class NotificationService {
       body:
           _l10n?.notifUpdateFailedBody ??
           'Could not download update. Try again later.',
-      // Android playSound defaults to true here (was omitted originally).
       details: _details(playSound: true),
     );
   }

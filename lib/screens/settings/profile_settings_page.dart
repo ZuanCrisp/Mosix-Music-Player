@@ -3,14 +3,17 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/user_profile_provider.dart';
-import 'package:mosix/services/user_profile_store.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/widgets/app_action_button.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
-import 'package:mosix/widgets/profile_avatar.dart';
-import 'package:mosix/widgets/settings_group.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/user_profile_provider.dart';
+import 'package:mornye/services/user_profile_store.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/widgets/app_action_button.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mornye/widgets/profile_avatar.dart';
+import 'package:mornye/widgets/settings_group.dart';
 
 class ProfileSettingsPage extends ConsumerStatefulWidget {
   const ProfileSettingsPage({super.key, required this.profile});
@@ -71,7 +74,11 @@ class _ProfileSettingsPageState extends ConsumerState<ProfileSettingsPage> {
       await ref
           .read(userProfileProvider.notifier)
           .save(name: _name.text, photo: _photo, removePhoto: _removePhoto);
-      if (mounted) Navigator.of(context).pop();
+      // In the desktop Settings detail pane the page is the pane's only
+      // route and stays open.
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -116,7 +123,7 @@ class _ProfileSettingsPageState extends ConsumerState<ProfileSettingsPage> {
                     Center(
                       child: AppActionButton(
                         onPressed: _busy ? null : _pickPhoto,
-                        icon: const Icon(Icons.photo_library_outlined),
+                        icon: const AppIcon(Icons.photo_library_outlined),
                         label: Text(context.l10n.profileChangePhoto),
                         outlined: true,
                         tonal: true,
@@ -124,7 +131,8 @@ class _ProfileSettingsPageState extends ConsumerState<ProfileSettingsPage> {
                     ),
                     if (hasPhoto)
                       Center(
-                        child: TextButton(
+                        child: ExpressiveButton(
+                          text: true,
                           onPressed: _busy
                               ? null
                               : () => setState(() {
@@ -163,11 +171,8 @@ class _ProfileSettingsPageState extends ConsumerState<ProfileSettingsPage> {
                     AppActionButton(
                       onPressed: _busy ? null : _save,
                       icon: _busy
-                          ? const SizedBox.square(
-                              dimension: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.check),
+                          ? const AppLoadingIndicator(size: 20, strokeWidth: 2)
+                          : const AppIcon(Icons.check),
                       label: Text(context.l10n.dialogSave),
                     ),
                   ],

@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
 
 class _Queue extends DownloadQueueNotifier {
   _Queue(this._initial);
@@ -49,6 +49,22 @@ DownloadItem _item(int index, DownloadStatus status) => DownloadItem(
   networkDownloadFolder: index.isEven ? 'smb://example.test/music' : '',
 );
 
+void _expectConsistentLookup(DownloadQueueState state) {
+  final rebuilt = DownloadQueueLookup.fromItems(state.items);
+  expect(state.lookup.byItemId, rebuilt.byItemId);
+  expect(state.lookup.byTrackId, rebuilt.byTrackId);
+  expect(state.lookup.indexByItemId, rebuilt.indexByItemId);
+  expect(state.lookup.itemIds, rebuilt.itemIds);
+  expect(state.lookup.notCompletedItemIds, rebuilt.notCompletedItemIds);
+  expect(state.lookup.queuedCount, rebuilt.queuedCount);
+  expect(state.lookup.failedCount, rebuilt.failedCount);
+  expect(state.lookup.completedCount, rebuilt.completedCount);
+  expect(state.lookup.activeDownloadsCount, rebuilt.activeDownloadsCount);
+  expect(state.lookup.finalizingCount, rebuilt.finalizingCount);
+  expect(state.lookup.firstDownloading, same(rebuilt.firstDownloading));
+  expect(state.lookup.firstFinalizing, same(rebuilt.firstFinalizing));
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -92,6 +108,7 @@ void main() {
             next.items.any((item) => item.status == DownloadStatus.queued),
             false,
           );
+          _expectConsistentLookup(next);
         });
         queue.failQueuedDownloads(
           error: 'Folder inaccessible',
@@ -152,6 +169,55 @@ void main() {
       }
     });
   }
+
+  test('status updates publish matching indexes once and preserve no-ops', () {
+    final items = List.generate(
+      130,
+      (i) => _item(i, DownloadStatus.downloading),
+    );
+    final initial = const DownloadQueueState().copyWith(items: items);
+    final container = scope(initial);
+    try {
+      final queue = container.read(downloadQueueProvider.notifier);
+      var publications = 0;
+      container.listen(downloadQueueProvider, (_, next) {
+        publications++;
+        _expectConsistentLookup(next);
+      });
+      queue.updateItemStatus('missing', DownloadStatus.failed);
+      expect(container.read(downloadQueueProvider), same(initial));
+      expect(publications, 0);
+
+      queue.updateItemStatus(
+        'item-64',
+        DownloadStatus.completed,
+        progress: 1,
+        filePath: '/selected/64',
+      );
+      final after = container.read(downloadQueueProvider);
+      expect(publications, 1);
+      expect(after.items[64].status, DownloadStatus.completed);
+      expect(after.items[64].progress, 1);
+      expect(after.items[64].filePath, '/selected/64');
+      for (var i = 0; i < items.length; i++) {
+        if (i != 64) expect(after.items[i], same(items[i]));
+      }
+      expect(initial.items, items);
+      _expectConsistentLookup(initial);
+
+      queue.updateItemStatus(
+        'item-64',
+        DownloadStatus.completed,
+        progress: 1,
+        filePath: '/selected/64',
+      );
+      queue.updateProgress('item-64', 0.5);
+      expect(container.read(downloadQueueProvider), same(after));
+      expect(publications, 1);
+    } finally {
+      container.dispose();
+    }
+  });
 
   test('empty queue failure is a no-op', () {
     const initial = DownloadQueueState();

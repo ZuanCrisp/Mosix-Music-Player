@@ -6,8 +6,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/file_access.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/file_access.dart';
 
 class _EmbeddedCoverCacheEntry {
   final String previewPath;
@@ -821,7 +821,19 @@ class DownloadedEmbeddedCoverResolver {
     try {
       if (!await preview.exists() || await preview.length() <= 0) return false;
       if (!await sidecar.exists()) return false;
-      return await sidecar.readAsString() == cleanPath;
+      if (await sidecar.readAsString() != cleanPath) return false;
+      final input = await preview.open();
+      try {
+        final header = await input.read(4);
+        // Older ID3 extraction could cache an extra NUL before JPEG data.
+        return !(header.length == 4 &&
+            header[0] == 0 &&
+            header[1] == 0xff &&
+            header[2] == 0xd8 &&
+            header[3] == 0xff);
+      } finally {
+        await input.close();
+      }
     } catch (_) {
       return false;
     }
@@ -1046,9 +1058,7 @@ class DownloadedEmbeddedCoverResolver {
   }
 
   static Future<void> _deleteFileIfPresent(File file) async {
-    try {
-      if (await file.exists()) await file.delete();
-    } catch (_) {}
+    await deleteFileQuietly(file);
   }
 
   static Future<void> _clearDirectoryContents(Directory directory) async {

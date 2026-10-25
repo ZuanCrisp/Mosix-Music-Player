@@ -24,14 +24,14 @@ extension _TrackMetadataMornye on _TrackMetadataScreenState {
               title: Text(context.l10n.trackMetadata),
               leadingWidth: 64,
               leading: Padding(
-                padding: const EdgeInsets.only(left: 16),
+                padding: const EdgeInsetsDirectional.only(start: 16),
                 child: HeaderCircleButton(
-                  icon: CupertinoIcons.chevron_back,
+                  icon: CupertinoIcons.back,
                   tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                   onPressed: _popWithMetadataResult,
                 ),
               ),
-              actionsPadding: const EdgeInsets.only(right: 16),
+              actionsPadding: const EdgeInsetsDirectional.only(end: 16),
               actions: [
                 Builder(
                   builder: (buttonContext) => HeaderCircleButton(
@@ -114,9 +114,27 @@ extension _TrackMetadataMornye on _TrackMetadataScreenState {
                             ),
                           ),
                         const SizedBox(height: 12),
-                        HeaderMetaRow(items: _headerMetadataItems(context)),
+                        // Centered under the title; desktop detail headers
+                        // start the row at the leading edge instead.
+                        Center(
+                          child: HeaderMetaRow(
+                            items: _headerMetadataItems(context),
+                          ),
+                        ),
                         const SizedBox(height: 16),
-                        _buildActionButtons(context, ref, scheme, _fileExists),
+                        // Music sizes its header buttons to the title column
+                        // rather than the window.
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 400),
+                            child: _buildActionButtons(
+                              context,
+                              ref,
+                              scheme,
+                              _fileExists,
+                            ),
+                          ),
+                        ),
                         if (_fileAccessMessage(context) case final message?)
                           Padding(
                             padding: const EdgeInsets.only(top: 16),
@@ -137,7 +155,7 @@ extension _TrackMetadataMornye on _TrackMetadataScreenState {
               child: Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth: adaptiveContentMaxWidth(
+                    maxWidth: _trackMetadataContentMaxWidth(
                       MediaQuery.sizeOf(context).width,
                     ),
                   ),

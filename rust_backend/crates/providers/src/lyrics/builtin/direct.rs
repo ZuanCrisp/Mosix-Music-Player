@@ -1,3 +1,5 @@
+//! Built-in lyrics providers that query their services directly (QQ Music, Kugou, Genius).
+
 use super::*;
 use crate::lyrics::http;
 use base64::{
@@ -5,8 +7,8 @@ use base64::{
     engine::general_purpose::{GeneralPurpose, GeneralPurposeConfig},
 };
 use html5ever::tendril::TendrilSink;
+use mornye_core::lyrics::lrc;
 use scraper::{Html, HtmlTreeSink, Node};
-use spotiflac_core::lyrics::lrc;
 
 fn base64_text(text: &str, raw: bool) -> Result<String, LyricsError> {
     // Go accepts nonzero padding bits and ignores CR/LF, but not other spaces.
@@ -65,28 +67,13 @@ impl BuiltinLyricsClient {
         if query.trim().is_empty() {
             return Err(LyricsError::NotFound("empty search query".into()));
         }
-        let params = pairs(&[
-            ("format", "json"),
-            ("inCharset", "utf8"),
-            ("outCharset", "utf8"),
-            ("platform", "yqq.json"),
-            ("new_json", "1"),
-            ("w", query.trim()),
-            ("p", "1"),
-            ("n", "20"),
-            ("t", "0"),
-            ("aggr", "1"),
-            ("cr", "1"),
-            ("catZhida", "1"),
-            ("lossless", "1"),
-            ("flag_qc", "0"),
-            ("remoteplace", "txt.yqq.center"),
-            ("needNewCode", "0"),
-        ]);
+        // The desktop search CGI now answers HTTP 500. Search suggestions
+        // still list songs, without durations, so the song detail CGI checks
+        // the length of the best few title and artist matches.
         let response: models::QqSearch = http::decode(
             &self.direct_body(
-                "https://c.y.qq.com/soso/fcgi-bin/client_search_cp",
-                params,
+                "https://c.y.qq.com/splcloud/fcgi-bin/smartbox_new.fcg",
+                pairs(&[("format", "json"), ("key", query.trim())]),
                 true,
                 check,
             )?,
@@ -99,15 +86,45 @@ impl BuiltinLyricsClient {
                 response.code
             )));
         }
-        let songs = response.data.song.list.unwrap_or_default();
-        let selected = select(&songs, request, |song| {
-            let artist = artists(song.singer.as_deref().unwrap_or_default());
-            let duration = song.interval as f64;
-            let allowed = matches(&song.name, &artist, duration, request);
-            (song.name.clone(), artist, duration, allowed)
-        })
-        .filter(|song| !song.mid.trim().is_empty())
-        .ok_or_else(|| LyricsError::NotFound("no matching song found on QQ Music".into()))?;
+        let mut songs: Vec<_> = response
+            .data
+            .song
+            .itemlist
+            .unwrap_or_default()
+            .into_iter()
+            .map(|song| {
+                let artist = song.singer.replace('/', ", ");
+                (song, artist)
+            })
+            .filter(|(song, artist)| {
+                !song.mid.trim().is_empty() && matches(&song.name, artist, 0.0, request)
+            })
+            .collect();
+        // Stable, so equal scores keep QQ's own ranking.
+        songs.sort_by_key(|(song, artist)| {
+            std::cmp::Reverse(matching::score(
+                &song.name,
+                artist,
+                0.0,
+                &request.track,
+                &request.artist,
+                request.duration,
+            ))
+        });
+        let mut selected = None;
+        for (song, _) in songs.iter().take(3) {
+            match self.qq_duration(&song.mid, check) {
+                Ok(Some(duration)) if !matching::duration_matches(duration, request.duration) => {}
+                Err(error @ LyricsError::Cancelled(_)) => return Err(error),
+                // A detail outage leaves the length unknown, not mismatched.
+                _ => {
+                    selected = Some(song);
+                    break;
+                }
+            }
+        }
+        let selected = selected
+            .ok_or_else(|| LyricsError::NotFound("no matching song found on QQ Music".into()))?;
         let params = pairs(&[
             ("format", "json"),
             ("inCharset", "utf8"),
@@ -116,7 +133,7 @@ impl BuiltinLyricsClient {
             ("platform", "yqq.json"),
             ("needNewCode", "0"),
             ("songmid", &selected.mid),
-            ("songid", &selected.id.to_string()),
+            ("songid", &selected.id),
         ]);
         let response: models::QqLyrics = http::decode(
             &self.direct_body(
@@ -146,6 +163,26 @@ impl BuiltinLyricsClient {
             base64_text(raw, false).or_else(|_| base64_text(raw, true))?
         };
         from_text(&text, "QQ Music", "QQ Music Direct")
+    }
+
+    fn qq_duration(&self, mid: &str, check: &Check<'_>) -> Result<Option<f64>, LyricsError> {
+        let response: models::QqSongDetail = http::decode(
+            &self.direct_body(
+                "https://c.y.qq.com/v8/fcg-bin/fcg_play_single_song.fcg",
+                pairs(&[("format", "json"), ("songmid", mid)]),
+                true,
+                check,
+            )?,
+            false,
+            check,
+        )?;
+        Ok(response
+            .data
+            .unwrap_or_default()
+            .first()
+            .filter(|_| response.code == 0)
+            .map(|song| song.interval as f64)
+            .filter(|duration| *duration > 0.0))
     }
 
     pub(super) fn kugou(
@@ -393,5 +430,36 @@ mod tests {
         assert!(base64_text("Zh", false).is_err());
         assert!(base64_text("Z h==", false).is_err());
         assert!(base64_text("Zg==", true).is_err());
+    }
+
+    #[test]
+    #[ignore = "requires live QQ Music access"]
+    fn live_qqmusic_matches_by_suggestion_and_checks_length() {
+        struct Resolver;
+        impl TrackResolver for Resolver {
+            fn deezer_id_from_spotify(
+                &self,
+                _: &str,
+                _: &Check<'_>,
+            ) -> Result<String, LyricsError> {
+                unreachable!("QQ Music does not resolve tracks")
+            }
+        }
+        let network = NetworkService::new().unwrap();
+        let client = BuiltinLyricsClient::new(&network, "", Arc::new(Resolver));
+        let mut request = SearchRequest {
+            track: "晴天".into(),
+            artist: "周杰伦".into(),
+            duration: 269.0,
+            ..SearchRequest::default()
+        };
+        let lyrics = client.qqmusic(&request, &|| Ok(())).unwrap();
+        assert!(lyrics.is_synced());
+        assert_eq!(lyrics.source, "QQ Music Direct");
+        request.duration = 120.0;
+        assert!(matches!(
+            client.qqmusic(&request, &|| Ok(())),
+            Err(LyricsError::NotFound(_))
+        ));
     }
 }

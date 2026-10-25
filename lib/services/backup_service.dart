@@ -7,12 +7,14 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/constants/app_info.dart';
-import 'package:mosix/services/history_database.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/sqlite_native_snapshot.dart';
-import 'package:mosix/services/user_profile_store.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/constants/app_info.dart';
+import 'package:mornye/services/history_database.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/sqlite_native_snapshot.dart';
+import 'package:mornye/services/user_profile_store.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/utils/native_platform_name.dart';
 
 typedef BackupHistoryPageLoader =
     Future<List<Map<String, dynamic>>> Function(int limit, int offset);
@@ -164,7 +166,8 @@ class BackupBundle {
 class BackupService {
   static final _log = AppLogger('BackupService');
 
-  static const String magic = 'spotiflac-backup';
+  static const String magic = 'mornye-backup';
+  static const String _legacyMagic = 'spotiflac-backup';
   // V3 permits omitted categories. Older readers reject it instead of treating
   // an omitted history as an empty history and clearing existing downloads.
   static const int formatVersion = 3;
@@ -177,11 +180,13 @@ class BackupService {
   static const int _maxProfilePhotoBytes = 2 << 20;
   static const String _profilePhotoEntry = 'profile/avatar.png';
 
+  @visibleForTesting
   static String encode(Map<String, dynamic> envelope) =>
       const JsonEncoder.withIndent('  ').convert(envelope);
 
   /// Legacy JSON envelope retained so backups from earlier releases and unit
   /// tests remain readable. New backups are written by [writeBackupArchive].
+  @visibleForTesting
   static Map<String, dynamic> buildEnvelope({
     required Map<String, dynamic>? settings,
     required List<Map<String, dynamic>> history,
@@ -192,7 +197,7 @@ class BackupService {
     return {
       'magic': magic,
       'format_version': 1,
-      'app': 'Mosix',
+      'app': AppInfo.appName,
       'app_version': AppInfo.displayVersion,
       'created_at': DateTime.now().toIso8601String(),
       'data': {
@@ -225,7 +230,7 @@ class BackupService {
     final staging = await Directory(
       p.join(
         tempRoot.path,
-        'spotiflac_backup_${DateTime.now().microsecondsSinceEpoch}',
+        'mornye_backup_${DateTime.now().microsecondsSinceEpoch}',
       ),
     ).create(recursive: true);
     final historyFile = File(p.join(staging.path, 'history.ndjson'));
@@ -277,7 +282,7 @@ class BackupService {
       final metadata = {
         'magic': magic,
         'format_version': formatVersion,
-        'app': 'Mosix',
+        'app': AppInfo.appName,
         'app_version': AppInfo.displayVersion,
         'created_at': DateTime.now().toIso8601String(),
         'history_count': historyCount,
@@ -341,9 +346,7 @@ class BackupService {
       try {
         if (await staging.exists()) await staging.delete(recursive: true);
       } catch (_) {}
-      try {
-        if (await partFile.exists()) await partFile.delete();
-      } catch (_) {}
+      await deleteFileQuietly(partFile);
     }
   }
 
@@ -378,9 +381,7 @@ class BackupService {
     final stamp =
         '${now.year}${two(now.month)}${two(now.day)}_'
         '${two(now.hour)}${two(now.minute)}${two(now.second)}';
-    return File(
-      p.join(backupsDir.path, 'spotiflac_mobile_backup_$stamp.$fileExtension'),
-    );
+    return File(p.join(backupsDir.path, 'mornye_backup_$stamp.$fileExtension'));
   }
 
   static Future<BackupBundle?> parseFile(
@@ -440,7 +441,7 @@ class BackupService {
         'operation': 'backup_history_export',
         'history_path': snapshotPath,
         'ndjson_path': path,
-        'platform': Platform.isAndroid ? 'android' : 'ios',
+        'platform': nativePlatformName(),
         if (Platform.isIOS)
           'documents_path': (await getApplicationDocumentsDirectory()).path,
       });
@@ -485,7 +486,7 @@ class BackupService {
         'ndjson_path': bundle._historyNdjsonPath,
         if (bundle._historyCount != null)
           'expected_count': bundle._historyCount,
-        'platform': Platform.isAndroid ? 'android' : 'ios',
+        'platform': nativePlatformName(),
         'mode': 'replace',
       });
       if (result['committed'] != true) {
@@ -535,7 +536,7 @@ class BackupService {
     Directory temporary,
   ) async {
     await temporary.create(recursive: true);
-    final staging = await temporary.createTemp('spotiflac_legacy_backup_');
+    final staging = await temporary.createTemp('mornye_legacy_backup_');
     try {
       final historyPath = p.join(staging.path, 'history.ndjson');
       final metadataPath = p.join(staging.path, 'metadata.json');
@@ -670,7 +671,7 @@ class BackupService {
       if (rootRaw is! Map) return null;
       final root = Map<String, dynamic>.from(rootRaw);
       final version = root['format_version'];
-      if (root['magic'] != magic ||
+      if ((root['magic'] != magic && root['magic'] != _legacyMagic) ||
           (version != 2 && version != formatVersion)) {
         return null;
       }
@@ -684,7 +685,7 @@ class BackupService {
       extractionDir = await Directory(
         p.join(
           temporaryDirectory.path,
-          'spotiflac_restore_${DateTime.now().microsecondsSinceEpoch}',
+          'mornye_restore_${DateTime.now().microsecondsSinceEpoch}',
         ),
       ).create(recursive: true);
       String? historyPath;
@@ -808,7 +809,10 @@ class BackupService {
     }
     if (decoded is! Map) return null;
     final root = Map<String, dynamic>.from(decoded);
-    if (root['magic'] != magic || root['data'] is! Map) return null;
+    if ((root['magic'] != magic && root['magic'] != _legacyMagic) ||
+        root['data'] is! Map) {
+      return null;
+    }
     final data = Map<String, dynamic>.from(root['data'] as Map);
     final history = <Map<String, dynamic>>[];
     if (data['history'] is List) {

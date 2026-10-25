@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -71,6 +72,10 @@ public final class LookupTestDocumentsProvider extends DocumentsProvider {
                 }
                 add("nested:音楽/opaque", "root", "音楽 🎵", Document.MIME_TYPE_DIR);
                 add("song:opaque/%", "nested:音楽/opaque", "歌 🎵.flac", "audio/flac");
+                if (projectionMode.equals("no-path")) {
+                    add("root/album", "root", "Legacy", Document.MIME_TYPE_DIR);
+                    add("root/album/song", "root/album", "Legacy.flac", "audio/flac");
+                }
                 if (extras.getBoolean("mimeCases")) {
                     add("mime:null", "root", "Null.flac", null);
                     add("mime:empty", "root", "Empty.flac", "");
@@ -87,7 +92,7 @@ public final class LookupTestDocumentsProvider extends DocumentsProvider {
                 try {
                     getContext().grantUriPermission(
                         extras.getString("targetPackage"),
-                        DocumentsContract.buildTreeDocumentUri("com.spotiflac.test.documents.lookup", "root"),
+                        DocumentsContract.buildTreeDocumentUri("com.mornye.test.documents.lookup", "root"),
                         Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
                             Intent.FLAG_GRANT_PREFIX_URI_PERMISSION |
                             (extras.getBoolean("persistable") ? Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION : 0)
@@ -207,6 +212,19 @@ public final class LookupTestDocumentsProvider extends DocumentsProvider {
     }
 
     @Override
+    public DocumentsContract.Path findDocumentPath(String parentId, String childId) throws FileNotFoundException {
+        if (projectionMode.equals("no-path")) throw new UnsupportedOperationException("Path unavailable");
+        ArrayList<String> path = new ArrayList<>();
+        Entry entry = entries.get(childId);
+        while (entry != null) {
+            path.add(0, entry.id);
+            if (entry.id.equals(parentId)) return new DocumentsContract.Path(null, path);
+            entry = entries.get(entry.parent);
+        }
+        throw new FileNotFoundException(childId);
+    }
+
+    @Override
     public boolean isChildDocument(String parentId, String documentId) {
         Entry entry = entries.get(documentId);
         while (entry != null && entry.parent != null) {
@@ -227,7 +245,8 @@ public final class LookupTestDocumentsProvider extends DocumentsProvider {
     public String renameDocument(String documentId, String displayName) throws FileNotFoundException {
         Entry entry = entries.get(documentId);
         if (entry == null) throw new FileNotFoundException(documentId);
-        if (failFinalRename && entry.name.endsWith(".partial") && displayName.equals("Song.flac")) {
+        if (failFinalRename && (entry.name.endsWith(".partial") || entry.name.contains(".partial."))
+                && displayName.equals("Song.flac")) {
             throw new FileNotFoundException("Injected publish rename failure");
         }
         String newId = "renamed:" + sequence++;

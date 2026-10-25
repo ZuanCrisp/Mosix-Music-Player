@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/screens/settings/lyrics_provider_priority_page.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/lyrics_size_setting.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/screens/settings/lyrics_provider_priority_page.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_text_field.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/lyrics_provider_names.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/widgets/lyrics_size_setting.dart';
 
 class LyricsSettingsPage extends ConsumerWidget {
   const LyricsSettingsPage({super.key});
@@ -34,6 +38,7 @@ class LyricsSettingsPage extends ConsumerWidget {
             ),
             SliverToBoxAdapter(
               child: SettingsGroup(
+                connected: true,
                 children: [
                   const LyricsSizeSetting(),
                   SettingsSwitchItem(
@@ -173,6 +178,7 @@ class LyricsSettingsPage extends ConsumerWidget {
             ],
 
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const NavBarSliverSpacer(),
           ],
         ),
       ),
@@ -190,20 +196,6 @@ class LyricsSettingsPage extends ConsumerWidget {
     }
   }
 
-  static const _providerDisplayNames = <String, String>{
-    'lrclib': 'LRCLIB',
-    'netease': 'Netease',
-    'musixmatch': 'Musixmatch',
-    'apple_music': 'Apple Music',
-    'qqmusic': 'QQ Music',
-    'spotify': 'Spotify',
-    'deezer': 'Deezer',
-    'youtube': 'YouTube',
-    'kugou': 'Kugou',
-    'genius': 'Genius',
-    'lyricsplus': 'LyricsPlus',
-  };
-
   String _getLyricsProvidersSubtitle(
     BuildContext context,
     List<String> providers,
@@ -213,11 +205,7 @@ class LyricsSettingsPage extends ConsumerWidget {
     return providers
         .map(
           (provider) =>
-              _providerDisplayNames[provider] ??
-              extensionProviderNames[provider] ??
-              (provider.startsWith('extension:')
-                  ? provider.substring('extension:'.length)
-                  : provider),
+              lyricsProviderDisplayName(provider, extensionProviderNames),
         )
         .join(' > ');
   }
@@ -227,59 +215,41 @@ class LyricsSettingsPage extends ConsumerWidget {
     WidgetRef ref,
     String current,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    showAppModalBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      builder: (context) => SafeArea(
+      title: context.l10n.lyricsMode,
+      subtitle: context.l10n.lyricsModeDescription,
+      builder: (context, controller) => SingleChildScrollView(
+        controller: controller,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-              child: Text(
-                context.l10n.lyricsMode,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: Text(
-                context.l10n.lyricsModeDescription,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            AppSheetOption(
-              leading: const Icon(Icons.audiotrack),
+            AppSheetOption.choice(
+              leading: const AppIcon(Icons.audiotrack),
               title: Text(context.l10n.lyricsModeEmbed),
               subtitle: Text(context.l10n.lyricsModeEmbedSubtitle),
-              trailing: current == 'embed' ? const Icon(Icons.check) : null,
+              selected: current == 'embed',
               onTap: () {
                 ref.read(settingsProvider.notifier).setLyricsMode('embed');
                 Navigator.pop(context);
               },
             ),
-            AppSheetOption(
-              leading: const Icon(Icons.insert_drive_file_outlined),
+            AppSheetOption.choice(
+              leading: const AppIcon(Icons.insert_drive_file_outlined),
               title: Text(context.l10n.lyricsModeExternal),
               subtitle: Text(context.l10n.lyricsModeExternalSubtitle),
-              trailing: current == 'external' ? const Icon(Icons.check) : null,
+              selected: current == 'external',
               onTap: () {
                 ref.read(settingsProvider.notifier).setLyricsMode('external');
                 Navigator.pop(context);
               },
             ),
-            AppSheetOption(
-              leading: const Icon(Icons.library_music_outlined),
+            AppSheetOption.choice(
+              leading: const AppIcon(Icons.library_music_outlined),
               title: Text(context.l10n.lyricsModeBoth),
               subtitle: Text(context.l10n.lyricsModeBothSubtitle),
-              trailing: current == 'both' ? const Icon(Icons.check) : null,
+              selected: current == 'both',
               onTap: () {
                 ref.read(settingsProvider.notifier).setLyricsMode('both');
                 Navigator.pop(context);
@@ -297,46 +267,24 @@ class LyricsSettingsPage extends ConsumerWidget {
     WidgetRef ref,
     String currentLanguage,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
     final controller = TextEditingController(text: currentLanguage);
 
-    showAppModalBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      isScrollControlled: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 24,
-          bottom: 24 + MediaQuery.viewInsetsOf(context).bottom,
-        ),
+      title: context.l10n.downloadMusixmatchLanguage,
+      subtitle: context.l10n.downloadMusixmatchLanguageDesc,
+      builder: (context, scrollController) => SingleChildScrollView(
+        controller: scrollController,
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              context.l10n.downloadMusixmatchLanguage,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.l10n.downloadMusixmatchLanguageDesc,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
+            AppTextField(
               controller: controller,
               textInputAction: TextInputAction.done,
-              decoration: InputDecoration(
-                labelText: context.l10n.downloadMusixmatchLanguageCode,
-                hintText: context.l10n.downloadMusixmatchLanguageHint,
-              ),
+              label: context.l10n.downloadMusixmatchLanguageCode,
+              hint: context.l10n.downloadMusixmatchLanguageHint,
             ),
             const SizedBox(height: 16),
             Builder(

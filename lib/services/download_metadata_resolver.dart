@@ -1,11 +1,11 @@
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/models/extension.dart';
-import 'package:mosix/services/download_album_metadata.dart';
-import 'package:mosix/services/download_track_metadata.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/utils/string_utils.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/models/extension.dart';
+import 'package:mornye/services/download_album_metadata.dart';
+import 'package:mornye/services/download_track_metadata.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/utils/string_utils.dart';
 
 class DownloadMetadataLookup {
   final Track track;

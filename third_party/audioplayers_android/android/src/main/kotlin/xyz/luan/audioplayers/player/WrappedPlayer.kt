@@ -24,6 +24,11 @@ class WrappedPlayer internal constructor(
 ) {
     private var player: PlayerWrapper? = null
 
+    fun setEqualizer(configuration: Map<String, Any?>) {
+        val output = player as? MediaPlayerWrapper
+        if (output != null) output.setEqualizer(configuration)
+    }
+
     var source: Source? = null
         set(value) {
             if (field != value) {
@@ -320,6 +325,10 @@ class WrappedPlayer internal constructor(
     }
 
     fun onError(what: Int, extra: Int): Boolean {
+        val wasPrepared = prepared
+        prepared = false
+        playing = false
+        focusManager.handleStop()
         val whatMsg = if (what == MediaPlayer.MEDIA_ERROR_SERVER_DIED) {
             "MEDIA_ERROR_SERVER_DIED"
         } else {
@@ -333,20 +342,18 @@ class WrappedPlayer internal constructor(
             MediaPlayer.MEDIA_ERROR_TIMED_OUT -> "MEDIA_ERROR_TIMED_OUT"
             else -> "MEDIA_ERROR_UNKNOWN {extra:$extra}"
         }
-        if (!prepared && extraMsg == "MEDIA_ERROR_SYSTEM") {
-            handleError(
-                "AndroidAudioError",
-                "Failed to set source. For troubleshooting, see: " +
-                    "https://github.com/bluefireteam/audioplayers/blob/main/troubleshooting.md",
-                "$whatMsg, $extraMsg",
-            )
-        } else {
-            // When an error occurs, reset player to not [prepared].
-            // Then no functions will be called, which end up in an illegal player state.
-            prepared = false
-            handleError("AndroidAudioError", whatMsg, extraMsg)
-        }
-        return false
+        handleError(
+            "AndroidAudioError",
+            if (wasPrepared) {
+                "Android could not play this audio."
+            } else {
+                "Android could not open this audio source."
+            },
+            "$whatMsg, $extraMsg",
+        )
+        // An unhandled error also invokes OnCompletionListener, which would
+        // incorrectly advance the application's queue after a playback failure.
+        return true
     }
 
     /**

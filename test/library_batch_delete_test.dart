@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/services/library_cleanup.dart';
-import 'package:mosix/utils/confirm_and_delete_tracks.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/services/library_cleanup.dart';
+import 'package:mornye/utils/confirm_and_delete_tracks.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
 import 'package:sqflite/sqflite.dart';
 
 class _DeleteDatabase implements Database, Transaction {
@@ -138,9 +139,13 @@ void main() {
       await tester.tap(find.text('Start'));
       await tester.pumpAndSettle();
       if (mode == 'cancel') {
-        await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+        await tester.tap(find.widgetWithText(AppDialogAction, 'Cancel'));
       } else {
-        await tester.tap(find.byType(FilledButton));
+        await tester.tap(
+          find.byWidgetPredicate(
+            (widget) => widget is AppDialogAction && widget.filled,
+          ),
+        );
       }
       await tester.pumpAndSettle();
       if (mode == 'cancel' || mode == 'none') {

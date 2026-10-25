@@ -26,7 +26,7 @@ extension _TrackMetadataLyricsAndSaving on _TrackMetadataScreenState {
                   ),
                 ),
                 if (hasDisplayLyrics)
-                  IconButton(
+                  AppIconButton(
                     icon: Icon(
                       context.isMornye ? CupertinoIcons.doc_on_doc : Icons.copy,
                       size: 20,
@@ -52,16 +52,13 @@ extension _TrackMetadataLyricsAndSaving on _TrackMetadataScreenState {
               const Center(
                 child: Padding(
                   padding: EdgeInsets.all(20),
-                  child: CircularProgressIndicator(),
+                  child: AppLoadingIndicator(),
                 ),
               )
+            // Status rows sit flat on the lyrics card instead of a second box.
             else if (_lyricsError != null)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: colorScheme.errorContainer.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   children: [
                     Icon(
@@ -73,10 +70,11 @@ extension _TrackMetadataLyricsAndSaving on _TrackMetadataScreenState {
                     Expanded(
                       child: Text(
                         _lyricsError!,
-                        style: TextStyle(color: colorScheme.onErrorContainer),
+                        style: TextStyle(color: colorScheme.onSurface),
                       ),
                     ),
-                    TextButton(
+                    ExpressiveButton(
+                      text: true,
                       onPressed: _fetchOnlineLyrics,
                       child: Text(context.l10n.dialogRetry),
                     ),
@@ -84,25 +82,21 @@ extension _TrackMetadataLyricsAndSaving on _TrackMetadataScreenState {
                 ),
               )
             else if (_isInstrumental)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.music_note,
-                      color: colorScheme.tertiary,
+                      color: colorScheme.onSurfaceVariant,
                       size: 20,
                     ),
                     const SizedBox(width: 12),
                     Text(
                       context.l10n.trackInstrumental,
                       style: TextStyle(
-                        color: colorScheme.onTertiaryContainer,
+                        color: colorScheme.onSurfaceVariant,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -113,14 +107,29 @@ extension _TrackMetadataLyricsAndSaving on _TrackMetadataScreenState {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // A visible scrollbar and a fade at the cut show that the
+                  // box scrolls, instead of a line clipped in half. Full
+                  // width keeps the scrollbar at the card's edge rather than
+                  // after the longest line.
                   Container(
+                    width: double.infinity,
                     constraints: const BoxConstraints(maxHeight: 300),
-                    child: SingleChildScrollView(
-                      child: Text(
-                        _lyrics!,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface,
-                          height: 1.6,
+                    child: ScrollEdgeFade(
+                      size: 48,
+                      fadeContent: true,
+                      child: Scrollbar(
+                        controller: _lyricsScrollController,
+                        thumbVisibility: isDesktopPlatform,
+                        child: SingleChildScrollView(
+                          controller: _lyricsScrollController,
+                          child: Text(
+                            _lyrics!,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: colorScheme.onSurface,
+                                  height: 1.6,
+                                ),
+                          ),
                         ),
                       ),
                     ),
@@ -128,18 +137,16 @@ extension _TrackMetadataLyricsAndSaving on _TrackMetadataScreenState {
                   if (!_lyricsEmbedded && _fileExists && !_isNetworkItem) ...[
                     const SizedBox(height: 16),
                     Center(
-                      child: FilledButton.tonalIcon(
+                      child: ExpressiveButton(
+                        tonal: true,
                         onPressed: _isEmbedding ? null : _embedLyrics,
                         icon: _isEmbedding
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
+                            ? const AppLoadingIndicator(
+                                size: 18,
+                                strokeWidth: 2,
                               )
                             : const Icon(Icons.save_alt),
-                        label: Text(context.l10n.trackEmbedLyrics),
+                        child: Text(context.l10n.trackEmbedLyrics),
                       ),
                     ),
                   ],
@@ -148,14 +155,8 @@ extension _TrackMetadataLyricsAndSaving on _TrackMetadataScreenState {
             else if (_embeddedLyricsChecked && _fileExists)
               Column(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.5,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(
                       children: [
                         Icon(
@@ -177,20 +178,22 @@ extension _TrackMetadataLyricsAndSaving on _TrackMetadataScreenState {
                   ),
                   const SizedBox(height: 12),
                   Center(
-                    child: FilledButton.tonalIcon(
+                    child: ExpressiveButton(
+                      tonal: true,
                       onPressed: _fetchOnlineLyrics,
                       icon: const Icon(Icons.cloud_download_outlined),
-                      label: Text(context.l10n.trackFetchOnlineLyrics),
+                      child: Text(context.l10n.trackFetchOnlineLyrics),
                     ),
                   ),
                 ],
               )
             else
               Center(
-                child: FilledButton.tonalIcon(
+                child: ExpressiveButton(
+                  tonal: true,
                   onPressed: _fetchLyrics,
                   icon: const Icon(Icons.download),
-                  label: Text(context.l10n.trackLoadLyrics),
+                  child: Text(context.l10n.trackLoadLyrics),
                 ),
               ),
           ],
@@ -527,7 +530,9 @@ extension _TrackMetadataLyricsAndSaving on _TrackMetadataScreenState {
         try {
           final result = await PlatformBridge.readFileMetadata(workingPath);
           if (result['error'] == null) {
-            final mapped = _mapMetadataForTagEmbed(result);
+            // Map separately so a non-explicit file keeps the fallback advisory.
+            final mapped = <String, String>{};
+            mergePlatformMetadataForTagEmbed(target: mapped, source: result);
             metadata.addAll(mapped);
           }
         } catch (e) {
@@ -671,156 +676,151 @@ extension _TrackMetadataLyricsAndSaving on _TrackMetadataScreenState {
 
   bool get _isSafFile => isContentUri(cleanFilePath);
 
+  /// Writes `baseName.extension` as a sidecar of the current track.
+  ///
+  /// `writeTo` renders the file at the given path and returns the bridge
+  /// result, or null when it has already told the user why nothing was
+  /// written. SAF tracks are rendered into a temp directory and published to
+  /// the download tree; local tracks are written next to the audio file.
+  /// Exceptions propagate to the caller.
+  Future<void> _publishSidecarFile({
+    required String baseName,
+    required String tempDirPrefix,
+    required String extension,
+    required String mimeType,
+    required String Function() successMessage,
+    required bool hideCurrentSnackBar,
+    required Future<Map<String, dynamic>?> Function(String outputPath) writeTo,
+  }) async {
+    void showMessage(String message) {
+      final messenger = ScaffoldMessenger.of(context);
+      if (hideCurrentSnackBar) {
+        messenger.hideCurrentSnackBar();
+      }
+      messenger.showSnackBar(SnackBar(content: Text(message)));
+    }
+
+    final fileName = '$baseName.$extension';
+
+    if (_isSafFile) {
+      final tempDir = await Directory.systemTemp.createTemp(tempDirPrefix);
+      final tempOutput = '${tempDir.path}${Platform.pathSeparator}$fileName';
+
+      final result = await writeTo(tempOutput);
+      if (result == null) {
+        return;
+      }
+
+      if (result['error'] != null) {
+        if (mounted) {
+          showMessage(
+            context.l10n.trackSaveFailed(
+              context.friendlyError(result['error']),
+            ),
+          );
+        }
+        try {
+          await Directory(tempDir.path).delete(recursive: true);
+        } catch (_) {}
+        return;
+      }
+
+      final treeUri = _downloadItem?.downloadTreeUri;
+      final relativeDir = _downloadItem?.safRelativeDir ?? '';
+      if (treeUri != null && treeUri.isNotEmpty) {
+        final safUri = await PlatformBridge.createSafFileFromPath(
+          treeUri: treeUri,
+          relativeDir: relativeDir,
+          fileName: fileName,
+          mimeType: mimeType,
+          srcPath: tempOutput,
+        );
+        try {
+          await Directory(tempDir.path).delete(recursive: true);
+        } catch (_) {}
+        if (mounted) {
+          if (safUri != null) {
+            showMessage(successMessage());
+          } else {
+            showMessage(
+              context.l10n.trackSaveFailed('Failed to write to storage'),
+            );
+          }
+        }
+      } else {
+        try {
+          await Directory(tempDir.path).delete(recursive: true);
+        } catch (_) {}
+        if (mounted) {
+          showMessage(context.l10n.trackSaveFailed('No storage access'));
+        }
+      }
+      return;
+    }
+
+    final dir = _getFileDirectory();
+    final outputPath = '$dir${Platform.pathSeparator}$fileName';
+
+    final result = await writeTo(outputPath);
+    if (result == null) {
+      return;
+    }
+
+    if (mounted) {
+      if (result['error'] != null) {
+        showMessage(
+          context.l10n.trackSaveFailed(context.friendlyError(result['error'])),
+        );
+      } else {
+        showMessage(successMessage());
+      }
+    }
+  }
+
   Future<void> _saveCoverArt() async {
     try {
       final baseName = _buildSaveBaseName();
 
-      if (_isSafFile) {
-        final tempDir = await Directory.systemTemp.createTemp('cover_');
-        final tempOutput =
-            '${tempDir.path}${Platform.pathSeparator}$baseName.jpg';
-
-        Map<String, dynamic> result;
-        if (_fileExists) {
-          // Prefer extracting cover from the already-downloaded file to avoid
-          // a redundant network request.
-          result = await PlatformBridge.extractCoverToFile(
-            cleanFilePath,
-            tempOutput,
-          );
-          if (result['error'] != null &&
-              _coverUrl != null &&
-              _coverUrl!.isNotEmpty) {
-            result = await PlatformBridge.downloadCoverToFile(
-              _coverUrl!,
-              tempOutput,
+      await _publishSidecarFile(
+        baseName: baseName,
+        tempDirPrefix: 'cover_',
+        extension: 'jpg',
+        mimeType: 'image/jpeg',
+        successMessage: () => context.l10n.trackCoverSaved(baseName),
+        hideCurrentSnackBar: false,
+        writeTo: (outputPath) async {
+          Map<String, dynamic> result;
+          if (_fileExists) {
+            // Prefer extracting cover from the already-downloaded file to
+            // avoid a redundant network request.
+            result = await PlatformBridge.extractCoverToFile(
+              cleanFilePath,
+              outputPath,
             );
-          }
-        } else if (_coverUrl != null && _coverUrl!.isNotEmpty) {
-          result = await PlatformBridge.downloadCoverToFile(
-            _coverUrl!,
-            tempOutput,
-          );
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(context.l10n.trackCoverNoSource)),
-            );
-          }
-          return;
-        }
-
-        if (result['error'] != null) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  context.l10n.trackSaveFailed(
-                    context.friendlyError(result['error']),
-                  ),
-                ),
-              ),
-            );
-          }
-          try {
-            await Directory(tempDir.path).delete(recursive: true);
-          } catch (_) {}
-          return;
-        }
-
-        final treeUri = _downloadItem?.downloadTreeUri;
-        final relativeDir = _downloadItem?.safRelativeDir ?? '';
-        if (treeUri != null && treeUri.isNotEmpty) {
-          final safUri = await PlatformBridge.createSafFileFromPath(
-            treeUri: treeUri,
-            relativeDir: relativeDir,
-            fileName: '$baseName.jpg',
-            mimeType: 'image/jpeg',
-            srcPath: tempOutput,
-          );
-          try {
-            await Directory(tempDir.path).delete(recursive: true);
-          } catch (_) {}
-          if (mounted) {
-            if (safUri != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(context.l10n.trackCoverSaved(baseName))),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    context.l10n.trackSaveFailed('Failed to write to storage'),
-                  ),
-                ),
+            if (result['error'] != null &&
+                _coverUrl != null &&
+                _coverUrl!.isNotEmpty) {
+              result = await PlatformBridge.downloadCoverToFile(
+                _coverUrl!,
+                outputPath,
               );
             }
-          }
-        } else {
-          try {
-            await Directory(tempDir.path).delete(recursive: true);
-          } catch (_) {}
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  context.l10n.trackSaveFailed('No storage access'),
-                ),
-              ),
+          } else if (_coverUrl != null && _coverUrl!.isNotEmpty) {
+            result = await PlatformBridge.downloadCoverToFile(
+              _coverUrl!,
+              outputPath,
             );
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(context.l10n.trackCoverNoSource)),
+              );
+            }
+            return null;
           }
-        }
-        return;
-      }
-
-      final dir = _getFileDirectory();
-      final outputPath = '$dir${Platform.pathSeparator}$baseName.jpg';
-
-      Map<String, dynamic> result;
-      if (_fileExists) {
-        result = await PlatformBridge.extractCoverToFile(
-          cleanFilePath,
-          outputPath,
-        );
-        if (result['error'] != null &&
-            _coverUrl != null &&
-            _coverUrl!.isNotEmpty) {
-          result = await PlatformBridge.downloadCoverToFile(
-            _coverUrl!,
-            outputPath,
-          );
-        }
-      } else if (_coverUrl != null && _coverUrl!.isNotEmpty) {
-        result = await PlatformBridge.downloadCoverToFile(
-          _coverUrl!,
-          outputPath,
-        );
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.trackCoverNoSource)),
-          );
-        }
-        return;
-      }
-
-      if (mounted) {
-        if (result['error'] != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                context.l10n.trackSaveFailed(
-                  context.friendlyError(result['error']),
-                ),
-              ),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.trackCoverSaved(baseName))),
-          );
-        }
-      }
+          return result;
+        },
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -846,128 +846,22 @@ extension _TrackMetadataLyricsAndSaving on _TrackMetadataScreenState {
           );
       }
 
-      if (_isSafFile) {
-        final tempDir = await Directory.systemTemp.createTemp('lyrics_');
-        final tempOutput =
-            '${tempDir.path}${Platform.pathSeparator}$baseName.lrc';
-
-        final result = await PlatformBridge.fetchAndSaveLyrics(
+      await _publishSidecarFile(
+        baseName: baseName,
+        tempDirPrefix: 'lyrics_',
+        extension: 'lrc',
+        mimeType: 'application/octet-stream',
+        successMessage: () => context.l10n.trackLyricsSaved(baseName),
+        hideCurrentSnackBar: true,
+        writeTo: (outputPath) => PlatformBridge.fetchAndSaveLyrics(
           trackName: trackName,
           artistName: artistName,
           spotifyId: _spotifyId ?? '',
           durationMs: durationMs,
-          outputPath: tempOutput,
+          outputPath: outputPath,
           audioFilePath: _fileExists ? cleanFilePath : '',
-        );
-
-        if (result['error'] != null) {
-          if (mounted) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text(
-                    context.l10n.trackSaveFailed(
-                      context.friendlyError(result['error']),
-                    ),
-                  ),
-                ),
-              );
-          }
-          try {
-            await Directory(tempDir.path).delete(recursive: true);
-          } catch (_) {}
-          return;
-        }
-
-        final treeUri = _downloadItem?.downloadTreeUri;
-        final relativeDir = _downloadItem?.safRelativeDir ?? '';
-        if (treeUri != null && treeUri.isNotEmpty) {
-          final safUri = await PlatformBridge.createSafFileFromPath(
-            treeUri: treeUri,
-            relativeDir: relativeDir,
-            fileName: '$baseName.lrc',
-            mimeType: 'application/octet-stream',
-            srcPath: tempOutput,
-          );
-          try {
-            await Directory(tempDir.path).delete(recursive: true);
-          } catch (_) {}
-          if (mounted) {
-            if (safUri != null) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(context.l10n.trackLyricsSaved(baseName)),
-                  ),
-                );
-            } else {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      context.l10n.trackSaveFailed(
-                        'Failed to write to storage',
-                      ),
-                    ),
-                  ),
-                );
-            }
-          }
-        } else {
-          try {
-            await Directory(tempDir.path).delete(recursive: true);
-          } catch (_) {}
-          if (mounted) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text(
-                    context.l10n.trackSaveFailed('No storage access'),
-                  ),
-                ),
-              );
-          }
-        }
-        return;
-      }
-
-      final dir = _getFileDirectory();
-      final outputPath = '$dir${Platform.pathSeparator}$baseName.lrc';
-
-      final result = await PlatformBridge.fetchAndSaveLyrics(
-        trackName: trackName,
-        artistName: artistName,
-        spotifyId: _spotifyId ?? '',
-        durationMs: durationMs,
-        outputPath: outputPath,
-        audioFilePath: _fileExists ? cleanFilePath : '',
+        ),
       );
-
-      if (mounted) {
-        if (result['error'] != null) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(
-                  context.l10n.trackSaveFailed(
-                    context.friendlyError(result['error']),
-                  ),
-                ),
-              ),
-            );
-        } else {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(content: Text(context.l10n.trackLyricsSaved(baseName))),
-            );
-        }
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)

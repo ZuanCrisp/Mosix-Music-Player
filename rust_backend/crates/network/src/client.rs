@@ -1,3 +1,13 @@
+//! HTTP client service with connection pooling, network options, and bounded response handling.
+
+mod headers;
+mod pool;
+mod stream;
+#[cfg(test)]
+mod tests;
+
+pub use stream::HttpStream;
+
 use crate::cookies::CookieJar;
 use crate::dns::{Dns, Lookup, Resolver, SystemLookup};
 use crate::policy::{NetworkPermissions, private_literal_or_local};
@@ -24,109 +34,16 @@ use tokio::sync::{Notify, OwnedSemaphorePermit, Semaphore};
 use tokio_util::io::StreamReader;
 use tower_service::Service;
 
+use headers::{canonical_header, forward_sensitive_headers, update_explicit_cookies};
+use pool::Pool;
+use stream::ResponseBody;
+
 pub const MAX_RESPONSE_BYTES: usize = 16 << 20;
 type Transport = HttpsConnector<HttpConnector<Resolver>>;
 type BoxError = Box<dyn std::error::Error + Send + Sync>;
-
-#[derive(Clone)]
-struct Connector(Transport);
-
-impl Service<Uri> for Connector {
-    type Response = <Transport as Service<Uri>>::Response;
-    type Error = BoxError;
-    type Future = BoxFuture<'static, Result<Self::Response, BoxError>>;
-
-    fn poll_ready(&mut self, context: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.0.poll_ready(context)
-    }
-
-    fn call(&mut self, uri: Uri) -> Self::Future {
-        let future = self.0.call(uri);
-        Box::pin(async move {
-            tokio::time::timeout(Duration::from_secs(10), future)
-                .await
-                .map_err(|_| {
-                    BoxError::from(io::Error::new(
-                        io::ErrorKind::TimedOut,
-                        "connection timeout",
-                    ))
-                })?
-        })
-    }
-}
-
-struct Pool {
-    client: Client<Connector, Full<Bytes>>,
-    allow_private: bool,
-    allow_http_fallback: bool,
-    permits: Mutex<HashMap<String, Weak<Semaphore>>>,
-}
-
-impl Pool {
-    fn new(
-        tls: rustls::ClientConfig,
-        dns: Arc<Dns>,
-        allow_private: bool,
-        allow_http_fallback: bool,
-    ) -> Self {
-        let mut http = HttpConnector::new_with_resolver(Resolver { dns, allow_private });
-        http.enforce_http(false);
-        http.set_connect_timeout(Some(Duration::from_secs(10)));
-        http.set_happy_eyeballs_timeout(Some(Duration::from_millis(300)));
-        http.set_keepalive(Some(Duration::from_secs(30)));
-        // Go's dialer default: small request/control writes are not held back
-        // by Nagle while waiting for a delayed ACK.
-        http.set_nodelay(true);
-        let connector = HttpsConnectorBuilder::new()
-            .with_tls_config(tls)
-            .https_or_http()
-            .enable_http1()
-            .enable_http2()
-            .wrap_connector(http);
-        let client = Client::builder(TokioExecutor::new())
-            .pool_timer(TokioTimer::new())
-            .pool_idle_timeout(Duration::from_secs(60))
-            .pool_max_idle_per_host(10)
-            .http1_max_buf_size(10 << 20)
-            // Go's 4 MiB per-stream window doubles one stream's ceiling per
-            // RTT. The 5 MiB connection window, and so peak buffering per
-            // connection, stays hyper's default.
-            .http2_initial_stream_window_size(4 << 20)
-            .build(Connector(connector));
-        Self {
-            client,
-            allow_private,
-            allow_http_fallback,
-            permits: Mutex::default(),
-        }
-    }
-
-    async fn acquire(&self, uri: &Uri) -> OwnedSemaphorePermit {
-        let key = format!(
-            "{}://{}",
-            uri.scheme_str().unwrap_or(""),
-            uri.authority().map_or("", |authority| authority.as_str())
-        );
-        let semaphore = {
-            let mut permits = self.permits.lock().expect("HTTP connection limit lock");
-            if permits.len() > 256 {
-                permits.retain(|_, semaphore| semaphore.strong_count() > 0);
-            }
-            match permits.get(&key).and_then(Weak::upgrade) {
-                Some(semaphore) => semaphore,
-                None => {
-                    let semaphore = Arc::new(Semaphore::new(20));
-                    permits.insert(key, Arc::downgrade(&semaphore));
-                    semaphore
-                }
-            }
-        };
-        semaphore
-            .acquire_owned()
-            .await
-            .expect("HTTP semaphore is never closed")
-    }
-}
+// `hyper` is not a direct dependency; name its response through the client.
+type HyperResponse =
+    <Client<pool::Connector, Full<Bytes>> as Service<Request<Full<Bytes>>>>::Response;
 
 /// These options belong to the native backend, never to extension JavaScript.
 pub struct NetworkOptions {
@@ -279,7 +196,7 @@ impl NetworkService {
 
     /// Native compatibility requests may retry HTTPS over HTTP. Extension
     /// sessions retain their manifest policy. TLS verification is never disabled.
-    pub fn set_network_compatibility_options(&self, allow_http: bool, _insecure_tls: bool) {
+    pub fn set_network_compatibility_options(&self, allow_http: bool) {
         let mut pool = self.pool.lock().expect("HTTP pool lock");
         if pool.allow_http_fallback == allow_http {
             return;
@@ -377,7 +294,7 @@ pub struct HttpRequest {
 }
 
 fn default_user_agent() -> String {
-    "Spotiflac-Extension/1.0".to_owned()
+    "Mosix-Extension/1.0".to_owned()
 }
 
 #[derive(Debug)]
@@ -387,130 +304,6 @@ pub struct HttpResponse {
     pub url: String,
     pub headers: BTreeMap<String, Vec<String>>,
     pub body: Vec<u8>,
-}
-
-struct ResponseBody {
-    reader: Box<dyn AsyncRead + Unpin + Send>,
-    small_http1: bool,
-    _permit: OwnedSemaphorePermit,
-}
-
-/// A pull-based media response. Read and progress callbacks run on the caller's
-/// worker; JavaScript never executes inside the Tokio executor. Dropping this
-/// response immediately releases its body and per-origin permit.
-pub struct HttpStream {
-    /// Response metadata. The body is delivered exclusively through `read`.
-    pub response: HttpResponse,
-    body: Option<ResponseBody>,
-    service: Arc<NetworkService>,
-    _pool: Arc<Pool>,
-    generation: u64,
-    started: Instant,
-    last_progress: Instant,
-    timeout: Duration,
-    stall_timeout: Duration,
-    failure: Option<String>,
-}
-
-impl HttpStream {
-    /// Read at most 64 KiB without collecting the response in memory. Errors
-    /// close the stream so callers cannot accidentally resume a failed reader.
-    pub fn read(
-        &mut self,
-        buffer: &mut [u8],
-        check: impl Fn() -> Result<(), String>,
-    ) -> Result<usize, String> {
-        if let Some(error) = &self.failure {
-            return Err(error.clone());
-        }
-        let result = (|| {
-            check()?;
-            if self.service.generation.load(Ordering::Acquire) != self.generation {
-                return Err("network policy changed".into());
-            }
-            let Some(body) = self.body.as_mut() else {
-                return Ok(0);
-            };
-            if buffer.is_empty() {
-                return Ok(0);
-            }
-            let total = self.timeout.saturating_sub(self.started.elapsed());
-            let idle = self
-                .stall_timeout
-                .saturating_sub(self.last_progress.elapsed());
-            if total.is_zero() {
-                return Err("HTTP request timeout exceeded".into());
-            }
-            if idle.is_zero() {
-                return Err(self.stall_message());
-            }
-            let size = buffer.len().min(64 << 10);
-            let count = self
-                .service
-                .run(self.generation, total.min(idle), &check, async {
-                    body.reader
-                        .read(&mut buffer[..size])
-                        .await
-                        .map_err(|error| error.to_string())
-                })
-                .map_err(|error| {
-                    if error == "HTTP request timeout exceeded" && idle <= total {
-                        self.stall_message()
-                    } else {
-                        error
-                    }
-                })?;
-            if count > 0 {
-                self.last_progress = Instant::now();
-            }
-            Ok(count)
-        })();
-        match &result {
-            Err(error) => {
-                self.body = None;
-                self.failure = Some(error.clone());
-            }
-            Ok(0) if !buffer.is_empty() => self.body = None,
-            _ => {}
-        }
-        result
-    }
-
-    /// Release an unwanted body (a range probe or retryable error). A small
-    /// HTTP/1.1 body is finished within 20 ms so its connection can return to
-    /// the pool; HTTP/2, compressed, large or slow bodies are dropped at once.
-    pub fn discard(&mut self, check: impl Fn() -> Result<(), String>) {
-        let Some(mut body) = self.body.take() else {
-            return;
-        };
-        if !body.small_http1 || self.failure.is_some() {
-            return;
-        }
-        let _ = self
-            .service
-            .run(self.generation, Duration::from_millis(20), &check, async {
-                let mut buffer = [0; 2048];
-                let mut received = 0;
-                loop {
-                    let count = body
-                        .reader
-                        .read(&mut buffer)
-                        .await
-                        .map_err(|error| error.to_string())?;
-                    received += count;
-                    if count == 0 || received > 2048 {
-                        return Ok(());
-                    }
-                }
-            });
-    }
-
-    fn stall_message(&self) -> String {
-        format!(
-            "download stalled: no data received for {}s (network timeout)",
-            self.stall_timeout.as_secs()
-        )
-    }
 }
 
 pub struct NetworkSession {
@@ -717,15 +510,112 @@ impl NetworkSession {
         pool: &Pool,
         compression: bool,
     ) -> Result<(HttpResponse, ResponseBody), String> {
-        let mut url = self.validate_target(&request.url, pool.allow_private, false)?;
+        let PreparedRequest {
+            mut url,
+            original,
+            mut method,
+            mut body,
+            mut headers,
+            explicit_referer,
+        } = self.prepare_request(request, pool)?;
+        for redirects in 0..10 {
+            let uri = url.request_uri()?;
+            let permit = pool.acquire(&uri).await;
+            let (outgoing, gzip) = self.outgoing_headers(&headers, &url, &method, compression)?;
+            let (permit, response, response_url) = self
+                .send(pool, &url, uri, &method, &body, permit, outgoing)
+                .await?;
+            if !self.native_media {
+                self.cookies
+                    .lock()
+                    .expect("cookie jar lock")
+                    .store(&url, response.headers());
+            }
+            let status = response.status();
+            if !self.follow_redirects && matches!(status.as_u16(), 301 | 302 | 303 | 307 | 308) {
+                return Err("media redirect blocked: request a fresh descriptor".into());
+            }
+            if matches!(status.as_u16(), 301 | 302 | 303 | 307 | 308)
+                && let Some(location) = response
+                    .headers()
+                    .get(header::LOCATION)
+                    .filter(|value| !value.is_empty())
+            {
+                let target = self.redirect_target(&url, location, pool)?;
+                if redirects < 9 {
+                    update_explicit_cookies(&mut headers, response.headers());
+                    if matches!(status.as_u16(), 301..=303) {
+                        if method != Method::GET && method != Method::HEAD {
+                            method = Method::GET;
+                        }
+                        body = Bytes::new();
+                        for name in [
+                            header::CONTENT_ENCODING,
+                            header::CONTENT_LANGUAGE,
+                            header::CONTENT_LOCATION,
+                            header::CONTENT_TYPE,
+                        ] {
+                            headers.remove(name);
+                        }
+                    }
+                    if !forward_sensitive_headers(&original.hostname, &target.hostname) {
+                        for name in [
+                            header::AUTHORIZATION,
+                            header::WWW_AUTHENTICATE,
+                            header::COOKIE,
+                            header::PROXY_AUTHORIZATION,
+                            header::PROXY_AUTHENTICATE,
+                        ] {
+                            headers.remove(name);
+                        }
+                        headers.remove("cookie2");
+                    }
+                    if url.scheme == "https" && target.scheme == "http" {
+                        headers.remove(header::REFERER);
+                    } else if let Some(value) = &explicit_referer {
+                        headers.insert(header::REFERER, value.clone());
+                    } else if let Ok(value) = url.display_url().parse() {
+                        headers.insert(header::REFERER, value);
+                    }
+                    url = target;
+                    release_redirect_body(response).await;
+                    continue;
+                }
+            }
+            let (response_headers, small_http1, reader) = response_reader(response, gzip);
+            let headers = canonical_headers(&response_headers);
+            return Ok((
+                HttpResponse {
+                    status: status.as_u16(),
+                    status_text: status.canonical_reason().unwrap_or("").into(),
+                    url: response_url.display_url(),
+                    headers,
+                    body: Vec::new(),
+                },
+                ResponseBody {
+                    reader,
+                    small_http1,
+                    _permit: permit,
+                },
+            ));
+        }
+        unreachable!("last redirect returns its response")
+    }
+
+    fn prepare_request(
+        &self,
+        request: HttpRequest,
+        pool: &Pool,
+    ) -> Result<PreparedRequest, String> {
+        let url = self.validate_target(&request.url, pool.allow_private, false)?;
         let original = url.clone();
-        let mut method = Method::from_bytes(if request.method.is_empty() {
+        let method = Method::from_bytes(if request.method.is_empty() {
             b"GET"
         } else {
             request.method.as_bytes()
         })
         .map_err(|_| format!("net/http: invalid method {:?}", request.method))?;
-        let mut body = Bytes::from(request.body);
+        let body = Bytes::from(request.body);
         let mut headers = HeaderMap::new();
         for (name, value) in request.headers {
             let name =
@@ -767,280 +657,222 @@ impl NetworkSession {
             .get(header::REFERER)
             .filter(|value| !value.is_empty())
             .cloned();
-        for redirects in 0..10 {
-            let uri = url.request_uri()?;
-            let mut permit = pool.acquire(&uri).await;
-            let mut outgoing = headers.clone();
-            let cookies = if self.native_media {
-                String::new()
-            } else {
-                self.cookies.lock().expect("cookie jar lock").header(&url)
-            };
-            if !cookies.is_empty() {
-                let value = outgoing
-                    .get(header::COOKIE)
-                    .and_then(|value| value.to_str().ok())
-                    .filter(|value| !value.is_empty())
-                    .map_or_else(|| cookies.clone(), |value| format!("{value}; {cookies}"));
-                outgoing.insert(
-                    header::COOKIE,
-                    value
-                        .parse()
-                        .map_err(|error: http::header::InvalidHeaderValue| error.to_string())?,
-                );
-            }
-            let gzip = compression
-                && outgoing
-                    .get(header::ACCEPT_ENCODING)
-                    .is_none_or(|value| value.is_empty())
-                && outgoing
-                    .get(header::RANGE)
-                    .is_none_or(|value| value.is_empty())
-                && method != Method::HEAD;
-            if gzip {
-                outgoing.insert(header::ACCEPT_ENCODING, HeaderValue::from_static("gzip"));
-            }
-            let mut req = Request::builder()
-                .method(method.clone())
-                .uri(uri)
-                .body(Full::new(body.clone()))
-                .map_err(|error| error.to_string())?;
-            *req.headers_mut() = outgoing.clone();
-            let response = tokio::time::timeout(Duration::from_secs(45), pool.client.request(req))
-                .await
-                .map_err(|_| "HTTP response header timeout exceeded".to_owned())
-                .and_then(|result| result.map_err(|error| error_chain(&error)));
-            let mut response_url = url.clone();
-            // Nonempty bodies are buffered and can be replayed, as Go's GetBody
-            // permits. Treat an empty body like a nil Go request body.
-            let can_replay = matches!(
-                method,
-                Method::GET | Method::HEAD | Method::OPTIONS | Method::DELETE
-            ) || !body.is_empty();
-            let response = match response {
-                Err(_)
-                    if pool.allow_http_fallback
-                        && self.permissions.is_none()
-                        && url.scheme == "https"
-                        && can_replay =>
-                {
-                    response_url.scheme = "http".into();
-                    let uri = response_url.request_uri()?;
-                    // The hostname is unchanged; the shared connector still
-                    // resolves and checks every destination against private-IP policy.
-                    drop(permit);
-                    permit = pool.acquire(&uri).await;
-                    let mut retry = Request::builder()
-                        .method(method.clone())
-                        .uri(uri)
-                        .body(Full::new(body.clone()))
-                        .map_err(|error| error.to_string())?;
-                    *retry.headers_mut() = outgoing;
-                    tokio::time::timeout(Duration::from_secs(45), pool.client.request(retry))
-                        .await
-                        .map_err(|_| "HTTP response header timeout exceeded".to_owned())?
-                        .map_err(|error| error_chain(&error))?
-                }
-                result => result?,
-            };
-            if !self.native_media {
-                self.cookies
-                    .lock()
-                    .expect("cookie jar lock")
-                    .store(&url, response.headers());
-            }
-            let status = response.status();
-            if !self.follow_redirects && matches!(status.as_u16(), 301 | 302 | 303 | 307 | 308) {
-                return Err("media redirect blocked: request a fresh descriptor".into());
-            }
-            if matches!(status.as_u16(), 301 | 302 | 303 | 307 | 308)
-                && let Some(location) = response
-                    .headers()
-                    .get(header::LOCATION)
-                    .filter(|value| !value.is_empty())
-            {
-                let location = location.to_str().map_err(|error| error.to_string())?;
-                let target = url
-                    .resolve(location)
-                    .ok_or_else(|| "invalid redirect URL".to_owned())?;
-                if target.has_credentials {
-                    return Err("invalid URL: embedded credentials are not allowed".into());
-                }
-                self.validate_target(&target.display_url(), pool.allow_private, true)?;
-                if redirects < 9 {
-                    update_explicit_cookies(&mut headers, response.headers());
-                    if matches!(status.as_u16(), 301..=303) {
-                        if method != Method::GET && method != Method::HEAD {
-                            method = Method::GET;
-                        }
-                        body = Bytes::new();
-                        for name in [
-                            header::CONTENT_ENCODING,
-                            header::CONTENT_LANGUAGE,
-                            header::CONTENT_LOCATION,
-                            header::CONTENT_TYPE,
-                        ] {
-                            headers.remove(name);
-                        }
-                    }
-                    if !forward_sensitive_headers(&original.hostname, &target.hostname) {
-                        for name in [
-                            header::AUTHORIZATION,
-                            header::WWW_AUTHENTICATE,
-                            header::COOKIE,
-                            header::PROXY_AUTHORIZATION,
-                            header::PROXY_AUTHENTICATE,
-                        ] {
-                            headers.remove(name);
-                        }
-                        headers.remove("cookie2");
-                    }
-                    if url.scheme == "https" && target.scheme == "http" {
-                        headers.remove(header::REFERER);
-                    } else if let Some(value) = &explicit_referer {
-                        headers.insert(header::REFERER, value.clone());
-                    } else if let Ok(value) = url.display_url().parse() {
-                        headers.insert(header::REFERER, value);
-                    }
-                    url = target;
-                    // A small HTTP/1.1 redirect body can return this connection
-                    // to the pool. Never wait for an unbounded/slow body or drain
-                    // HTTP/2 streams, whose connections are already multiplexed.
-                    if response.version() == http::Version::HTTP_11
-                        && response
-                            .headers()
-                            .get(header::CONTENT_LENGTH)
-                            .and_then(|value| value.to_str().ok())
-                            .and_then(|value| value.parse::<usize>().ok())
-                            .is_some_and(|length| length <= 2048)
-                    {
-                        let mut body = response.into_body();
-                        let _ = tokio::time::timeout(Duration::from_millis(20), async {
-                            let mut received = 0;
-                            while let Some(Ok(frame)) = body.frame().await {
-                                received += frame.data_ref().map_or(0, Bytes::len);
-                                if received > 2048 {
-                                    break;
-                                }
-                            }
-                        })
-                        .await;
-                    }
-                    continue;
-                }
-            }
-            let mut response_headers = response.headers().clone();
-            let decompress = gzip
-                && response_headers
-                    .get(header::CONTENT_ENCODING)
-                    .is_some_and(|value| value.as_bytes().eq_ignore_ascii_case(b"gzip"));
-            // Same bound as redirect bodies: only an uncompressed HTTP/1.1
-            // body of at most 2 KiB may be finished by `HttpStream::discard`.
-            let small_http1 = !decompress
-                && response.version() == http::Version::HTTP_11
-                && response_headers
-                    .get(header::CONTENT_LENGTH)
-                    .and_then(|value| value.to_str().ok())
-                    .and_then(|value| value.parse::<usize>().ok())
-                    .is_some_and(|length| length <= 2048);
-            let stream = response
-                .into_body()
-                .into_data_stream()
-                .map_err(io::Error::other);
-            let reader = StreamReader::new(stream);
-            let reader: Box<dyn AsyncRead + Unpin + Send> = if decompress {
-                response_headers.remove(header::CONTENT_ENCODING);
-                response_headers.remove(header::CONTENT_LENGTH);
-                let mut decoder = GzipDecoder::new(BufReader::new(reader));
-                decoder.multiple_members(true);
-                Box::new(decoder)
-            } else {
-                Box::new(reader)
-            };
-            let mut headers = BTreeMap::new();
-            for name in response_headers.keys() {
-                headers.insert(
-                    canonical_header(name.as_str()),
-                    response_headers
-                        .get_all(name)
-                        .iter()
-                        .map(|value| String::from_utf8_lossy(value.as_bytes()).into_owned())
-                        .collect(),
-                );
-            }
-            return Ok((
-                HttpResponse {
-                    status: status.as_u16(),
-                    status_text: status.canonical_reason().unwrap_or("").into(),
-                    url: response_url.display_url(),
-                    headers,
-                    body: Vec::new(),
-                },
-                ResponseBody {
-                    reader,
-                    small_http1,
-                    _permit: permit,
-                },
-            ));
+        Ok(PreparedRequest {
+            url,
+            original,
+            method,
+            body,
+            headers,
+            explicit_referer,
+        })
+    }
+
+    /// Per-attempt headers: the session cookie jar and, for API-style
+    /// requests, gzip negotiation. The returned flag records that negotiation.
+    fn outgoing_headers(
+        &self,
+        headers: &HeaderMap,
+        url: &UrlParts,
+        method: &Method,
+        compression: bool,
+    ) -> Result<(HeaderMap, bool), String> {
+        let mut outgoing = headers.clone();
+        let cookies = if self.native_media {
+            String::new()
+        } else {
+            self.cookies.lock().expect("cookie jar lock").header(url)
+        };
+        if !cookies.is_empty() {
+            let value = outgoing
+                .get(header::COOKIE)
+                .and_then(|value| value.to_str().ok())
+                .filter(|value| !value.is_empty())
+                .map_or_else(|| cookies.clone(), |value| format!("{value}; {cookies}"));
+            outgoing.insert(
+                header::COOKIE,
+                value
+                    .parse()
+                    .map_err(|error: http::header::InvalidHeaderValue| error.to_string())?,
+            );
         }
-        unreachable!("last redirect returns its response")
+        let gzip = compression
+            && outgoing
+                .get(header::ACCEPT_ENCODING)
+                .is_none_or(|value| value.is_empty())
+            && outgoing
+                .get(header::RANGE)
+                .is_none_or(|value| value.is_empty())
+            && method != Method::HEAD;
+        if gzip {
+            outgoing.insert(header::ACCEPT_ENCODING, HeaderValue::from_static("gzip"));
+        }
+        Ok((outgoing, gzip))
     }
-}
 
-fn update_explicit_cookies(headers: &mut HeaderMap, response: &HeaderMap) {
-    let Some(original) = headers
-        .get(header::COOKIE)
-        .and_then(|value| value.to_str().ok())
-    else {
-        return;
-    };
-    let names: Vec<_> = response
-        .get_all(header::SET_COOKIE)
-        .iter()
-        .filter_map(|value| value.to_str().ok())
-        .filter_map(|value| cookie::Cookie::parse(value).ok())
-        .map(|cookie| cookie.name().to_owned())
-        .collect();
-    let mut changed = false;
-    let mut remaining: Vec<_> = original
-        .split(';')
-        .map(str::trim)
-        .filter(|pair| {
-            let remove = pair
-                .split_once('=')
-                .is_some_and(|(name, _)| names.iter().any(|replaced| replaced == name));
-            changed |= remove;
-            !remove
-        })
-        .collect();
-    if changed {
-        remaining.sort_unstable();
-        let value = remaining
-            .join("; ")
-            .parse()
-            .expect("existing HTTP cookie header");
-        headers.insert(header::COOKIE, value);
-    }
-}
-
-fn forward_sensitive_headers(original: &str, target: &str) -> bool {
-    let original = original.to_lowercase();
-    let target = target.to_lowercase();
-    original == target
-        || (!target.contains([':', '%']) && target.ends_with(&format!(".{original}")))
-}
-
-fn canonical_header(name: &str) -> String {
-    name.split('-')
-        .map(|word| {
-            let mut bytes = word.as_bytes().to_vec();
-            if let Some(first) = bytes.first_mut() {
-                first.make_ascii_uppercase();
+    /// Send one attempt. A native session with the compatibility fallback
+    /// retries a failed HTTPS attempt once over HTTP, on a fresh origin permit.
+    /// Returns the permit held for the response and the URL it came from.
+    #[allow(clippy::too_many_arguments)]
+    async fn send(
+        &self,
+        pool: &Pool,
+        url: &UrlParts,
+        uri: Uri,
+        method: &Method,
+        body: &Bytes,
+        mut permit: OwnedSemaphorePermit,
+        outgoing: HeaderMap,
+    ) -> Result<(OwnedSemaphorePermit, HyperResponse, UrlParts), String> {
+        let mut req = Request::builder()
+            .method(method.clone())
+            .uri(uri)
+            .body(Full::new(body.clone()))
+            .map_err(|error| error.to_string())?;
+        *req.headers_mut() = outgoing.clone();
+        let response = tokio::time::timeout(Duration::from_secs(45), pool.client.request(req))
+            .await
+            .map_err(|_| "HTTP response header timeout exceeded".to_owned())
+            .and_then(|result| result.map_err(|error| error_chain(&error)));
+        let mut response_url = url.clone();
+        // Nonempty bodies are buffered and can be replayed, as Go's GetBody
+        // permits. Treat an empty body like a nil Go request body.
+        let can_replay = matches!(
+            *method,
+            Method::GET | Method::HEAD | Method::OPTIONS | Method::DELETE
+        ) || !body.is_empty();
+        let response = match response {
+            Err(_)
+                if pool.allow_http_fallback
+                    && self.permissions.is_none()
+                    && url.scheme == "https"
+                    && can_replay =>
+            {
+                response_url.scheme = "http".into();
+                let uri = response_url.request_uri()?;
+                // The hostname is unchanged; the shared connector still
+                // resolves and checks every destination against private-IP policy.
+                drop(permit);
+                permit = pool.acquire(&uri).await;
+                let mut retry = Request::builder()
+                    .method(method.clone())
+                    .uri(uri)
+                    .body(Full::new(body.clone()))
+                    .map_err(|error| error.to_string())?;
+                *retry.headers_mut() = outgoing;
+                tokio::time::timeout(Duration::from_secs(45), pool.client.request(retry))
+                    .await
+                    .map_err(|_| "HTTP response header timeout exceeded".to_owned())?
+                    .map_err(|error| error_chain(&error))?
             }
-            String::from_utf8(bytes).expect("ASCII HTTP header name")
+            result => result?,
+        };
+        Ok((permit, response, response_url))
+    }
+
+    fn redirect_target(
+        &self,
+        url: &UrlParts,
+        location: &HeaderValue,
+        pool: &Pool,
+    ) -> Result<UrlParts, String> {
+        let location = location.to_str().map_err(|error| error.to_string())?;
+        let target = url
+            .resolve(location)
+            .ok_or_else(|| "invalid redirect URL".to_owned())?;
+        if target.has_credentials {
+            return Err("invalid URL: embedded credentials are not allowed".into());
+        }
+        self.validate_target(&target.display_url(), pool.allow_private, true)?;
+        Ok(target)
+    }
+}
+
+/// Request state that `execute_stream` carries and rewrites across redirects.
+struct PreparedRequest {
+    url: UrlParts,
+    original: UrlParts,
+    method: Method,
+    body: Bytes,
+    headers: HeaderMap,
+    explicit_referer: Option<HeaderValue>,
+}
+
+async fn release_redirect_body(response: HyperResponse) {
+    // A small HTTP/1.1 redirect body can return this connection
+    // to the pool. Never wait for an unbounded/slow body or drain
+    // HTTP/2 streams, whose connections are already multiplexed.
+    if response.version() == http::Version::HTTP_11
+        && response
+            .headers()
+            .get(header::CONTENT_LENGTH)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.parse::<usize>().ok())
+            .is_some_and(|length| length <= 2048)
+    {
+        let mut body = response.into_body();
+        let _ = tokio::time::timeout(Duration::from_millis(20), async {
+            let mut received = 0;
+            while let Some(Ok(frame)) = body.frame().await {
+                received += frame.data_ref().map_or(0, Bytes::len);
+                if received > 2048 {
+                    break;
+                }
+            }
         })
-        .collect::<Vec<_>>()
-        .join("-")
+        .await;
+    }
+}
+
+/// Response headers, the `HttpStream::discard` eligibility flag and the body
+/// reader, gzip-decoded when this attempt negotiated gzip.
+fn response_reader(
+    response: HyperResponse,
+    gzip: bool,
+) -> (HeaderMap, bool, Box<dyn AsyncRead + Unpin + Send>) {
+    let mut response_headers = response.headers().clone();
+    let decompress = gzip
+        && response_headers
+            .get(header::CONTENT_ENCODING)
+            .is_some_and(|value| value.as_bytes().eq_ignore_ascii_case(b"gzip"));
+    // Same bound as redirect bodies: only an uncompressed HTTP/1.1
+    // body of at most 2 KiB may be finished by `HttpStream::discard`.
+    let small_http1 = !decompress
+        && response.version() == http::Version::HTTP_11
+        && response_headers
+            .get(header::CONTENT_LENGTH)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.parse::<usize>().ok())
+            .is_some_and(|length| length <= 2048);
+    let stream = response
+        .into_body()
+        .into_data_stream()
+        .map_err(io::Error::other);
+    let reader = StreamReader::new(stream);
+    let reader: Box<dyn AsyncRead + Unpin + Send> = if decompress {
+        response_headers.remove(header::CONTENT_ENCODING);
+        response_headers.remove(header::CONTENT_LENGTH);
+        let mut decoder = GzipDecoder::new(BufReader::new(reader));
+        decoder.multiple_members(true);
+        Box::new(decoder)
+    } else {
+        Box::new(reader)
+    };
+    (response_headers, small_http1, reader)
+}
+
+fn canonical_headers(response_headers: &HeaderMap) -> BTreeMap<String, Vec<String>> {
+    let mut headers = BTreeMap::new();
+    for name in response_headers.keys() {
+        headers.insert(
+            canonical_header(name.as_str()),
+            response_headers
+                .get_all(name)
+                .iter()
+                .map(|value| String::from_utf8_lossy(value.as_bytes()).into_owned())
+                .collect(),
+        );
+    }
+    headers
 }
 
 fn error_chain(error: &dyn std::error::Error) -> String {
@@ -1050,171 +882,4 @@ fn error_chain(error: &dyn std::error::Error) -> String {
         message.push_str(&error_chain(source));
     }
     message
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::future::poll_fn;
-    use std::sync::{atomic::AtomicBool, mpsc};
-
-    #[test]
-    fn direct_media_keeps_manifest_permissions_and_https_requirement() {
-        let service = NetworkService::new().unwrap();
-        let original = service.session(
-            NetworkPermissions {
-                domains: vec!["cdn.example.test".into()],
-                allow_http: false,
-            },
-            Duration::from_secs(30),
-        );
-        let media = original.direct_media();
-        assert!(media.validate_url("https://cdn.example.test/audio").is_ok());
-        assert!(
-            media
-                .validate_url("https://unlisted.example.test/audio")
-                .is_err()
-        );
-        assert!(media.validate_url("http://cdn.example.test/audio").is_err());
-        assert!(!media.follow_redirects);
-        assert!(media.native_media);
-    }
-
-    #[test]
-    fn direct_media_does_not_send_metadata_cookies_or_follow_redirects() {
-        use std::io::{Read, Write};
-        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-        let base = format!("http://{}", listener.local_addr().unwrap());
-        let server = std::thread::spawn(move || {
-            for response in [
-                "HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok",
-                "HTTP/1.1 302 Found\r\nLocation: /unexpected\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
-            ] {
-                let (mut stream, _) = listener.accept().unwrap();
-                stream
-                    .set_read_timeout(Some(Duration::from_secs(3)))
-                    .unwrap();
-                let mut request = Vec::new();
-                while !request.ends_with(b"\r\n\r\n") {
-                    let mut byte = [0];
-                    stream.read_exact(&mut byte).unwrap();
-                    request.push(byte[0]);
-                    assert!(request.len() < 8192);
-                }
-                assert!(
-                    !String::from_utf8(request)
-                        .unwrap()
-                        .to_lowercase()
-                        .contains("\r\ncookie:")
-                );
-                stream.write_all(response.as_bytes()).unwrap();
-            }
-        });
-        let service = NetworkService::new().unwrap();
-        service.set_allow_private_network(true);
-        let original = service.session(
-            NetworkPermissions {
-                domains: vec!["127.0.0.1".into()],
-                allow_http: true,
-            },
-            Duration::from_secs(3),
-        );
-        let mut cookies = http::HeaderMap::new();
-        cookies.insert(
-            http::header::SET_COOKIE,
-            "metadata=private; Path=/".parse().unwrap(),
-        );
-        original
-            .cookies
-            .lock()
-            .unwrap()
-            .store(&UrlParts::parse(&base).unwrap(), &cookies);
-        let media = original.direct_media();
-        let request =
-            || serde_json::from_value(serde_json::json!({"url":format!("{base}/media")})).unwrap();
-        assert_eq!(media.request(request(), || Ok(())).unwrap().body, b"ok");
-        assert!(
-            media
-                .request(request(), || Ok(()))
-                .unwrap_err()
-                .contains("media redirect blocked")
-        );
-        server.join().unwrap();
-    }
-
-    #[test]
-    fn cancellation_after_operation_is_pending_drops_it_before_return() {
-        struct Dropped<'a>(&'a AtomicBool);
-        impl Drop for Dropped<'_> {
-            fn drop(&mut self) {
-                self.0.store(true, Ordering::Release);
-            }
-        }
-
-        let service = NetworkService::new().unwrap();
-        // Sample two phases; timings are diagnostics, not shared-host limits.
-        for (waiting_for, wake) in [
-            (Duration::ZERO, false),
-            (Duration::from_millis(15), false),
-            (Duration::from_millis(15), true),
-        ] {
-            let cancelled = AtomicBool::new(false);
-            let dropped = AtomicBool::new(false);
-            let (waiting_tx, waiting_rx) = mpsc::sync_channel(1);
-            let (finished_tx, finished_rx) = mpsc::sync_channel(1);
-            std::thread::scope(|scope| {
-                let worker = scope.spawn(|| {
-                    let mut waiting = Some(waiting_tx);
-                    let result = service.run(
-                        0,
-                        Duration::from_secs(2),
-                        || {
-                            if cancelled.load(Ordering::Acquire) {
-                                Err("cancelled".into())
-                            } else {
-                                Ok(())
-                            }
-                        },
-                        async {
-                            let _dropped = Dropped(&dropped);
-                            if !waiting_for.is_zero() {
-                                tokio::time::sleep(waiting_for).await;
-                            }
-                            poll_fn(|_| {
-                                if let Some(waiting) = waiting.take() {
-                                    waiting.send(()).unwrap();
-                                }
-                                Poll::<Result<(), String>>::Pending
-                            })
-                            .await
-                        },
-                    );
-                    finished_tx
-                        .send((result, Instant::now(), dropped.load(Ordering::Acquire)))
-                        .unwrap();
-                });
-                waiting_rx.recv_timeout(Duration::from_secs(1)).unwrap();
-                let began = Instant::now();
-                cancelled.store(true, Ordering::Release);
-                if wake {
-                    service.cancellation_waker().wake();
-                }
-                let (result, returned, dropped_before_return) =
-                    finished_rx.recv_timeout(Duration::from_secs(1)).unwrap();
-                worker.join().unwrap();
-                assert_eq!(result, Err("cancelled".into()));
-                assert!(dropped_before_return);
-                println!(
-                    "pending operation cancellation (wait={}ms, wake={wake}): return={}us join={}us",
-                    waiting_for.as_millis(),
-                    returned.duration_since(began).as_micros(),
-                    began.elapsed().as_micros(),
-                );
-            });
-        }
-        assert_eq!(
-            service.run(0, Duration::from_secs(1), || Ok(()), async { Ok(7) }),
-            Ok(7)
-        );
-    }
 }

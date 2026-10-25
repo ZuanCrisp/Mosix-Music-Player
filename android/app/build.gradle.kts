@@ -148,7 +148,6 @@ android {
         }
     }
 
-    // Split APKs by ABI for smaller individual downloads
     splits {
         abi {
             isEnable = true
@@ -195,7 +194,7 @@ flutter {
 }
 
 dependencies {
-    val discordSdk = file("../../third_party/spotiflac_discord/sdk/discord_partner_sdk.aar")
+    val discordSdk = file("../../third_party/mornye_discord/sdk/discord_partner_sdk.aar")
     if (discordSdkEnabled && discordSdk.exists()) {
         implementation(files(discordSdk))
     }
@@ -217,4 +216,5 @@ dependencies {
     debugImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test:runner:1.7.0")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.media:media:1.8.0")
 }

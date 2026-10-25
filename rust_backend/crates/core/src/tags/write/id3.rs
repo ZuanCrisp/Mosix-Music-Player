@@ -1,3 +1,5 @@
+//! ID3v2 tag writing: parses the existing header and builds or rewrites the tag frames.
+
 use super::{Fields, MAX_TAG_BYTES, bytes, cover_mime, edit_index, pair, seek};
 use crate::matching::uppercase;
 use crate::tags::id3::{decode, user_text};
@@ -172,20 +174,9 @@ fn edit_header(
 pub(in crate::tags) fn cover(tag: &[u8]) -> Option<(Vec<u8>, String)> {
     let (frames, _) = read_frames(&mut Cursor::new(tag), &|| Ok(())).ok()?;
     let data = &frames.iter().find(|frame| frame.id == b"APIC")?.data;
-    let encoding = *data.first()?;
-    let mime_end = data[1..].iter().position(|byte| *byte == 0)? + 1;
-    let mime = String::from_utf8_lossy(&data[1..mime_end]).into_owned();
-    let mut start = mime_end + 2;
-    if matches!(encoding, 0 | 3) {
-        start += data.get(start..)?.iter().position(|byte| *byte == 0)? + 1;
-    } else {
-        start += data
-            .get(start..)?
-            .windows(2)
-            .position(|pair| pair == [0, 0])?
-            + 2;
-    }
-    (start < data.len()).then(|| (data[start..].to_vec(), mime))
+    // read_frames also normalizes ID3v2.2 PIC frames to APIC.
+    let picture = super::super::id3::picture_frame(data, 4)?;
+    Some((picture.data, picture.mime))
 }
 
 fn frame(id: &str, data: Vec<u8>) -> Frame {
@@ -211,10 +202,7 @@ fn syncsafe(size: usize) -> [u8; 4] {
 
 fn size(data: &[u8], syncsafe: bool) -> usize {
     if syncsafe {
-        ((data[0] as usize) << 21)
-            | ((data[1] as usize) << 14)
-            | ((data[2] as usize) << 7)
-            | data[3] as usize
+        crate::tags::id3::syncsafe(data) as usize
     } else {
         u32::from_be_bytes(data.try_into().unwrap()) as usize
     }
@@ -378,4 +366,38 @@ fn read_frames(
         });
     }
     Ok((frames, audio_start))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn previous_syncsafe_size(data: &[u8]) -> usize {
+        ((data[0] as usize) << 21)
+            | ((data[1] as usize) << 14)
+            | ((data[2] as usize) << 7)
+            | data[3] as usize
+    }
+
+    #[test]
+    fn syncsafe_size_matches_previous_decoder_across_bit_boundaries() {
+        assert_eq!(size(&[0, 0, 0, 0], true), 0);
+        assert_eq!(size(&[0, 0, 0, 0x7f], true), 0x7f);
+        assert_eq!(size(&[0, 0, 1, 0], true), 0x80);
+        assert_eq!(size(&[0x7f, 0x7f, 0x7f, 0x7f], true), 0x0fff_ffff);
+        assert_eq!(size(&[0, 0, 0, 0x80], true), 0x80);
+        assert_eq!(size(&[0xff, 0xff, 0xff, 0xff], true), 0x1fff_ffff);
+        assert_eq!(size(&[0, 0, 1, 0, 9], true), 0x80);
+        let values = [0x00, 0x01, 0x7f, 0x80, 0xff];
+        for a in values {
+            for b in values {
+                for c in values {
+                    for d in values {
+                        let data = [a, b, c, d];
+                        assert_eq!(size(&data, true), previous_syncsafe_size(&data), "{data:?}");
+                    }
+                }
+            }
+        }
+    }
 }

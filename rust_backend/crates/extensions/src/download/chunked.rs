@@ -1,10 +1,12 @@
+//! Chunked (ranged) downloads with resume, retry delays, and total length detection.
+
 use super::store::DownloadFile;
 use super::{
     DownloadOptions, Failure, fingerprint, header, next_delay, retryable, set_header,
     status_failure, validator,
 };
 use crate::files::FilePath;
-use spotiflac_network::{HttpRequest, HttpResponse, HttpStream, NetworkSession};
+use mornye_network::{HttpRequest, HttpResponse, HttpStream, NetworkSession};
 use std::io::Write;
 use std::time::Duration;
 

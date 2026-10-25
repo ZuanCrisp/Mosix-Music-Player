@@ -7,13 +7,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/screens/settings/about_page.dart';
-import 'package:mosix/screens/settings/settings_tab.dart';
-import 'package:mosix/services/app_remote_config_service.dart';
-import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/settings_group.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/screens/settings/about_page.dart';
+import 'package:mornye/screens/settings/settings_tab.dart';
+import 'package:mornye/services/app_remote_config_service.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_progress_indicator.dart';
+import 'package:mornye/widgets/settings_group.dart';
 
 void main() {
   setUp(() {
@@ -84,13 +85,13 @@ void main() {
       );
       final progress = find.descendant(
         of: support,
-        matching: find.byType(LinearProgressIndicator),
+        matching: find.byType(AppProgressIndicator),
       );
       expect(
         find.descendant(of: support, matching: find.text('9%')),
         findsOneWidget,
       );
-      expect(tester.widget<LinearProgressIndicator>(progress).value, 0.09);
+      expect(tester.widget<AppProgressIndicator>(progress).value, 0.09);
 
       response.complete(
         http.Response(jsonEncode(goalConfig(progress: 0.27)), 200),
@@ -100,7 +101,7 @@ void main() {
         find.descendant(of: support, matching: find.text('27%')),
         findsOneWidget,
       );
-      expect(tester.widget<LinearProgressIndicator>(progress).value, 0.27);
+      expect(tester.widget<AppProgressIndicator>(progress).value, 0.27);
       expect(find.text('9%'), findsNothing);
       expect(tester.takeException(), isNull);
     });
@@ -121,7 +122,7 @@ void main() {
       await pumpSettings(tester, service: service);
       expect(find.text('9%'), findsNothing);
       expect(
-        find.byType(LinearProgressIndicator),
+        find.byType(AppProgressIndicator),
         active ? findsOneWidget : findsNothing,
       );
     });
@@ -140,6 +141,34 @@ void main() {
       findsNothing,
     );
   });
+
+  for (final mornye in [false, true]) {
+    testWidgets('broad search builds only visible grouped results ($mornye)', (
+      tester,
+    ) async {
+      await pumpSettings(
+        tester,
+        theme: mornye ? MornyeTheme.build(Brightness.dark) : AppTheme.light(),
+      );
+      await tester.enterText(find.byType(TextField), 'a');
+      await tester.pump();
+      final group = tester.widget<SliverSettingsGroup>(
+        find.byType(SliverSettingsGroup),
+      );
+      expect(group.itemCount, greaterThan(30));
+      final rows = find.descendant(
+        of: find.byType(SliverSettingsGroup),
+        matching: find.byType(SettingsItem),
+      );
+      expect(rows.evaluate().length, lessThan(group.itemCount ~/ 2));
+      await tester.drag(
+        find.byType(CustomScrollView).first,
+        const Offset(0, -600),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('network protocols are discoverable from Settings', (
     tester,

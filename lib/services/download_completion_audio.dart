@@ -1,6 +1,7 @@
-import 'package:mosix/models/download_result.dart';
-import 'package:mosix/utils/audio_format_utils.dart';
-import 'package:mosix/utils/int_utils.dart';
+import 'package:mornye/models/download_result.dart';
+import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/int_utils.dart';
 
 typedef DownloadCompletionAudio = ({
   String quality,
@@ -30,7 +31,7 @@ Future<DownloadCompletionAudio> resolveDownloadCompletionAudio({
       normalizeAudioFormatValue(audioFormatForPath(filePath));
   var bitrate = download.bitrateKbps;
   final lowerPath = filePath.toLowerCase();
-  if (filePath.startsWith('content://') ||
+  if (isContentUri(filePath) ||
       const [
         '.flac',
         '.m4a',

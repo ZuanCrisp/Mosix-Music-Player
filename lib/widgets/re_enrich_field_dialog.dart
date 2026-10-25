@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_action_button.dart';
+import 'package:mornye/widgets/app_checkbox.dart';
+import 'package:mornye/widgets/app_text_field.dart';
 import '../l10n/app_localizations.dart';
-import 'package:mosix/services/batch_metadata_re_enrich.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/settings_group.dart';
+import 'package:mornye/services/batch_metadata_re_enrich.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/settings_group.dart';
 
 Future<ReEnrichFieldSelection?> showReEnrichFieldDialog(
   BuildContext context, {
@@ -288,10 +290,15 @@ class _ReEnrichFieldSheetState extends State<_ReEnrichFieldSheet> {
                                 ),
                               ],
                             )
-                          : TextField(
+                          : AppTextField(
                               controller:
                                   _manualControllers[manualBatchMetadataFields[index]],
                               onChanged: (_) => setState(() {}),
+                              outlined: true,
+                              label: _manualLabelFor(
+                                manualBatchMetadataFields[index],
+                                l10n,
+                              ),
                               decoration: InputDecoration(
                                 labelText: _manualLabelFor(
                                   manualBatchMetadataFields[index],
@@ -338,7 +345,15 @@ class _ReEnrichFieldSheetState extends State<_ReEnrichFieldSheet> {
   }
 
   Widget _options({required List<Widget> children, bool grouped = true}) {
-    if (!context.isMornye) return SettingsGroup(children: children);
+    if (!context.isMornye) {
+      return SettingsGroup(
+        connected: true,
+        children: [
+          for (final child in children)
+            if (child is! Divider) child,
+        ],
+      );
+    }
     final content = Column(mainAxisSize: MainAxisSize.min, children: children);
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: grouped ? 16 : 4, vertical: 4),
@@ -366,6 +381,8 @@ class _ReEnrichFieldSheetState extends State<_ReEnrichFieldSheet> {
         leading: Icon(icon),
         title: Text(title),
         subtitle: Text(subtitle),
+        selected: _mode == mode,
+        selectedColor: scheme.onSurface,
         trailing: _mode == mode
             ? Icon(Icons.check, color: scheme.primary)
             : null,
@@ -420,7 +437,7 @@ class _ReEnrichFieldSheetState extends State<_ReEnrichFieldSheet> {
     IconData? icon,
   }) {
     if (!context.isMornye) {
-      return CheckboxListTile(
+      return AppCheckboxListTile(
         title: Text(title),
         value: value,
         onChanged: onChanged,

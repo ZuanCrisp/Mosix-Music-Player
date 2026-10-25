@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/controllers/player_metadata_controller.dart';
-import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mornye/controllers/player_metadata_controller.dart';
+import 'package:mornye/utils/lyrics_parser.dart';
 
 MediaItem _item(
   String id, {
@@ -342,4 +342,75 @@ void main() {
       expect(controller.lyrics.lines.single.text, 'Current');
     },
   );
+
+  group('online lyrics search', () {
+    PlayerMetadataController controllerFor(
+      Future<String> Function(MediaItem) fetch,
+    ) {
+      final controller = PlayerMetadataController(
+        readMetadata: (_) async => const {},
+        parseLyrics: (raw) async => LyricsParser.parse(raw),
+        fetchOnlineLyrics: fetch,
+      );
+      addTearDown(controller.dispose);
+      return controller;
+    }
+
+    test('shows provider lyrics for a file without its own', () async {
+      final requested = <String>[];
+      final controller = controllerFor((item) async {
+        requested.add(item.title);
+        return '[00:01.00]Found';
+      });
+      await controller.load(_item('a'));
+      expect(controller.lyrics.isEmpty, isTrue);
+      expect(controller.canSearchOnline, isTrue);
+      final search = controller.searchOnline();
+      expect(controller.searchingOnline, isTrue);
+      await search;
+      expect(requested, ['a']);
+      expect(controller.searchingOnline, isFalse);
+      expect(controller.onlineSearchMissed, isFalse);
+      expect(controller.lyrics.lines.single.text, 'Found');
+    });
+
+    test('a miss or failure is reported until the track changes', () async {
+      var attempt = 0;
+      final controller = controllerFor((_) async {
+        if (attempt++ == 0) return '';
+        throw StateError('offline');
+      });
+      await controller.load(_item('a'));
+      await controller.searchOnline();
+      expect(controller.onlineSearchMissed, isTrue);
+      await controller.searchOnline();
+      expect(controller.onlineSearchMissed, isTrue);
+      expect(controller.lyrics.isEmpty, isTrue);
+      await controller.load(_item('b'));
+      expect(controller.onlineSearchMissed, isFalse);
+    });
+
+    test('a late result cannot replace the next track', () async {
+      final result = Completer<String>();
+      final controller = controllerFor((_) => result.future);
+      await controller.load(_item('a'));
+      final search = controller.searchOnline();
+      await controller.load(_item('b'));
+      expect(controller.searchingOnline, isFalse);
+      result.complete('[00:01.00]Old track');
+      await search;
+      expect(controller.lyrics.isEmpty, isTrue);
+      expect(controller.onlineSearchMissed, isFalse);
+    });
+
+    test('needs a title and artist to search', () async {
+      final controller = controllerFor((_) async => '[00:01.00]Found');
+      await controller.load(
+        MediaItem(id: 'a', title: 'a', extras: const {'source': '/a.flac'}),
+      );
+      expect(controller.canSearchOnline, isFalse);
+      await controller.searchOnline();
+      expect(controller.lyrics.isEmpty, isTrue);
+    });
+  });
 }

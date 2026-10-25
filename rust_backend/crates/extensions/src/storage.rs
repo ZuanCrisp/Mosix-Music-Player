@@ -1,4 +1,4 @@
-//! Go-compatible extension persistence. Each file is serialized across runtimes.
+//! Go-compatible extension persistence. Each file is serialized per path.
 
 use aes_gcm::aead::{Aead, KeyInit};
 use aes_gcm::{Aes256Gcm, Nonce};
@@ -9,7 +9,7 @@ use hmac::{Hmac, Mac};
 use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use std::fs::{self, File};
+use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock, RwLock, RwLockReadGuard, Weak};
@@ -66,6 +66,7 @@ impl StorageMasterKey {
     pub fn derive(&self, extension_id: &str, purpose: &str) -> Zeroizing<[u8; 32]> {
         let mut mac = <Hmac<Sha256> as KeyInit>::new_from_slice(self.0.as_ref())
             .expect("HMAC accepts any key length");
+        // Keep the domain stable across app renames to decrypt existing snapshots.
         mac.update(b"SpotiFLAC Mobile extension storage v2\0");
         mac.update(purpose.as_bytes());
         mac.update(&[0]);
@@ -433,16 +434,15 @@ fn parse_object(data: &[u8]) -> Result<Map<String, Value>, StorageError> {
 pub(crate) fn atomic_write(path: &Path, data: &[u8]) -> Result<(), StorageError> {
     file_identity(path)?;
     let directory = path.parent().ok_or(StorageError::InvalidPath)?;
-    let mut file = tempfile::Builder::new()
-        .prefix(".spotiflac-")
-        .tempfile_in(directory)?;
-    file.write_all(data)?;
-    file.as_file().sync_all()?;
-    file.persist(path).map_err(|error| error.error)?;
-    // Directory fsync is unavailable on some filesystems; rename remains atomic.
-    if let Ok(directory) = File::open(directory) {
-        let _ = directory.sync_all();
-    }
+    mornye_core::fs::write_atomic(
+        directory,
+        path,
+        ".mornye-",
+        |file| file.write_all(data),
+        || Ok(()),
+        true,
+    )
+    .map_err(io::Error::from)?;
     Ok(())
 }
 

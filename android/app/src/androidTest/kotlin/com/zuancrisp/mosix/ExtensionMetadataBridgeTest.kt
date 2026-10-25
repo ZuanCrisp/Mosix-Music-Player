@@ -2,9 +2,9 @@ package com.zuancrisp.mosix
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.spotiflac.backend.CancellationDomain
-import com.spotiflac.backend.CancellationRegistry
-import com.spotiflac.backend.ExtensionManager
+import com.mornye.backend.CancellationDomain
+import com.mornye.backend.CancellationRegistry
+import com.mornye.backend.ExtensionManager
 import java.io.File
 import org.json.JSONObject
 import org.junit.Assert.assertEquals

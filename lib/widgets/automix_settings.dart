@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/automix_options.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/settings_group.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/automix_options.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_slider.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/slider_value_header.dart';
 
 class AutoMixSettings extends ConsumerStatefulWidget {
   const AutoMixSettings({super.key});
@@ -46,6 +49,7 @@ class _AutoMixSettingsState extends ConsumerState<AutoMixSettings> {
                     AutoMixEffect.custom => Icons.tune,
                   }),
                   title: Text(names[effect]!),
+                  selected: effect == current,
                   trailing: effect == current
                       ? Icon(
                           Icons.check,
@@ -81,6 +85,7 @@ class _AutoMixSettingsState extends ConsumerState<AutoMixSettings> {
     };
     Widget slider(
       String label,
+      String valueLabel,
       double value,
       double min,
       double max,
@@ -93,13 +98,21 @@ class _AutoMixSettingsState extends ConsumerState<AutoMixSettings> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label),
-            Slider(
+            if (context.isMornye)
+              Text('$label: $valueLabel')
+            else
+              SliderValueHeader(
+                title: label,
+                value: valueLabel,
+                enabled: enabled,
+              ),
+            AppSlider(
               value: value.clamp(min, max),
               min: min,
               max: max,
               divisions: divisions,
               label: value.toStringAsFixed(2),
+              semanticLabel: '$label: $valueLabel',
               onChanged: enabled ? draft : null,
               onChangeEnd: enabled ? save : null,
             ),
@@ -109,6 +122,7 @@ class _AutoMixSettingsState extends ConsumerState<AutoMixSettings> {
     }
 
     return SettingsGroup(
+      connected: true,
       children: [
         SettingsSwitchItem(
           icon: Icons.timer_outlined,
@@ -120,7 +134,8 @@ class _AutoMixSettingsState extends ConsumerState<AutoMixSettings> {
         ),
         if (settings.autoMixDuration != 0)
           slider(
-            '${l10n.autoMixDuration}: ${(_duration ?? settings.autoMixDuration.toDouble()).round()} s',
+            l10n.autoMixDuration,
+            '${(_duration ?? settings.autoMixDuration.toDouble()).round()} s',
             _duration ?? settings.autoMixDuration.toDouble(),
             3,
             60,
@@ -142,7 +157,8 @@ class _AutoMixSettingsState extends ConsumerState<AutoMixSettings> {
         if (settings.autoMixEffect == AutoMixEffect.pitch ||
             settings.autoMixEffect == AutoMixEffect.custom)
           slider(
-            '${l10n.autoMixPitch}: ${(_pitch ?? settings.autoMixPitch).toStringAsFixed(1)}',
+            l10n.autoMixPitch,
+            (_pitch ?? settings.autoMixPitch).toStringAsFixed(1),
             _pitch ?? settings.autoMixPitch,
             -6,
             6,
@@ -155,7 +171,8 @@ class _AutoMixSettingsState extends ConsumerState<AutoMixSettings> {
           ),
         if (settings.autoMixEffect == AutoMixEffect.custom) ...[
           slider(
-            '${l10n.autoMixSpeed}: ${(_speed ?? settings.autoMixSpeed).toStringAsFixed(2)}×',
+            l10n.autoMixSpeed,
+            '${(_speed ?? settings.autoMixSpeed).toStringAsFixed(2)}×',
             _speed ?? settings.autoMixSpeed,
             0.8,
             1.2,

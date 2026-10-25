@@ -4,10 +4,10 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mosix/services/music_playback_deck.dart';
-import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/services/network_metadata_service.dart';
-import 'package:mosix/services/platform_bridge.dart';
+import 'package:mornye/services/music_playback_deck.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/services/network_metadata_service.dart';
+import 'package:mornye/services/platform_bridge.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -152,7 +152,7 @@ void main() {
       read: () async => null,
       write: (_) async {},
     );
-    final deck = MusicPlaybackDeck(playerId: 'network-integration');
+    final deck = AudioplayersPlaybackDeck(playerId: 'network-integration');
     try {
       await service.save(
         NetworkConnection(

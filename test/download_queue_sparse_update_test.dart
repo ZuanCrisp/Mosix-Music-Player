@@ -1,9 +1,9 @@
 import 'dart:collection';
 import 'dart:math';
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_state.dart';
-import 'package:mosix/utils/chunked_list.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_state.dart';
+import 'package:mornye/utils/chunked_list.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _CountingList<T> extends ListBase<T> {
@@ -93,7 +93,7 @@ void main() {
         lookup: state.lookup.updatedForIndices(
           previousItems: previous,
           nextItems: next,
-          changedIndices: List.generate(previous.length, (i) => i),
+          changedIndices: List.generate(previous.length * 2, (i) => i ~/ 2),
         ),
       );
       expect(state.queuedItems, isEmpty);
@@ -153,6 +153,58 @@ void main() {
     },
   );
 
+  test('item replacements preserve queue metadata and immutable snapshots', () {
+    final items = List.generate(130, _item);
+    const retry = DownloadQueueReconnectRetry(2);
+    final initial = const DownloadQueueState(
+      isProcessing: true,
+      isPaused: true,
+      outputDir: '/selected',
+      filenameFormat: '{title}',
+      singleFilenameFormat: '{artist}',
+      audioQuality: 'HIGH',
+      autoFallback: false,
+      reconnectRetry: retry,
+    ).copyWith(items: items, currentDownload: items[1]);
+    expect(initial.withItemReplacements({}), same(initial));
+    final replacements = {
+      63: initial.items[63].copyWith(progress: 0.5),
+      64: initial.items[64].copyWith(status: DownloadStatus.failed),
+    };
+    final next = initial.withItemReplacements(replacements);
+    replacements.clear();
+    expect(next.items[63].progress, 0.5);
+    expect(next.items[64].status, DownloadStatus.failed);
+    for (var i = 0; i < items.length; i++) {
+      if (i != 63 && i != 64) expect(next.items[i], same(initial.items[i]));
+    }
+    expect(next.lookup.indexByItemId, same(initial.lookup.indexByItemId));
+    expect(next.lookup.itemIds, same(initial.lookup.itemIds));
+    expect(
+      next.lookup.notCompletedItemIds,
+      same(initial.lookup.notCompletedItemIds),
+    );
+    expect(next.currentDownload, same(initial.currentDownload));
+    expect(next.isProcessing, initial.isProcessing);
+    expect(next.isPaused, initial.isPaused);
+    expect(next.outputDir, initial.outputDir);
+    expect(next.filenameFormat, initial.filenameFormat);
+    expect(next.singleFilenameFormat, initial.singleFilenameFormat);
+    expect(next.audioQuality, initial.audioQuality);
+    expect(next.autoFallback, initial.autoFallback);
+    expect(next.reconnectRetry, same(retry));
+    expect(() => next.items[0] = _item(200), throwsUnsupportedError);
+    expect(
+      () => initial.withItemReplacements({0: next.items[63], 130: _item(130)}),
+      throwsRangeError,
+    );
+    expect(initial.items, items);
+    expect(initial.lookup.byItemId['item-63'], same(items[63]));
+    expect(initial.lookup.byItemId['item-64'], same(items[64]));
+    expect(initial.items[63].progress, 0);
+    expect(initial.items[64].status, DownloadStatus.downloading);
+  });
+
   test(
     'queue indexes match a full rebuild through sparse status transitions',
     () {
@@ -164,23 +216,17 @@ void main() {
       for (var tick = 0; tick < 150; tick++) {
         final index = random.nextInt(state.items.length);
         final old = state;
-        final next = ChunkedList<DownloadItem>.from(state.items).updated({
+        state = state.withItemReplacements({
           index: state.items[index].copyWith(
             progress: tick / 150,
             status: DownloadStatus.values[tick % DownloadStatus.values.length],
           ),
         });
-        state = state.copyWith(
-          items: next,
-          lookup: state.lookup.updatedForIndices(
-            previousItems: state.items,
-            nextItems: next,
-            changedIndices: [index, index],
-          ),
-        );
-        final rebuilt = DownloadQueueLookup.fromItems(next);
+        final rebuilt = DownloadQueueLookup.fromItems(state.items);
         expect(state.lookup.byItemId, rebuilt.byItemId);
         expect(state.lookup.byTrackId, rebuilt.byTrackId);
+        expect(state.lookup.indexByItemId, rebuilt.indexByItemId);
+        expect(state.lookup.itemIds, rebuilt.itemIds);
         expect(state.lookup.queuedCount, rebuilt.queuedCount);
         expect(state.lookup.completedCount, rebuilt.completedCount);
         expect(state.lookup.failedCount, rebuilt.failedCount);
@@ -238,15 +284,7 @@ void main() {
       );
       void update(Map<int, DownloadItem> changes) {
         final old = state;
-        final next = ChunkedList<DownloadItem>.from(old.items).updated(changes);
-        state = old.copyWith(
-          items: next,
-          lookup: old.lookup.updatedForIndices(
-            previousItems: old.items,
-            nextItems: next,
-            changedIndices: changes.keys.toList().reversed,
-          ),
-        );
+        state = old.withItemReplacements(changes);
         check(state);
         check(old);
       }

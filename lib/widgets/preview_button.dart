@@ -1,10 +1,12 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/providers/preview_player_provider.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/preview_player_provider.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
 
 class PreviewButton extends ConsumerWidget {
   final Track track;
@@ -46,7 +48,7 @@ class PreviewButton extends ConsumerWidget {
     );
     if (isCurrentMainTrack) {
       final isPlaying = ref.watch(playbackPlayingProvider);
-      return IconButton(
+      return AppIconButton(
         iconSize: size,
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
@@ -78,13 +80,10 @@ class PreviewButton extends ConsumerWidget {
     final String tooltip;
     switch (status) {
       case PreviewStatus.loading:
-        icon = SizedBox(
-          width: size * 0.7,
-          height: size * 0.7,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: colorScheme.primary,
-          ),
+        icon = AppLoadingIndicator(
+          size: size * 0.7,
+          strokeWidth: 2,
+          color: colorScheme.primary,
         );
         tooltip = context.l10n.previewStop;
         break;
@@ -108,7 +107,7 @@ class PreviewButton extends ConsumerWidget {
         break;
     }
 
-    return IconButton(
+    return AppIconButton(
       iconSize: size,
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 48, minHeight: 48),

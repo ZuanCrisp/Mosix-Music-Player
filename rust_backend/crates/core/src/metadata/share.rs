@@ -1,6 +1,6 @@
 //! Collection matching and share links from already-decoded extension tracks.
 
-use crate::lyrics::json::go_deserialize;
+use crate::json::lenient_deserialize;
 use crate::lyrics::matching::{normalize_loose_artist, normalize_title};
 use crate::matching::lowercase;
 use serde::Serialize;
@@ -13,7 +13,7 @@ pub struct Request {
     pub kind: String,
     pub source_extension_id: String,
 }
-go_deserialize!(Request {
+lenient_deserialize!(Request {
     "name" => name, "artists" => artists, "type" => kind,
     "source_extension_id" => source_extension_id,
 });

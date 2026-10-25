@@ -1,3 +1,5 @@
+//! ID3v1 and ID3v2 tag reading: text frames, embedded cover art, and genre decoding.
+
 use super::{AudioMetadata, CoverArt, bytes, exact, pair, seek, truthy, utf8};
 use crate::matching::{lowercase, uppercase};
 use std::io::{self, Cursor, Read, Seek, SeekFrom};
@@ -73,7 +75,7 @@ pub(super) fn read(reader: &mut (impl Read + Seek)) -> Result<AudioMetadata, Str
             }
         }
     }
-    if metadata.title.is_empty() && metadata.artist.is_empty() {
+    if metadata == AudioMetadata::default() {
         Err("no ID3 tags found".into())
     } else {
         Ok(metadata)
@@ -278,7 +280,7 @@ fn frames<R: Read + Seek>(
     Ok(())
 }
 
-fn picture_frame(data: &[u8], version: u8) -> Option<CoverArt> {
+pub(in crate::tags) fn picture_frame(data: &[u8], version: u8) -> Option<CoverArt> {
     let encoding = *data.first()?;
     let (mime, start) = if version == 2 {
         let format = data.get(1..4)?;
@@ -296,12 +298,16 @@ fn picture_frame(data: &[u8], version: u8) -> Option<CoverArt> {
         (utf8(&data[1..end]), end + 2)
     };
     let description = data.get(start..)?;
-    let skip = if matches!(encoding, 0 | 3) {
-        description.iter().position(|byte| *byte == 0)? + 1
-    } else {
-        description.windows(2).position(|bytes| bytes == [0, 0])? + 2
-    };
-    let image = description.get(skip..)?;
+    let (end, terminator) = separator(description, encoding)?;
+    let mut image = description.get(end + terminator..)?;
+    // Some taggers add redundant NULs after the description. Only remove
+    // them when the remaining bytes have a recognized image signature.
+    if image.first() == Some(&0)
+        && let Some(start) = image.iter().position(|byte| *byte != 0)
+        && image::guess_format(&image[start..]).is_ok()
+    {
+        image = &image[start..];
+    }
     (!image.is_empty()).then(|| CoverArt {
         data: image.to_vec(),
         mime,
@@ -501,7 +507,21 @@ fn v1(reader: &mut (impl Read + Seek)) -> Result<AudioMetadata, String> {
     })
 }
 
-fn syncsafe(data: &[u8]) -> u64 {
+/// The length of a whole ID3v2 tag, footer included, from its 10-byte header,
+/// or None when the header is not ID3v2. Some taggers put one in front of a
+/// FLAC or ADTS stream, and players skip it.
+pub(crate) fn v2_tag_length(header: &[u8]) -> Option<u64> {
+    if header.len() < 10
+        || &header[..3] != b"ID3"
+        || header[6..10].iter().any(|value| *value >= 128)
+    {
+        return None;
+    }
+    let footer = if header[5] & 0x10 != 0 { 10 } else { 0 };
+    Some(10 + syncsafe(&header[6..10]) + footer)
+}
+
+pub(crate) fn syncsafe(data: &[u8]) -> u64 {
     u64::from(data[0]) << 21
         | u64::from(data[1]) << 14
         | u64::from(data[2]) << 7

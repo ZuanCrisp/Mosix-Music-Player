@@ -1,0 +1,2 @@
+// Discord Social SDK ships only an arm64 iOS simulator slice.
+EXCLUDED_ARCHS[sdk=iphonesimulator*] = $(inherited) i386 x86_64

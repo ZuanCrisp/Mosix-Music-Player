@@ -3,7 +3,7 @@ package com.zuancrisp.mosix
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.ParcelFileDescriptor
-import com.spotiflac.backend.UsbDirectOutput
+import com.mornye.backend.UsbDirectOutput
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -73,6 +73,37 @@ class UsbBitPerfectPluginTest {
                         assertEquals(-1234 shl 16, decoded.int)
                     }
                 }
+            }
+        } finally { file.delete() }
+    }
+
+    @Test
+    fun flacSourcePreserves24BitSamplesAfterSafLeaseClosesAndSeeks() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val file = File.createTempFile("usb-flac-", ".flac", instrumentation.targetContext.cacheDir)
+        try {
+            instrumentation.context.assets.open("pcm24-pattern.flac").use { input ->
+                file.outputStream().use { input.copyTo(it) }
+            }
+            val source = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->
+                UsbPcmSource("/proc/self/fd/${fd.fd}")
+            }
+            source.use {
+                assertEquals(96000, it.rate)
+                assertEquals(24, it.bits)
+                assertEquals(2, it.channels)
+                assertEquals(100000L, it.durationUs)
+                for (target in listOf(0L, 50000L, 0L)) {
+                    it.seek(target)
+                    val decoded = requireNotNull(it.read(32)).order(ByteOrder.LITTLE_ENDIAN)
+                    assertEquals(target, it.bufferTimeUs)
+                    assertTrue(decoded.remaining() > 0)
+                    while (decoded.hasRemaining()) {
+                        assertEquals(1193047 shl 8, decoded.int)
+                        assertEquals(-1193047 shl 8, decoded.int)
+                    }
+                }
+                assertThrows(Exception::class.java) { it.read(16) }
             }
         } finally { file.delete() }
     }

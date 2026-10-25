@@ -1,12 +1,14 @@
+//! Backend re-enrichment of an existing audio file with fresh metadata, cover art, and lyrics.
+
 use super::{Backend, LyricsRequest};
 use cap_std::fs::OpenOptions;
+use mornye_core::lyrics::{file, lrc};
+use mornye_core::metadata::TrackMetadata;
+use mornye_core::metadata::reenrich::{self, Request};
+use mornye_core::tags::{embed_flac_metadata, extract_cover};
+use mornye_providers::deezer::MetadataLookup;
+use mornye_providers::resolver::{Check, availability};
 use serde_json::json;
-use spotiflac_core::lyrics::{file, lrc};
-use spotiflac_core::metadata::TrackMetadata;
-use spotiflac_core::metadata::reenrich::{self, Request};
-use spotiflac_core::tags::{embed_flac_metadata, extract_cover};
-use spotiflac_providers::deezer::MetadataLookup;
-use spotiflac_providers::resolver::{Check, availability};
 use std::io::Write;
 use std::sync::Mutex;
 

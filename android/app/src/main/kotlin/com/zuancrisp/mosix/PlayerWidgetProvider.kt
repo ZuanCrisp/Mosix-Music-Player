@@ -22,6 +22,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
+import androidx.core.graphics.ColorUtils
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import org.json.JSONObject
@@ -107,91 +108,217 @@ class PlayerWidgetProvider : AppWidgetProvider() {
             val widgets = ids ?: manager.getAppWidgetIds(ComponentName(context, PlayerWidgetProvider::class.java))
             if (widgets.isEmpty()) return
             val prefs = preferences(context)
-            val state = runCatching { JSONObject(prefs.getString("state", "{}")!!) }.getOrDefault(JSONObject())
-            val active = state.optBoolean("canPlay")
-            val cover = if (state.optString("artworkKey").isNotEmpty()) {
-                BitmapFactory.decodeFile(File(context.filesDir, "player-widget-cover.png").path)
-            } else null
+            val state = state(context)
+            val cover = cover(context, state)
             for (id in widgets) {
                 val options = manager.getAppWidgetOptions(id)
                 val width = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 280)
                 val height = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 150)
-                val horizontal = width >= 240 && height < 240
-                val views = RemoteViews(context.packageName, if (horizontal) R.layout.widget_player_wide else R.layout.widget_player)
-                val theme = prefs.getString("theme_$id", "artwork")
-                val light = theme == "light"
-                val foreground = if (light) Color.rgb(26, 24, 31) else Color.WHITE
-                val background = when (theme) {
-                    "light" -> Color.rgb(246, 243, 248)
-                    "dark" -> Color.rgb(28, 27, 33)
-                    else -> state.optLong("background", 0xff292433).toInt()
-                }
-                views.setImageViewBitmap(R.id.player_widget_background, renderBackground(background, width, height))
-                views.setTextViewText(R.id.player_widget_title, state.optString("title").ifEmpty { context.getString(R.string.player_widget_name) })
-                views.setTextViewText(R.id.player_widget_artist, if (active) state.optString("artist") else context.getString(R.string.player_widget_empty))
-                views.setTextColor(R.id.player_widget_title, foreground)
-                views.setTextColor(R.id.player_widget_artist, (foreground and 0x00ffffff) or (0xb8 shl 24))
-                views.setViewVisibility(R.id.player_widget_artist, if (prefs.getBoolean("artist_$id", true)) View.VISIBLE else View.GONE)
-                views.setImageViewBitmap(R.id.player_widget_art, cover?.let(::roundedCover) ?: icon(context, R.drawable.ic_widget_music, foreground, false))
-                val playing = state.optBoolean("playing")
-                val buttons = listOf(
-                    Triple(R.id.player_widget_previous, R.drawable.ic_widget_previous, "previous"),
-                    Triple(R.id.player_widget_play, if (playing) R.drawable.ic_widget_pause else R.drawable.ic_widget_play, "toggle"),
-                    Triple(R.id.player_widget_next, R.drawable.ic_widget_next, "next"),
-                )
-                for ((view, drawable, command) in buttons) {
-                    val enabled = active && when (command) {
-                        "previous" -> state.optBoolean("canPrevious")
-                        "next" -> state.optBoolean("canNext")
-                        else -> true
-                    }
-                    views.setImageViewBitmap(view, icon(context, drawable, foreground, command == "toggle"))
-                    views.setFloat(view, "setAlpha", if (enabled) 1f else 0.4f)
-                    views.setBoolean(view, "setEnabled", enabled)
-                    views.setOnClickPendingIntent(view, PendingIntent.getBroadcast(
-                        context, 8200 + command.hashCode(),
-                        Intent(context, PlayerWidgetProvider::class.java).setAction(ACTION).putExtra(COMMAND, command),
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-                    ))
-                }
-                views.setContentDescription(R.id.player_widget_play, context.getString(if (playing) R.string.player_widget_pause else R.string.player_widget_play))
-                views.setOnClickPendingIntent(R.id.player_widget_root, launchIntent(context, "open"))
-                manager.updateAppWidget(id, views)
+                manager.updateAppWidget(id, render(
+                    context, state, cover, prefs.getString("theme_$id", "artwork"),
+                    prefs.getBoolean("artist_$id", true), width, height,
+                ))
             }
             cover?.recycle()
         }
 
+        fun state(context: Context): JSONObject =
+            runCatching { JSONObject(preferences(context).getString("state", "{}")!!) }.getOrDefault(JSONObject())
+
+        fun cover(context: Context, state: JSONObject): Bitmap? = if (state.optString("artworkKey").isNotEmpty()) {
+            BitmapFactory.decodeFile(File(context.filesDir, "player-widget-cover.png").path)
+        } else null
+
+        /** Builds one widget instance; the configuration screen reuses it as a live preview. */
+        fun render(
+            context: Context, state: JSONObject, cover: Bitmap?, theme: String?,
+            showArtist: Boolean, width: Int, height: Int,
+        ): RemoteViews {
+            val active = state.optBoolean("canPlay")
+            val playing = state.optBoolean("playing")
+            val density = context.resources.displayMetrics.density
+            val corner = if (Build.VERSION.SDK_INT >= 31) {
+                context.resources.getDimension(android.R.dimen.system_app_widget_background_radius)
+            } else 28 * density
+            // The wide row needs room for the cover and all three controls;
+            // shorter sizes without that width use the full-bleed cover.
+            val wide = width >= 340 && height < 240
+            val compact = !wide && (width < 200 || height < 240)
+            val layout = when {
+                wide -> R.layout.widget_player_wide
+                compact -> R.layout.widget_player_compact
+                else -> R.layout.widget_player
+            }
+            val views = RemoteViews(context.packageName, layout)
+            val colors = palette(context, theme, seed(state))
+            views.setInt(R.id.player_widget_background, "setColorFilter", colors.container)
+            views.setTextViewText(R.id.player_widget_title, state.optString("title").ifEmpty { context.getString(R.string.player_widget_name) })
+            views.setTextViewText(R.id.player_widget_artist, if (active) state.optString("artist") else context.getString(R.string.player_widget_empty))
+            views.setViewVisibility(R.id.player_widget_artist, if (showArtist) View.VISIBLE else View.GONE)
+            // Over a full-bleed cover the text sits on a dark scrim.
+            val overCover = compact && cover != null
+            views.setTextColor(R.id.player_widget_title, if (overCover) Color.WHITE else colors.onContainer)
+            views.setTextColor(R.id.player_widget_artist, if (overCover) 0xd9ffffff.toInt() else colors.onContainerVariant)
+            views.setImageViewBitmap(R.id.player_widget_art, when {
+                compact -> filledCover(context, cover, width, height, density, corner, colors)
+                cover != null -> roundedCover(cover)
+                else -> placeholder(context, colors)
+            })
+
+            fun bind(root: Int, shape: Int, icon: Int, iconRes: Int, fill: Int, tint: Int, command: String) {
+                val enabled = active && when (command) {
+                    "previous" -> state.optBoolean("canPrevious")
+                    "next" -> state.optBoolean("canNext")
+                    else -> true
+                }
+                views.setInt(shape, "setColorFilter", fill)
+                views.setImageViewResource(icon, iconRes)
+                views.setInt(icon, "setColorFilter", tint)
+                views.setFloat(root, "setAlpha", if (enabled) 1f else 0.38f)
+                views.setBoolean(root, "setEnabled", enabled)
+                views.setOnClickPendingIntent(root, PendingIntent.getBroadcast(
+                    context, 8200 + command.hashCode(),
+                    Intent(context, PlayerWidgetProvider::class.java).setAction(ACTION).putExtra(COMMAND, command),
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                ))
+            }
+            // Expressive shape morph: a pill while paused, a rounder square while playing.
+            views.setImageViewResource(R.id.player_widget_play_shape, if (playing) R.drawable.widget_shape_squircle else R.drawable.widget_shape_pill)
+            bind(R.id.player_widget_play, R.id.player_widget_play_shape, R.id.player_widget_play_icon,
+                if (playing) R.drawable.ic_widget_pause else R.drawable.ic_widget_play, colors.primary, colors.onPrimary, "toggle")
+            if (!compact) {
+                bind(R.id.player_widget_previous, R.id.player_widget_previous_shape, R.id.player_widget_previous_icon,
+                    R.drawable.ic_widget_previous, colors.tonal, colors.onTonal, "previous")
+                bind(R.id.player_widget_next, R.id.player_widget_next_shape, R.id.player_widget_next_icon,
+                    R.drawable.ic_widget_next, colors.tonal, colors.onTonal, "next")
+            }
+            views.setContentDescription(R.id.player_widget_play, context.getString(if (playing) R.string.player_widget_pause else R.string.player_widget_play))
+            views.setOnClickPendingIntent(R.id.player_widget_root, launchIntent(context, "open"))
+            return views
+        }
+
+        fun seed(state: JSONObject) = state.optLong("background", 0xff292433).toInt()
+
+        /** Material 3 colour roles for one widget instance. */
+        class Palette(
+            val container: Int,
+            val onContainer: Int,
+            val onContainerVariant: Int,
+            val primary: Int,
+            val onPrimary: Int,
+            val tonal: Int,
+            val onTonal: Int,
+        )
+
+        /**
+         * Light and Dark follow the wallpaper's dynamic colours where the
+         * system provides them. Artwork derives tonal roles from the cover.
+         */
+        fun palette(context: Context, theme: String?, seed: Int): Palette {
+            if (theme != "light" && theme != "dark") return tonalPalette(seed, dark = true)
+            val dark = theme == "dark"
+            if (Build.VERSION.SDK_INT < 31) return tonalPalette(0xff6750a4.toInt(), dark)
+            fun c(id: Int) = context.getColor(id)
+            return if (dark) Palette(
+                c(android.R.color.system_neutral1_900), c(android.R.color.system_neutral1_50),
+                c(android.R.color.system_neutral2_200), c(android.R.color.system_accent1_200),
+                c(android.R.color.system_accent1_800), c(android.R.color.system_accent2_700),
+                c(android.R.color.system_accent2_100),
+            ) else Palette(
+                c(android.R.color.system_neutral1_50), c(android.R.color.system_neutral1_900),
+                c(android.R.color.system_neutral2_700), c(android.R.color.system_accent1_600),
+                c(android.R.color.system_accent1_0), c(android.R.color.system_accent2_100),
+                c(android.R.color.system_accent2_900),
+            )
+        }
+
+        private fun tonalPalette(seed: Int, dark: Boolean): Palette {
+            val hsl = FloatArray(3)
+            ColorUtils.colorToHSL(seed, hsl)
+            val s = hsl[1]
+            fun tone(saturation: Float, lightness: Float) =
+                ColorUtils.HSLToColor(floatArrayOf(hsl[0], saturation.coerceIn(0f, 1f), lightness))
+            return if (dark) Palette(
+                container = tone(minOf(s, 0.42f), 0.15f),
+                onContainer = tone(minOf(s, 0.12f), 0.95f),
+                onContainerVariant = tone(minOf(s, 0.18f), 0.76f),
+                primary = tone(s.coerceIn(0.35f, 0.75f), 0.80f),
+                onPrimary = tone(minOf(s, 0.5f), 0.16f),
+                tonal = tone(minOf(s, 0.38f), 0.26f),
+                onTonal = tone(minOf(s, 0.3f), 0.90f),
+            ) else Palette(
+                container = tone(minOf(s, 0.4f), 0.96f),
+                onContainer = tone(minOf(s, 0.2f), 0.11f),
+                onContainerVariant = tone(minOf(s, 0.15f), 0.32f),
+                primary = tone(s.coerceIn(0.3f, 0.6f), 0.42f),
+                onPrimary = Color.WHITE,
+                tonal = tone(minOf(s, 0.45f), 0.88f),
+                onTonal = tone(minOf(s, 0.4f), 0.14f),
+            )
+        }
+
         private fun roundedCover(source: Bitmap): Bitmap {
-            val scaled = Bitmap.createScaledBitmap(source, 256, 256, true)
-            val result = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
-            Canvas(result).drawRoundRect(0f, 0f, 256f, 256f, 20f, 20f, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            val size = 384
+            val scaled = Bitmap.createScaledBitmap(source, size, size, true)
+            val result = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            // Expressive covers use large corners: about a fifth of the side.
+            val radius = size * 0.2f
+            Canvas(result).drawRoundRect(0f, 0f, size.toFloat(), size.toFloat(), radius, radius, Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 shader = BitmapShader(scaled, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
             })
             if (scaled !== source) scaled.recycle()
             return result
         }
 
-        private fun renderBackground(color: Int, width: Int, height: Int): Bitmap {
-            val w = width.coerceIn(120, 640)
-            val h = height.coerceIn(100, 640)
-            val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-            val highlight = Color.rgb((Color.red(color) + 12).coerceAtMost(255), (Color.green(color) + 12).coerceAtMost(255), (Color.blue(color) + 12).coerceAtMost(255))
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                shader = LinearGradient(0f, 0f, w.toFloat(), h.toFloat(), highlight, color, Shader.TileMode.CLAMP)
+        /** The compact widget's cover fills it edge to edge under a bottom scrim. */
+        private fun filledCover(
+            context: Context, source: Bitmap?, width: Int, height: Int,
+            density: Float, corner: Float, colors: Palette,
+        ): Bitmap {
+            val scale = minOf(density, 2f, 512f / maxOf(width, height, 1))
+            val w = (width * scale).toInt().coerceAtLeast(1)
+            val h = (height * scale).toInt().coerceAtLeast(1)
+            val result = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(result)
+            val radius = corner * scale / density
+            if (source == null) {
+                val icon = context.getDrawable(R.drawable.ic_widget_music)!!.mutate()
+                icon.setTint(colors.onContainerVariant)
+                val side = minOf(w, h) * 0.34f
+                val left = (w - side) / 2
+                val top = (h - side) / 2 - h * 0.12f
+                icon.setBounds(left.toInt(), top.toInt(), (left + side).toInt(), (top + side).toInt())
+                icon.draw(canvas)
+                return result
             }
-            Canvas(bitmap).drawRoundRect(0f, 0f, w.toFloat(), h.toFloat(), 26f, 26f, paint)
-            return bitmap
+            val crop = minOf(source.width / w.toFloat(), source.height / h.toFloat())
+            val sw = w * crop
+            val sh = h * crop
+            val matrix = android.graphics.Matrix().apply {
+                setScale(1 / crop, 1 / crop)
+                preTranslate(-(source.width - sw) / 2, -(source.height - sh) / 2)
+            }
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
+                shader = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply { setLocalMatrix(matrix) }
+            }
+            canvas.drawRoundRect(0f, 0f, w.toFloat(), h.toFloat(), radius, radius, paint)
+            canvas.drawRoundRect(0f, 0f, w.toFloat(), h.toFloat(), radius, radius, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                shader = LinearGradient(0f, h * 0.35f, 0f, h.toFloat(), Color.TRANSPARENT, 0xcc000000.toInt(), Shader.TileMode.CLAMP)
+            })
+            return result
         }
 
-        private fun icon(context: Context, resource: Int, color: Int, circle: Boolean): Bitmap {
-            val bitmap = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bitmap)
-            if (circle) canvas.drawCircle(48f, 48f, 46f, Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color })
-            val drawable = context.getDrawable(resource)!!.mutate()
-            drawable.setTint(if (circle && color == Color.WHITE) Color.rgb(35, 30, 42) else if (circle) Color.WHITE else color)
-            drawable.setBounds(25, 25, 71, 71)
-            drawable.draw(canvas)
-            return bitmap
+        private fun placeholder(context: Context, colors: Palette): Bitmap {
+            val size = 384
+            val result = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(result)
+            val radius = size * 0.2f
+            canvas.drawRoundRect(0f, 0f, size.toFloat(), size.toFloat(), radius, radius, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colors.tonal })
+            val icon = context.getDrawable(R.drawable.ic_widget_music)!!.mutate()
+            icon.setTint(colors.onTonal)
+            icon.setBounds(132, 132, 252, 252)
+            icon.draw(canvas)
+            return result
         }
     }
 }

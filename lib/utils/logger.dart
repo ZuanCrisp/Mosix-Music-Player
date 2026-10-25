@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:mosix/constants/app_info.dart';
-import 'package:mosix/services/native_log_source.dart';
+import 'package:mornye/constants/app_info.dart';
+import 'package:mornye/services/native_log_source.dart';
 
 const int _maxLogMessageLength = 500;
 const int _maxBufferedLogMessageLength = 4000;
@@ -74,13 +74,16 @@ String _redactSensitiveText(String value) {
   return redacted;
 }
 
+/// Crash reports use the same secret filtering as the ordinary log export.
+String redactDiagnosticText(String value) => _redactSensitiveText(value);
+
 class LogEntry {
   final DateTime timestamp;
   final String level;
   final String tag;
   final String message;
   final String? error;
-  final bool isFromGo;
+  final bool isFromNative;
 
   LogEntry({
     required this.timestamp,
@@ -88,7 +91,7 @@ class LogEntry {
     required this.tag,
     required this.message,
     this.error,
-    this.isFromGo = false,
+    this.isFromNative = false,
   });
 
   String get formattedTime {
@@ -106,7 +109,7 @@ class LogEntry {
   @override
   String toString() {
     final errorPart = error != null ? ' | $error' : '';
-    final nativePart = isFromGo ? ' [Native]' : '';
+    final nativePart = isFromNative ? ' [Native]' : '';
     return '[$formattedTime] [$level]$nativePart [$tag] $message$errorPart';
   }
 }
@@ -122,15 +125,20 @@ class LogBuffer extends ChangeNotifier {
 
   static const int maxEntries = 500;
   static const _nativeLogs = NativeLogSource();
-  static const Duration _goLogPollingInterval = Duration(milliseconds: 800);
+  static const Duration _nativeLogPollingInterval = Duration(milliseconds: 800);
   final Queue<LogEntry> _entries = Queue<LogEntry>();
-  Timer? _goLogTimer;
-  int _lastGoLogIndex = 0;
-  bool _isFetchingGoLogs = false;
-  int _goLogGeneration = 0;
-  Future<void>? _pendingGoLogClear;
+  Timer? _nativeLogTimer;
+  int _lastNativeLogIndex = 0;
+  bool _isFetchingNativeLogs = false;
+  int _nativeLogGeneration = 0;
+  Future<void>? _pendingNativeLogClear;
 
   static bool _loggingEnabled = false;
+
+  /// Receives every entry the buffer keeps, already redacted and filtered.
+  /// Desktop writes these to rotating log files.
+  static void Function(LogEntry entry)? fileSink;
+
   static bool get loggingEnabled => _loggingEnabled;
   static set loggingEnabled(bool value) {
     _loggingEnabled = value;
@@ -177,46 +185,47 @@ class LogBuffer extends ChangeNotifier {
             tag: entry.tag,
             message: sanitizedMessage,
             error: sanitizedError,
-            isFromGo: entry.isFromGo,
+            isFromNative: entry.isFromNative,
           );
 
     if (_entries.length >= maxEntries) {
       _entries.removeFirst();
     }
     _entries.add(sanitizedEntry);
+    fileSink?.call(sanitizedEntry);
     return true;
   }
 
-  void startGoLogPolling() {
-    _goLogTimer?.cancel();
-    _goLogGeneration++;
-    _goLogTimer = Timer.periodic(_goLogPollingInterval, (_) async {
-      if (_isFetchingGoLogs) return;
-      _isFetchingGoLogs = true;
+  void startNativeLogPolling() {
+    _nativeLogTimer?.cancel();
+    _nativeLogGeneration++;
+    _nativeLogTimer = Timer.periodic(_nativeLogPollingInterval, (_) async {
+      if (_isFetchingNativeLogs) return;
+      _isFetchingNativeLogs = true;
       try {
-        await _fetchGoLogs(_goLogGeneration);
+        await _fetchNativeLogs(_nativeLogGeneration);
       } finally {
-        _isFetchingGoLogs = false;
+        _isFetchingNativeLogs = false;
       }
     });
   }
 
-  void stopGoLogPolling() {
-    _goLogTimer?.cancel();
-    _goLogTimer = null;
-    _goLogGeneration++;
+  void stopNativeLogPolling() {
+    _nativeLogTimer?.cancel();
+    _nativeLogTimer = null;
+    _nativeLogGeneration++;
     // The stopped poll still owns the in-flight slot until its call completes.
   }
 
-  Future<void> _fetchGoLogs(int generation) async {
+  Future<void> _fetchNativeLogs(int generation) async {
     try {
-      final clearing = _pendingGoLogClear;
+      final clearing = _pendingNativeLogClear;
       if (clearing != null) await clearing;
-      if (generation != _goLogGeneration) return;
-      final result = await _nativeLogs.getSince(_lastGoLogIndex);
-      if (generation != _goLogGeneration) return;
+      if (generation != _nativeLogGeneration) return;
+      final result = await _nativeLogs.getSince(_lastNativeLogIndex);
+      if (generation != _nativeLogGeneration) return;
       final logs = result['logs'] as List<dynamic>? ?? [];
-      final nextIndex = result['next_index'] as int? ?? _lastGoLogIndex;
+      final nextIndex = result['next_index'] as int? ?? _lastNativeLogIndex;
       final keepNonErrorLogs = _loggingEnabled;
       final entries = <LogEntry>[];
 
@@ -256,13 +265,13 @@ class LogBuffer extends ChangeNotifier {
             level: level,
             tag: tag,
             message: message,
-            isFromGo: true,
+            isFromNative: true,
           ),
         );
       }
 
       addAll(entries);
-      if (generation == _goLogGeneration) _lastGoLogIndex = nextIndex;
+      if (generation == _nativeLogGeneration) _lastNativeLogIndex = nextIndex;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Failed to fetch native backend logs: $e');
@@ -272,25 +281,25 @@ class LogBuffer extends ChangeNotifier {
 
   void clear() {
     _entries.clear();
-    _lastGoLogIndex = 0;
-    _goLogGeneration++;
+    _lastNativeLogIndex = 0;
+    _nativeLogGeneration++;
     late final Future<void> clearing;
     clearing =
-        (_pendingGoLogClear?.then((_) => _nativeLogs.clear()) ??
+        (_pendingNativeLogClear?.then((_) => _nativeLogs.clear()) ??
                 _nativeLogs.clear())
             .catchError((_) {})
             .whenComplete(() {
-              if (identical(_pendingGoLogClear, clearing)) {
-                _pendingGoLogClear = null;
+              if (identical(_pendingNativeLogClear, clearing)) {
+                _pendingNativeLogClear = null;
               }
             });
-    _pendingGoLogClear = clearing;
+    _pendingNativeLogClear = clearing;
     notifyListeners();
   }
 
   String export() {
     final buffer = StringBuffer();
-    buffer.writeln('Mosix Log Export');
+    buffer.writeln('${AppInfo.appName} Log Export');
     buffer.writeln('Generated: ${DateTime.now().toIso8601String()}');
     buffer.writeln('Entries: ${_entries.length}');
     buffer.writeln('=' * 60);
@@ -305,7 +314,7 @@ class LogBuffer extends ChangeNotifier {
     final buffer = StringBuffer();
 
     buffer.writeln('=' * 60);
-    buffer.writeln('SPOTIFLAC LOG EXPORT');
+    buffer.writeln('${AppInfo.appName.toUpperCase()} LOG EXPORT');
     buffer.writeln('=' * 60);
     buffer.writeln();
 
@@ -346,6 +355,28 @@ class LogBuffer extends ChangeNotifier {
         buffer.writeln('System Version: ${ios.systemVersion}');
         buffer.writeln('Device Name: ${ios.name}');
         buffer.writeln('Is Physical Device: ${ios.isPhysicalDevice}');
+      } else if (Platform.isMacOS) {
+        final macos = await deviceInfo.macOsInfo;
+        buffer.writeln('Platform: macOS');
+        buffer.writeln('Model: ${macos.model}');
+        buffer.writeln(
+          'OS Version: ${macos.osRelease} (Kernel ${macos.kernelVersion})',
+        );
+        buffer.writeln('Architecture: ${macos.arch}');
+        buffer.writeln('Memory: ${macos.memorySize ~/ (1024 * 1024)} MB');
+      } else if (Platform.isWindows) {
+        final windows = await deviceInfo.windowsInfo;
+        buffer.writeln('Platform: Windows');
+        buffer.writeln('Product: ${windows.productName}');
+        buffer.writeln(
+          'Version: ${windows.displayVersion} (Build ${windows.buildNumber})',
+        );
+        buffer.writeln('Memory: ${windows.systemMemoryInMegabytes} MB');
+      } else if (Platform.isLinux) {
+        final linux = await deviceInfo.linuxInfo;
+        buffer.writeln('Platform: Linux');
+        buffer.writeln('Distribution: ${linux.prettyName}');
+        buffer.writeln('Kernel: ${Platform.operatingSystemVersion}');
       }
     } catch (e) {
       buffer.writeln('Failed to get device info: $e');
@@ -359,7 +390,7 @@ class LogBuffer extends ChangeNotifier {
     int warnCount = 0;
     int infoCount = 0;
     int debugCount = 0;
-    int goCount = 0;
+    int nativeCount = 0;
 
     for (final entry in _entries) {
       switch (entry.level) {
@@ -377,14 +408,14 @@ class LogBuffer extends ChangeNotifier {
           debugCount++;
           break;
       }
-      if (entry.isFromGo) goCount++;
+      if (entry.isFromNative) nativeCount++;
     }
 
     buffer.writeln('Errors: $errorCount');
     buffer.writeln('Warnings: $warnCount');
     buffer.writeln('Info: $infoCount');
     buffer.writeln('Debug: $debugCount');
-    buffer.writeln('From Native Backend: $goCount');
+    buffer.writeln('From Native Backend: $nativeCount');
     buffer.writeln();
 
     buffer.writeln('=' * 60);
@@ -467,18 +498,6 @@ class BufferedOutput extends LogOutput {
     }
   }
 }
-
-final log = Logger(
-  printer: PrettyPrinter(
-    methodCount: 0,
-    errorMethodCount: 5,
-    lineLength: 80,
-    colors: true,
-    printEmojis: false,
-    dateTimeFormat: DateTimeFormat.none,
-  ),
-  level: Level.debug,
-);
 
 class AppLogger {
   final String _tag;

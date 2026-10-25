@@ -6,19 +6,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/download_history_provider.dart';
-import 'package:mosix/providers/player_artwork_video_provider.dart';
-import 'package:mosix/providers/player_motion_artwork_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/screens/downloaded_album_screen.dart';
-import 'package:mosix/screens/local_album_screen.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/services/motion_artwork_store.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_player_artwork.dart';
-import 'package:mosix/widgets/motion_header_banner.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/download_history_provider.dart';
+import 'package:mornye/providers/player_artwork_video_provider.dart';
+import 'package:mornye/providers/player_motion_artwork_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/screens/downloaded_album_screen.dart';
+import 'package:mornye/screens/local_album_screen.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/services/motion_artwork_store.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/mornye_player_artwork.dart';
+import 'package:mornye/widgets/motion_header_banner.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
 class _VideoPlatform extends VideoPlayerPlatform {
@@ -208,7 +208,7 @@ void main() {
           final platform = _VideoPlatform();
           VideoPlayerPlatform.instance = platform;
           addTearDown(() => VideoPlayerPlatform.instance = previous);
-          const channel = MethodChannel('com.zuancrisp.mosix/backend');
+          const channel = MethodChannel('com.zarz.mornye/backend');
           final messenger =
               TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
           messenger.setMockMethodCallHandler(channel, (_) async => null);

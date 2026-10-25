@@ -1,9 +1,10 @@
 part of 'queue_tab.dart';
 
 extension _QueueTabNavigation on _QueueTabState {
-  String _libraryPlaybackMediaId(UnifiedLibraryItem item) {
-    return item.historyItem?.id ?? item.localItem?.id ?? item.id;
-  }
+  PlaybackRowKey _libraryPlaybackKey(UnifiedLibraryItem item) => (
+    id: item.historyItem?.id ?? item.localItem?.id ?? item.id,
+    path: item.filePath,
+  );
 
   Future<void> _openFile(
     String filePath, {
@@ -234,24 +235,35 @@ extension _QueueTabNavigation on _QueueTabState {
     );
   }
 
-  void _navigateToLocalAlbum(_GroupedLocalAlbum album) {
-    Future<List<LocalLibraryItem>> loadTracks() async {
-      var rows = album.albumKey.isNotEmpty
-          ? await LibraryDatabase.instance.getQueueLocalAlbumTracksByKey(
-              album.albumKey,
-            )
-          : await LibraryDatabase.instance.getQueueLocalAlbumTracks(
-              album.albumName,
-              album.artistName,
-            );
-      if (rows.isEmpty && album.albumKey.isNotEmpty) {
-        rows = await LibraryDatabase.instance.getQueueLocalAlbumTracks(
-          album.albumName,
-          album.artistName,
-        );
-      }
-      return rows.map(LocalLibraryItem.fromJson).toList(growable: false);
+  /// Plays a scanned album from its first track, loading its tracks when the
+  /// Library page did not.
+  Future<void> _playLocalAlbum(_GroupedLocalAlbum album) async {
+    try {
+      await playLocalAlbum(
+        ref,
+        album.tracks.isNotEmpty
+            ? album.tracks
+            : await _loadLocalAlbumTracks(album),
+      );
+    } catch (e) {
+      if (mounted) showCannotOpenFileSnackBar(context, e);
     }
+  }
+
+  Future<void> _playDownloadedAlbum(_GroupedAlbum album) async {
+    try {
+      await playDownloadedAlbum(
+        ref,
+        albumName: album.albumName,
+        artistName: album.artistName,
+      );
+    } catch (e) {
+      if (mounted) showCannotOpenFileSnackBar(context, e);
+    }
+  }
+
+  void _navigateToLocalAlbum(_GroupedLocalAlbum album) {
+    Future<List<LocalLibraryItem>> loadTracks() => _loadLocalAlbumTracks(album);
 
     _navigateWithUnfocus(
       slidePageRoute(
@@ -266,6 +278,26 @@ extension _QueueTabNavigation on _QueueTabState {
         ),
       ),
     );
+  }
+
+  Future<List<LocalLibraryItem>> _loadLocalAlbumTracks(
+    _GroupedLocalAlbum album,
+  ) async {
+    var rows = album.albumKey.isNotEmpty
+        ? await LibraryDatabase.instance.getQueueLocalAlbumTracksByKey(
+            album.albumKey,
+          )
+        : await LibraryDatabase.instance.getQueueLocalAlbumTracks(
+            album.albumName,
+            album.artistName,
+          );
+    if (rows.isEmpty && album.albumKey.isNotEmpty) {
+      rows = await LibraryDatabase.instance.getQueueLocalAlbumTracks(
+        album.albumName,
+        album.artistName,
+      );
+    }
+    return rows.map(LocalLibraryItem.fromJson).toList(growable: false);
   }
 
   void _openWishlistFolder() {
@@ -306,50 +338,10 @@ extension _QueueTabNavigation on _QueueTabState {
   }
 
   Future<void> _showCreatePlaylistDialog(BuildContext context) async {
-    final controller = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    final playlistName = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(dialogContext.l10n.collectionCreatePlaylist),
-          content: Form(
-            key: formKey,
-            child: TextFormField(
-              controller: controller,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: dialogContext.l10n.collectionPlaylistNameHint,
-              ),
-              validator: (value) {
-                final trimmed = value?.trim() ?? '';
-                if (trimmed.isEmpty) {
-                  return dialogContext.l10n.collectionPlaylistNameRequired;
-                }
-                return null;
-              },
-              onFieldSubmitted: (_) {
-                if (formKey.currentState?.validate() != true) return;
-                Navigator.of(dialogContext).pop(controller.text.trim());
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(dialogContext.l10n.dialogCancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                if (formKey.currentState?.validate() != true) return;
-                Navigator.of(dialogContext).pop(controller.text.trim());
-              },
-              child: Text(dialogContext.l10n.actionCreate),
-            ),
-          ],
-        );
-      },
+    final playlistName = await promptPlaylistName(
+      context,
+      title: context.l10n.collectionCreatePlaylist,
+      confirmLabel: context.l10n.actionCreate,
     );
 
     if (playlistName == null || playlistName.isEmpty) return;
@@ -428,12 +420,12 @@ extension _QueueTabNavigation on _QueueTabState {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: const Color(0xFF5085A5),
+        color: colorScheme.secondaryContainer,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(
+      child: AppIcon(
         Icons.queue_music,
-        color: Colors.white,
+        color: colorScheme.onSecondaryContainer,
         size: size != null ? size * 0.5 : 40,
       ),
     );
@@ -523,7 +515,7 @@ extension _QueueTabNavigation on _QueueTabState {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.playlist_add, size: 18, color: colorScheme.primary),
+            AppIcon(Icons.playlist_add, size: 18, color: colorScheme.primary),
             const SizedBox(width: 8),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 180),

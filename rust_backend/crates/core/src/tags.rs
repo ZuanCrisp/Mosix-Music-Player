@@ -7,14 +7,17 @@ mod file;
 mod id3;
 mod library;
 mod mp4;
+mod separators;
 mod write;
 use crate::text::utf8;
 pub(crate) use containers::{ogg_packets, ogg_stream_is_opus};
 pub use file::{file_metadata_extension, read_file_metadata};
+pub(crate) use id3::v2_tag_length;
 pub use library::{
     library_extension, library_id, library_metadata, read_library_metadata,
     read_library_metadata_with_cover,
 };
+pub use separators::format_metadata_tag_value;
 use serde::Serialize;
 use std::io::{self, BufReader, Read, Seek, SeekFrom};
 pub use write::{
@@ -28,28 +31,63 @@ pub struct CoverArt {
     pub mime: String,
 }
 
+/// The container behind an extension that names more than one: Opus is also
+/// carried in MP4 under a .opus name, and .aac names both MP4 and raw ADTS
+/// streams, the latter often behind an ID3v2 tag. ADTS reports "adts".
 fn read_container_format<'a>(
     reader: &mut (impl Read + Seek),
     format: &'a str,
 ) -> Result<&'a str, String> {
-    if format != "opus" {
+    if !matches!(format, "opus" | "aac") {
         return Ok(format);
     }
-    // Opus is also carried in MP4; the filename can still end in .opus.
+    let mut header = [0; 10];
+    let length = read_prefix(reader, 0, &mut header)?;
+    let container = if length >= 8 && &header[4..8] == b"ftyp" {
+        if format == "opus" { "m4a" } else { format }
+    } else if format == "aac" {
+        let mut sync = [0; 2];
+        let synced = match id3::v2_tag_length(&header[..length]) {
+            Some(tag) => read_prefix(reader, tag, &mut sync)? == sync.len(),
+            None => {
+                sync.copy_from_slice(&header[..2]);
+                length >= sync.len()
+            }
+        };
+        if synced && crate::media::is_adts_frame(&sync) {
+            "adts"
+        } else {
+            format
+        }
+    } else {
+        format
+    };
     reader
         .seek(SeekFrom::Start(0))
         .map_err(|error| error.to_string())?;
-    let mut header = [0; 8];
-    let read = reader.read_exact(&mut header);
+    Ok(container)
+}
+
+/// Fills as much of `data` as the file has from `offset`, without treating a
+/// short file as an error.
+fn read_prefix(
+    reader: &mut (impl Read + Seek),
+    offset: u64,
+    data: &mut [u8],
+) -> Result<usize, String> {
     reader
-        .seek(SeekFrom::Start(0))
+        .seek(SeekFrom::Start(offset))
         .map_err(|error| error.to_string())?;
-    match read {
-        Ok(()) if &header[4..] == b"ftyp" => Ok("m4a"),
-        Ok(()) => Ok(format),
-        Err(error) if error.kind() == io::ErrorKind::UnexpectedEof => Ok(format),
-        Err(error) => Err(error.to_string()),
+    let mut length = 0;
+    while length < data.len() {
+        match reader.read(&mut data[length..]) {
+            Ok(0) => break,
+            Ok(count) => length += count,
+            Err(error) if error.kind() == io::ErrorKind::Interrupted => {}
+            Err(error) => return Err(error.to_string()),
+        }
     }
+    Ok(length)
 }
 
 /// Extract the embedded bytes without decoding the image or reading audio into
@@ -73,7 +111,7 @@ pub fn extract_cover(
     let result = match format {
         "flac" => containers::flac_cover(&mut reader),
         "m4a" | "aac" => mp4::cover(&mut reader),
-        "mp3" => id3::cover(&mut reader),
+        "mp3" | "adts" => id3::cover(&mut reader),
         "ogg" | "opus" => containers::ogg_cover(&mut reader),
         "wav" => containers::riff_cover(&mut reader, false),
         "aiff" | "aif" | "aifc" => containers::riff_cover(&mut reader, true),
@@ -206,6 +244,8 @@ fn read_tags(
         },
         "m4a" | "mp4" | "aac" => mp4::read(&mut reader),
         "mp3" => id3::read(&mut reader),
+        // ADTS has no tag format of its own; taggers use ID3 or APEv2.
+        "adts" => id3::read(&mut reader).or_else(|_| containers::ape(&mut reader)),
         "ogg" | "opus" => containers::ogg(&mut reader),
         "ape" | "wv" | "mpc" => containers::ape(&mut reader),
         "wav" => containers::riff(&mut reader, false),

@@ -1,8 +1,8 @@
 // ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
 part of 'track_metadata_screen.dart';
 
-// Display helpers: quality/bitrate labels, service track-id formatting,
-// snackbars, and path formatting.
+final _spotifyTrackIdPattern = RegExp(r'^[A-Za-z0-9]{22}$');
+
 extension _TrackMetadataDisplay on _TrackMetadataScreenState {
   bool _isBitrateFormatValue(String? value) {
     return const {
@@ -61,7 +61,7 @@ extension _TrackMetadataDisplay on _TrackMetadataScreenState {
   String _displayServiceTrackId(String value) {
     final raw = value.trim();
     if (raw.isEmpty) return raw;
-    final spotifyTrackIdPattern = RegExp(r'^[A-Za-z0-9]{22}$');
+    final spotifyTrackIdPattern = _spotifyTrackIdPattern;
 
     if (raw.startsWith('deezer:')) return raw.substring('deezer:'.length);
     if (raw.startsWith('tidal:')) return raw.substring('tidal:'.length);
@@ -91,7 +91,7 @@ extension _TrackMetadataDisplay on _TrackMetadataScreenState {
   String _serviceForTrackId(String value, {required String fallbackService}) {
     final raw = value.trim();
     if (raw.isEmpty) return fallbackService;
-    final spotifyTrackIdPattern = RegExp(r'^[A-Za-z0-9]{22}$');
+    final spotifyTrackIdPattern = _spotifyTrackIdPattern;
 
     if (raw.startsWith('deezer:')) return MusicServices.deezer;
     if (raw.startsWith('tidal:')) return MusicServices.tidal;

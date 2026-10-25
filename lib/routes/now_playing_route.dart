@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/services/app_orientation.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/services/app_orientation.dart';
+import 'package:mornye/theme/mornye_theme.dart';
 
 /// Hero tag shared by the mini player artwork and the full player artwork so
 /// the cover visually expands when the player opens.

@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/download_service_picker.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/download_service_picker.dart';
+
+import 'support/fixed_settings.dart';
 
 class _Extensions extends ExtensionNotifier {
   _Extensions(
@@ -87,11 +88,6 @@ class _Extensions extends ExtensionNotifier {
   }
 }
 
-class _Settings extends SettingsNotifier {
-  @override
-  AppSettings build() => const AppSettings();
-}
-
 void main() {
   for (final (qualityCount, mornye) in [
     (3, false),
@@ -110,7 +106,7 @@ void main() {
           ProviderScope(
             overrides: [
               extensionProvider.overrideWith(() => _Extensions(qualityCount)),
-              settingsProvider.overrideWith(_Settings.new),
+              settingsProvider.overrideWith(FixedSettingsNotifier.new),
             ],
             child: MaterialApp(
               theme: mornye
@@ -190,7 +186,7 @@ void main() {
           ProviderScope(
             overrides: [
               extensionProvider.overrideWith(() => extensions),
-              settingsProvider.overrideWith(_Settings.new),
+              settingsProvider.overrideWith(FixedSettingsNotifier.new),
             ],
             child: MaterialApp(
               theme: MornyeTheme.build(brightness),

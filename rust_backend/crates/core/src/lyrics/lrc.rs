@@ -1,3 +1,5 @@
+//! LRC lyrics parsing and helpers: timestamps, synced and plain text, and usability checks.
+
 use super::{LyricsLine, LyricsResponse};
 use crate::matching::lowercase;
 use base64::{Engine, engine::general_purpose::STANDARD};
@@ -157,9 +159,15 @@ pub fn source_uses_proxy(source: &str) -> bool {
     !source.is_empty()
         && ![
             "lrclib",
+            "zarz-lrc",
+            "mornye lyrics",
+            // Retain credits embedded before the provider was renamed.
+            "spotiflac-mobile lyrics",
             "kugou direct",
             "qq music direct",
             "genius direct",
+            "lrc.red",
+            "betterlyrics",
             "extension:",
             "heuristic",
         ]
@@ -192,9 +200,9 @@ pub fn with_metadata(lyrics: &LyricsResponse, track: &str, artist: &str) -> Stri
         lyrics.source.trim()
     };
     let credit = if source_uses_proxy(source) {
-        "SpotiFLAC-Mobile via Paxsenix API"
+        "Mosix via Paxsenix API"
     } else {
-        "SpotiFLAC-Mobile"
+        "Mosix"
     };
     let mut output = format!("[ti:{track}]\n[ar:{artist}]\n[by:{credit}");
     if !source.is_empty() {
@@ -248,6 +256,26 @@ pub fn with_metadata(lyrics: &LyricsResponse, track: &str, artist: &str) -> Stri
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn first_party_lyrics_do_not_credit_paxsenix() {
+        for source in [
+            "Zarz-LRC",
+            "Zarz-LRC (cached)",
+            "Mosix Lyrics",
+            "Mosix Lyrics (cached)",
+            "SpotiFLAC-Mobile Lyrics",
+            "SpotiFLAC-Mobile Lyrics (cached)",
+        ] {
+            let lyrics = LyricsResponse::from_text("[00:01.00]Example", source, source);
+            let saved = with_metadata(&lyrics, "Track", "Artist");
+            assert!(saved.contains("[by:Mosix (source: "));
+            assert!(!saved.contains("Paxsenix"));
+            assert_eq!(extract_source(&saved), source);
+        }
+        let lyrics = LyricsResponse::from_text("[00:01.00]Example", "Spotify", "Spotify");
+        assert!(with_metadata(&lyrics, "Track", "Artist").contains("via Paxsenix API"));
+    }
 
     #[test]
     fn zero_placeholders_are_plain_lyrics_without_losing_source_or_text() {

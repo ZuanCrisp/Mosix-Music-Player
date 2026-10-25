@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/metadata_cover_resources.dart';
+import 'package:mornye/services/metadata_cover_resources.dart';
 
 void main() {
   test(

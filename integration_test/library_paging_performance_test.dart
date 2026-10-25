@@ -7,15 +7,16 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/download_history_provider.dart';
-import 'package:mosix/providers/library_browse_provider.dart';
-import 'package:mosix/providers/local_library_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/screens/mornye_library_screen.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/providers/download_history_provider.dart';
+import 'package:mornye/providers/library_browse_provider.dart';
+import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/screens/mornye_library_screen.dart';
+import 'package:mornye/theme/mornye_theme.dart';
 
+import '../test/support/fixed_settings.dart';
 import '../test/support/library_paging_fixture.dart';
 import 'performance_probe.dart';
 
@@ -27,11 +28,6 @@ const _request = (
   limit: 40,
   completeness: null,
 );
-
-class _Settings extends SettingsNotifier {
-  @override
-  AppSettings build() => const AppSettings(localLibraryEnabled: true);
-}
 
 class _History extends DownloadHistoryNotifier {
   @override
@@ -197,7 +193,11 @@ void main() {
             child: ProviderScope(
               key: ValueKey(mountNumber++),
               overrides: [
-                settingsProvider.overrideWith(_Settings.new),
+                settingsProvider.overrideWith(
+                  () => FixedSettingsNotifier(
+                    const AppSettings(localLibraryEnabled: true),
+                  ),
+                ),
                 downloadHistoryProvider.overrideWith(_History.new),
                 localLibraryProvider.overrideWith(_Local.new),
                 libraryBrowsePageLoaderProvider.overrideWithValue(readPage),

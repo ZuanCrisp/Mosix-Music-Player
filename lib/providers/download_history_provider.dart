@@ -1,22 +1,23 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/models/download_history.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/history_database.dart';
-import 'package:mosix/services/history_maintenance.dart';
-import 'package:mosix/utils/logger.dart' hide log;
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/utils/string_utils.dart';
-import 'package:mosix/utils/audio_format_utils.dart';
-import 'package:mosix/utils/int_utils.dart';
-import 'package:mosix/utils/lyrics_metadata_helper.dart';
-import 'package:mosix/utils/path_match_keys.dart';
+import 'package:mornye/models/download_history.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/history_database.dart';
+import 'package:mornye/services/history_maintenance.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/string_utils.dart';
+import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mornye/utils/int_utils.dart';
+import 'package:mornye/utils/lyrics_metadata_helper.dart';
+import 'package:mornye/utils/path_match_keys.dart';
 
-export 'package:mosix/models/download_history.dart';
+export 'package:mornye/models/download_history.dart';
 
 part 'download_history_provider_maintenance.dart';
 
@@ -117,11 +118,11 @@ class DownloadHistoryNotifier extends Notifier<DownloadHistoryState> {
   @override
   DownloadHistoryState build() {
     ref.onDispose(() => _indexBumpTimer?.cancel());
-    _loadFromDatabaseSync();
+    _scheduleLoadFromDatabase();
     return DownloadHistoryState();
   }
 
-  void _loadFromDatabaseSync() {
+  void _scheduleLoadFromDatabase() {
     if (_isLoaded) return;
     _isLoaded = true;
     Future.microtask(() async {
@@ -1131,21 +1132,19 @@ class DownloadHistoryNotifier extends Notifier<DownloadHistoryState> {
   Future<void> restoreFromBackup(List<Map<String, dynamic>> items) =>
       restoreFromBackupStream(Stream.fromIterable(items));
 
-  /// Serializes a native backup replacement with existing history writes, then
-  /// publishes the same bounded initial state as a streamed restore.
+  /// Serializes backup replacement with existing history writes. Repair iOS
+  /// paths before publishing the restored history to Library and maintenance.
   Future<void> restoreFromBackupOperation(Future<void> Function() restore) =>
       _enqueueHistoryWrite(() async {
         await restore();
+        await _db.migrateIosContainerPaths(force: true);
         await _loadFromDatabase();
       });
 
   /// Restores a large v2 backup without retaining the complete history in
   /// Dart memory. SQLite writes are grouped to keep JNI/channel overhead low.
   Future<void> restoreFromBackupStream(Stream<Map<String, dynamic>> items) =>
-      _enqueueHistoryWrite(() async {
-        await _db.replaceAll(items);
-        await _loadFromDatabase();
-      });
+      restoreFromBackupOperation(() => _db.replaceAll(items));
 }
 
 final downloadHistoryProvider =
@@ -1178,7 +1177,7 @@ final downloadHistoryBatchExistsProvider = FutureProvider.autoDispose
       };
     });
 
-bool historyLookupExistsInMemory(
+bool _historyLookupExistsInMemory(
   DownloadHistoryState state,
   HistoryLookupRequest request,
 ) {
@@ -1204,34 +1203,56 @@ Set<String> mergeVisibleHistoryLookupKeys({
 }) {
   final keys = <String>{...persistedKeys};
   for (final track in request.tracks) {
-    if (historyLookupExistsInMemory(state, track)) {
+    if (_historyLookupExistsInMemory(state, track)) {
       keys.add(track.lookupKey);
     }
   }
   return keys;
 }
 
+class _VisibleHistoryBatchExistsNotifier extends Notifier<Set<String>> {
+  _VisibleHistoryBatchExistsNotifier(this.request);
+
+  final HistoryBatchLookupRequest request;
+
+  @override
+  Set<String> build() {
+    final history = ref.watch(downloadHistoryProvider);
+    final persistedKeys = ref
+        .watch(downloadHistoryBatchExistsProvider(request))
+        .maybeWhen(
+          skipLoadingOnReload: true,
+          skipLoadingOnRefresh: true,
+          data: (keys) => keys,
+          orElse: () => const <String>{},
+        );
+    return mergeVisibleHistoryLookupKeys(
+      state: history,
+      request: request,
+      persistedKeys: persistedKeys,
+    );
+  }
+
+  @override
+  bool updateShouldNotify(Set<String> previous, Set<String> next) =>
+      !setEquals(previous, next);
+}
+
+final _visibleHistoryBatchExistsProvider = NotifierProvider.autoDispose
+    .family<
+      _VisibleHistoryBatchExistsNotifier,
+      Set<String>,
+      HistoryBatchLookupRequest
+    >(_VisibleHistoryBatchExistsNotifier.new);
+
 /// UI-facing history lookup that keeps the last database result visible while
 /// a batch query reloads and immediately merges downloads persisted in memory.
 /// This prevents completed tracks from losing their Play action until the
 /// remainder of a large download batch finishes.
 final downloadHistoryVisibleBatchExistsProvider = Provider.autoDispose
-    .family<Set<String>, HistoryBatchLookupRequest>((ref, request) {
-      final state = ref.watch(downloadHistoryProvider);
-      final persistedKeys = ref
-          .watch(downloadHistoryBatchExistsProvider(request))
-          .maybeWhen(
-            skipLoadingOnReload: true,
-            skipLoadingOnRefresh: true,
-            data: (keys) => keys,
-            orElse: () => const <String>{},
-          );
-      return mergeVisibleHistoryLookupKeys(
-        state: state,
-        request: request,
-        persistedKeys: persistedKeys,
-      );
-    });
+    .family<Set<String>, HistoryBatchLookupRequest>(
+      (ref, request) => ref.watch(_visibleHistoryBatchExistsProvider(request)),
+    );
 
 class DownloadedAlbumTracksRequest {
   final String albumName;

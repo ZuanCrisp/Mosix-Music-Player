@@ -6,27 +6,33 @@ import 'dart:isolate';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/services/network_metadata_service.dart';
-import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/lyrics_metadata_helper.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/services/library_database_models.dart';
+import 'package:mornye/services/network_metadata_service.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/lyrics_metadata_helper.dart';
+import 'package:mornye/utils/logger.dart';
+
+part 'network_library_scanner_subsonic.dart';
 
 final _log = AppLogger('LocalLibrary');
 
 /// Bounded tag prefetch; only NDJSON and artwork are stored locally.
 /// Failed listings never count as empty directories. Partial scans retain old
-/// rows through the same ingestion policy used for local/SAF scans.
+/// rows only under unreadable folders or at unreadable files.
 class NetworkLibraryScanner {
   NetworkLibraryScanner({
     NetworkStorageService? storage,
     Future<Map<String, dynamic>> Function(String)? readMetadata,
+    Future<Map<String, Map<String, dynamic>>> Function(List<String>)?
+    readCachedRows,
     Future<Directory> Function()? supportDirectory,
     Future<Directory> Function()? temporaryDirectory,
     Future<RandomAccessFile> Function(File)? openOutput,
     int? metadataConcurrency,
   }) : _storage = storage ?? NetworkStorageService.instance,
        _readMetadata = readMetadata,
+       _readCachedRows = readCachedRows,
        _metadataConcurrency = metadataConcurrency == null
            ? null
            : RangeError.checkValueInInterval(metadataConcurrency, 1, 4),
@@ -36,12 +42,55 @@ class NetworkLibraryScanner {
 
   final NetworkStorageService _storage;
   final Future<Map<String, dynamic>> Function(String)? _readMetadata;
+  final Future<Map<String, Map<String, dynamic>>> Function(List<String>)?
+  _readCachedRows;
   final int? _metadataConcurrency;
   final Future<Directory> Function() _supportDirectory, _temporaryDirectory;
   final Future<RandomAccessFile> Function(File) _openOutput;
+  NetworkMetadataService? _activeMetadata;
+  SubsonicClient? _activeSubsonic;
+  bool _running = false;
+  bool _cancelled = false;
+
+  /// Stop scan-owned native reads even while scan() is awaiting their result.
+  Future<void> cancelPending() async {
+    _cancelled = true;
+    _activeSubsonic?.close();
+    await _activeMetadata?.cancelPending();
+  }
 
   Future<LibraryScanNDJSONFile> scan(
     String source, {
+    bool forceFullScan = false,
+    required Future<void> Function() checkpoint,
+    required void Function(int processed, int errors, String name) onProgress,
+  }) async {
+    if (_running) {
+      throw StateError('Network library scanner is already running');
+    }
+    _running = true;
+    _cancelled = false;
+    try {
+      return await _scan(
+        source,
+        forceFullScan: forceFullScan,
+        checkpoint: () async {
+          if (_cancelled) throw StateError('Network library scan cancelled');
+          await checkpoint();
+          if (_cancelled) throw StateError('Network library scan cancelled');
+        },
+        onProgress: onProgress,
+      );
+    } finally {
+      _activeMetadata = null;
+      _activeSubsonic = null;
+      _running = false;
+    }
+  }
+
+  Future<LibraryScanNDJSONFile> _scan(
+    String source, {
+    required bool forceFullScan,
     required Future<void> Function() checkpoint,
     required void Function(int processed, int errors, String name) onProgress,
   }) async {
@@ -53,6 +102,17 @@ class NetworkLibraryScanner {
       throw const FormatException('Invalid network library source');
     }
     final connection = await _storage.connection(uri.host);
+    if (connection.protocol == NetworkProtocol.subsonic) {
+      if (uri.pathSegments.any((segment) => segment.isNotEmpty)) {
+        throw const FormatException('Expected a Subsonic library root');
+      }
+      return _scanSubsonic(
+        connection,
+        forceFullScan: forceFullScan,
+        checkpoint: checkpoint,
+        onProgress: onProgress,
+      );
+    }
     if (connection.protocol == NetworkProtocol.http) {
       throw const FormatException('Library folders require SMB or WebDAV');
     }
@@ -62,7 +122,21 @@ class NetworkLibraryScanner {
     }
     await checkpoint();
     // Fail before creating scan output if the root cannot be listed.
-    final first = await _storage.list(connection, root);
+    List<NetworkEntry>? first = await _storage.list(connection, root);
+    await checkpoint();
+    List<String>? preserveMissingPaths = [];
+    void preserve(String path) {
+      final paths = preserveMissingPaths;
+      if (paths == null) return;
+      // Keep failed-scan memory and publication SQL bounded. Widespread
+      // failures fall back to retaining the whole previous source snapshot.
+      if (paths.length >= 128) {
+        preserveMissingPaths = null;
+      } else {
+        paths.add(NetworkStorageService.source(connection.id, path));
+      }
+    }
+
     final temp = await Directory(
       '${(await _temporaryDirectory()).path}/network_scans',
     ).create(recursive: true);
@@ -74,9 +148,9 @@ class NetworkLibraryScanner {
     var written = 0;
     var processed = 0;
     var errors = 0;
+    var reused = 0;
     final pending = <String>[root];
     final visited = <String>{};
-    final seenFiles = <String>{};
     // Leave room for playback and avoid saturating a small NAS/router.
     final concurrency =
         _metadataConcurrency ??
@@ -88,6 +162,7 @@ class NetworkLibraryScanner {
             cacheDirectory: _temporaryDirectory,
           )
         : null;
+    _activeMetadata = metadata;
     final read =
         _readMetadata ??
         ((String source) => metadata!.read(source, forceRefresh: true));
@@ -115,13 +190,17 @@ class NetworkLibraryScanner {
         if (visited.length > 100000) {
           throw StateError('Too many network folders');
         }
-        final List<NetworkEntry> entries;
+        List<NetworkEntry>? entries;
         try {
           entries = folder == root
-              ? first
+              ? first!
               : await _storage.list(connection, folder);
+          // The first listing can be very large. Release it before descending
+          // into children instead of retaining it for the entire scan.
+          first = null;
         } catch (error) {
           errors++;
+          preserve(folder);
           _log.e('Network folder listing failed [$folder]', error);
           onProgress(processed, errors, folder);
           continue;
@@ -131,35 +210,87 @@ class NetworkLibraryScanner {
           '${entries.where((entry) => entry.directory).length} folders, '
           '${entries.where((entry) => entry.audio).length} audio files',
         );
-        final iterator = entries.iterator;
+        // Each directory is visited once and only its direct children are
+        // accepted, so file deduplication need not retain every scanned path.
+        final seenFiles = <String>{};
+        Iterator<NetworkEntry>? iterator = entries.iterator;
+        entries = null;
+        final candidates = <_NetworkCandidate>[];
+        var candidateIndex = 0;
+        var cachedRows = <String, Map<String, dynamic>>{};
         Future<void> fill() async {
-          while (prefetched.length < concurrency && iterator.moveNext()) {
+          while (prefetched.length < concurrency) {
             await checkpoint();
-            final entry = iterator.current;
-            final path = networkPath(entry.path);
-            // Reject provider parent links and paths outside this folder.
-            if (!path.startsWith(folder) || path == folder) continue;
-            if (entry.directory) {
-              if (!path.endsWith('/')) {
-                throw const FormatException('Invalid folder entry');
+            if (candidateIndex == candidates.length) {
+              candidates.clear();
+              candidateIndex = 0;
+              cachedRows.clear();
+              // Bound database reads and retained metadata independently of
+              // the size of a NAS directory or the metadata prefetch lanes.
+              while (candidates.length < 64 && iterator!.moveNext()) {
+                await checkpoint();
+                final entry = iterator!.current;
+                final path = networkPath(entry.path);
+                // Reject provider parent links and paths outside this folder.
+                if (!path.startsWith(folder) || path == folder) continue;
+                final child = path.substring(folder.length);
+                final name = entry.directory && child.endsWith('/')
+                    ? child.substring(0, child.length - 1)
+                    : child;
+                if (name.isEmpty || name.contains('/')) continue;
+                if (entry.directory) {
+                  if (!path.endsWith('/')) {
+                    throw const FormatException('Invalid folder entry');
+                  }
+                  pending.add(path);
+                  continue;
+                }
+                if (!entry.audio || !seenFiles.add(path)) continue;
+                candidates.add((
+                  entry: entry,
+                  source: NetworkStorageService.source(connection.id, path),
+                  version: _networkFileVersion(connection, entry),
+                ));
               }
-              pending.add(path);
-              continue;
+              if (candidates.isEmpty) break;
+              if (!forceFullScan && _readCachedRows != null) {
+                final paths = [
+                  for (final candidate in candidates)
+                    if (candidate.version != null) candidate.source,
+                ];
+                if (paths.isNotEmpty) cachedRows = await _readCachedRows(paths);
+              }
             }
-            if (!entry.audio || !seenFiles.add(path)) continue;
-            final trackSource = NetworkStorageService.source(
-              connection.id,
-              path,
-            );
+            await checkpoint();
+            final candidate = candidates[candidateIndex++];
+            final trackSource = candidate.source;
+            final cached = cachedRows.remove(trackSource);
             // Capture failures immediately: a later result can fail while the
             // first read is still running. Consume results in listing order.
-            final result = Future.sync(() => read(trackSource))
-                .then<_NetworkTags>(
-                  (tags) => (tags: tags, error: null, stack: null),
+            final result =
+                Future.sync(() async {
+                  if (candidate.version != null &&
+                      cached?['networkFileVersion'] == candidate.version &&
+                      cached?['filePath'] == trackSource) {
+                    final cover = cached!['coverPath'] as String?;
+                    if (cover == null ||
+                        cover.isEmpty ||
+                        await File(cover).exists()) {
+                      return (tags: null, row: cached);
+                    }
+                  }
+                  return (tags: await read(trackSource), row: null);
+                }).then<_NetworkTags>(
+                  (value) => (
+                    tags: value.tags,
+                    row: value.row,
+                    error: null,
+                    stack: null,
+                  ),
                   onError: (Object error, StackTrace stack) =>
-                      (tags: null, error: error, stack: stack),
+                      (tags: null, row: null, error: error, stack: stack),
                 );
-            prefetched.add((entry: entry, source: trackSource, result: result));
+            prefetched.add((candidate: candidate, result: result));
           }
         }
 
@@ -167,60 +298,72 @@ class NetworkLibraryScanner {
         while (prefetched.isNotEmpty) {
           await checkpoint();
           final next = prefetched.removeAt(0);
-          final entry = next.entry;
-          final trackSource = next.source;
+          final entry = next.candidate.entry;
+          final trackSource = next.candidate.source;
           String? encodedRow;
           try {
             final result = await next.result;
             if (result.error != null) {
               Error.throwWithStackTrace(result.error!, result.stack!);
             }
-            final tags = result.tags!;
-            if (tags['error'] != null || tags['metadataFromFilename'] == true) {
-              throw StateError(
-                tags['error']?.toString() ?? 'Network tags unavailable',
-              );
-            }
-            final id = 'network_${sha256.convert(utf8.encode(trackSource))}';
-            String? coverPath;
-            final cover = tags['cover_path']?.toString();
-            if (cover != null &&
-                cover.isNotEmpty &&
-                await File(cover).exists()) {
-              // Identical embedded artwork shares an immutable file, including
-              // across albums/sources. Cleanup retains all DB cover references.
-              try {
+            final cached = result.row;
+            if (cached != null) {
+              encodedRow = '${jsonEncode(cached)}\n';
+              reused++;
+            } else {
+              final tags = result.tags!;
+              if (tags['error'] != null ||
+                  tags['metadataFromFilename'] == true) {
+                throw StateError(
+                  tags['error']?.toString() ?? 'Network tags unavailable',
+                );
+              }
+              final id = 'network_${sha256.convert(utf8.encode(trackSource))}';
+              String? coverPath;
+              final cover = tags['cover_path']?.toString();
+              if (cover != null &&
+                  cover.isNotEmpty &&
+                  await File(cover).exists()) {
+                // Identical embedded artwork shares an immutable file, including
+                // across albums/sources. Cleanup retains all DB cover references.
                 try {
-                  if (!PlatformBridge.supportsCoreBackend) {
+                  try {
+                    if (!PlatformBridge.supportsCoreBackend) {
+                      coverPath = await _promoteCoverInBackground(
+                        cover,
+                        covers.path,
+                      );
+                    } else {
+                      final promoted = await PlatformBridge.runNativeDataJob({
+                        'operation': 'promote_network_cover',
+                        'path': cover,
+                        'directory': covers.path,
+                      });
+                      coverPath = promoted['cover_path'] as String;
+                    }
+                  } on MissingPluginException {
                     coverPath = await _promoteCoverInBackground(
                       cover,
                       covers.path,
                     );
-                  } else {
-                    final promoted = await PlatformBridge.runNativeDataJob({
-                      'operation': 'promote_network_cover',
-                      'path': cover,
-                      'directory': covers.path,
-                    });
-                    coverPath = promoted['cover_path'] as String;
                   }
-                } on MissingPluginException {
-                  coverPath = await _promoteCoverInBackground(
-                    cover,
-                    covers.path,
-                  );
-                }
-              } catch (_) {}
+                } catch (_) {}
+              }
+              await checkpoint();
+              final row = networkLibraryRow(trackSource, entry, tags)
+                ..['id'] = id
+                ..['coverPath'] = coverPath
+                ..['networkFileVersion'] =
+                    cover != null && cover.isNotEmpty && coverPath == null
+                    ? null
+                    : next.candidate.version;
+              encodedRow = '${jsonEncode(row)}\n';
             }
-            await checkpoint();
-            final row = networkLibraryRow(trackSource, entry, tags)
-              ..['id'] = id
-              ..['coverPath'] = coverPath;
-            encodedRow = '${jsonEncode(row)}\n';
           } catch (error) {
             // Cancellation must abort the whole staging operation.
             await checkpoint();
             errors++;
+            preserve(entry.path);
             _log.e('Network track scan failed [$trackSource]', error);
           }
           if (encodedRow != null) {
@@ -242,6 +385,10 @@ class NetworkLibraryScanner {
           onProgress(processed, errors, entry.name);
           await fill();
         }
+        // Async closures may otherwise keep the completed iterator's backing
+        // list alive while awaiting the next directory listing.
+        iterator = null;
+        seenFiles.clear();
       }
       await checkpoint();
       await flush();
@@ -251,12 +398,14 @@ class NetworkLibraryScanner {
       await checkpoint();
       _log.i(
         'Network scan complete: ${visited.length} folders visited, '
-        '$processed audio files discovered, $written indexed, $errors errors',
+        '$processed audio files discovered, $written indexed '
+        '($reused unchanged), $errors errors',
       );
       return LibraryScanNDJSONFile(
         file: file,
         expectedCount: written,
         errorCount: errors,
+        preserveMissingPaths: preserveMissingPaths,
       );
     } catch (_) {
       await metadata?.cancelPending();
@@ -278,14 +427,53 @@ class NetworkLibraryScanner {
 
 typedef _NetworkTags = ({
   Map<String, dynamic>? tags,
+  Map<String, dynamic>? row,
   Object? error,
   StackTrace? stack,
 });
-typedef _PendingNetworkTrack = ({
+typedef _NetworkCandidate = ({
   NetworkEntry entry,
   String source,
+  String? version,
+});
+typedef _PendingNetworkTrack = ({
+  _NetworkCandidate candidate,
   Future<_NetworkTags> result,
 });
+
+String? _networkFileVersion(NetworkConnection connection, NetworkEntry entry) {
+  final etag = entry.etag?.trim();
+  final strongEtag =
+      etag != null &&
+      etag.length >= 2 &&
+      etag.startsWith('"') &&
+      etag.endsWith('"');
+  final datedSize =
+      entry.size != null &&
+      entry.size! >= 0 &&
+      entry.modifiedTime != null &&
+      entry.modifiedTime! > 0;
+  // Filename/size alone cannot detect in-place tag edits. A strong ETag or
+  // dated size is required; weak ETags serve only as additional invalidators.
+  if (!strongEtag && !datedSize) return null;
+  return sha256
+      .convert(
+        utf8.encode(
+          jsonEncode([
+            1,
+            libraryAudioMetadataScanVersion,
+            connection.protocol.name,
+            connection.address,
+            connection.username,
+            connection.domain,
+            entry.size,
+            entry.modifiedTime,
+            etag,
+          ]),
+        ),
+      )
+      .toString();
+}
 
 // Keep the isolate closure outside scan's scope so it cannot capture an open
 // output handle or the buffering closures, which are not isolate-sendable.
@@ -320,6 +508,7 @@ Map<String, dynamic> networkLibraryRow(
   return {
     'filePath': source,
     'scannedAt': DateTime.now().toIso8601String(),
+    'fileModTime': (entry.modifiedTime ?? 0) > 0 ? entry.modifiedTime : null,
     'trackName': text(
       'title',
       entry.name.replaceFirst(RegExp(r'\.[^.]+$'), ''),

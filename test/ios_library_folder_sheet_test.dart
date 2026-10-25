@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/ios_library_folder_sheet.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/ios_library_folder_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const backend = MethodChannel('com.zuancrisp.mosix/backend');
+  const backend = MethodChannel('com.zarz.mornye/backend');
   const paths = MethodChannel('plugins.flutter.io/path_provider');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -71,7 +71,7 @@ void main() {
     testWidgets('internal music bypasses Files (Mornye=$mornye)', (
       tester,
     ) async {
-      final music = File('${documents.path}/SpotiFLAC/example.flac');
+      final music = File('${documents.path}/Mornye/example.flac');
       music.parent.createSync(recursive: true);
       music.writeAsBytesSync([1, 2, 3]);
       await openSheet(tester, mornye: mornye);

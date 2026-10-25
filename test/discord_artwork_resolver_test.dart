@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/services/discord_artwork_resolver.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/services/discord_artwork_resolver.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -75,7 +75,7 @@ void main() {
   });
 
   test('default catalog searches enabled metadata extensions', () async {
-    const channel = MethodChannel('com.zuancrisp.mosix/backend');
+    const channel = MethodChannel('com.zarz.mornye/backend');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(channel, (call) async {

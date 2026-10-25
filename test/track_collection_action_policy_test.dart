@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/widgets/track_collection_action_policy.dart';
+import 'package:mornye/widgets/track_collection_action_policy.dart';
 
 void main() {
   group('quality variant track menu', () {

@@ -4,12 +4,12 @@ import 'dart:isolate';
 
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/models/library_collections.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
-import 'package:mosix/services/sqlite_native_snapshot.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/models/library_collections.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
+import 'package:mornye/services/sqlite_native_snapshot.dart';
+import 'package:mornye/utils/logger.dart';
 
 // Small selections cost less inline; reserve worker setup for larger lists.
 const _workerThreshold = 1024;

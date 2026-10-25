@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/utils/app_bar_layout.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/app_bar_layout.dart';
 
 /// The collapsing header used by every top-level tab and every settings-style
 /// sub-page.
@@ -11,9 +13,13 @@ import 'package:mosix/utils/app_bar_layout.dart';
 class AppSliverHeader extends StatelessWidget {
   /// Root of a navigation tab: no back button, and the title stays aligned with
   /// the content margin at every collapse ratio.
-  const AppSliverHeader.tabRoot({super.key, required this.title, this.actions})
-    : leading = null,
-      _showLeading = false;
+  const AppSliverHeader.tabRoot({
+    super.key,
+    required this.title,
+    this.actions,
+    this.alignToContent = false,
+  }) : leading = null,
+       _showLeading = false;
 
   /// A pushed page: shows [leading] (a back button by default) and slides the
   /// title clear of it as the header collapses.
@@ -22,6 +28,7 @@ class AppSliverHeader extends StatelessWidget {
     required this.title,
     this.actions,
     this.leading,
+    this.alignToContent = true,
   }) : _showLeading = true;
 
   final String title;
@@ -29,6 +36,10 @@ class AppSliverHeader extends StatelessWidget {
 
   /// Overrides the default back button. Only used by the page variant.
   final Widget? leading;
+
+  /// Lines the expanded title up with content centered by [wideListInset] on
+  /// tablets. Full-bleed pages (carousels, grids) keep it at the screen edge.
+  final bool alignToContent;
 
   final bool _showLeading;
 
@@ -39,13 +50,31 @@ class AppSliverHeader extends StatelessWidget {
   /// Content margin the expanded title aligns to.
   static const double _contentMargin = 24;
 
+  static bool _isNestedNavigatorRoot(BuildContext context) {
+    if (ModalRoute.of(context)?.canPop ?? true) return false;
+    final navigator = Navigator.maybeOf(context);
+    return navigator != null &&
+        !identical(navigator, Navigator.maybeOf(context, rootNavigator: true));
+  }
+
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     final colorScheme = Theme.of(context).colorScheme;
     final topPadding = normalizedHeaderTopPadding(context);
-    final maxHeight = tokens.headerExpandedHeight + topPadding;
+    // Short landscape windows give the large title less headroom so content
+    // starts higher. Portrait phones, even small ones, keep the full header.
+    final screenSize = MediaQuery.sizeOf(context);
+    final expandedHeight =
+        screenSize.height < screenSize.width && screenSize.height < 720
+        ? tokens.headerExpandedHeight - 24
+        : tokens.headerExpandedHeight;
+    final maxHeight = expandedHeight + topPadding;
     final edgeInset = detailHeaderEdgeInset(context);
+    // A page at the root of a nested navigator, such as the desktop settings
+    // detail pane, has nothing to go back to.
+    final showLeading =
+        _showLeading && (leading != null || !_isNestedNavigatorRoot(context));
 
     return SliverAppBar(
       expandedHeight: maxHeight,
@@ -55,24 +84,39 @@ class AppSliverHeader extends StatelessWidget {
       backgroundColor: colorScheme.surface,
       surfaceTintColor: Colors.transparent,
       automaticallyImplyLeading: false,
-      leadingWidth: _showLeading ? kToolbarHeight + edgeInset : null,
-      leading: _showLeading
+      leadingWidth: showLeading ? kToolbarHeight + edgeInset : null,
+      leading: showLeading
           ? Padding(
-              padding: EdgeInsets.only(left: edgeInset),
+              padding: EdgeInsetsDirectional.only(start: edgeInset),
               child:
                   leading ??
-                  IconButton(
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).backButtonTooltip,
-                    icon: Icon(
-                      context.isMornye ? Icons.chevron_left : Icons.arrow_back,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
+                  (context.isMornye
+                      ? AppIconButton(
+                          tooltip: MaterialLocalizations.of(
+                            context,
+                          ).backButtonTooltip,
+                          icon: const AppIcon(Icons.chevron_left),
+                          onPressed: () => Navigator.pop(context),
+                        )
+                      // Expressive app bars hold navigation in a tonal circle.
+                      : AppIconButton.filledTonal(
+                          tooltip: MaterialLocalizations.of(
+                            context,
+                          ).backButtonTooltip,
+                          icon: const AppIcon(Icons.arrow_back),
+                          style: ButtonStyle(
+                            backgroundColor: WidgetStatePropertyAll(
+                              colorScheme.surfaceContainerHighest,
+                            ),
+                            foregroundColor: WidgetStatePropertyAll(
+                              colorScheme.onSurface,
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                        )),
             )
           : null,
-      actionsPadding: EdgeInsets.only(right: edgeInset),
+      actionsPadding: EdgeInsetsDirectional.only(end: edgeInset),
       actions: actions,
       flexibleSpace: LayoutBuilder(
         builder: (context, constraints) {
@@ -91,38 +135,54 @@ class AppSliverHeader extends StatelessWidget {
           final expandRatio = extentDelta > 0
               ? ((currentExtent - minExtent) / extentDelta).clamp(0.0, 1.0)
               : 0.0;
-          final leftPadding = _showLeading
+          final contentMargin =
+              _contentMargin + (alignToContent ? wideListInset(context) : 0);
+          final leftPadding = showLeading
               ? (_leadingClearance + edgeInset) -
-                    (((_leadingClearance + edgeInset) - _contentMargin) *
+                    (((_leadingClearance + edgeInset) - contentMargin) *
                         expandRatio)
-              : _contentMargin;
+              : contentMargin;
           final fontSize =
               tokens.headerCollapsedTitleSize +
               (tokens.headerExpandedTitleSize -
                       tokens.headerCollapsedTitleSize) *
                   expandRatio;
 
-          return FlexibleSpaceBar(
+          final bar = FlexibleSpaceBar(
             centerTitle: false,
             expandedTitleScale: 1.0,
-            titlePadding: EdgeInsets.only(
-              left: leftPadding,
-              right: tokens.gapLg,
+            titlePadding: EdgeInsetsDirectional.only(
+              start: leftPadding,
+              end: tokens.gapLg,
               bottom: tokens.gapLg,
             ),
-            title: Text(
-              title,
-              // The title grows as the header expands; without a cap a long
-              // localized title overflowed instead of ellipsizing.
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.bold,
-                letterSpacing: context.isMornye ? -0.7 * expandRatio : null,
-                color: colorScheme.onSurface,
+            title: Semantics(
+              header: true,
+              child: Text(
+                title,
+                // The title grows as the header expands; without a cap a long
+                // localized title overflowed instead of ellipsizing.
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: context.isMornye ? -0.7 * expandRatio : null,
+                  color: colorScheme.onSurface,
+                ),
               ),
             ),
+          );
+          if (context.isMornye) return bar;
+          // Collapsed expressive bars sit on a container tone, like a
+          // scrolled-under app bar, and fade back to the surface on expand.
+          return ColoredBox(
+            color: Color.lerp(
+              colorScheme.surfaceContainer,
+              colorScheme.surface,
+              expandRatio,
+            )!,
+            child: bar,
           );
         },
       ),

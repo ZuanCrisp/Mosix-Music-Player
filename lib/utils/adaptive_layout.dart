@@ -1,30 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/desktop_platform.dart';
 
 /// Keeps touch-first tablets on the bottom navigation used by phones. A rail
 /// is reserved for genuinely desktop-width windows; the old 600dp threshold
 /// made an iPad portrait layout look like a shrunken desktop app.
 const double navigationRailBreakpoint = 1440;
-const double defaultWideContentMaxWidth = 960;
-const double maxWideContentInset = 32;
+
+/// Material's expanded window class. Landscape tablets switch the Material
+/// theme to a navigation rail and Mornye to compact, centered chrome; portrait
+/// tablets stay below it.
+const double expandedLayoutBreakpoint = 840;
+const double defaultWideContentMaxWidth = 840;
 
 bool useNavigationRailForWidth(double width) =>
     width >= navigationRailBreakpoint;
 
+/// The Material theme follows Material's expanded window class.
+bool useMaterialNavigationRailForWidth(double width) =>
+    width >= expandedLayoutBreakpoint;
+
 /// Explicit horizontal safe spacing for controls drawn in full-bleed detail
 /// headers. iOS reports no left/right safe-area inset in portrait, so toolbar
-/// buttons otherwise land only a few pixels from the device edge.
+/// buttons otherwise land only a few pixels from the device edge. Filled
+/// expressive circles need the same breathing room on Android.
 double detailHeaderEdgeInset(BuildContext context) {
   final platform = Theme.of(context).platform;
   return platform == TargetPlatform.iOS || platform == TargetPlatform.macOS
       ? 12
-      : 0;
+      : 8;
 }
 
 /// Visual scale for touch-first tablet surfaces. Large iPads have enough
 /// pixels to make an unscaled phone density feel miniature, especially when
-/// Simulator shrinks the whole device to fit a desktop display.
+/// Simulator shrinks the whole device to fit a desktop display. Desktop
+/// windows keep native density at every size.
 double adaptiveUiScaleForSize(Size size) {
-  if (size.shortestSide < 600 || size.width >= navigationRailBreakpoint) {
+  if (isDesktopPlatform ||
+      size.shortestSide < 600 ||
+      size.width >= navigationRailBreakpoint) {
     return 1;
   }
   return size.shortestSide >= 800 ? 1.2 : 1.1;
@@ -80,15 +94,13 @@ class AdaptiveUiScaler extends StatelessWidget {
   }
 }
 
-/// Widest content span for a surface of [maxWidth]: content is never narrower
-/// than [contentMaxWidth], and the centering margin never exceeds 32dp per
-/// side so tablets retain near-full-width rows.
+/// Widest content span for a surface of [maxWidth]: lists, settings and
+/// detail content stop at [contentMaxWidth], a comfortable reading width, and
+/// center on wider tablet and landscape surfaces.
 double adaptiveContentMaxWidth(
   double maxWidth, {
   double contentMaxWidth = defaultWideContentMaxWidth,
-}) => maxWidth > contentMaxWidth + (maxWideContentInset * 2)
-    ? maxWidth - (maxWideContentInset * 2)
-    : contentMaxWidth;
+}) => maxWidth < contentMaxWidth ? maxWidth : contentMaxWidth;
 
 /// Horizontal inset that centers content of [maxWidth] at
 /// [adaptiveContentMaxWidth]; zero once it fits. Prefer this constraint-based
@@ -97,16 +109,62 @@ double adaptiveContentMaxWidth(
 double wideInsetForWidth(
   double maxWidth, {
   double contentMaxWidth = defaultWideContentMaxWidth,
-}) => maxWidth > contentMaxWidth
-    ? ((maxWidth - contentMaxWidth) / 2).clamp(0.0, maxWideContentInset)
-    : 0;
+}) => maxWidth > contentMaxWidth ? (maxWidth - contentMaxWidth) / 2 : 0;
 
 /// Horizontal inset that centers full-width list content on tablets/landscape;
-/// zero on phones, so rows stop stretching across the whole screen.
-double wideListInset(
-  BuildContext context, {
-  double contentMaxWidth = defaultWideContentMaxWidth,
-}) => wideInsetForWidth(
-  MediaQuery.sizeOf(context).width,
-  contentMaxWidth: contentMaxWidth,
-);
+/// zero on phones, so rows stop stretching across the whole screen. Mornye
+/// desktop pages run across the whole content pane, as Music's do, and center
+/// only past [desktopContentMaxWidth]. Material desktop pages center past
+/// [desktopMaterialContentMaxWidth], so long lists keep a reading width
+/// instead of stretching across a wide window.
+double wideListInset(BuildContext context, {double? contentMaxWidth}) =>
+    wideInsetForWidth(
+      MediaQuery.sizeOf(context).width,
+      contentMaxWidth:
+          contentMaxWidth ??
+          (isDesktopPlatform
+              ? (context.isMornye
+                    ? desktopContentMaxWidth
+                    : desktopMaterialContentMaxWidth)
+              : defaultWideContentMaxWidth),
+    );
+
+const double desktopContentMaxWidth = 1600;
+
+/// The M3 large window class starts at 1200dp; the extra 80dp leaves room
+/// for the navigation rail, since the inset is measured on the window width.
+const double desktopMaterialContentMaxWidth = 1280;
+
+/// Discography cover geometry shared by loaded cards and loading placeholders.
+double artistAlbumTileSize(BuildContext context) {
+  final scale = responsiveScale(context: context, min: 0.82, max: 1.05);
+  final textScale = effectiveTextScale(context);
+  return 140 * scale * (1 + (textScale - 1) * 0.12);
+}
+
+double artistAlbumSectionHeight(BuildContext context) =>
+    artistAlbumTileSize(context) +
+    64 +
+    ((effectiveTextScale(context) - 1) * 14);
+
+/// Scales fixed sizes with the shortest screen side, clamped to [min]..[max].
+double responsiveScale({
+  required BuildContext context,
+  double min = 0.82,
+  double max = 1.08,
+  double baseShortestSide = 390,
+}) {
+  final shortestSide = MediaQuery.sizeOf(context).shortestSide;
+  final scale = shortestSide / baseShortestSide;
+  if (scale < min) return min;
+  if (scale > max) return max;
+  return scale;
+}
+
+/// The system text scale clamped to 1.0..1.4 for fixed-height layouts.
+double effectiveTextScale(BuildContext context) {
+  final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+  if (textScale < 1.0) return 1.0;
+  if (textScale > 1.4) return 1.4;
+  return textScale;
+}

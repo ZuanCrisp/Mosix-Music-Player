@@ -1,5 +1,5 @@
 use super::Backend;
-use spotiflac_providers::resolver::Check;
+use mornye_providers::resolver::Check;
 
 impl Backend {
     pub fn fetch_music_brainz_genre_by_isrc(

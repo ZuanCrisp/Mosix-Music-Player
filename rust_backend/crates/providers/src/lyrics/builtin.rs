@@ -1,6 +1,7 @@
 mod apple;
 mod direct;
 mod proxy;
+mod ttml;
 
 pub use direct::genius_text;
 
@@ -9,9 +10,9 @@ use super::{
     http::{LyricsHttp, Params, Request, pairs},
     lrclib::LrcLibClient,
 };
-use spotiflac_core::app_version::AppVersion;
-use spotiflac_core::lyrics::{LyricsResponse, errors, matching, models, text_from_bytes};
-use spotiflac_network::NetworkService;
+use mornye_core::app_version::AppVersion;
+use mornye_core::lyrics::{LyricsResponse, errors, matching, models, text_from_bytes};
+use mornye_network::NetworkService;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 
@@ -77,6 +78,7 @@ impl BuiltinLyricsClient {
             "netease" => self.netease(request, check),
             "musixmatch" => self.musixmatch(request, check),
             "apple_music" => self.apple(request, check),
+            "mornye_lyrics" | "spotiflac_lyrics" => self.zarz_lrc_lyrics(request, check),
             "spotify" => self.spotify(request, check),
             "deezer" => self.deezer(request, check),
             "youtube" => self.youtube(request, check),
@@ -84,6 +86,8 @@ impl BuiltinLyricsClient {
             "qqmusic" => self.qqmusic(request, check),
             "kugou" => self.kugou(request, check),
             "genius" => self.genius(request, check),
+            "lrcred" => self.lrc_red(request, check),
+            "betterlyrics" => self.better_lyrics(request, check),
             _ => Err(LyricsError::Other(format!("unknown provider: {provider}"))),
         }
     }
@@ -127,7 +131,9 @@ impl LyricsFetcher for BuiltinLyricsClient {
         request: &SearchRequest,
         check: &Check<'_>,
     ) -> Result<LyricsResponse, LyricsError> {
-        if provider == "lrclib" {
+        if matches!(provider, "lrclib" | "lrcred") {
+            // Recording search needs every credited artist and version marker.
+            // A primary-artist or simplified-title retry can select a solo take.
             return self.fetch_once(provider, request, check);
         }
         let primary = matching::primary_artist(&request.artist);

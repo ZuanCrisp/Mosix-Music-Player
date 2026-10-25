@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Expressive transport: tonal circles around a wide, morphing play button. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:gravity="center_vertical" android:orientation="horizontal">
+    <FrameLayout android:id="@+id/player_widget_previous" android:layout_width="48dp" android:layout_height="48dp"
+        android:contentDescription="@string/player_widget_previous">
+        <ImageView android:id="@+id/player_widget_previous_shape" android:layout_width="match_parent" android:layout_height="match_parent"
+            android:scaleType="fitXY" android:src="@drawable/widget_shape_circle" android:tint="@color/widgetAccentContainer" android:importantForAccessibility="no" />
+        <ImageView android:id="@+id/player_widget_previous_icon" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+            android:src="@drawable/ic_widget_previous" android:importantForAccessibility="no" />
+    </FrameLayout>
+    <FrameLayout android:id="@+id/player_widget_play" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+        android:layout_marginStart="8dp" android:layout_marginEnd="8dp" android:contentDescription="@string/player_widget_play">
+        <ImageView android:id="@+id/player_widget_play_shape" android:layout_width="match_parent" android:layout_height="match_parent"
+            android:scaleType="fitXY" android:src="@drawable/widget_shape_pill" android:tint="@color/widgetAccent" android:importantForAccessibility="no" />
+        <ImageView android:id="@+id/player_widget_play_icon" android:layout_width="28dp" android:layout_height="28dp" android:layout_gravity="center"
+            android:src="@drawable/ic_widget_play" android:tint="@color/widgetOnAccent" android:importantForAccessibility="no" />
+    </FrameLayout>
+    <FrameLayout android:id="@+id/player_widget_next" android:layout_width="48dp" android:layout_height="48dp"
+        android:contentDescription="@string/player_widget_next">
+        <ImageView android:id="@+id/player_widget_next_shape" android:layout_width="match_parent" android:layout_height="match_parent"
+            android:scaleType="fitXY" android:src="@drawable/widget_shape_circle" android:tint="@color/widgetAccentContainer" android:importantForAccessibility="no" />
+        <ImageView android:id="@+id/player_widget_next_icon" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+            android:src="@drawable/ic_widget_next" android:importantForAccessibility="no" />
+    </FrameLayout>
+</LinearLayout>

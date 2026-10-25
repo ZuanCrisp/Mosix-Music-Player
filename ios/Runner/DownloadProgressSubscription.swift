@@ -21,7 +21,7 @@ final class CoreDownloadProgress {
 final class DownloadProgressSubscription {
     typealias Waiter = (Int64, Int64) -> String
     private final class Session {
-        let queue = DispatchQueue(label: "com.zuancrisp.mosix.download_progress_subscription", qos: .utility)
+        let queue = DispatchQueue(label: "com.zarz.mornye.download_progress_subscription", qos: .utility)
         private let lock = NSLock()
         private var cancelled = false
         private var source: CoreDownloadProgress?
@@ -129,7 +129,7 @@ final class DownloadProgressSubscription {
                 }
             }
             // Schedule from main so subscription identity is never accessed
-            // concurrently, and stop/relisten does not wait for an old Go call.
+            // concurrently, and stop/relisten does not wait for an old backend call.
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.current === session, !session.isCancelled else { return }
                 DispatchQueue.main.asyncAfter(deadline: .now() + self.interval) { [weak self] in

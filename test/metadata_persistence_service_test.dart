@@ -3,9 +3,9 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/metadata_cover_resources.dart';
-import 'package:mosix/services/metadata_persistence_service.dart';
-import 'package:mosix/utils/artist_utils.dart';
+import 'package:mornye/services/metadata_cover_resources.dart';
+import 'package:mornye/services/metadata_persistence_service.dart';
+import 'package:mornye/utils/artist_utils.dart';
 
 class _Covers extends MetadataCoverResources {
   bool failResize = false;

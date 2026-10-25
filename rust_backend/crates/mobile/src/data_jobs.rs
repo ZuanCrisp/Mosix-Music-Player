@@ -88,11 +88,11 @@ fn execute(
         }
         "parse_lyrics" => crate::native_lyrics::execute(request, Some(bytes), check),
         "palette" => {
-            let colors = spotiflac_core::native_palette::quantize_rgba(bytes, check)?;
+            let colors = mornye_core::native_palette::quantize_rgba(bytes, check)?;
             Ok(json!({"colors": colors}))
         }
         "automix" => {
-            let grid = spotiflac_core::native_audio_analysis::analyze_automix_pcm_file(
+            let grid = mornye_core::native_audio_analysis::analyze_automix_pcm_file(
                 string(request, "path")?,
                 check,
             )?;
@@ -111,7 +111,7 @@ fn execute(
                 .get("max_frequency")
                 .and_then(Value::as_f64)
                 .ok_or("Missing maximum frequency")?;
-            let cutoff = spotiflac_core::native_audio_analysis::estimate_spectral_cutoff_file(
+            let cutoff = mornye_core::native_audio_analysis::estimate_spectral_cutoff_file(
                 string(request, "path")?,
                 usize::try_from(width).map_err(|e| e.to_string())?,
                 usize::try_from(height).map_err(|e| e.to_string())?,
@@ -179,11 +179,7 @@ pub(crate) fn hash_file(
         hash.update(&buffer[..count]);
     }
     check()?;
-    Ok(hash
-        .finalize()
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect())
+    Ok(mornye_core::lower_hex(&hash.finalize()))
 }
 
 #[cfg(test)]

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/screens/settings/provider_priority_list_page.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/screens/settings/provider_priority_list_page.dart';
 
 class ProviderPriorityPage extends StatelessWidget {
   const ProviderPriorityPage({super.key});

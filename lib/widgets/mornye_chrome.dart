@@ -3,12 +3,13 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:liquid_glass_easy/liquid_glass_easy.dart';
-import 'package:mosix/providers/runtime_profile_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_selection_pill.dart';
-import 'package:mosix/widgets/mornye_liquid_backdrop.dart';
-import 'package:mosix/widgets/mornye_squircle_border.dart';
-import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mornye/providers/runtime_profile_provider.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/widgets/mornye_selection_pill.dart';
+import 'package:mornye/widgets/mornye_liquid_backdrop.dart';
+import 'package:mornye/widgets/mornye_squircle_border.dart';
+import 'package:mornye/widgets/animation_utils.dart';
 
 class MornyeSegmentedControl extends ConsumerWidget {
   const MornyeSegmentedControl({
@@ -25,7 +26,11 @@ class MornyeSegmentedControl extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final height = MediaQuery.textScalerOf(context).scale(15) + 36;
+    // At least 56 so each segment keeps a 48 dp target inside the pill inset.
+    final height = (MediaQuery.textScalerOf(context).scale(15) + 36).clamp(
+      56.0,
+      double.infinity,
+    );
     final contrastBlocked = ref.watch(
       mornyeGlassContrastBlockedProvider(MediaQuery.highContrastOf(context)),
     );
@@ -38,7 +43,11 @@ class MornyeSegmentedControl extends ConsumerWidget {
           radius: height / 2,
           child: MornyeSelectionPill(
             contrastBlocked: contrastBlocked,
+            // The held lens follows a finger. A click never holds it, and over
+            // an opaque toolbar it only refracts a flat fill, so desktop skips
+            // it.
             liquidInteraction:
+                !isDesktopPlatform &&
                 ref.watch(mornyeLiquidGlassProvider) &&
                 MornyeTheme.glassClarityOf(context) > 0.2,
             labels: labels,

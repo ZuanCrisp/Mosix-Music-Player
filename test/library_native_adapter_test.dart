@@ -3,10 +3,11 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/services/library_native_adapter.dart';
-import 'package:mosix/services/library_row_mapper.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/sqlite_native_snapshot.dart';
+import 'package:mornye/services/library_native_adapter.dart';
+import 'package:mornye/services/library_row_mapper.dart';
+import 'package:mornye/services/library_schema.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/sqlite_native_snapshot.dart';
 
 import 'support/library_native_fixture.dart';
 import 'support/sqlite_process_database.dart';
@@ -16,6 +17,8 @@ class _NativeHarness {
   final Database live;
   List<Map<String, dynamic>> incremental = [];
   List<String> removed = [];
+  // Scan rows the native staging reports as invalid instead of staging.
+  List<String> invalidPaths = [];
   Future<void> Function()? afterStage;
   final stagedPaths = <String>[];
 
@@ -31,8 +34,13 @@ class _NativeHarness {
     );
     stagedPaths.add(path);
     final private = await SqliteProcessDatabase.open(path: path);
+    expect(
+      (await private.rawQuery('PRAGMA user_version')).single['user_version'],
+      LibrarySchema.version,
+    );
     final snapshot = request['operation'] == 'library_snapshot';
     var count = 0;
+    var invalid = <Map<String, dynamic>>[];
     try {
       if (snapshot) {
         final indexes = await private.rawQuery('PRAGMA index_list(library)');
@@ -82,10 +90,14 @@ class _NativeHarness {
                   )
                   .toList()
             : incremental;
+        invalid = rows
+            .where((row) => invalidPaths.contains(row['filePath']))
+            .toList();
         for (final row in rows) {
+          if (invalid.contains(row)) continue;
           await addNativeLibraryTrack(private, row);
         }
-        count = rows.length;
+        count = rows.length - invalid.length;
         if (!full) {
           expect(request['retain_removed_paths'], isTrue);
           await private.execute(
@@ -107,7 +119,13 @@ class _NativeHarness {
       'committed': true,
       'inserted': count,
       'skipped': 0,
-      'scanned_count': count,
+      'scanned_count': count + invalid.length,
+      'invalid_rows': invalid.length,
+      'invalid_row_paths': invalid.map((row) => row['filePath']).toList(),
+      if (invalid.isNotEmpty)
+        'invalid_row_error':
+            '${invalid.first['filePath']}: '
+            'Library scan row requires string trackName',
       'totalFiles': count + 3,
       'skippedCount': 3,
       if (snapshot) 'path': request['snapshot_path'],
@@ -213,6 +231,7 @@ void main() {
   Future<LibraryScanNDJSONFile> scan(
     List<Map<String, dynamic>> rows, {
     int errors = 0,
+    List<String>? preserveMissingPaths,
   }) async {
     final file = File('${root.path}/scan.ndjson');
     await file.writeAsString(rows.map(jsonEncode).join('\n'));
@@ -220,6 +239,7 @@ void main() {
       file: file,
       expectedCount: rows.length,
       errorCount: errors,
+      preserveMissingPaths: preserveMissingPaths,
     );
   }
 
@@ -310,6 +330,76 @@ void main() {
       );
       expect(result['inserted'], 0);
       expect((await live.query('library')).map((r) => r['id']), ['other']);
+      await cleaned();
+    },
+  );
+
+  test('partial NAS publication retains only unreadable scopes', () async {
+    const prefix = 'network://nas/music/';
+    await addNativeLibraryTrack(
+      live,
+      nativeLibraryTrack('unreadable', path: '${prefix}unreadable.flac'),
+    );
+    await addNativeLibraryTrack(
+      live,
+      nativeLibraryTrack('offline', path: '${prefix}offline%25_/keep.flac'),
+    );
+    await addNativeLibraryTrack(
+      live,
+      nativeLibraryTrack('deleted', path: '${prefix}test/deleted.flac'),
+    );
+    final refreshed = nativeLibraryTrack(
+      'refreshed',
+      path: '${prefix}offline%25_/keep.flac',
+    );
+    await adapter.importScanFile(
+      'source',
+      await scan(
+        [refreshed],
+        errors: 2,
+        preserveMissingPaths: [
+          '${prefix}offline%25_/',
+          '${prefix}unreadable.flac',
+        ],
+      ),
+      requestId: 'partial-nas',
+      isCancelled: () => false,
+    );
+    expect(
+      (await live.query('library')).map((row) => row['id']),
+      unorderedEquals(['refreshed', 'unreadable', 'other']),
+    );
+    expect(
+      (await live.query(
+        'library_path_keys',
+      )).map((row) => row['item_id']).toSet(),
+      {'refreshed', 'unreadable', 'other'},
+    );
+    await cleaned();
+  });
+
+  test(
+    'invalid native rows are skipped and keep their previous entries',
+    () async {
+      await addNativeLibraryTrack(live, nativeLibraryTrack('broken'));
+      await addNativeLibraryTrack(live, nativeLibraryTrack('gone'));
+      native.invalidPaths = ['/music/broken.flac'];
+      final result = await adapter.importScanFile(
+        'source',
+        await scan([
+          nativeLibraryTrack('new'),
+          nativeLibraryTrack('broken-2', path: '/music/broken.flac'),
+        ]),
+        requestId: 'invalid-rows',
+        isCancelled: () => false,
+      );
+      expect(result['invalid_rows'], 1);
+      // The skipped file keeps its previous entry; files absent from an
+      // otherwise clean scan are still removed.
+      expect(
+        (await live.query('library')).map((row) => row['id']),
+        unorderedEquals(['new', 'broken', 'other']),
+      );
       await cleaned();
     },
   );

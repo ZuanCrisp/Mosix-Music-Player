@@ -25,7 +25,7 @@ class BackendArchiveAuditTest(unittest.TestCase):
         self.dwarf.parent.mkdir(parents=True)
         self.dwarf.write_bytes(b"\xcf\xfa\xed\xfe" + b"symbols")
         self.binary_symbols = ""
-        self.dsym_symbols = "0000000100010000 T _uniffi_spotiflac_mobile_fn_func_probe\n"
+        self.dsym_symbols = "0000000100010000 T _uniffi_mornye_mobile_fn_func_probe\n"
         self.dsym_uuid = "12345678-1234-1234-1234-123456789ABC"
         self.dsym_arch = "arm64"
         self.sections = ""
@@ -78,7 +78,7 @@ class BackendArchiveAuditTest(unittest.TestCase):
             self.audit(self.dsym)
 
     def test_matching_dsym_without_defined_rust_is_rejected(self):
-        self.dsym_symbols = "                 U _uniffi_spotiflac_mobile_fn_func_probe\n"
+        self.dsym_symbols = "                 U _uniffi_mornye_mobile_fn_func_probe\n"
         with self.assertRaisesRegex(checker.AuditError, "no defined"):
             self.audit(self.dsym)
 

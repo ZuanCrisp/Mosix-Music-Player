@@ -1,4 +1,4 @@
-use spotiflac_core::progress::{ItemTransferProgressReporter, ProgressRegistry};
+use mornye_core::progress::{ItemTransferProgressReporter, ProgressRegistry};
 use std::sync::Arc;
 
 pub(crate) struct ItemProgressTarget {

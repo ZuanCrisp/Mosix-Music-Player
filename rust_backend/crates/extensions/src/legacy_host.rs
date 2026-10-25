@@ -17,7 +17,7 @@ pub(crate) fn register<'js>(
     host.set(
         "legacySanitize",
         Function::new(ctx.clone(), |value: String| {
-            spotiflac_core::filename::sanitize_filename(&value)
+            mornye_core::filename::sanitize_filename(&value)
         })?,
     )?;
     host.set(
@@ -29,7 +29,7 @@ pub(crate) fn register<'js>(
                 let result = serde_json::from_str(&metadata)
                     .map_err(|error| error.to_string())
                     .and_then(|metadata| {
-                        spotiflac_core::filename::build_filename_checked(
+                        mornye_core::filename::build_filename_checked(
                             &template,
                             &metadata,
                             8 * 1024 * 1024,
@@ -43,7 +43,7 @@ pub(crate) fn register<'js>(
     host.set(
         "legacyLocalTime",
         Function::new(ctx.clone(), || {
-            serde_json::to_string(&spotiflac_core::clock::local_time()).expect("local time JSON")
+            serde_json::to_string(&mornye_core::clock::local_time()).expect("local time JSON")
         })?,
     )?;
     Ok(())

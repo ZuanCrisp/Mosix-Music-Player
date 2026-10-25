@@ -4,16 +4,16 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/providers/player_artwork_video_provider.dart';
-import 'package:mosix/providers/player_motion_artwork_provider.dart';
-import 'package:mosix/providers/runtime_profile_provider.dart';
-import 'package:mosix/services/motion_artwork_store.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/audio_quality_badges.dart';
-import 'package:mosix/widgets/mini_player.dart';
-import 'package:mosix/widgets/overflow_marquee.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/player_artwork_video_provider.dart';
+import 'package:mornye/providers/player_motion_artwork_provider.dart';
+import 'package:mornye/providers/runtime_profile_provider.dart';
+import 'package:mornye/services/motion_artwork_store.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/audio_quality_badges.dart';
+import 'package:mornye/widgets/mini_player.dart';
+import 'package:mornye/widgets/overflow_marquee.dart';
 import 'package:video_player/video_player.dart';
 
 void main() {
@@ -288,8 +288,8 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
-              currentMediaItemProvider.overrideWith(
-                (ref) => Stream.value(
+              currentMediaItemProvider.overrideWithBuild(
+                (ref, notifier) => Stream.value(
                   const MediaItem(
                     id: 'track',
                     title: 'Song',
@@ -339,8 +339,8 @@ void main() {
           await tester.pumpWidget(
             ProviderScope(
               overrides: [
-                currentMediaItemProvider.overrideWith(
-                  (ref) => Stream.value(
+                currentMediaItemProvider.overrideWithBuild(
+                  (ref, notifier) => Stream.value(
                     const MediaItem(
                       id: 'long-track',
                       title: longTitle,

@@ -33,7 +33,7 @@ impl Fixture {
             })
             .collect::<Vec<_>>()
             .join(",");
-        db.execute_batch(&format!("PRAGMA journal_mode=WAL; PRAGMA user_version=17;
+        db.execute_batch(&format!("PRAGMA journal_mode=WAL; PRAGMA user_version={SCHEMA_VERSION};
             CREATE TABLE library({definitions});
             CREATE TABLE library_sources(id TEXT PRIMARY KEY,path TEXT,enabled INTEGER);
             INSERT INTO library_sources VALUES('source','/music',1),('other','/other',1);
@@ -107,6 +107,26 @@ impl Fixture {
 
 fn track(id: &str, path: &str) -> Value {
     json!({"id":id,"trackName":format!("Track {id}"),"artistName":"Artist","albumName":"Album","albumArtist":null,"filePath":path,"scannedAt":"2026-10-06T12:00:00.000Z","fileModTime":1770000000000_i64,"isrc":"USAAA2600001","hasReplayGain":false,"replaygain_track_gain":"-4.5 dB"})
+}
+
+#[test]
+fn full_import_persists_network_file_versions_and_cached_flags() {
+    let fixture = Fixture::new();
+    let mut row = track("network", "network://nas/song.flac");
+    row["networkFileVersion"] = "fingerprint".into();
+    row["hasLyrics"] = true.into();
+    row["hasReplayGain"] = true.into();
+    row.as_object_mut().unwrap().remove("replaygain_track_gain");
+    fixture.scan(&[row], 1, 0, &|| Ok(())).unwrap();
+    let stored: (String, i64, i64) = fixture
+        .db
+        .query_row(
+            "SELECT network_file_version,has_lyrics,has_replaygain FROM library",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )
+        .unwrap();
+    assert_eq!(stored, ("fingerprint".into(), 1, 1));
 }
 
 #[test]
@@ -367,16 +387,74 @@ fn full_swap_excludes_downloads_and_preserves_other_source_and_fts() {
 }
 
 #[test]
-fn invalid_rows_count_mismatch_and_cancel_never_replace_existing_index() {
-    for failure in ["invalid", "count", "cancel"] {
+fn invalid_rows_are_skipped_and_reported_without_dropping_the_scan() {
+    let fixture = Fixture::new();
+    fixture.add("old", "/music/old.flac", "source");
+    fixture.add("broken", "/music/broken.flac", "source");
+    let mut rows = vec![
+        track("new", "/music/new.flac"),
+        track("broken", "/music/broken.flac"),
+    ];
+    rows[1]["trackName"] = Value::Null;
+    let result = fixture.scan(&rows, 2, 0, &|| Ok(())).unwrap();
+    assert_eq!(result["invalid_rows"], 1);
+    assert_eq!(
+        result["invalid_row_error"],
+        "/music/broken.flac: Library scan row requires string trackName"
+    );
+    assert_eq!(result["invalid_row_paths"], json!(["/music/broken.flac"]));
+    // The skipped row counts as a read error, so entries missing from the
+    // stage keep their previous rows instead of being removed.
+    assert_eq!(fixture.ids(), ["broken", "new", "old"]);
+
+    let mut request = fixture.request.clone();
+    request["operation"] = "library_incremental_import".into();
+    let mut bad = track("bad", "/music/bad.flac");
+    bad["duration"] = json!("fast");
+    request["delta"] = json!({"scanned":[track("inc","/music/inc.flac"),bad],"deletedPaths":[]});
+    let result = execute(&request, &|| Ok(())).unwrap();
+    assert_eq!(result["invalid_rows"], 1);
+    assert_eq!(
+        result["invalid_row_error"],
+        "/music/bad.flac: Incremental Library duration must be numeric"
+    );
+    assert_eq!(result["invalid_row_paths"], json!(["/music/bad.flac"]));
+    assert_eq!(fixture.ids(), ["broken", "inc", "new", "old"]);
+}
+
+#[test]
+fn platform_rows_without_scan_time_are_stamped_instead_of_rejected() {
+    let fixture = Fixture::new();
+    let mut dsd = track("dsd", "/music/album.dsf");
+    dsd.as_object_mut().unwrap().remove("scannedAt");
+    let result = fixture.scan(&[dsd.clone()], 1, 0, &|| Ok(())).unwrap();
+    assert_eq!(result["invalid_rows"], 0);
+    assert_eq!(fixture.ids(), ["dsd"]);
+    let scanned_at: String = fixture
+        .db
+        .query_row("SELECT scanned_at FROM library WHERE id='dsd'", [], |row| {
+            row.get(0)
+        })
+        .unwrap();
+    assert!(dart_date::parse(&scanned_at).is_some(), "{scanned_at}");
+
+    let mut request = fixture.request.clone();
+    request["operation"] = "library_incremental_import".into();
+    dsd["id"] = "dsd-2".into();
+    dsd["filePath"] = "/music/album-2.dsf".into();
+    request["delta"] = json!({"scanned":[dsd],"deletedPaths":[]});
+    execute(&request, &|| Ok(())).unwrap();
+    assert_eq!(fixture.ids(), ["dsd", "dsd-2"]);
+}
+
+#[test]
+fn count_mismatch_and_cancel_never_replace_existing_index() {
+    for failure in ["count", "cancel"] {
         let fixture = Fixture::new();
         fixture.add("old", "/music/old.flac", "source");
-        let mut rows = (0..650)
+        let rows = (0..650)
             .map(|index| track(&format!("row-{index}"), &format!("/music/{index}.flac")))
             .collect::<Vec<_>>();
-        if failure == "invalid" {
-            rows[640]["id"] = Value::Null;
-        }
         let calls = Cell::new(0);
         let check = || {
             calls.set(calls.get() + 1);
@@ -526,7 +604,7 @@ fn mapper_preserves_null_artist_flags_and_replaygain_contract() {
     row["albumArtist"] = json!("");
     row["metadataFromFilename"] = json!(true);
     let mapped = encode(&row, "nas").unwrap();
-    assert_eq!(mapped.len(), 39);
+    assert_eq!(mapped.len(), 40);
     assert_eq!(mapped["explicit"], 1);
     assert_eq!(mapped["has_replaygain"], 1);
     assert_eq!(mapped["audio_metadata_scan_version"], 0);

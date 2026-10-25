@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/player_widget_service.dart';
-import 'package:mosix/services/playback_notification.dart';
+import 'package:mornye/services/player_widget_service.dart';
+import 'package:mornye/services/playback_notification.dart';
 
 class _Player extends BaseAudioHandler {
   final actions = <String>[];

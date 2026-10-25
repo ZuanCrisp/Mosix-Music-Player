@@ -1,9 +1,11 @@
+//! Signed session exchanges: preflight, bootstrap, grant completion, and token refresh.
+
 use super::coordinator::{Check, Flight, SignedSessionClient};
 use super::protocol::{self, Record};
 use crate::auth::{PendingAuthRequest, callback_state};
+use mornye_network::{query, url::UrlParts};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use spotiflac_network::{query, url::UrlParts};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};

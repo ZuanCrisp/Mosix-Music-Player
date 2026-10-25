@@ -4,17 +4,24 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/artist_concert.dart';
-import 'package:mosix/screens/playlist_screen.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/shell_navigation_service.dart';
-import 'package:mosix/theme/cover_palette.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/utils/nav_bar_inset.dart';
-import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/widgets/animation_utils.dart';
-import 'package:mosix/widgets/cached_cover_image.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/artist_concert.dart';
+import 'package:mornye/screens/playlist_screen.dart';
+import 'package:mornye/services/concert_calendar_service.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/shell_navigation_service.dart';
+import 'package:mornye/theme/cover_palette.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/widgets/album_detail_header.dart';
+import 'package:mornye/widgets/animation_utils.dart';
+import 'package:mornye/widgets/cached_cover_image.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_shape.dart';
+import 'package:mornye/widgets/error_card.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/settings_group.dart';
 
 class ConcertDetailScreen extends StatefulWidget {
   const ConcertDetailScreen({
@@ -82,9 +89,17 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final source = _detail.coverUrl ?? widget.coverUrl;
-    final base = context.isMornye
-        ? MornyeTheme.fromContext(context, brightness: Brightness.dark)
-        : ThemeData.dark();
+    if (!context.isMornye) {
+      // Material follows the app brightness with a cover-seeded scheme.
+      return CoverPaletteBuilder(
+        imageSource: source,
+        builder: (context, palette) => Theme(
+          data: Theme.of(context).copyWith(colorScheme: palette),
+          child: Builder(builder: (context) => _materialPage(context, source)),
+        ),
+      );
+    }
+    final base = MornyeTheme.fromContext(context, brightness: Brightness.dark);
     return Theme(
       data: base,
       child: CoverPaletteBuilder(
@@ -160,7 +175,7 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
               surfaceTintColor: Colors.transparent,
               leadingWidth: 64,
               leading: Padding(
-                padding: const EdgeInsets.only(left: 12),
+                padding: const EdgeInsetsDirectional.only(start: 12),
                 child: HeaderCircleButton(
                   icon: Icons.arrow_back,
                   tooltip: MaterialLocalizations.of(context).backButtonTooltip,
@@ -169,7 +184,7 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
               ),
               actions: [
                 Padding(
-                  padding: const EdgeInsets.only(right: 12),
+                  padding: const EdgeInsetsDirectional.only(end: 12),
                   child: Builder(
                     builder: (context) => HeaderCircleButton(
                       icon: CupertinoIcons.share,
@@ -188,7 +203,8 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        ClipOval(
+                        AppShapeClip(
+                          kind: AppShapes.artist,
                           child: SizedBox.square(
                             dimension: photoSize,
                             child: source == null
@@ -201,8 +217,8 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
                                   ),
                           ),
                         ),
-                        Positioned(
-                          right: -4,
+                        PositionedDirectional(
+                          end: -4,
                           bottom: -4,
                           child: Container(
                             width: 64,
@@ -356,7 +372,8 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
                                 context.l10n.concertDetailsUnavailable,
                                 textAlign: TextAlign.center,
                               ),
-                              TextButton(
+                              ExpressiveButton(
+                                text: true,
                                 onPressed: _load,
                                 child: Text(context.l10n.dialogRetry),
                               ),
@@ -366,7 +383,7 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
                       if (hasSetList) ...[
                         const SizedBox(height: 32),
                         Align(
-                          alignment: Alignment.centerLeft,
+                          alignment: AlignmentDirectional.centerStart,
                           child: Text(
                             context.l10n.concertSetList,
                             style: const TextStyle(
@@ -408,10 +425,7 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                const Icon(
-                                  CupertinoIcons.chevron_forward,
-                                  size: 18,
-                                ),
+                                const Icon(CupertinoIcons.forward, size: 18),
                               ],
                             ),
                           ),
@@ -429,6 +443,272 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
     );
   }
 
+  Widget _materialPage(BuildContext context, String? source) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final locale = Localizations.localeOf(context).toString();
+    final date = widget.concert.date;
+    final artist = _detail.artistName ?? widget.artistName;
+    final venue = _detail.venue ?? widget.concert.venue;
+    final address = _detail.address ?? widget.concert.location;
+    final hasTicket = _detail.ticketUrl != null;
+    final hasSetList = _detail.setListId != null && widget.providerId != null;
+    final photoSize = (MediaQuery.sizeOf(context).width * 0.5).clamp(
+      144.0,
+      220.0,
+    );
+    final placeholder = AppIcon(
+      Icons.person,
+      size: 96,
+      color: scheme.onSurfaceVariant,
+    );
+    return Scaffold(
+      backgroundColor: scheme.surface,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            backgroundColor: scheme.surface,
+            actions: [
+              Builder(
+                builder: (context) => AppIconButton(
+                  icon: const Icon(Icons.share_outlined),
+                  tooltip: context.l10n.trackMetadataShare,
+                  onPressed: () => _share(context),
+                ),
+              ),
+              const SizedBox(width: 4),
+            ],
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Column(
+                children: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      AppShapeClip(
+                        kind: AppShapes.artist,
+                        child: SizedBox.square(
+                          dimension: photoSize,
+                          child: source == null
+                              ? ColoredBox(
+                                  color: scheme.surfaceContainerHigh,
+                                  child: placeholder,
+                                )
+                              : CachedCoverImage(
+                                  imageUrl: source,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (_, _, _) => placeholder,
+                                ),
+                        ),
+                      ),
+                      PositionedDirectional(
+                        end: -4,
+                        bottom: -4,
+                        child: Container(
+                          width: 64,
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          decoration: BoxDecoration(
+                            color: scheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                DateFormat.MMM(locale).format(date),
+                                style: textTheme.labelLarge?.copyWith(
+                                  color: scheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                DateFormat.d(locale).format(date),
+                                style: textTheme.headlineMedium?.copyWith(
+                                  color: scheme.onPrimaryContainer,
+                                  height: 1.1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    artist,
+                    textAlign: TextAlign.center,
+                    style: textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                  if (_loading) ...[
+                    const SizedBox(height: 24),
+                    const ShimmerLoading(
+                      child: Column(
+                        children: [
+                          SkeletonBox(
+                            width: double.infinity,
+                            height: 48,
+                            borderRadius: 24,
+                          ),
+                          SizedBox(height: 16),
+                          SkeletonBox(
+                            width: double.infinity,
+                            height: 144,
+                            borderRadius: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else if (hasTicket || hasSetList) ...[
+                    const SizedBox(height: 24),
+                    // Tickets are the one filled action; the set list is tonal.
+                    Row(
+                      spacing: 12,
+                      children: [
+                        if (hasTicket)
+                          Expanded(
+                            child: ExpressiveButton(
+                              onPressed: () => _openLink(_detail.ticketUrl!),
+                              icon: const Icon(
+                                Icons.confirmation_number_outlined,
+                              ),
+                              child: Text(
+                                context.l10n.concertGetTickets,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        if (hasSetList)
+                          Expanded(
+                            child: ExpressiveButton(
+                              tonal: true,
+                              onPressed: _openSetList,
+                              icon: const Icon(Icons.queue_music),
+                              child: Text(
+                                context.l10n.concertSetListButton,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          if (!_loading) ...[
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                connected: true,
+                children: [
+                  ListTile(
+                    leading: const AppIcon(Icons.event_outlined),
+                    title: Text(
+                      '${DateFormat.yMMMMd(locale).format(date)} · '
+                      '${DateFormat.EEEE(locale).format(date)}',
+                    ),
+                    subtitle: widget.concert.hasTime
+                        ? Text(DateFormat.Hm(locale).format(date))
+                        : null,
+                    trailing: _detail.start == null
+                        ? null
+                        : AppIconButton(
+                            icon: const Icon(Icons.edit_calendar_outlined),
+                            tooltip: context.l10n.concertAddToCalendar,
+                            onPressed: _addToCalendar,
+                          ),
+                  ),
+                  ListTile(
+                    leading: const AppIcon(Icons.place_outlined),
+                    title: Text(venue),
+                    subtitle: address.isEmpty ? null : Text(address),
+                    trailing: _detail.mapUrl == null
+                        ? null
+                        : AppIconButton(
+                            icon: const Icon(Icons.map_outlined),
+                            tooltip: context.l10n.concertOpenMaps,
+                            onPressed: () => _openLink(_detail.mapUrl!),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+            if (_detail.attribution != null)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                  child: Text(
+                    _detail.attribution!,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+            if (_failed)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: ErrorCard(
+                    error: context.l10n.concertDetailsUnavailable,
+                    colorScheme: scheme,
+                    onRetry: _load,
+                  ),
+                ),
+              ),
+            if (hasSetList) ...[
+              SliverToBoxAdapter(
+                child: SettingsSectionHeader(
+                  title: context.l10n.concertSetList,
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SettingsGroup(
+                  connected: true,
+                  children: [
+                    ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox.square(
+                          dimension: 56,
+                          child: _detail.setListCover == null
+                              ? ColoredBox(
+                                  color: scheme.secondaryContainer,
+                                  child: AppIcon(
+                                    Icons.queue_music,
+                                    color: scheme.onSecondaryContainer,
+                                  ),
+                                )
+                              : CachedCoverImage(
+                                  imageUrl: _detail.setListCover!,
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
+                      ),
+                      title: Text(
+                        _detail.setListName ?? context.l10n.concertSetList,
+                      ),
+                      trailing: const AppIcon(Icons.chevron_right),
+                      onTap: _openSetList,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          const NavBarSliverSpacer(),
+        ],
+      ),
+    );
+  }
+
   BoxDecoration get _glassDecoration => BoxDecoration(
     color: Colors.black.withValues(alpha: 0.15),
     borderRadius: BorderRadius.circular(28),
@@ -440,10 +720,10 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
     IconData icon,
     String label,
     VoidCallback onTap,
-  ) => OutlinedButton.icon(
+  ) => ExpressiveButton(
+    outlined: true,
     onPressed: onTap,
     icon: Icon(icon, size: 19),
-    label: Text(label, textAlign: TextAlign.center),
     style: OutlinedButton.styleFrom(
       foregroundColor: Colors.white,
       backgroundColor: Colors.black.withValues(alpha: 0.15),
@@ -452,6 +732,7 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
     ),
+    child: Text(label, textAlign: TextAlign.center),
   );
 
   Widget _infoRow(
@@ -484,7 +765,7 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
           ),
         ),
         if (onTap != null)
-          IconButton(
+          AppIconButton(
             onPressed: onTap,
             tooltip: tooltip,
             icon: Icon(icon, size: 21),
@@ -541,19 +822,16 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
     if (_calendarOpen || _detail.start == null) return;
     _calendarOpen = true;
     try {
-      final opened =
-          await const MethodChannel(
-            'com.zuancrisp.mosix/concert_calendar',
-          ).invokeMethod<bool>('add', {
-            'title': _detail.title ?? widget.artistName,
-            'location': [
-              _detail.venue ?? widget.concert.venue,
-              _detail.address ?? widget.concert.location,
-            ].join(', '),
-            'start': _detail.start!.millisecondsSinceEpoch,
-            'end': _detail.end?.millisecondsSinceEpoch,
-            'url': _detail.url ?? widget.concert.url,
-          });
+      final opened = await ConcertCalendarService.add(
+        title: _detail.title ?? widget.artistName,
+        location: [
+          _detail.venue ?? widget.concert.venue,
+          _detail.address ?? widget.concert.location,
+        ].join(', '),
+        start: _detail.start!.millisecondsSinceEpoch,
+        end: _detail.end?.millisecondsSinceEpoch,
+        url: _detail.url ?? widget.concert.url,
+      );
       if (mounted && opened != true) {
         _error(context.l10n.concertCalendarUnavailable);
       }

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/screens/settings/log_screen.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/screens/settings/log_screen.dart';
+import 'package:mornye/utils/logger.dart';
+
+import 'support/app_icon_finder.dart';
 
 void main() {
   test(
@@ -50,7 +53,7 @@ void main() {
         tag: 'Download',
         message: 'second',
         error: 'failed',
-        isFromGo: true,
+        isFromNative: true,
       ),
     ];
 
@@ -121,10 +124,12 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const LogScreen(),
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const LogScreen(),
+        ),
       ),
     );
 
@@ -138,7 +143,7 @@ void main() {
     await tester.pump();
     expect(find.text('2 selected'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.copy));
+    await tester.tap(findAppIcon(Icons.copy));
     await tester.pump();
 
     expect(clipboardText, contains('first selected message'));

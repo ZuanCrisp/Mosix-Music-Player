@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/services/source_deletion_events.dart';
-import 'package:mosix/utils/file_access.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/services/source_deletion_events.dart';
+import 'package:mornye/utils/file_access.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

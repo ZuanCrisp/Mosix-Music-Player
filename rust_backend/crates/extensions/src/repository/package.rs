@@ -1,8 +1,8 @@
 use super::{RepositoryError, cause, error, normalize_sha256};
+use mornye_core::filename::sanitize_filename;
+use mornye_core::matching::lowercase;
+use mornye_network::url::UrlParts;
 use sha2::{Digest, Sha256};
-use spotiflac_core::filename::sanitize_filename;
-use spotiflac_core::matching::lowercase;
-use spotiflac_network::url::UrlParts;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -18,7 +18,7 @@ pub fn destination_path(directory: &Path, id: &str, url: &str) -> Result<PathBuf
     let suffix = if lowercase(&path).ends_with(".sflx") {
         ".sflx"
     } else {
-        ".spotiflac-ext"
+        ".mornye-ext"
     };
     Ok(crate::files::clean(
         &directory.join(format!("{}{suffix}", sanitize_filename(id))),

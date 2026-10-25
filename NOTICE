@@ -1,0 +1,11 @@
+Mornye
+Copyright 2026 zarzet
+
+SPDX-License-Identifier: LGPL-3.0-only
+
+The project source is licensed under the GNU Lesser General Public License,
+version 3 only. See LICENSE and COPYING for the complete terms.
+
+Third-party components retain their own copyrights and licenses. Their notices
+are included in third_party/, rust_backend/NOTICE, assets/licenses/, and the
+application's Licenses page.

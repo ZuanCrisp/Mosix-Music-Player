@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/screens/now_playing_screen.dart';
-import 'package:mosix/services/app_orientation.dart';
+import 'package:mornye/screens/now_playing_screen.dart';
+import 'package:mornye/services/app_orientation.dart';
 
 class _PlayerRoute extends NowPlayingRoute {
   _PlayerRoute() : super(child: const SizedBox());

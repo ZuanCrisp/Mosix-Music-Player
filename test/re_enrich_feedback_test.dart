@@ -2,23 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/services/local_track_batch_actions.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/re_enrich_review_sheet.dart';
-import 'package:mosix/widgets/selection_bottom_bar.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/services/local_track_batch_actions.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/re_enrich_review_sheet.dart';
+import 'package:mornye/widgets/selection_bottom_bar.dart';
 
-class _Settings extends SettingsNotifier {
-  @override
-  AppSettings build() => const AppSettings();
-
-  @override
-  Future<void> syncLyricsSettingsToBackend({AppSettings? settings}) async {}
-}
+import 'support/re_enrich_settings.dart';
 
 void main() {
   for (final mornye in [false, true]) {
@@ -70,7 +63,7 @@ void main() {
       testWidgets(
         'empty/failed preview stays visible before selection returns ($mornye/$fails)',
         (tester) async {
-          const channel = MethodChannel('com.zuancrisp.mosix/backend');
+          const channel = MethodChannel('com.zarz.mornye/backend');
           tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
             channel,
             (call) async {
@@ -92,7 +85,9 @@ void main() {
           Future<void>? action;
           await tester.pumpWidget(
             ProviderScope(
-              overrides: [settingsProvider.overrideWith(_Settings.new)],
+              overrides: [
+                settingsProvider.overrideWith(ReEnrichTestSettings.new),
+              ],
               child: MaterialApp(
                 theme: mornye
                     ? MornyeTheme.build(Brightness.dark)

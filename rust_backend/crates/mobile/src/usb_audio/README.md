@@ -39,7 +39,7 @@ opt-in under Settings > Playback > Hi-res and bit-perfect audio.
   on the same attached device, respecting a hardware knob lowered externally.
   Remove remembered levels on detach. This is attenuation, not a guarantee of
   safe acoustic output for every amplifier/headphone combination.
-- The Mornye player slider and Playback settings control verified DAC
+- The Mosix player slider and Playback settings control verified DAC
   volume. They never modify DSD/DoP samples or apply software gain. Phone volume
   buttons may not affect direct USB output.
 - Warn before enabling the mode. A DAC without verified hardware volume stays
@@ -114,11 +114,29 @@ Actual exclusive DAP playback and route-specific hardware behavior need a DAP.
 
 ## Reference and dependencies
 
+All three Android PCM paths share `UsbPcmSource`. Native FLAC is decoded with
+libFLAC directly from the original file, rather than Android `MediaExtractor`:
+some vendor extractors expose 24-bit FLAC as already-decoded 16-bit `audio/raw`.
+The decoder keeps one bounded block, writes integer PCM into a reused direct
+buffer, and supports sample-accurate seeking and retained SAF descriptors.
+16/24/32-bit sources may be padded to a wider DAC format but never truncated.
+The reported bit depth is the negotiated output format.
+
+Decoder sample/seek tests can run without building an APK:
+
+```sh
+cmake -S android/app/src/main/cpp -B /tmp/mornye-flac-tests \
+  -DMOSIX_AUDIO_HOST_TESTS=ON
+cmake --build /tmp/mornye-flac-tests
+ctest --test-dir /tmp/mornye-flac-tests --output-on-failure
+```
+
 USB identity/format facts were checked against
 [Linux USB audio quirks](https://github.com/torvalds/linux/blob/master/sound/usb/quirks.c).
 The Android-only `libusb1-sys` dependency builds its unmodified bundled libusb;
 license texts and rebuild information are in `assets/licenses/usb.txt` and in
-the app's license registry. Oboe (Apache-2.0) and WavPack (BSD-3-Clause) are built
-statically into `libspotiflac_audio.so` for ARM32/ARM64. Their pinned release URLs
+the app's license registry. Oboe (Apache-2.0), WavPack and libFLAC (BSD-3-Clause) are built
+statically into `libmornye_audio.so` for ARM32/ARM64. Their pinned release URLs
 and SHA-256 checksums are in `android/app/src/main/cpp/CMakeLists.txt`; licenses
-are included in `assets/licenses/oboe.txt` and `assets/licenses/wavpack.txt`.
+are included in `assets/licenses/oboe.txt`, `assets/licenses/wavpack.txt` and
+`assets/licenses/flac.txt`.

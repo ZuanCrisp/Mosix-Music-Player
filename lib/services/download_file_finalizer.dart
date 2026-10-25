@@ -1,10 +1,11 @@
 import 'dart:io';
 
-import 'package:mosix/models/download_result.dart';
-import 'package:mosix/services/download_saf_file_replacer.dart';
-import 'package:mosix/services/ffmpeg_models.dart';
-import 'package:mosix/utils/audio_conversion_utils.dart';
-import 'package:mosix/utils/audio_format_utils.dart';
+import 'package:mornye/models/download_result.dart';
+import 'package:mornye/services/download_saf_file_replacer.dart';
+import 'package:mornye/services/ffmpeg_models.dart';
+import 'package:mornye/utils/audio_conversion_utils.dart';
+import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mornye/utils/file_access.dart';
 
 typedef DecryptDownloadFile =
     Future<String?> Function({
@@ -120,7 +121,7 @@ class DownloadFileFinalizer {
       return DownloadDecryptionOutcome(filePath);
     }
     onStart?.call(descriptor.normalizedStrategy);
-    if (useSaf && filePath.startsWith('content://')) {
+    if (useSaf && isContentUri(filePath)) {
       if (treeUri == null || treeUri.isEmpty) {
         return const DownloadDecryptionOutcome(
           null,
@@ -239,7 +240,7 @@ class DownloadFileFinalizer {
       onStart?.call();
       String? convertedPath;
       String? publishedName = convertedName;
-      if (useSaf && filePath.startsWith('content://')) {
+      if (useSaf && isContentUri(filePath)) {
         if (treeUri == null || treeUri.isEmpty) {
           throw StateError('Missing SAF tree for automatic conversion');
         }

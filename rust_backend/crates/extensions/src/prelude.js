@@ -297,7 +297,7 @@
             } catch (error) { return fail("failed to stringify body: " + goString(error)); }
             const result = host.request(url, method, body, headers,
                 (!options && method === "POST") || body !== "",
-                fetch ? host.appUserAgent() : "Spotiflac-Extension/1.0", fetch);
+                fetch ? host.appUserAgent() : "Mornye-Extension/1.0", fetch);
             if (result.error !== undefined) return fail(result.error);
             if (!fetch) return result;
             const bytes = result.bytes;

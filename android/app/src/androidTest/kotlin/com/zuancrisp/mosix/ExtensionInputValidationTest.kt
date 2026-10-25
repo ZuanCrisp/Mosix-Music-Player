@@ -1,8 +1,8 @@
 package com.zuancrisp.mosix
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.spotiflac.backend.JsExtension
-import com.spotiflac.backend.JsExtensionException
+import com.mornye.backend.JsExtension
+import com.mornye.backend.JsExtensionException
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

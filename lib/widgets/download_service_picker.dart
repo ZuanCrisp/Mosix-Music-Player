@@ -3,13 +3,15 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
 
 class DownloadServicePicker extends ConsumerStatefulWidget {
   final String? trackName;
@@ -39,25 +41,19 @@ class DownloadServicePicker extends ConsumerStatefulWidget {
     String? recommendedService,
     required void Function(String quality, String service) onSelect,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
     final mornye = context.isMornye;
 
-    showModalBottomSheet<void>(
+    showAppModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
-      backgroundColor: mornye
-          ? Colors.transparent
-          : colorScheme.surfaceContainerHigh,
-      elevation: mornye ? 0 : null,
-      // Only the glass draws the sheet outline, including its bottom corners.
-      shape: mornye ? const RoundedRectangleBorder() : null,
-      clipBehavior: mornye ? Clip.none : null,
-      barrierColor: mornye
-          ? CupertinoDynamicColor.resolve(kCupertinoModalBarrierColor, context)
-          : null,
       isScrollControlled: true,
       showDragHandle: !mornye,
+      // Phones float the glass above the home indicator; the desktop dialog
+      // draws its own glass around the picker.
+      mornyeGlass: isDesktopPlatform,
+      // Explicit constraints replace the theme's, so repeat its tablet width.
       constraints: BoxConstraints(
+        maxWidth: 640,
         maxHeight: MediaQuery.sizeOf(context).height * 0.88,
       ),
       builder: (context) {
@@ -68,20 +64,19 @@ class DownloadServicePicker extends ConsumerStatefulWidget {
           onSelect: onSelect,
           recommendedService: recommendedService,
         );
-        return context.isMornye
-            ? Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                child: MornyeGlassPanel.overlay(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const AppSheetHandle(),
-                      Flexible(child: picker),
-                    ],
-                  ),
-                ),
-              )
-            : picker;
+        if (!context.isMornye) return picker;
+        final content = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppSheetHandle(),
+            Flexible(child: picker),
+          ],
+        );
+        if (isDesktopPlatform) return content;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          child: MornyeGlassPanel.overlay(child: content),
+        );
       },
     );
   }
@@ -188,10 +183,11 @@ class _DownloadServicePickerState extends ConsumerState<DownloadServicePicker> {
                 artistName: widget.artistName,
                 coverUrl: widget.coverUrl,
               ),
-              Divider(
-                height: 1,
-                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-              ),
+              if (context.isMornye)
+                Divider(
+                  height: 1,
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
             ],
 
             Padding(
@@ -383,7 +379,7 @@ class _QualityOption extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Icon(
-              CupertinoIcons.chevron_right,
+              CupertinoIcons.right_chevron,
               size: 14,
               color: colorScheme.onSurfaceVariant,
             ),
@@ -508,63 +504,69 @@ class _ServiceChip extends StatelessWidget {
         ),
       );
     }
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? colorScheme.primaryContainer
-              : colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-          border: isSelected
-              ? null
-              : Border.all(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (healthServiceId != null) ...[
-              _ServiceHealthDot(serviceId: healthServiceId!),
-              const SizedBox(width: 8),
-            ],
-            if (iconPath != null) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: Image.file(
-                  File(iconPath!),
-                  width: 18,
-                  height: 18,
-                  cacheWidth: (18 * MediaQuery.devicePixelRatioOf(context))
-                      .ceil(),
-                  cacheHeight: (18 * MediaQuery.devicePixelRatioOf(context))
-                      .ceil(),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Icon(
-                    Icons.extension,
-                    size: 18,
-                    color: isSelected
-                        ? colorScheme.onPrimaryContainer
-                        : colorScheme.onSurfaceVariant,
-                  ),
-                ),
+    // The chip stays compact; the tap area around it is the 48dp minimum.
+    final chip = AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? colorScheme.primaryContainer
+            : colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: isSelected
+            ? null
+            : Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
               ),
-              const SizedBox(width: 6),
-            ],
-            Text(
-              accessibleLabel,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: isSelected
-                    ? colorScheme.onPrimaryContainer
-                    : colorScheme.onSurfaceVariant,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (healthServiceId != null) ...[
+            _ServiceHealthDot(serviceId: healthServiceId!),
+            const SizedBox(width: 8),
+          ],
+          if (iconPath != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.file(
+                File(iconPath!),
+                width: 18,
+                height: 18,
+                cacheWidth: (18 * MediaQuery.devicePixelRatioOf(context))
+                    .ceil(),
+                cacheHeight: (18 * MediaQuery.devicePixelRatioOf(context))
+                    .ceil(),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Icon(
+                  Icons.extension,
+                  size: 18,
+                  color: isSelected
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
+            const SizedBox(width: 6),
           ],
-        ),
+          Text(
+            accessibleLabel,
+            style: TextStyle(
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              color: isSelected
+                  ? colorScheme.onPrimaryContainer
+                  : colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: context.tokens.minTouchTarget),
+        child: Center(widthFactor: 1, heightFactor: 1, child: chip),
       ),
     );
   }

@@ -5,8 +5,8 @@ import 'package:flutter/painting.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'package:mosix/utils/cache_byte_budget.dart';
-import 'package:mosix/utils/periodic_async_task.dart';
+import 'package:mornye/utils/cache_byte_budget.dart';
+import 'package:mornye/utils/periodic_async_task.dart';
 
 /// Persistent cache manager for album/track cover images.
 ///

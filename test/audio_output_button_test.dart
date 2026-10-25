@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/widgets/audio_output_button.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/widgets/audio_output_button.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zuancrisp.mosix/audio_output');
+  const channel = MethodChannel('com.zarz.mornye/audio_output');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
 
@@ -35,11 +35,9 @@ void main() {
       ) async {
         if (call.method == 'create') {
           final args = call.arguments as Map<Object?, Object?>;
-          expect(args['viewType'], 'com.zuancrisp.mosix/audio_output');
+          expect(args['viewType'], 'com.zarz.mornye/audio_output');
           viewId = args['id'] as int;
-          viewChannel = MethodChannel(
-            'com.zuancrisp.mosix/audio_output/$viewId',
-          );
+          viewChannel = MethodChannel('com.zarz.mornye/audio_output/$viewId');
           messenger.setMockMethodCallHandler(
             viewChannel!,
             (call) async => updates.add(call),

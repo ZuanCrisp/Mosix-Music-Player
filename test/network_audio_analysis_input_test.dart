@@ -4,10 +4,10 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/audio_analysis_jobs.dart';
-import 'package:mosix/services/hires_check_service.dart';
-import 'package:mosix/services/network_audio_analysis_input.dart';
-import 'package:mosix/services/network_storage_service.dart';
+import 'package:mornye/services/audio_analysis_jobs.dart';
+import 'package:mornye/services/hires_check_service.dart';
+import 'package:mornye/services/network_audio_analysis_input.dart';
+import 'package:mornye/services/network_storage_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -112,7 +112,7 @@ void main() {
   });
 
   test('Hi-Res checker receives the staged file, never a proxy URL', () async {
-    const channel = MethodChannel('com.zuancrisp.mosix/backend');
+    const channel = MethodChannel('com.zarz.mornye/backend');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
           expect(call.method, 'checkHiResAuthenticity');

@@ -168,6 +168,9 @@ class PlayerTrackSwipeTitles extends StatelessWidget {
         builder: (context, constraints) {
           final width = constraints.maxWidth;
           state._width = width > 0 ? width : 1;
+          MediaItem? cachedNeighbor;
+          double? cachedDirection;
+          Widget? neighborTitle;
           return ClipRect(
             child: AnimatedBuilder(
               animation: state._offset,
@@ -175,6 +178,14 @@ class PlayerTrackSwipeTitles extends StatelessWidget {
               builder: (context, child) {
                 final offset = state._offset.value;
                 final next = state._neighbor(offset);
+                if (offset != 0 && next != null) {
+                  if (!identical(next, cachedNeighbor) ||
+                      offset.sign != cachedDirection) {
+                    cachedNeighbor = next;
+                    cachedDirection = offset.sign;
+                    neighborTitle = builder(next);
+                  }
+                }
                 return Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -189,7 +200,7 @@ class PlayerTrackSwipeTitles extends StatelessWidget {
                         width: width,
                         child: ExcludeSemantics(
                           child: IgnorePointer(
-                            child: ClipRect(child: builder(next)),
+                            child: ClipRect(child: neighborTitle),
                           ),
                         ),
                       ),

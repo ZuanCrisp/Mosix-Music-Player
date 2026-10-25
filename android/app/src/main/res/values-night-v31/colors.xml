@@ -4,4 +4,8 @@
     <color name="widgetTextPrimary">@android:color/system_neutral1_50</color>
     <color name="widgetTextSecondary">@android:color/system_neutral2_200</color>
     <color name="widgetAccent">@android:color/system_accent1_200</color>
+    <color name="widgetOnAccent">@android:color/system_accent1_800</color>
+    <color name="widgetAccentContainer">@android:color/system_accent1_700</color>
+    <color name="widgetOnAccentContainer">@android:color/system_accent1_100</color>
+    <color name="widgetTrack">@android:color/system_accent2_700</color>
 </resources>

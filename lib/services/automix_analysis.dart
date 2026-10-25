@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
-import 'package:mosix/models/automix_options.dart';
+import 'package:mornye/models/automix_options.dart';
 
 /// A local beat grid, measured in seconds within the decoded audio window.
 class AutoMixBeatGrid {
@@ -75,7 +75,7 @@ AutoMixBeatGrid analyzeAutoMixPcm(Uint8List pcm) {
   final peakEnergy = energy.reduce(math.max);
   if (peakEnergy < 0.00001) return unknown;
   final firstAudible = energy.indexWhere(
-    (e) => e > math.max(0.00001, peakEnergy * 0.01),
+    (e) => e > math.max(0.00001, peakEnergy * 0.0001),
   );
   final firstSound = math.max(0, firstAudible) / framesPerSecond;
   // Suppress slow volume changes and constant noise before finding the pulse.
@@ -100,6 +100,21 @@ AutoMixBeatGrid analyzeAutoMixPcm(Uint8List pcm) {
       confidence: 0,
       firstSound: firstSound,
     );
+  }
+
+  // A fade, a loud fill, or a quieter verse must not dominate the pulse
+  // correlation. Normalize against nearby onset energy with a global floor
+  // so silence and low-level noise cannot acquire arbitrary gain.
+  final power = Float64List(frames + 1);
+  for (var i = 0; i < frames; i++) {
+    power[i + 1] = power[i] + onset[i] * onset[i];
+  }
+  final floor = total / frames * 0.01;
+  for (var i = 0; i < frames; i++) {
+    final begin = math.max(0, i - 43);
+    final end = math.min(frames, i + 44);
+    final local = (power[end] - power[begin]) / (end - begin);
+    onset[i] = math.min(6, onset[i] / math.sqrt(math.max(floor, local)));
   }
 
   double correlation(double lag) {
@@ -133,6 +148,18 @@ AutoMixBeatGrid analyzeAutoMixPcm(Uint8List pcm) {
     }
   }
   if (bestBpm == 0) return unknown;
+  final coarseBpm = bestBpm;
+  for (var step = -25; step <= 25; step++) {
+    final bpm = coarseBpm + step * 0.01;
+    if (bpm < 60 || bpm > 180) continue;
+    final score = correlation(framesPerSecond * 60 / bpm);
+    final weighted =
+        score * (0.96 + 0.04 * math.exp(-math.pow((bpm - 120) / 45, 2)));
+    if (weighted > bestScore) {
+      bestScore = weighted;
+      bestBpm = bpm;
+    }
+  }
   final period = framesPerSecond * 60 / bestBpm;
   var bestPhase = 0.0;
   var phaseScore = 0.0;
@@ -176,6 +203,8 @@ enum AutoMixFallbackReason {
   unreliableBeats,
   incompatibleTempo,
   longIntro,
+  alignmentUnverified,
+  effectTempo,
 }
 
 class AutoMixPlan {
@@ -186,6 +215,8 @@ class AutoMixPlan {
     required this.rate,
     required this.beatMatched,
     this.fallbackReason,
+    this.assisted = false,
+    this.beatPeriod = Duration.zero,
   });
 
   final Duration start;
@@ -194,6 +225,17 @@ class AutoMixPlan {
   final double rate;
   final bool beatMatched;
   final AutoMixFallbackReason? fallbackReason;
+  final bool assisted;
+  final Duration beatPeriod;
+
+  AutoMixPlan withoutBeatMatching() => AutoMixPlan(
+    start: start,
+    incomingStart: incomingStart,
+    duration: duration,
+    rate: 1,
+    beatMatched: false,
+    fallbackReason: AutoMixFallbackReason.alignmentUnverified,
+  );
 
   static AutoMixPlan? create({
     required Duration outgoingDuration,
@@ -219,6 +261,8 @@ class AutoMixPlan {
     AutoMixFallbackReason? fallbackReason;
     if (options.effect == AutoMixEffect.crossfade) {
       fallbackReason = AutoMixFallbackReason.crossfadePreset;
+    } else if (options.effectiveSpeed != 1) {
+      fallbackReason = AutoMixFallbackReason.effectTempo;
     } else if (outro == null || intro == null) {
       fallbackReason = AutoMixFallbackReason.analysisUnavailable;
     } else if (!outro.reliable || !intro.reliable) {
@@ -262,18 +306,32 @@ class AutoMixPlan {
       rate: rate,
       beatMatched: matched,
       fallbackReason: fallbackReason,
+      // A measured but uncertain pulse can support a tonal handoff without
+      // authorizing a tempo change or claiming that the beats are aligned.
+      assisted:
+          !matched &&
+          options.effect == AutoMixEffect.auto &&
+          outro != null &&
+          intro != null &&
+          outro.bpm >= 60 &&
+          outro.bpm <= 180 &&
+          intro.bpm >= 60 &&
+          intro.bpm <= 180 &&
+          outro.confidence >= 0.25 &&
+          intro.confidence >= 0.25,
+      beatPeriod: matched
+          ? Duration(microseconds: (outro!.period * 1e6).round())
+          : Duration.zero,
     );
   }
 }
 
 /// Equal-power gain ramps; tempo returns gradually after the outgoing song ends.
 ({double outgoing, double incoming, double rate, bool complete})
-autoMixEnvelope(Duration elapsed, AutoMixPlan plan) {
-  final t = (elapsed.inMicroseconds / plan.duration.inMicroseconds).clamp(
-    0.0,
-    1.0,
-  );
-  final recovery = ((elapsed - plan.duration).inMicroseconds / 8000000).clamp(
+autoMixEnvelope(Duration elapsed, AutoMixPlan plan, {Duration? fadeDuration}) {
+  final duration = fadeDuration ?? plan.duration;
+  final t = (elapsed.inMicroseconds / duration.inMicroseconds).clamp(0.0, 1.0);
+  final recovery = ((elapsed - duration).inMicroseconds / 8000000).clamp(
     0.0,
     1.0,
   );

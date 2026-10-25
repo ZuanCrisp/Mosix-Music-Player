@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mosix/services/album_replaygain_readiness.dart';
+import 'package:mornye/services/album_replaygain_readiness.dart';
 
 import '../test/support/album_replaygain_benchmark.dart';
 

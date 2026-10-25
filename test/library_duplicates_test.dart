@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/library_database_models.dart';
-import 'package:mosix/services/library_duplicates.dart';
-import 'package:mosix/services/library_schema.dart';
+import 'package:mornye/services/library_database_models.dart';
+import 'package:mornye/services/library_duplicates.dart';
+import 'package:mornye/services/library_schema.dart';
+import 'package:mornye/services/network_storage_service.dart';
 
 import 'support/sqlite_process_database.dart';
 
@@ -106,12 +107,54 @@ void main() {
     },
   );
 
+  for (final protocol in [NetworkProtocol.smb, NetworkProtocol.webdav]) {
+    test('NAS connection aliases are one physical file ($protocol)', () async {
+      final scheme = protocol == NetworkProtocol.smb ? 'smb' : 'https';
+      final connections = {
+        for (final (id, address) in [
+          ('root', '$scheme://nas.test/music/'),
+          ('folder', '$scheme://nas.test/music/downloads/'),
+          ('other', '$scheme://other.test/music/'),
+          ('user', '$scheme://nas.test/music/'),
+        ])
+          id: NetworkConnection(
+            id: id,
+            name: 'NAS',
+            protocol: protocol,
+            address: address,
+            username: id == 'user' ? 'other-user' : 'listener',
+          ),
+      };
+      await add('first', 'network://root/downloads/Track.flac');
+      await add('alias', 'network://folder/Track.flac');
+      expect(
+        await readIsrcDuplicateGroups(
+          db,
+          loadNetworkConnections: () async => connections.values.toList(),
+        ),
+        isEmpty,
+      );
+      // A real copy, another server, and another account remain distinct.
+      await add('copy', 'network://root/processed/Track.flac');
+      await add('server', 'network://other/downloads/Track.flac');
+      await add('account', 'network://user/downloads/Track.flac');
+      final groups = await readIsrcDuplicateGroups(
+        db,
+        networkConnections: connections,
+      );
+      expect(groups.single.entries, hasLength(4));
+    });
+  }
+
   test('actual copies and different formats remain selectable', () async {
     await add('download', '/music/Track.flac', history: true);
     await add('indexed-download', 'file:///music/Track.flac');
     await add('conversion', '/music/Track.opus');
     await add('copy', '/playlist/Track.flac');
-    final group = (await readIsrcDuplicateGroups(db)).single;
+    final group = (await readIsrcDuplicateGroups(
+      db,
+      loadNetworkConnections: () async => throw StateError('No NAS required'),
+    )).single;
     expect(group.entries.map((entry) => entry.filePath).toSet(), {
       '/music/Track.flac',
       '/music/Track.opus',

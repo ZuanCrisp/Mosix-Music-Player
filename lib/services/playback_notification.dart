@@ -2,8 +2,8 @@ import 'package:audio_service/audio_service.dart';
 
 /// Presentation only; every transport action still uses the audio handler.
 class PlaybackNotification {
-  static const favoriteAction = 'spotiflac.favorite';
-  static const shuffleAction = 'spotiflac.shuffle';
+  static const favoriteAction = 'mornye.favorite';
+  static const shuffleAction = 'mornye.shuffle';
 
   final bool mornye;
   final String? mediaId;
@@ -44,14 +44,8 @@ class PlaybackNotification {
     required MediaItem? item,
     bool shuffle = false,
   }) {
-    if (!mornye) {
-      return [
-        MediaControl.skipToPrevious,
-        playing ? MediaControl.pause : MediaControl.play,
-        MediaControl.skipToNext,
-      ];
-    }
     final current = item?.id == mediaId && item?.extras?['source'] == source;
+    final playPause = playing ? MediaControl.pause : MediaControl.play;
     return [
       MediaControl.custom(
         name: favoriteAction,
@@ -60,15 +54,23 @@ class PlaybackNotification {
             : 'drawable/ic_notification_star',
         label: current && loved ? unfavoriteLabel : favoriteLabel,
       ),
-      MediaControl.skipToPrevious.copyWith(
-        androidIcon: 'drawable/ic_widget_previous',
-      ),
-      (playing ? MediaControl.pause : MediaControl.play).copyWith(
-        androidIcon: playing
-            ? 'drawable/ic_widget_pause'
-            : 'drawable/ic_widget_play',
-      ),
-      MediaControl.skipToNext.copyWith(androidIcon: 'drawable/ic_widget_next'),
+      mornye
+          ? MediaControl.skipToPrevious.copyWith(
+              androidIcon: 'drawable/ic_widget_previous',
+            )
+          : MediaControl.skipToPrevious,
+      mornye
+          ? playPause.copyWith(
+              androidIcon: playing
+                  ? 'drawable/ic_widget_pause'
+                  : 'drawable/ic_widget_play',
+            )
+          : playPause,
+      mornye
+          ? MediaControl.skipToNext.copyWith(
+              androidIcon: 'drawable/ic_widget_next',
+            )
+          : MediaControl.skipToNext,
       MediaControl.custom(
         name: shuffleAction,
         androidIcon: shuffle

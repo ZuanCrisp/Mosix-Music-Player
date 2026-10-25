@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mosix/theme/material_expressive.dart';
+import 'package:mornye/theme/material_expressive.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/expressive_button_group.dart';
 
 /// Compact expressive transport/header actions with the same accessible target
 /// and tooltip as the standard Material fallback.
@@ -28,6 +30,7 @@ class ExpressiveIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final icon = symbolIconWidget(this.icon);
     final scheme = Theme.of(context).colorScheme;
     final foreground = WidgetStateProperty.resolveWith<Color?>((states) {
       if (states.contains(WidgetState.disabled)) {
@@ -57,22 +60,30 @@ class ExpressiveIconButton extends StatelessWidget {
     }
     return Tooltip(
       message: tooltip,
-      child: MaterialExpressiveScope(
-        child: M3EIconButton(
-          icon: IconTheme.merge(
-            data: IconThemeData(size: iconSize),
-            child: icon,
-          ),
-          semanticLabel: tooltip,
-          onPressed: onPressed,
-          isSelected: selected,
-          visualSize: Size.square(size),
-          variant: backgroundColor == null
-              ? M3EIconButtonVariant.standard
-              : M3EIconButtonVariant.filled,
-          decoration: M3EIconButtonDecoration(
-            foregroundColor: foreground,
-            backgroundColor: background,
+      excludeFromSemantics: true,
+      // One labeled node instead of a label plus an unnamed tap target.
+      child: MergeSemantics(
+        child: MaterialExpressiveScope(
+          child: M3EIconButton(
+            icon: IconTheme.merge(
+              data: IconThemeData(size: iconSize),
+              child: icon,
+            ),
+            semanticLabel: tooltip,
+            onPressed: onPressed,
+            isSelected: selected,
+            // Widens with an expressive button group's squish.
+            visualSize: Size(
+              ExpressiveButtonGroupSlot.widthOf(context) ?? size,
+              size,
+            ),
+            variant: backgroundColor == null
+                ? M3EIconButtonVariant.standard
+                : M3EIconButtonVariant.filled,
+            decoration: M3EIconButtonDecoration(
+              foregroundColor: foreground,
+              backgroundColor: background,
+            ),
           ),
         ),
       ),

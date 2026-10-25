@@ -373,6 +373,15 @@ internal object NativeFinalizationPolicy {
             ?: ""
     }
 
+    fun metadataCoverUrl(resultValue: String?, requestValue: String?, trackValue: String?): String {
+        // The backend result preserves the selected metadata cover, including
+        // full-size artwork returned by source enrichment.
+        return normalizeOptional(resultValue)
+            ?: normalizeOptional(requestValue)
+            ?: normalizeOptional(trackValue)
+            ?: ""
+    }
+
     // Same separator set as the Rust writer and Dart's primaryArtistTagValue.
     // Android's regex engine rejects Pattern.UNICODE_CHARACTER_CLASS when this
     // object initializes, so Unicode spaces are listed explicitly instead.
@@ -397,6 +406,16 @@ internal object NativeFinalizationPolicy {
             .map(String::trim)
             .firstOrNull(String::isNotEmpty)
             ?: trimmed
+    }
+
+    private val metadataListSeparator = Regex("\\s*[,;]\\s*")
+
+    fun metadataTagValue(value: String, separator: String?): String {
+        val delimiter = separator.orEmpty()
+        if (delimiter.isEmpty() || delimiter.length > 16 ||
+            delimiter.any { it <= '\u001f' || it == '\u007f' }) return value
+        return value.split(metadataListSeparator).map(String::trim)
+            .filter(String::isNotEmpty).joinToString(delimiter)
     }
 
     private fun audioFormatForPath(filePath: String, fileName: String): String? {
@@ -452,7 +471,7 @@ internal object NativeFinalizationPolicy {
         return trimmed
     }
 
-    private fun normalizeExtension(extension: String?): String {
+    internal fun normalizeExtension(extension: String?): String {
         val trimmed = extension?.trim().orEmpty()
         if (trimmed.isEmpty()) return ""
         val lower = trimmed.lowercase(Locale.ROOT)

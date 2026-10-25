@@ -139,14 +139,7 @@ pub(crate) fn decode_option_bytes(
 pub(crate) fn encode(bytes: &[u8], encoding: &str) -> Result<String, String> {
     match encoding.trim().to_lowercase().as_str() {
         "" | "base64" => Ok(STANDARD.encode(bytes)),
-        "hex" => {
-            use std::fmt::Write;
-            let mut value = String::with_capacity(bytes.len() * 2);
-            for byte in bytes {
-                let _ = write!(value, "{byte:02x}");
-            }
-            Ok(value)
-        }
+        "hex" => Ok(mornye_core::lower_hex(bytes)),
         "utf8" | "utf-8" | "text" => Ok(decode_go_utf8(bytes)),
         _ => Err(format!("unsupported byte encoding: {encoding}")),
     }

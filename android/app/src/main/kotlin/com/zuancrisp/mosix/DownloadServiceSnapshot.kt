@@ -11,10 +11,8 @@ import org.json.JSONObject
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
-// Native-worker item state snapshots for the Flutter side.
-
 /**
- * The compact subset of Go progress needed by the Android worker UI. Keeping
+ * The compact subset of backend progress needed by the Android worker UI. Keeping
  * this as a Kotlin value avoids sharing mutable JSONObject instances between
  * the polling coroutine and worker coroutines.
  */

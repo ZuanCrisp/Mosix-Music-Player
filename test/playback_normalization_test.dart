@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/playback_normalization.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/services/playback_normalization.dart';
 
 void main() {
   test('updated gain replaces the cached volume for the same URI', () async {
@@ -112,5 +113,73 @@ void main() {
     expect(await cache.volumeFor('song'), 1.0);
     expect(await cache.volumeFor('song'), 1.0);
     expect(reads, 2);
+  });
+
+  test('pre-amp and gain mode reuse one tag read', () async {
+    var reads = 0;
+    final cache = PlaybackNormalizationCache(
+      readMetadata: (_, {displayName}) async {
+        reads++;
+        return {
+          'replaygain_track_gain': '-4.00 dB',
+          'replaygain_album_gain': '-2.00 dB',
+        };
+      },
+    );
+    // -7 dB pre-amp targets -25 LUFS: -4 - 7 = -11 dB.
+    expect(
+      await cache.volumeFor('song', preampDb: -7),
+      closeTo(0.281838, 0.000001),
+    );
+    expect(
+      await cache.volumeFor('song', preferAlbumGain: true),
+      closeTo(0.794328, 0.000001),
+    );
+    // A positive pre-amp still cannot raise a track above its source level.
+    expect(await cache.volumeFor('song', preampDb: 6), 1.0);
+    expect(reads, 1);
+  });
+
+  test('each gain mode falls back to the other tag', () async {
+    final trackOnly = PlaybackNormalizationCache(
+      readMetadata: (_, {displayName}) async => {
+        'replaygain_track_gain': '-6.00 dB',
+      },
+    );
+    final albumOnly = PlaybackNormalizationCache(
+      readMetadata: (_, {displayName}) async => {
+        'replaygain_album_gain': '-6.00 dB',
+      },
+    );
+    expect(
+      await trackOnly.volumeFor('song', preferAlbumGain: true),
+      closeTo(0.501187, 0.000001),
+    );
+    expect(await albumOnly.volumeFor('song'), closeTo(0.501187, 0.000001));
+  });
+
+  test('untagged files ignore the pre-amp', () async {
+    final cache = PlaybackNormalizationCache(
+      readMetadata: (_, {displayName}) async => {},
+    );
+    expect(await cache.volumeFor('song', preampDb: -7), 1.0);
+  });
+
+  test('stored pre-amp and mode are sanitized', () {
+    expect(playbackNormalizationPreampFromJson(-7.4), -7);
+    expect(playbackNormalizationPreampFromJson(-40), -15);
+    expect(playbackNormalizationPreampFromJson(20), 6);
+    expect(playbackNormalizationPreampFromJson('loud'), 0);
+    expect(playbackNormalizationModeFromJson('album'), 'album');
+    expect(playbackNormalizationModeFromJson('smart'), 'track');
+    final restored = AppSettings.fromJson(
+      const AppSettings(
+        playbackNormalizationPreamp: -7,
+        playbackNormalizationMode: 'album',
+      ).toJson(),
+    );
+    expect(restored.playbackNormalizationPreamp, -7);
+    expect(restored.playbackNormalizationMode, 'album');
+    expect(AppSettings.fromJson(const {}).playbackNormalizationPreamp, 0);
   });
 }

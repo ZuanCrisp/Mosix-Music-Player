@@ -4,12 +4,12 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mosix/widgets/cached_cover_image.dart';
+import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mornye/widgets/cached_cover_image.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const backendChannel = MethodChannel('com.zuancrisp.mosix/backend');
+  const backendChannel = MethodChannel('com.zarz.mornye/backend');
   final sourcePaths = <String>[];
   final tempDirectories = <Directory>[];
 
@@ -583,6 +583,30 @@ void main() {
       expect(await File(first!).exists(), isFalse);
     },
   );
+
+  test('legacy NUL-prefixed JPEG previews are re-extracted', () async {
+    final sourcePath = await createAudioFixture('legacy-padded-cover');
+    var extractions = 0;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(backendChannel, (call) async {
+          expect(call.method, 'extractCoverToFile');
+          extractions++;
+          await File(
+            (call.arguments as Map)['output_path'] as String,
+          ).writeAsBytes([0xff, 0xd8, 0xff, 0xe0]);
+          return jsonEncode({'success': true});
+        });
+    final preview = (await DownloadedEmbeddedCoverResolver.resolveOrExtract(
+      sourcePath,
+    ))!;
+    await File(preview).writeAsBytes([0, 0xff, 0xd8, 0xff, 0xe0]);
+    await DownloadedEmbeddedCoverResolver.resetMemoryStateForTesting();
+    final refreshed = await DownloadedEmbeddedCoverResolver.resolveOrExtract(
+      sourcePath,
+    );
+    expect(extractions, 2);
+    expect(await File(refreshed!).readAsBytes(), [0xff, 0xd8, 0xff, 0xe0]);
+  });
 
   test('legacy SAF thumbnails are replaced without changing the audio', () async {
     const source = 'content://covers/document/original-artwork.flac';

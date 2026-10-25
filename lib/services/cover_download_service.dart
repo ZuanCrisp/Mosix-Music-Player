@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/string_utils.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/string_utils.dart';
 
 class SavedCoverResult {
   final String fileName;
@@ -37,7 +37,7 @@ class CoverDownloadService {
     try {
       final download = await PlatformBridge.downloadCoverToFile(
         normalizedUrl,
-        Platform.isAndroid || Platform.isIOS ? '' : tempPath,
+        PlatformBridge.supportsCoreBackend ? '' : tempPath,
       );
       final error = download['error']?.toString().trim() ?? '';
       if (error.isNotEmpty) throw StateError(error);
@@ -86,7 +86,7 @@ class CoverDownloadService {
       }
       if (outputDirectory.isEmpty) {
         final documents = await getApplicationDocumentsDirectory();
-        outputDirectory = p.join(documents.path, 'Mosix');
+        outputDirectory = p.join(documents.path, 'Mornye');
       }
 
       final directory = Directory(outputDirectory);

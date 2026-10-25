@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/widgets/app_action_button.dart';
 
 /// Full-width delete action for selection-mode bottom bars: destructive
 /// (error) styling once at least one item is selected, disabled/neutral

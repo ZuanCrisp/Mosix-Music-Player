@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:material_3_expressive/components/sliders/components/m3e_slider_track_painter.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 
@@ -33,6 +34,10 @@ class _ExpressiveSeekTrackState extends State<ExpressiveSeekTrack>
         if (status == AnimationStatus.dismissed) _phase.stop();
       });
   late final _animation = Listenable.merge([_phase, _amplitude]);
+  late final _trackShape = ExpressiveSeekTrackShape(
+    phase: _phase,
+    amplitude: _amplitude,
+  );
   bool _motionEnabled = false;
 
   @override
@@ -72,34 +77,78 @@ class _ExpressiveSeekTrackState extends State<ExpressiveSeekTrack>
 
   @override
   Widget build(BuildContext context) => RepaintBoundary(
-    child: AnimatedBuilder(
-      animation: _animation,
-      child: widget.child,
-      builder: (context, child) => SliderTheme(
+    child: _AnimatedTrackRepaint(
+      repaint: _animation,
+      child: SliderTheme(
         data: SliderTheme.of(context).copyWith(
           trackHeight: 4,
-          trackShape: ExpressiveSeekTrackShape(
-            phase: _phase.value * 2 * math.pi,
-            amplitude: Curves.easeInOutCubic.transform(_amplitude.value),
-          ),
+          trackShape: _trackShape,
           thumbShape: const HandleThumbShape(),
           thumbSize: const WidgetStatePropertyAll(Size(4, 24)),
         ),
-        child: child!,
+        child: widget.child,
       ),
     ),
   );
 }
 
+/// A wave tick changes paint only. In particular it must not invalidate the
+/// SliderTheme dependency of the native slider on every display frame.
+class _AnimatedTrackRepaint extends SingleChildRenderObjectWidget {
+  const _AnimatedTrackRepaint({required this.repaint, required super.child});
+
+  final Listenable repaint;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderAnimatedTrackRepaint(repaint);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderAnimatedTrackRepaint renderObject,
+  ) => renderObject.repaint = repaint;
+}
+
+class _RenderAnimatedTrackRepaint extends RenderProxyBox {
+  _RenderAnimatedTrackRepaint(this._repaint);
+
+  Listenable _repaint;
+
+  set repaint(Listenable value) {
+    if (identical(value, _repaint)) return;
+    if (attached) _repaint.removeListener(markNeedsPaint);
+    _repaint = value;
+    if (attached) _repaint.addListener(markNeedsPaint);
+    markNeedsPaint();
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _repaint.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _repaint.removeListener(markNeedsPaint);
+    super.detach();
+  }
+}
+
 /// Uses the package's wave renderer without changing the slider gesture cycle.
 class ExpressiveSeekTrackShape extends RoundedRectSliderTrackShape {
   const ExpressiveSeekTrackShape({
-    required this.phase,
-    required this.amplitude,
-  });
+    required Animation<double> phase,
+    required Animation<double> amplitude,
+  }) : _phase = phase,
+       _amplitude = amplitude;
 
-  final double phase;
-  final double amplitude;
+  final Animation<double> _phase;
+  final Animation<double> _amplitude;
+
+  double get phase => _phase.value * 2 * math.pi;
+  double get amplitude => Curves.easeInOutCubic.transform(_amplitude.value);
 
   @override
   void paint(

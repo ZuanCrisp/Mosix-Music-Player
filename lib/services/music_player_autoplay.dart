@@ -22,14 +22,6 @@ AutoplayLearningTrack _learningTrack(PlayableMedia media) =>
       duration: media.duration,
     );
 
-void setAutoplayEnabled(bool enabled, {bool includeLocal = true}) =>
-    musicPlayerRuntime.configure(
-      musicPlayerRuntime.settings.copyWith(
-        autoplay: enabled,
-        localLibraryEnabled: includeLocal,
-      ),
-    );
-
 /// Bounded database pages keep recommendation work independent of Library
 /// size. Both downloaded tracks and enabled scanned sources are local files.
 Future<List<PlayableMedia>> _loadAutoplayLibrary(

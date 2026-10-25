@@ -16,6 +16,18 @@
 
 The Android implementation of [`audioplayers`](https://pub.dev/packages/audioplayers).
 
+## Mornye local changes
+
+In addition to preserving granted proxy file descriptors, this fork exposes a
+player-specific `setEqualizer` method. On Android 9+, `DynamicsProcessing` attaches
+to that player's nonzero audio session and provides graphic EQ, preamp, balance,
+compression and limiting. Effects are released with the underlying player and
+restored by the playback deck after source preparation. Unsupported effects are
+reported to the editor without stopping playback. Direct USB and exclusive
+bit-perfect paths bypass these effects.
+
+API reference: https://developer.android.com/reference/android/media/audiofx/DynamicsProcessing
+
 ## Usage
 
 This package is [endorsed](https://flutter.dev/docs/development/packages-and-plugins/developing-packages#endorsed-federated-plugin),

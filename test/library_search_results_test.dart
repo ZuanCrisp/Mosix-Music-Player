@@ -7,18 +7,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/models/unified_library_item.dart';
-import 'package:mosix/providers/download_history_provider.dart';
-import 'package:mosix/providers/library_search_provider.dart';
-import 'package:mosix/providers/playback_provider.dart';
-import 'package:mosix/screens/track_metadata_screen.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/services/library_search.dart';
-import 'package:mosix/services/music_player_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/library_search_results.dart';
-import 'package:mosix/widgets/track_card.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/models/unified_library_item.dart';
+import 'package:mornye/providers/download_history_provider.dart';
+import 'package:mornye/providers/library_search_provider.dart';
+import 'package:mornye/providers/playback_provider.dart';
+import 'package:mornye/screens/track_metadata_screen.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/services/library_search.dart';
+import 'package:mornye/services/music_player_service.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/library_search_results.dart';
+import 'package:mornye/widgets/track_card.dart';
+
+import 'support/app_icon_finder.dart';
 
 class _PlaybackRecorder extends PlaybackController {
   final paths = <String>[];
@@ -51,7 +53,7 @@ void main() {
         (tester) async {
           SharedPreferences.setMockInitialValues({});
           FlutterSecureStorage.setMockInitialValues({});
-          const channel = MethodChannel('com.zuancrisp.mosix/backend');
+          const channel = MethodChannel('com.zarz.mornye/backend');
           tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
             channel,
             (call) async => switch (call.method) {
@@ -205,11 +207,11 @@ void main() {
       await tester.tap(find.text('Found artists 0'));
       expect(artists, ['Found artists 0']);
       await tester.scrollUntilVisible(
-        find.byIcon(Icons.expand_more),
+        findAppIcon(Icons.expand_more),
         600,
         scrollable: find.byType(Scrollable).first,
       );
-      await tester.tap(find.byIcon(Icons.expand_more));
+      await tester.tap(findAppIcon(Icons.expand_more));
       await tester.pumpAndSettle();
       expect(requests.last.offset, 40);
       expect(tester.takeException(), isNull);
@@ -356,7 +358,6 @@ void main() {
         expect(find.textContaining('selected'), findsNothing);
         expect(find.byTooltip('Play'), findsNWidgets(2));
 
-        // A new query starts without the previous selection.
         await tester.longPress(find.text('Song a'));
         await tester.pumpAndSettle();
         expect(find.text('1 selected'), findsOneWidget);

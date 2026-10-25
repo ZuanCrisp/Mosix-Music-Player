@@ -1,4 +1,4 @@
-//! Port of SpotiFLAC-Module-Version's tests/test_hires_check.py. Signals are
+//! Port of the Python reference checker's test_hires_check.py. Signals are
 //! synthesised rather than fixtured: a "fake Hi-Res" file is exactly a
 //! band-limited 44.1 kHz signal carried at a higher rate, which a few lines
 //! build more clearly than any committed binary could describe.
@@ -171,7 +171,7 @@ struct TempDir(PathBuf);
 impl TempDir {
     fn new(name: &str) -> Self {
         let path = std::env::temp_dir().join(format!(
-            "spotiflac-hires-{name}-{}-{}",
+            "mornye-hires-{name}-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

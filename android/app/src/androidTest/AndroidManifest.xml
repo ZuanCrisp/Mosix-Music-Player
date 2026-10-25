@@ -2,12 +2,12 @@
     <application>
         <provider
             android:name="com.zuancrisp.mosix.LookupTestControlProvider"
-            android:authorities="com.spotiflac.test.documents.lookup.control"
+            android:authorities="com.mornye.test.documents.lookup.control"
             android:exported="true" />
         <!-- This fixture exists only in the instrumentation APK. -->
         <provider
             android:name="com.zuancrisp.mosix.LookupTestDocumentsProvider"
-            android:authorities="com.spotiflac.test.documents.lookup"
+            android:authorities="com.mornye.test.documents.lookup"
             android:exported="true"
             android:permission="android.permission.MANAGE_DOCUMENTS"
             android:grantUriPermissions="true">

@@ -1,12 +1,13 @@
 //! Bounded, seekable metadata reads through the app's authenticated loopback
 //! proxy. The native reader never receives NAS credentials or external URLs.
 use base64::Engine;
-use serde_json::{Value, json};
-use sha2::{Digest, Sha256};
-use spotiflac_core::tags;
-use spotiflac_network::{
+use mornye_core::fs::{DEFAULT_TEMP_PREFIX, write_atomic};
+use mornye_core::{lower_hex, tags};
+use mornye_network::{
     HttpRequest, NetworkService, NetworkSession, policy::NetworkPermissions, url::UrlParts,
 };
+use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 use std::{
     collections::{BTreeMap, VecDeque},
     fs::{self, File},
@@ -82,7 +83,7 @@ pub(crate) fn matches_upload(
             body: String::new(),
             headers: BTreeMap::from([("Accept-Encoding".into(), "identity".into())]),
             default_json: false,
-            user_agent: "SpotiFLAC/NetworkUploadRecovery".into(),
+            user_agent: "Mosix/NetworkUploadRecovery".into(),
         },
         Duration::from_secs(u32::MAX.into()),
         idle,
@@ -125,11 +126,7 @@ pub(crate) fn matches_upload(
     if received != length {
         return Ok(json!({"matches": false}));
     }
-    let remote: String = hash
-        .finalize()
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect();
+    let remote = lower_hex(&hash.finalize());
     let local = crate::data_jobs::hash_file(path, check)?;
     check()?;
     Ok(json!({"matches": remote == local}))
@@ -191,20 +188,17 @@ fn cache_cover(
         return Err("Artwork cache must be absolute".into());
     }
     fs::create_dir_all(directory).map_err(|error| error.to_string())?;
-    let digest: String = Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect();
+    let digest = lower_hex(&Sha256::digest(bytes));
     let target = directory.join(format!("network_cover_{digest}.image"));
-    let mut staged =
-        tempfile::NamedTempFile::new_in(directory).map_err(|error| error.to_string())?;
-    staged.write_all(bytes).map_err(|error| error.to_string())?;
-    staged
-        .as_file()
-        .sync_all()
-        .map_err(|error| error.to_string())?;
-    check()?;
-    staged.persist(&target).map_err(|error| error.to_string())?;
+    write_atomic(
+        directory,
+        &target,
+        DEFAULT_TEMP_PREFIX,
+        |file| file.write_all(bytes),
+        || check().map_err(io::Error::other),
+        false,
+    )
+    .map_err(|error| error.to_string())?;
     let mut files = fs::read_dir(directory)
         .map_err(|error| error.to_string())?
         .filter_map(Result::ok)
@@ -286,25 +280,25 @@ pub(crate) fn promote_cover(
         {
             return Err("Artwork input must be a regular file".into());
         }
-        let mut staged =
-            tempfile::NamedTempFile::new_in(destination).map_err(|error| error.to_string())?;
-        let mut buffer = [0; 64 * 1024];
-        loop {
-            check()?;
-            let count = input.read(&mut buffer).map_err(|error| error.to_string())?;
-            if count == 0 {
-                break;
-            }
-            staged
-                .write_all(&buffer[..count])
-                .map_err(|error| error.to_string())?;
-        }
-        staged
-            .as_file()
-            .sync_all()
-            .map_err(|error| error.to_string())?;
-        check()?;
-        staged.persist(&target).map_err(|error| error.to_string())?;
+        write_atomic(
+            destination,
+            &target,
+            DEFAULT_TEMP_PREFIX,
+            |file| {
+                let mut buffer = [0; 64 * 1024];
+                loop {
+                    check().map_err(io::Error::other)?;
+                    let count = input.read(&mut buffer)?;
+                    if count == 0 {
+                        return Ok(());
+                    }
+                    file.write_all(&buffer[..count])?;
+                }
+            },
+            || check().map_err(io::Error::other),
+            false,
+        )
+        .map_err(|error| error.to_string())?;
     }
     Ok(json!({"cover_path": target.to_string_lossy(), "sha256": digest}))
 }
@@ -367,7 +361,7 @@ impl<'a> RangeReader<'a> {
                 ("Accept-Encoding".into(), "identity".into()),
             ]),
             default_json: false,
-            user_agent: "SpotiFLAC/NetworkMetadata".into(),
+            user_agent: "Mosix/NetworkMetadata".into(),
         };
         let mut stream = self
             .session

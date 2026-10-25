@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/library_browse_provider.dart';
-import 'package:mosix/providers/library_search_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/screens/mornye_library_screen.dart';
-import 'package:mosix/services/album_completeness.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/library_browse_provider.dart';
+import 'package:mornye/providers/library_search_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/screens/mornye_library_screen.dart';
+import 'package:mornye/services/album_completeness.dart';
+import 'package:mornye/theme/mornye_theme.dart';
 
 class _Settings extends SettingsNotifier {
   @override

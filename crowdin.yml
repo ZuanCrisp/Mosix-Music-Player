@@ -5,7 +5,7 @@ files:
       locale:
         # Keys MUST be the project's Crowdin language ids; values are the
         # %locale% suffix used in app_%locale%.arb (underscores so Flutter
-        # gen-l10n parses them — hyphenated filenames break gen-l10n).
+        # gen-l10n parses them; hyphenated filenames break gen-l10n).
         # Keep every Crowdin locale mapped even while it is below the UI's
         # 70% threshold. This lets translators keep making progress without
         # exposing incomplete locales in production builds.

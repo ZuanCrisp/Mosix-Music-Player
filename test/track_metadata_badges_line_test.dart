@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/widgets/audio_quality_badges.dart';
-import 'package:mosix/widgets/in_library_badge.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/widgets/audio_quality_badges.dart';
+import 'package:mornye/widgets/in_library_badge.dart';
 
 void main() {
   testWidgets('track metadata badges wrap on a narrow result row', (

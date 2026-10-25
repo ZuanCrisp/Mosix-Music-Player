@@ -1,6 +1,9 @@
+//! Mobile audio tag and library entry points on `ExtensionManager`: metadata reads, CUE parsing,
+//! library scans and scan control, cover extraction and download, and tag writes.
+
 use crate::cancellation::RequestLease;
 use crate::manager::{ExtensionManager, ExtensionManagerError};
-use spotiflac_core::tags;
+use mornye_core::tags;
 use std::collections::BTreeMap;
 use std::fs::{File, OpenOptions};
 use std::sync::Arc;
@@ -97,7 +100,7 @@ impl ExtensionManager {
         let format = tags::library_extension(&audio_path, &hint);
         let mut metadata = serde_json::json!({"coverPath":cover_path});
         if format == "flac" {
-            if let Ok(quality) = spotiflac_core::media::probe_quality(&mut file, &check) {
+            if let Ok(quality) = mornye_core::media::probe_quality(&mut file, &check) {
                 metadata["bitDepth"] = quality.bit_depth.into();
                 metadata["sampleRate"] = quality.sample_rate.into();
                 if quality.sample_rate > 0 && quality.total_samples > 0 {
@@ -126,31 +129,6 @@ impl ExtensionManager {
             .map_err(ExtensionManagerError::Operation)
     }
 
-    #[allow(clippy::too_many_arguments)]
-    pub fn scan_cue_file_for_library(
-        &self,
-        path: String,
-        audio_directory: String,
-        virtual_prefix: String,
-        mod_time: i64,
-        cache_key: String,
-        scan_time: String,
-        lease: Option<Arc<RequestLease>>,
-    ) -> Result<String, ExtensionManagerError> {
-        self.inner
-            .scan_cue_file_for_library(
-                &path,
-                &audio_directory,
-                &virtual_prefix,
-                mod_time,
-                &cache_key,
-                &scan_time,
-                &|| check_lease(lease.as_deref()),
-            )
-            .map(|value| value.to_string())
-            .map_err(ExtensionManagerError::Operation)
-    }
-
     pub fn scan_library_folder_incremental(
         &self,
         folder: String,
@@ -159,20 +137,6 @@ impl ExtensionManager {
     ) -> Result<String, ExtensionManagerError> {
         self.inner
             .scan_library_folder_incremental(&folder, &existing_json, &|| {
-                check_lease(lease.as_deref())
-            })
-            .map(|value| value.to_string())
-            .map_err(ExtensionManagerError::Operation)
-    }
-
-    pub fn scan_library_folder_incremental_from_snapshot(
-        &self,
-        folder: String,
-        snapshot: String,
-        lease: Option<Arc<RequestLease>>,
-    ) -> Result<String, ExtensionManagerError> {
-        self.inner
-            .scan_library_folder_incremental_from_snapshot(&folder, &snapshot, &|| {
                 check_lease(lease.as_deref())
             })
             .map(|value| value.to_string())

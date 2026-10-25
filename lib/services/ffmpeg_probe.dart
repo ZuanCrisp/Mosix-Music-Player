@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:ffmpeg_kit_flutter_new_audio/ffprobe_kit.dart';
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/utils/audio_format_utils.dart' as audio;
+import 'package:mornye/services/ffmpeg_support.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/utils/audio_format_utils.dart' as audio;
 
 final _log = AppLogger('FFmpeg');
 
@@ -40,9 +40,7 @@ abstract final class FFmpegProbe {
 
   static Future<({int width, int height})?> imageDimensions(String path) async {
     try {
-      final info = (await FFprobeKit.getMediaInformation(
-        path,
-      )).getMediaInformation();
+      final info = await FFmpegExecution.mediaInformation(path);
       if (info == null) return null;
       for (final stream in info.getStreams()) {
         final dimensions = imageDimensionsFromProperties(
@@ -89,9 +87,7 @@ abstract final class FFmpegProbe {
     String path,
   ) async {
     try {
-      final info = (await FFprobeKit.getMediaInformation(
-        path,
-      )).getMediaInformation();
+      final info = await FFmpegExecution.mediaInformation(path);
       if (info == null) return const PrimaryAudioProperties();
       for (final stream in info.getStreams()) {
         final props = stream.getAllProperties() ?? const <String, dynamic>{};

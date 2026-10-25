@@ -4,8 +4,8 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mosix/models/automix_options.dart';
-import 'package:mosix/services/automix_effect_renderer.dart';
+import 'package:mornye/models/automix_options.dart';
+import 'package:mornye/services/automix_effect_renderer.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

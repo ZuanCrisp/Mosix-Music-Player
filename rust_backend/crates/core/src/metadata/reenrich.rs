@@ -1,6 +1,6 @@
 //! Re-enrichment input, candidate policy and preview metadata. No file access.
 
-use crate::lyrics::json::go_deserialize;
+use crate::json::lenient_deserialize;
 use crate::matching::lowercase;
 use crate::resolver::{artists_match, titles_match, track_identity_title, track_titles_match};
 use serde::Serialize;
@@ -36,7 +36,7 @@ pub struct Request {
     pub preview_only: bool,
     pub replace_release_metadata: bool,
 }
-go_deserialize!(Request {
+lenient_deserialize!(Request {
     "file_path" => file_path, "cover_url" => cover_url,
     "cover_max_dimension" => cover_max_dimension, "embed_lyrics" => embed_lyrics,
     "lyrics_mode" => lyrics_mode, "artist_tag_mode" => artist_tag_mode,

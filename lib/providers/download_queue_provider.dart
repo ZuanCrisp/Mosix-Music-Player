@@ -2,65 +2,70 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:convert';
 import 'dart:io';
-import 'package:mosix/utils/chunked_list.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/services/network_download_staging.dart';
+import 'package:mornye/services/network_download_staging.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/models/download_result.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/player_motion_artwork_provider.dart';
-import 'package:mosix/providers/download_verification_retry_guard.dart';
-import 'package:mosix/providers/download_queue_state.dart';
-import 'package:mosix/services/download_queue_persistence.dart';
-import 'package:mosix/services/download_progress.dart';
-import 'package:mosix/services/download_file_finalizer.dart';
-import 'package:mosix/services/download_container_finalizer.dart';
-import 'package:mosix/services/download_completion_audio.dart';
-import 'package:mosix/services/download_metadata_resolver.dart';
-import 'package:mosix/services/download_metadata_embedding.dart';
-import 'package:mosix/services/download_saf_file_replacer.dart';
-import 'package:mosix/services/download_connectivity_policy.dart';
-import 'package:mosix/services/download_scheduler.dart';
-import 'package:mosix/services/source_deletion_events.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/download_request_payload.dart';
-import 'package:mosix/services/download_motion_artwork_source.dart';
-import 'package:mosix/services/ffmpeg_service.dart';
-import 'package:mosix/services/hires_check_service.dart';
-import 'package:mosix/services/replaygain_service.dart';
-import 'package:mosix/services/album_replaygain_readiness.dart';
-import 'package:mosix/services/notification_service.dart';
-import 'package:mosix/services/verification_notification.dart';
-import 'package:mosix/utils/logger.dart' hide log;
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/utils/string_utils.dart';
-import 'package:mosix/utils/artist_utils.dart';
-import 'package:mosix/utils/audio_format_utils.dart';
-import 'package:mosix/utils/int_utils.dart';
-import 'package:mosix/utils/path_match_keys.dart';
-import 'package:mosix/utils/extension_auth_launcher.dart';
-import 'package:mosix/utils/download_error_type.dart';
-import 'package:mosix/utils/lyrics_metadata_helper.dart';
-import 'package:mosix/utils/progress_stream_poller.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/models/download_result.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/providers/player_motion_artwork_provider.dart';
+import 'package:mornye/providers/download_verification_retry_guard.dart';
+import 'package:mornye/providers/download_queue_state.dart';
+import 'package:mornye/providers/download_queue_policy.dart';
+import 'package:mornye/services/download_queue_persistence.dart';
+import 'package:mornye/providers/download_progress.dart';
+import 'package:mornye/services/download_file_finalizer.dart';
+import 'package:mornye/services/download_container_finalizer.dart';
+import 'package:mornye/services/download_completion_audio.dart';
+import 'package:mornye/services/download_metadata_resolver.dart';
+import 'package:mornye/services/download_metadata_embedding.dart';
+import 'package:mornye/services/download_saf_file_replacer.dart';
+import 'package:mornye/services/download_connectivity_policy.dart';
+import 'package:mornye/services/download_keep_awake.dart';
+import 'package:mornye/services/download_scheduler.dart';
+import 'package:mornye/services/source_deletion_events.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/download_request_payload.dart';
+import 'package:mornye/services/folder_path_template.dart';
+import 'package:mornye/services/download_motion_artwork_source.dart';
+import 'package:mornye/services/ffmpeg_service.dart';
+import 'package:mornye/services/hires_check_service.dart';
+import 'package:mornye/services/replaygain_service.dart';
+import 'package:mornye/services/album_replaygain_readiness.dart';
+import 'package:mornye/services/notification_service.dart';
+import 'package:mornye/services/verification_notification.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/utils/desktop_folders.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/string_utils.dart';
+import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mornye/utils/int_utils.dart';
+import 'package:mornye/utils/path_match_keys.dart';
+import 'package:mornye/utils/extension_auth_launcher.dart';
+import 'package:mornye/utils/download_error_type.dart';
+import 'package:mornye/utils/lyrics_metadata_helper.dart';
+import 'package:mornye/utils/progress_stream_poller.dart';
 
-import 'package:mosix/providers/download_history_provider.dart';
-import 'package:mosix/services/native_download_history.dart';
+import 'package:mornye/providers/download_history_provider.dart';
+import 'package:mornye/services/native_download_history.dart';
+import 'package:mornye/services/native_download_worker_monitor.dart';
 
-export 'package:mosix/providers/download_history_provider.dart';
-export 'package:mosix/providers/download_queue_state.dart';
-export 'package:mosix/services/download_metadata_resolver.dart'
+export 'package:mornye/providers/download_history_provider.dart';
+export 'package:mornye/providers/download_queue_policy.dart';
+export 'package:mornye/providers/download_queue_state.dart';
+export 'package:mornye/services/download_metadata_resolver.dart'
     show copyTrackWithResolvedMetadata;
-export 'package:mosix/services/download_queue_persistence.dart'
+export 'package:mornye/services/download_queue_persistence.dart'
     show encodeDownloadQueueItemForPersistence, downloadQueuePersistenceStatus;
 
-export 'package:mosix/services/history_database.dart'
+export 'package:mornye/services/history_database.dart'
     show HistoryLookupRequest, HistoryBatchLookupRequest;
 
 part 'download_queue_provider_paths.dart';
@@ -76,220 +81,15 @@ part 'download_queue_provider_hires_check.dart';
 
 final _log = AppLogger('DownloadQueue');
 
-/// Prevents asynchronous queue startup checks from overlapping before
-/// [DownloadQueueState.isProcessing] can be published.
-class QueueProcessingGate {
-  bool _active = false;
-  bool _pending = false;
-
-  bool tryEnter() {
-    if (_active) {
-      _pending = true;
-      return false;
-    }
-    _active = true;
-    return true;
-  }
-
-  bool leave() {
-    _active = false;
-    final shouldRunAgain = _pending;
-    _pending = false;
-    return shouldRunAgain;
-  }
-}
-
-/// Set on queued items when the persisted Android SAF grant fails validation.
-/// The queue UI matches on this to offer re-selecting the download folder.
-const String safPermissionLostErrorMessage =
-    'SAF permission invalid or revoked. Please reconfigure download location in Settings.';
-
-/// Set on queued items when the iOS download folder bookmark can no longer be
-/// opened. The queue UI matches on this to offer re-selecting the folder.
-const String downloadFolderAccessLostErrorMessage =
-    'Download folder access lost. Please re-select your download folder in Settings.';
-
-enum StorageWriteRecovery { requestSafAccess, useAppFolderFallback }
-
-StorageWriteRecovery storageWriteRecoveryFor({required bool useSaf}) {
-  return useSaf
-      ? StorageWriteRecovery.requestSafAccess
-      : StorageWriteRecovery.useAppFolderFallback;
-}
-
-bool canStartForegroundDownloadForLifecycle(AppLifecycleState? lifecycleState) {
-  return lifecycleState == AppLifecycleState.resumed;
-}
-
-String nativeWorkerStatusAfterSnapshotStop({
-  required bool workerRunning,
-  required String status,
-}) {
-  if (workerRunning) return status;
-  return switch (status) {
-    'preparing' || 'downloading' || 'finalizing' => 'queued',
-    _ => status,
-  };
-}
-
-/// Keeps a download in its finalizing state until its durable Library record
-/// has been written. If persistence fails, completion is deliberately not
-/// published so the queue can surface the error instead of losing the file
-/// from the app while it still exists on disk.
-Future<void> persistBeforePublishingDownloadCompletion({
-  required Future<void> Function() persist,
-  required void Function() publish,
-}) async {
-  await persist();
-  publish();
-}
-
-/// Keeps native-worker finalization visually distinct from completion.
-/// Download bytes may reach 100% before SAF publishing, metadata persistence,
-/// and queue reconciliation have finished.
-double nativeWorkerFinalizingProgress(double progress) {
-  final normalized = progress.clamp(0.0, 1.0).toDouble();
-  if (normalized <= 0) return 0.95;
-  return min(normalized, 0.99);
-}
-
-/// Whether a backend failure means the selected destination could not be
-/// written. This intentionally stays provider-agnostic: once an output path is
-/// unwritable, trying more audio providers against that same path only wastes
-/// time and hides the actionable storage failure behind a later network error.
-bool isStorageWriteFailure({String? errorType, String? errorMessage}) {
-  if (errorType?.trim().toLowerCase() == 'permission') return true;
-
-  final message = errorMessage?.trim().toLowerCase() ?? '';
-  if (message.isEmpty) return false;
-  return message.contains('operation not permitted') ||
-      message.contains('permission denied') ||
-      message.contains('read-only file system') ||
-      message.contains('failed to create file') ||
-      message.contains('failed to create directory') ||
-      message.contains('failed to access saf directory') ||
-      message.contains('failed to create saf file') ||
-      message.contains('failed to open saf file') ||
-      message.contains('failed to publish saf') ||
-      message.contains('failed to publish deferred saf') ||
-      message.contains('failed to copy extension output to saf');
-}
-
-/// Makes the album-artist credit stable for tracks from the same album.
-///
-/// Some metadata providers expose every `MAIN` track artist as the album
-/// artist. On collaboration tracks that turns one album into values such as
-/// "Artist", "Artist, Guest A", and "Artist, Guest B". Music libraries then
-/// split the files into separate albums. Keep the complete track artist credit
-/// intact, but reduce inconsistent album-artist credits to the artist names
-/// shared by every track in that album.
-List<Track> normalizeBatchAlbumArtists(List<Track> tracks) {
-  if (tracks.length < 2) return tracks;
-
-  final albumGroups = <String, List<int>>{};
-  for (var index = 0; index < tracks.length; index++) {
-    final key = _batchAlbumIdentity(tracks[index]);
-    if (key == null) continue;
-    albumGroups.putIfAbsent(key, () => <int>[]).add(index);
-  }
-
-  List<Track>? normalized;
-  for (final indices in albumGroups.values) {
-    if (indices.length < 2) continue;
-    final albumTracks = [for (final index in indices) tracks[index]];
-    final canonicalArtist = _sharedBatchAlbumArtist(albumTracks);
-    if (canonicalArtist == null) continue;
-
-    for (final index in indices) {
-      final currentArtist = normalizeOptionalString(tracks[index].albumArtist);
-      if (currentArtist == canonicalArtist) continue;
-      normalized ??= List<Track>.of(tracks);
-      normalized[index] = tracks[index].copyWith(albumArtist: canonicalArtist);
-    }
-  }
-
-  return normalized ?? tracks;
-}
-
-String? _batchAlbumIdentity(Track track) {
-  final source = normalizeOptionalString(track.source)?.toLowerCase() ?? '';
-  final albumId = normalizeOptionalString(track.albumId)?.toLowerCase();
-  if (albumId != null) return '$source|id:$albumId';
-
-  final albumName = normalizeOptionalString(track.albumName)?.toLowerCase();
-  if (albumName == null) return null;
-
-  final cover = normalizeOptionalString(
-    normalizeCoverReference(track.coverUrl),
-  )?.toLowerCase();
-  if (cover != null) return '$source|cover:$albumName|$cover';
-
-  final releaseDate = normalizeOptionalString(track.releaseDate) ?? '';
-  final totalTracks = track.totalTracks ?? 0;
-  final primaryArtist = primaryArtistName(
-    track.artistName,
-    albumArtist: track.albumArtist,
-  ).trim().toLowerCase();
-  return '$source|meta:$albumName|$releaseDate|$totalTracks|$primaryArtist';
-}
-
-String? _sharedBatchAlbumArtist(List<Track> tracks) {
-  final albumArtists = tracks
-      .map((track) => normalizeOptionalString(track.albumArtist))
-      .toList(growable: false);
-  final firstAlbumArtist = albumArtists.first;
-  if (firstAlbumArtist != null &&
-      albumArtists.every(
-        (artist) => artist?.toLowerCase() == firstAlbumArtist.toLowerCase(),
-      )) {
-    return firstAlbumArtist;
-  }
-
-  final credits = <List<String>>[];
-  for (var index = 0; index < tracks.length; index++) {
-    final rawCredit = albumArtists[index] ?? tracks[index].artistName;
-    final names = splitArtistNames(rawCredit);
-    if (names.isEmpty) return null;
-    credits.add(names);
-  }
-
-  final sharedKeys = credits.first.map((name) => name.toLowerCase()).toSet();
-  for (final credit in credits.skip(1)) {
-    final keys = credit.map((name) => name.toLowerCase()).toSet();
-    sharedKeys.removeWhere((name) => !keys.contains(name));
-  }
-  if (sharedKeys.isEmpty) return null;
-
-  // Preserve a provider's original separator whenever one of its credits is
-  // already exactly the shared album credit.
-  for (final rawCredit in albumArtists.whereType<String>()) {
-    final keys = splitArtistNames(
-      rawCredit,
-    ).map((name) => name.toLowerCase()).toSet();
-    if (keys.length == sharedKeys.length && keys.containsAll(sharedKeys)) {
-      return rawCredit;
-    }
-  }
-
-  final displayNames = <String>[];
-  final seen = <String>{};
-  for (final name in credits.first) {
-    final key = name.toLowerCase();
-    if (sharedKeys.contains(key) && seen.add(key)) displayNames.add(name);
-  }
-  return displayNames.isEmpty ? null : displayNames.join(', ');
-}
-
 final _invalidFolderChars = RegExp(r'[<>:"/\\|?*]');
 final _trimDotsAndSpacesRegex = RegExp(r'^[. ]+|[. ]+$');
 final _trimUnderscoresAndSpacesRegex = RegExp(r'^[_ ]+|[_ ]+$');
 final _multiWhitespaceRegex = RegExp(r'\s+');
 final _multiUnderscoreRegex = RegExp(r'_+');
 
-/// log10 helper using dart:math's natural log.
 double _log10(num x) => log(x) / ln10;
 final _yearRegex = RegExp(r'^(\d{4})');
-const _defaultOutputFolderName = 'Mosix';
+const _defaultOutputFolderName = 'Mornye';
 const _defaultAndroidDownloadSubpath = 'Download/$_defaultOutputFolderName';
 const _maxSafFilenameUtf8Bytes = 180;
 const _maxSafDirSegmentUtf8Bytes = 120;
@@ -594,7 +394,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
         _log.e('Failed to flush expired iOS queue: $error');
       }),
     );
-    // The native expiration callback cancels Go synchronously before this
+    // The native expiration callback cancels the download synchronously before this
     // asynchronous event reaches Dart. If foregrounding won that race, still
     // requeue the cancelled item, then immediately let the running queue loop
     // continue instead of misclassifying it as a skipped download.
@@ -784,6 +584,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
       quality: quality,
       embedMetadata: settings.embedMetadata,
       artistTagMode: settings.artistTagMode,
+      metadataSeparators: settings.metadataSeparators,
       embedLyrics:
           settings.embedMetadata &&
           settings.embedLyrics &&
@@ -1093,17 +894,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
       return;
     }
 
-    final updatedItems = ChunkedList<DownloadItem>.from(
-      items,
-    ).updated({index: next});
-    state = state.copyWith(
-      items: updatedItems,
-      lookup: state.lookup.updatedForIndices(
-        previousItems: items,
-        nextItems: updatedItems,
-        changedIndices: [index],
-      ),
-    );
+    state = state.withItemReplacements({index: next});
 
     if (Platform.isAndroid && status == DownloadStatus.finalizing) {
       PlatformBridge.clearItemProgress(id).catchError((_) {});
@@ -1123,6 +914,20 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
         status == DownloadStatus.skipped) {
       _saveQueueToStorage();
     }
+  }
+
+  void _recordFailedDownload(
+    String id, {
+    required String error,
+    required DownloadErrorType errorType,
+  }) {
+    updateItemStatus(
+      id,
+      DownloadStatus.failed,
+      error: error,
+      errorType: errorType,
+    );
+    _failedInSession++;
   }
 
   /// Fails requests that have not started when shared queue setup cannot
@@ -1145,15 +950,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
     }
     if (changes.isEmpty) return;
 
-    final updatedItems = ChunkedList<DownloadItem>.from(items).updated(changes);
-    state = state.copyWith(
-      items: updatedItems,
-      lookup: state.lookup.updatedForIndices(
-        previousItems: items,
-        nextItems: updatedItems,
-        changedIndices: changes.keys,
-      ),
-    );
+    state = state.withItemReplacements(changes);
     _saveQueueToStorage();
   }
 
@@ -1634,7 +1431,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
       final buffer = StringBuffer();
 
       if (!fileExists) {
-        buffer.writeln('# Mosix Failed Downloads');
+        buffer.writeln('# Mornye Failed Downloads');
         buffer.writeln('# Date: $dateStr');
         buffer.writeln('#');
         buffer.writeln('# Format: [Time] Track - Artist | URL | Error');
@@ -1729,6 +1526,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
         } else if (Platform.isIOS) {
           await PlatformBridge.endBackgroundDownloadTask();
         }
+        await downloadKeepAwake.end();
       } catch (cleanupError, cleanupStack) {
         _log.e(
           'Failed to release download execution window: $cleanupError',
@@ -1891,6 +1689,9 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
       await PlatformBridge.beginBackgroundDownloadTask();
     }
 
+    // Desktop: keep the computer from idle sleeping until the queue stops.
+    if (_totalQueuedAtStart > 0) await downloadKeepAwake.begin();
+
     if (!isSafMode && state.outputDir.isEmpty) {
       _log.d('Output dir empty, initializing...');
       await _initOutputDir();
@@ -1997,6 +1798,8 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
       await PlatformBridge.endBackgroundDownloadTask();
     }
 
+    await downloadKeepAwake.end();
+
     if (stoppedWhilePaused && _downloadCount > 0) {
       try {
         await PlatformBridge.cleanupConnections();
@@ -2017,10 +1820,14 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
     );
     final hasSessionResults = _completedInSession > 0 || _failedInSession > 0;
     if (!stoppedWhilePaused && _totalQueuedAtStart > 0 && hasSessionResults) {
-      await _notificationService.showQueueComplete(
-        completedCount: _completedInSession,
-        failedCount: _failedInSession,
-      );
+      try {
+        await _notificationService.showQueueComplete(
+          completedCount: _completedInSession,
+          failedCount: _failedInSession,
+        );
+      } catch (error) {
+        _log.w('Failed to show queue completion notification: $error');
+      }
 
       final settings = ref.read(settingsProvider);
       if (settings.autoExportFailedDownloads && _failedInSession > 0) {
@@ -2030,9 +1837,13 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
         }
       }
     } else if (!stoppedWhilePaused && _totalQueuedAtStart > 0) {
-      await _notificationService.showQueueCanceled(
-        canceledCount: _totalQueuedAtStart,
-      );
+      try {
+        await _notificationService.showQueueCanceled(
+          canceledCount: _totalQueuedAtStart,
+        );
+      } catch (error) {
+        _log.w('Failed to show queue cancellation notification: $error');
+      }
     }
 
     if (stoppedWhilePaused) {

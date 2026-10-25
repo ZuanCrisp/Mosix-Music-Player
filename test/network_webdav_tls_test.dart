@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/network_certificate.dart';
-import 'package:mosix/services/network_storage_error.dart';
-import 'package:mosix/services/network_storage_service.dart';
+import 'package:mornye/services/network_certificate.dart';
+import 'package:mornye/services/network_storage_error.dart';
+import 'package:mornye/services/network_storage_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

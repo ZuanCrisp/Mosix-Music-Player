@@ -1,0 +1,11 @@
+<resources>
+    <string name="download_widget_name">Unduhan Mosix</string>
+    <string name="download_widget_description">Progres lagu yang sedang diunduh.</string>
+    <string name="download_widget_downloading">Mengunduh…</string>
+    <string name="download_widget_idle">Tidak ada unduhan aktif</string>
+    <string name="download_widget_idle_title">Semua beres</string>
+    <string name="download_widget_status_active">Mengunduh</string>
+    <string name="download_widget_status_idle">Selesai</string>
+    <string name="download_widget_percent">%1$d%%</string>
+    <string name="download_widget_queue">%1$d dalam antrean</string>
+</resources>

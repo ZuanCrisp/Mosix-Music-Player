@@ -1,8 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mornye/theme/app_motion.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/theme/material_expressive.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
 
 /// Dialog presentation follows the selected design, including on Android.
 Future<T?> showAppDialog<T>({
@@ -19,6 +25,37 @@ Future<T?> showAppDialog<T>({
         context: context,
         builder: (context) => themes.wrap(Builder(builder: builder)),
         barrierDismissible: barrierDismissible,
+      ),
+    );
+  }
+  if (materialExpressiveEnabled(context)) {
+    // Expressive: the dialog scales in on a spatial spring while an effects
+    // spring fades it, keeping opacity within range.
+    const fallback = AppMotionSpec(Duration.zero, Curves.linear);
+    final scale = AppMotion.spatial(context, fallback);
+    final fade = AppMotion.effectsFast(context, fallback);
+    final navigator = Navigator.of(context, rootNavigator: useRootNavigator);
+    final themes = InheritedTheme.capture(from: context, to: navigator.context);
+    return showGeneralDialog<T>(
+      context: context,
+      barrierDismissible: barrierDismissible,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: DialogTheme.of(context).barrierColor ?? Colors.black54,
+      useRootNavigator: useRootNavigator,
+      transitionDuration: scale.duration,
+      pageBuilder: (dialogContext, _, _) =>
+          themes.wrap(SafeArea(child: Builder(builder: builder))),
+      transitionBuilder: (context, animation, _, child) => FadeTransition(
+        opacity: animation.drive(CurveTween(curve: fade.curve)),
+        child: ScaleTransition(
+          scale: animation.drive(
+            Tween<double>(
+              begin: 0.85,
+              end: 1,
+            ).chain(CurveTween(curve: scale.curve)),
+          ),
+          child: child,
+        ),
       ),
     );
   }
@@ -147,9 +184,17 @@ class AppAlertDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!context.isMornye) {
       return AlertDialog(
+        // M3 basic dialogs are 280 to 560dp wide; without a cap, a long
+        // message stretches the dialog across a wide window. Desktop starts
+        // at the compact class, so a short question or a single field is
+        // not squeezed to the minimum.
+        constraints: BoxConstraints(
+          minWidth: isDesktopPlatform ? AppDialogSize.compact.width : 280,
+          maxWidth: appSheetDialogMaxWidth,
+        ),
         backgroundColor: backgroundColor,
         shape: shape,
-        icon: icon,
+        icon: icon == null ? null : symbolIconWidget(icon!),
         title: title,
         content: content,
         actions: actions,
@@ -283,10 +328,12 @@ class AppDialogAction extends StatelessWidget {
         ),
       );
     }
-    return filled
-        ? FilledButton(onPressed: onPressed, style: style, child: child)
-        : outlined
-        ? OutlinedButton(onPressed: onPressed, style: style, child: child)
-        : TextButton(onPressed: onPressed, style: style, child: child);
+    return ExpressiveButton(
+      onPressed: onPressed,
+      style: style,
+      outlined: !filled && outlined,
+      text: !filled && !outlined,
+      child: child,
+    );
   }
 }

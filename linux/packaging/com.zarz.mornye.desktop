@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.4
+Name=Mornye
+GenericName=Music Player
+Comment=Play, organize and download your music library
+Exec=mornye %U
+Icon=com.zarz.mornye
+Terminal=false
+StartupNotify=true
+StartupWMClass=com.zarz.mornye
+Categories=AudioVideo;Audio;Player;Music;
+Keywords=music;player;audio;flac;library;
+MimeType=x-scheme-handler/mornye;

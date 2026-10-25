@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/theme_settings.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/screens/settings/playback_settings_page.dart';
-import 'package:mosix/screens/settings/settings_search_catalog.dart';
-import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/settings_group.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/theme_settings.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/screens/settings/playback_settings_page.dart';
+import 'package:mornye/utils/settings_search_catalog.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/settings_group.dart';
 
 void main() {
   for (final mornye in [false, true]) {
@@ -50,24 +50,33 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
-      expect(find.text('Reset recommendation learning'), findsNothing);
+      // On by default; the reset action belongs to the enabled state.
+      expect(container.read(settingsProvider).autoplayPersonalization, isTrue);
+      expect(find.text('Reset recommendation learning'), findsOneWidget);
+      // A stray tap only asks; cancelling keeps what was learned.
+      await tester.tap(find.text('Reset recommendation learning'));
+      await tester.pumpAndSettle();
+      expect(find.text('Reset recommendation learning?'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.text('Reset recommendation learning?'), findsNothing);
       await tester.tap(label);
       await tester.pumpAndSettle();
-      expect(container.read(settingsProvider).autoplayPersonalization, isTrue);
+      expect(container.read(settingsProvider).autoplayPersonalization, isFalse);
       expect(container.read(settingsProvider).autoplay, isFalse);
       final prefs = await SharedPreferences.getInstance();
       expect(
         AppSettings.fromJson(
           jsonDecode(prefs.getString('app_settings')!) as Map<String, dynamic>,
         ).autoplayPersonalization,
-        isTrue,
+        isFalse,
       );
-      expect(find.text('Reset recommendation learning'), findsOneWidget);
+      expect(find.text('Reset recommendation learning'), findsNothing);
       await tester.ensureVisible(label);
       await tester.pumpAndSettle();
       await tester.tap(label);
       await tester.pumpAndSettle();
-      expect(container.read(settingsProvider).autoplayPersonalization, isFalse);
+      expect(container.read(settingsProvider).autoplayPersonalization, isTrue);
       final l10n = AppLocalizations.of(tester.element(label));
       expect(
         SettingsSearchCatalog(l10n).playback.any(

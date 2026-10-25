@@ -5,26 +5,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/unified_library_item.dart';
-import 'package:mosix/providers/library_search_provider.dart';
-import 'package:mosix/providers/local_library_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/services/library_search.dart';
-import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/library_search_results.dart';
-import 'package:mosix/widgets/selection_bottom_bar.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/unified_library_item.dart';
+import 'package:mornye/providers/library_search_provider.dart';
+import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/services/library_search.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/library_search_results.dart';
+import 'package:mornye/widgets/selection_bottom_bar.dart';
 
-class _Settings extends SettingsNotifier {
-  @override
-  AppSettings build() => const AppSettings();
-
-  @override
-  Future<void> syncLyricsSettingsToBackend({AppSettings? settings}) async {}
-}
+import 'support/re_enrich_settings.dart';
 
 class _Library extends LocalLibraryNotifier {
   @override
@@ -44,7 +37,7 @@ void main() {
           tester.view.physicalSize = const Size(800, 1600);
           tester.view.devicePixelRatio = 1;
           addTearDown(tester.view.reset);
-          const channel = MethodChannel('com.zuancrisp.mosix/backend');
+          const channel = MethodChannel('com.zarz.mornye/backend');
           final messenger = tester.binding.defaultBinaryMessenger;
           final requests = <Map<String, dynamic>>[];
           messenger.setMockMethodCallHandler(channel, (call) async {
@@ -72,7 +65,7 @@ void main() {
           await tester.pumpWidget(
             ProviderScope(
               overrides: [
-                settingsProvider.overrideWith(_Settings.new),
+                settingsProvider.overrideWith(ReEnrichTestSettings.new),
                 localLibraryProvider.overrideWith(_Library.new),
                 librarySearchProvider.overrideWith(
                   (ref, request) async =>

@@ -1,6 +1,6 @@
 [workspace]
-members = ["crates/core", "crates/network", "crates/providers", "crates/extensions", "crates/mobile", "crates/bindgen"]
-exclude = ["vendor/rustix-1.1.5", "vendor/libusb1-sys-0.7.0"]
+members = ["crates/core", "crates/network", "crates/providers", "crates/extensions", "crates/mobile", "crates/desktop", "crates/bindgen"]
+exclude = ["vendor/rustix-1.1.5", "vendor/libusb1-sys-0.7.0", "vendor/cap-primitives-4.0.3"]
 resolver = "3"
 
 [patch.crates-io]
@@ -8,21 +8,24 @@ resolver = "3"
 # Keep all direct and transitive users on the same compatibility fix.
 rustix = { path = "vendor/rustix-1.1.5" }
 libusb1-sys = { path = "vendor/libusb1-sys-0.7.0" }
+# Preserve the UNC root when deriving Windows paths from directory handles.
+cap-primitives = { path = "vendor/cap-primitives-4.0.3" }
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.99.0"
-license = "MIT"
+license = "LGPL-3.0-only"
 publish = false
 
 [workspace.dependencies]
 image = { version = "=0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
-spotiflac-core = { path = "crates/core" }
-spotiflac-extensions = { path = "crates/extensions" }
-spotiflac-network = { path = "crates/network" }
-spotiflac-providers = { path = "crates/providers" }
-rquickjs = { version = "=0.14.0", features = ["bindgen"] }
+mornye-core = { path = "crates/core" }
+mornye-extensions = { path = "crates/extensions" }
+mornye-network = { path = "crates/network" }
+mornye-providers = { path = "crates/providers" }
+# Crates enable `bindgen` per target: rquickjs-sys ships Windows bindings.
+rquickjs = "=0.14.0"
 base64 = "0.23"
 sha2 = "0.11"
 sha1 = "0.11"
@@ -40,7 +43,6 @@ serde_json = { version = "1.0", features = ["float_roundtrip", "raw_value"] }
 thiserror = "2.0"
 uniffi = { version = "=0.32.2", default-features = false }
 tokio = { version = "=1.53.2", features = ["rt-multi-thread", "net", "time", "sync", "io-util", "macros"] }
-hyper = { version = "=1.12.0", features = ["client", "http1", "http2"] }
 hyper-util = { version = "=0.1.21", features = ["client-legacy", "http1", "http2", "tokio"] }
 hyper-rustls = { version = "=0.27.10", default-features = false, features = ["http1", "http2", "ring", "tls12"] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
@@ -72,6 +74,12 @@ tz-rs = "=0.7.3"
 httpdate = "=1.0.3"
 cap-std = "=4.0.3"
 rustix = { version = "=1.1.5", features = ["fs"] }
+roxmltree = "=0.21.1"
+rusqlite = { version = "=0.40.2", features = ["bundled", "modern_sqlite", "hooks"] }
+libc = "=0.2.190"
+windows-sys = "0.61"
+# Desktop library folder watching (crates/desktop).
+notify = "=8.2.0"
 
 [workspace.lints.rust]
 unsafe_code = "deny"

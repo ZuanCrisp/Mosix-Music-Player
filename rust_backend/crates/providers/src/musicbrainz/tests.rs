@@ -1,5 +1,6 @@
 use super::*;
-use spotiflac_core::metadata::musicbrainz::{ArtistCredit, Recording, Release, Tag};
+use mornye_core::metadata::musicbrainz::{ArtistCredit, Recording, Release, Tag};
+use std::sync::atomic::AtomicUsize;
 use std::thread;
 
 fn response() -> Arc<Response> {
@@ -174,9 +175,15 @@ fn genre_and_album_artist_share_a_flight_without_cancelling_other_callers() {
         })
         .collect();
     until(|| {
-        client.inner.state.lock().unwrap().flights["USAA00000101"]
-            .waiters
-            .load(Ordering::Acquire)
+        client
+            .inner
+            .state
+            .lock()
+            .unwrap()
+            .flights
+            .get("USAA00000101")
+            .unwrap()
+            .waiters()
             == 9
     });
     cancel.store(true, Ordering::Release);
@@ -236,7 +243,7 @@ fn abandoned_flight_cannot_publish_over_its_replacement() {
     probe.release.store(true, Ordering::Release);
     assert_eq!(second.join().unwrap().unwrap(), "Rock");
     probe.hold_cancelled.store(false, Ordering::Release);
-    until(|| client.inner.state.lock().unwrap().active == 0);
+    until(|| client.inner.state.lock().unwrap().flights.active() == 0);
     assert_eq!(client.genre("same", &|| Ok(())).unwrap(), "Rock");
     assert_eq!(probe.calls.load(Ordering::Acquire), 2);
 }

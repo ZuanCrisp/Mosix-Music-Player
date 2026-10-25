@@ -6,15 +6,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/providers/playback_provider.dart';
-import 'package:mosix/screens/local_album_screen.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/widgets/album_track_tile.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/playback_provider.dart';
+import 'package:mornye/screens/local_album_screen.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/album_detail_header.dart';
+import 'package:mornye/widgets/album_track_tile.dart';
+
+import 'support/app_icon_finder.dart';
 
 class _Playing extends Notifier<bool> {
   @override
@@ -54,6 +56,14 @@ class _Playback extends PlaybackController {
   }) async {
     _started.add(startItem.id);
     _start(startItem);
+  }
+}
+
+/// The current row's equalizer glyph loops while playing, so this settles
+/// with bounded pumps instead of waiting for an idle frame.
+Future<void> _settle(WidgetTester tester) async {
+  for (var i = 0; i < 20; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
   }
 }
 
@@ -97,7 +107,9 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
-              currentMediaItemProvider.overrideWith((ref) => media.stream),
+              currentMediaItemProvider.overrideWithBuild(
+                (ref, notifier) => media.stream,
+              ),
               playbackPlayingProvider.overrideWith(
                 (ref) => ref.watch(_playingProvider),
               ),
@@ -121,7 +133,7 @@ void main() {
         container = ProviderScope.containerOf(
           tester.element(find.byType(LocalAlbumScreen)),
         );
-        await tester.pumpAndSettle();
+        await _settle(tester);
         final header = find.byType(AlbumPlayActions);
         Finder row(int number) => find.byWidgetPredicate(
           (widget) =>
@@ -135,29 +147,29 @@ void main() {
         await tester.tap(
           find.descendant(of: header, matching: find.text('Play')),
         );
-        await tester.pumpAndSettle();
+        await _settle(tester);
         expect(playback._started, ['1']);
         expect(
           find.descendant(of: header, matching: find.text('Pause')),
           findsOneWidget,
         );
         expect(
-          find.descendant(of: header, matching: find.byIcon(pauseIcon)),
+          find.descendant(of: header, matching: findAppIcon(pauseIcon)),
           findsOneWidget,
         );
         expect(
-          find.descendant(of: row(1), matching: find.byIcon(pauseIcon)),
+          find.descendant(of: row(1), matching: findAppIcon(pauseIcon)),
           findsOneWidget,
         );
         expect(
-          find.descendant(of: row(2), matching: find.byIcon(playIcon)),
+          find.descendant(of: row(2), matching: findAppIcon(playIcon)),
           findsOneWidget,
         );
 
         await tester.tap(
           find.descendant(of: header, matching: find.text('Pause')),
         );
-        await tester.pumpAndSettle();
+        await _settle(tester);
         expect(player._toggles, [true]);
         expect(
           find.descendant(of: header, matching: find.text('Play')),
@@ -170,7 +182,7 @@ void main() {
 
         await tester.ensureVisible(rowButton(1));
         await tester.tap(rowButton(1));
-        await tester.pumpAndSettle();
+        await _settle(tester);
         expect(player._toggles, [true, false]);
         expect(playback._started, ['1']);
         expect(
@@ -180,31 +192,31 @@ void main() {
 
         await tester.ensureVisible(rowButton(2));
         await tester.tap(rowButton(2));
-        await tester.pumpAndSettle();
+        await _settle(tester);
         expect(playback._started, ['1', '2']);
         expect(
-          find.descendant(of: row(1), matching: find.byIcon(playIcon)),
+          find.descendant(of: row(1), matching: findAppIcon(playIcon)),
           findsOneWidget,
         );
         expect(
-          find.descendant(of: row(2), matching: find.byIcon(pauseIcon)),
+          find.descendant(of: row(2), matching: findAppIcon(pauseIcon)),
           findsOneWidget,
         );
         await tester.tap(rowButton(2));
-        await tester.pumpAndSettle();
+        await _settle(tester);
         expect(player._toggles, [true, false, true]);
         expect(playback._started, ['1', '2']);
 
         // A queue started from a playlist uses its file path as the media ID.
         media.add(MediaItem(id: tracks.first.filePath, title: 'Song 1'));
         emitPlaying(true);
-        await tester.pumpAndSettle();
+        await _settle(tester);
         expect(
-          find.descendant(of: row(1), matching: find.byIcon(pauseIcon)),
+          find.descendant(of: row(1), matching: findAppIcon(pauseIcon)),
           findsOneWidget,
         );
         await tester.tap(rowButton(1));
-        await tester.pumpAndSettle();
+        await _settle(tester);
         expect(player._toggles.last, isTrue);
         expect(playback._started, ['1', '2']);
 
@@ -217,17 +229,17 @@ void main() {
           ),
         );
         emitPlaying(true);
-        await tester.pumpAndSettle();
+        await _settle(tester);
         expect(
           find.descendant(of: header, matching: find.text('Play')),
           findsOneWidget,
         );
-        expect(find.byIcon(pauseIcon), findsNothing);
+        expect(findAppIcon(pauseIcon), findsNothing);
         await tester.ensureVisible(header);
         await tester.tap(
           find.descendant(of: header, matching: find.text('Play')),
         );
-        await tester.pumpAndSettle();
+        await _settle(tester);
         expect(playback._started, ['1', '2', '1']);
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());

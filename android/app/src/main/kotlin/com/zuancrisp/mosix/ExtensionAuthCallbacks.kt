@@ -12,7 +12,7 @@ internal class ExtensionAuthCallbacks {
     private val processing = Mutex()
 
     fun offer(uri: Uri): Boolean {
-        if (!uri.scheme.equals("spotiflac", ignoreCase = true)) return false
+        if (!uri.scheme.equals("mornye", ignoreCase = true)) return false
         val host = uri.host.orEmpty().lowercase(java.util.Locale.US)
         val grant = host == "session-grant"
         if (!grant && host != "callback" && host != "spotify-callback") return false

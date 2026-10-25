@@ -4,14 +4,14 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/app.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/platform_bridge.dart';
+import 'package:mornye/app.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/platform_bridge.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const backendChannel = MethodChannel('com.zuancrisp.mosix/backend');
+  const backendChannel = MethodChannel('com.zarz.mornye/backend');
 
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

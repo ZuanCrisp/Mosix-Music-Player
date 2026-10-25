@@ -9,7 +9,7 @@ if [[ -z "$sdk_source" ]]; then
   exit 1
 fi
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-sdk_target="$repo_root/third_party/spotiflac_discord/sdk"
+sdk_target="$repo_root/third_party/mornye_discord/sdk"
 for sdk_file in include/discordpp.h lib/release/discord_partner_sdk.aar lib/release/discord_partner_sdk.xcframework/Info.plist; do
   if [[ ! -f "$sdk_source/$sdk_file" ]]; then
     echo "Missing SDK file: $sdk_file" >&2
@@ -19,11 +19,11 @@ done
 mkdir -p "$sdk_target/android"
 cp "$sdk_source/lib/release/discord_partner_sdk.aar" "$sdk_target/"
 unzip -oq "$sdk_target/discord_partner_sdk.aar" -d "$sdk_target/android"
-mkdir -p "$repo_root/third_party/spotiflac_discord/ios/Frameworks"
-cp -R "$sdk_source/lib/release/discord_partner_sdk.xcframework" "$repo_root/third_party/spotiflac_discord/ios/Frameworks/"
+mkdir -p "$repo_root/third_party/mornye_discord/ios/Frameworks"
+cp -R "$sdk_source/lib/release/discord_partner_sdk.xcframework" "$repo_root/third_party/mornye_discord/ios/Frameworks/"
 cp "$sdk_source/License-Notices.txt" "$sdk_target/"
 mkdir -p "$sdk_target/notices"
 cp "$sdk_source/License-Notices.txt" "$sdk_target/notices/Discord-License-Notices.txt"
-cp "$sdk_source/License-Notices.txt" "$repo_root/third_party/spotiflac_discord/ios/Frameworks/Discord-License-Notices.txt"
-cp "$repo_root/third_party/spotiflac_discord/ios/DiscordSimulator.xcconfig" "$repo_root/third_party/spotiflac_discord/ios/Frameworks/"
+cp "$sdk_source/License-Notices.txt" "$repo_root/third_party/mornye_discord/ios/Frameworks/Discord-License-Notices.txt"
+cp "$repo_root/third_party/mornye_discord/ios/DiscordSimulator.xcconfig" "$repo_root/third_party/mornye_discord/ios/Frameworks/"
 echo "Discord SDK staged. Run flutter pub get and rebuild both platforms."

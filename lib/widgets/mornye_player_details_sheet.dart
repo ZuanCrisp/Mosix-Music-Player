@@ -2,12 +2,12 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/runtime_profile_provider.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/mornye_metadata_row.dart';
-import 'package:mosix/widgets/player_artwork.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/runtime_profile_provider.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/widgets/mornye_metadata_row.dart';
+import 'package:mornye/widgets/player_artwork.dart';
 
 /// Uses Mornye's TrackInfoView layout: artwork header, then selectable values
 /// below small labels, separated by thin dividers on one glass surface.

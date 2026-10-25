@@ -2,23 +2,29 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:ffmpeg_kit_flutter_new_audio/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new_audio/return_code.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/models/automix_options.dart';
-import 'package:mosix/services/audio_analysis_jobs.dart';
+import 'package:mornye/models/automix_options.dart';
+import 'package:mornye/services/audio_analysis_jobs.dart';
+import 'package:mornye/services/ffmpeg_support.dart';
 
 /// Keep the beginning dry for the live deck handover, then ease in the FX.
-String autoMixEffectFilters(AutoMixOptions options, Duration duration) {
+String autoMixEffectFilters(
+  AutoMixOptions options,
+  Duration duration, {
+  bool bassHandoff = false,
+}) {
   final seconds = duration.inMicroseconds / 1e6;
   final pitchRatio = pow(2, options.effectivePitch / 12).toDouble();
-  final ramp = min(1.5, seconds / 3);
+  final ramp = bassHandoff
+      ? max(0.1, seconds * 0.5 - 0.24)
+      : min(1.5, seconds / 3);
   final progress = 'clip((t-0.24)/${ramp.toStringAsFixed(6)},0,1)';
   final wet = '($progress*$progress*(3-2*$progress))';
   final bounds =
       'apad=whole_dur=${seconds.toStringAsFixed(6)},'
       'atrim=duration=${seconds.toStringAsFixed(6)}';
   final effects = [
+    if (bassHandoff) 'highpass=f=260',
     if (options.effectivePitch != 0) ...[
       'asetrate=${(48000 * pitchRatio).toStringAsFixed(6)}',
       'aresample=48000',
@@ -57,7 +63,10 @@ class AutoMixEffectRenderer {
     Future<Directory> Function()? temporaryDirectory,
   }) : _jobs =
            jobs ??
-           AudioAnalysisJobs<bool>(start: _start, cancel: FFmpegKit.cancel),
+           AudioAnalysisJobs<bool>(
+             start: _start,
+             cancel: FFmpegExecution.cancel,
+           ),
        _temporaryDirectory = temporaryDirectory ?? getTemporaryDirectory;
 
   final AudioAnalysisJobs<bool> _jobs;
@@ -67,21 +76,18 @@ class AutoMixEffectRenderer {
   static Future<({int id, Future<bool> completed})> _start(
     List<String> arguments,
   ) async {
-    final done = Completer<bool>();
-    final session = await FFmpegKit.executeWithArgumentsAsync(arguments, (
-      session,
-    ) async {
-      if (!done.isCompleted) {
-        done.complete(ReturnCode.isSuccess(await session.getReturnCode()));
-      }
-    });
-    final id = session.getSessionId();
-    if (id == null) throw StateError('Mix effect session has no ID');
+    final session = await FFmpegExecution.start(arguments);
+    final id = session.id;
     final timeout = Timer(
       const Duration(seconds: 30),
-      () => unawaited(FFmpegKit.cancel(id)),
+      () => unawaited(FFmpegExecution.cancel(id)),
     );
-    return (id: id, completed: done.future.whenComplete(timeout.cancel));
+    return (
+      id: id,
+      completed: session.completed
+          .then((result) => result.success)
+          .whenComplete(timeout.cancel),
+    );
   }
 
   void cancel() {
@@ -99,8 +105,9 @@ class AutoMixEffectRenderer {
     required Duration start,
     required Duration duration,
     required AutoMixOptions options,
+    bool bassHandoff = false,
   }) async {
-    if (!options.hasEffects ||
+    if ((!options.hasEffects && !bassHandoff) ||
         duration <= Duration.zero ||
         duration > const Duration(seconds: 60)) {
       return null;
@@ -112,8 +119,11 @@ class AutoMixEffectRenderer {
       if (generation != _generation) return null;
       final output = File('${work.path}/tail.wav');
       final seconds = duration.inMicroseconds / 1e6;
-      // Slower playback needs less source material; faster playback is bounded
-      // by the outgoing song's end and padded to the exact overlap length.
+      // Faster playback consumes more source than the overlap lasts. Reading
+      // only the overlap's length ended the effect early and padded the rest
+      // with silence. The song's end still bounds the read, then padding
+      // keeps the exact overlap length.
+      final source = seconds * max(1.0, options.effectiveSpeed);
       final success = await _jobs.run([
         '-hide_banner',
         '-loglevel',
@@ -127,14 +137,14 @@ class AutoMixEffectRenderer {
         '-ss',
         (max(0, start.inMicroseconds) / 1e6).toStringAsFixed(6),
         '-t',
-        seconds.toStringAsFixed(6),
+        source.toStringAsFixed(6),
         '-i',
         path,
         '-vn',
         '-sn',
         '-dn',
         '-af',
-        autoMixEffectFilters(options, duration),
+        autoMixEffectFilters(options, duration, bassHandoff: bassHandoff),
         '-t',
         seconds.toStringAsFixed(6),
         '-ac',

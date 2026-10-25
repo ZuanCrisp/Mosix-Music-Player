@@ -1,3 +1,5 @@
+//! ISRC index cache keyed by file stamps, with TTL expiry, invalidation, and clearing.
+
 use crate::matching::uppercase;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};

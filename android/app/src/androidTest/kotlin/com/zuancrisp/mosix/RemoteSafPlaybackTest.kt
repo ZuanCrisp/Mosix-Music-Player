@@ -9,8 +9,8 @@ import android.os.ProxyFileDescriptorCallback
 import android.os.storage.StorageManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.spotiflac.backend.readFileMetadata
-import com.spotiflac.backend.readLibraryMetadataFromDescriptor
+import com.mornye.backend.readFileMetadata
+import com.mornye.backend.readLibraryMetadataFromDescriptor
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.io.File
@@ -65,7 +65,6 @@ class RemoteSafPlaybackTest {
         }.array()
         withProxy(wav) { fd, _ ->
             val path = "/proc/self/fd/${fd.fd}"
-            // Reproduce the old path before exercising the patched plugin.
             assertTrue(runCatching { FileInputStream(path).use { it.read() } }.isFailure)
             val prepared = CountDownLatch(1)
             val failed = AtomicLong()

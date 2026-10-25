@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/library_database.dart';
+import 'package:mornye/services/library_database.dart';
 
 String _tableDefinition(String path, String table) {
   final source = File(path).readAsStringSync();
@@ -56,7 +56,7 @@ print('both databases passed')
 ''',
         jsonEncode({
           'history': _tableDefinition(
-            'lib/services/history_database.dart',
+            'lib/services/history_schema.dart',
             'history',
           ),
           'library': _tableDefinition(

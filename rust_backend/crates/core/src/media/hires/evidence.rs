@@ -142,7 +142,6 @@ pub fn analyze_stft(
         if f.is_multiple_of(256) {
             check()?;
         }
-        // Index into y of the frame's first sample.
         let start = f * hop;
         for (i, (r, w)) in re.iter_mut().zip(&window).enumerate() {
             *r = f64::from(y[start + i]) * w;

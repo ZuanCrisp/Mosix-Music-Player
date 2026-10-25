@@ -1,9 +1,12 @@
 //! File capabilities granted by the native manager, never by JavaScript.
 
 mod index;
+#[cfg(windows)]
+mod windows;
 
 use cap_std::ambient_authority;
 use cap_std::fs::{Dir, File, OpenOptions};
+pub(crate) use mornye_core::fs::clean;
 use std::collections::BTreeMap;
 use std::io;
 use std::path::{Component, Path, PathBuf};
@@ -28,6 +31,14 @@ impl Root {
             path,
         }))
     }
+}
+
+/// Windows: check the part of a path below its granted root.
+#[cfg(not(unix))]
+fn check_windows_relative(relative: &Path) -> Result<(), String> {
+    let relative = relative.to_str().ok_or("invalid UTF-8 path")?;
+    crate::windows_path::check_relative(relative)
+        .map_err(|error| format!("file access denied: {error}"))
 }
 
 #[derive(Default)]
@@ -129,6 +140,8 @@ impl FileRegistry {
         {
             let base = clean(&std::path::absolute(base).map_err(|error| error.to_string())?);
             if let Ok(relative) = target.strip_prefix(&base) {
+                #[cfg(not(unix))]
+                check_windows_relative(relative)?;
                 let directory = match Dir::open_ambient_dir(&base, ambient_authority()) {
                     Ok(directory) => directory,
                     // Go accepts a future output path; validation must not create it.
@@ -238,8 +251,14 @@ impl ExtensionFiles {
             let root = root.or_else(|| self.registry.temporary.read().expect("temporary file grants lock")
                 .iter().filter_map(Weak::upgrade).find(|root| input.starts_with(&root.path)))
                 .ok_or("file access denied: absolute paths are not allowed. Use relative paths within extension sandbox")?;
+            #[cfg(not(unix))]
+            check_windows_relative(input.strip_prefix(&root.path).expect("granted file root"))?;
             (root, input)
         } else {
+            // Check the raw text: cleaning would hide `..` and Win32 aliases.
+            #[cfg(not(unix))]
+            crate::windows_path::check_relative(path)
+                .map_err(|error| format!("file access denied: {error}"))?;
             let absolute = clean(&self.root.path.join(input));
             if !absolute.starts_with(&self.root.path) {
                 return Err(format!(
@@ -464,7 +483,104 @@ impl FilePath {
         ))
     }
 
-    #[cfg(not(unix))]
+    /// Windows twin of the Unix walk: open each component below its parent
+    /// handle with `FILE_FLAG_OPEN_REPARSE_POINT`, so a symlink, junction or
+    /// mount point opens as itself and is rejected instead of followed. The
+    /// next component is opened through the verified handle, never by path.
+    #[cfg(windows)]
+    pub(crate) fn open_native_read(&self) -> io::Result<File> {
+        use cap_std::fs::OpenOptionsExt;
+        use std::os::windows::fs::MetadataExt;
+        use windows_sys::Win32::Storage::FileSystem::{
+            FILE_ATTRIBUTE_REPARSE_POINT, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT,
+        };
+
+        let special =
+            || io::Error::other("native media path must not contain symlinks or special files");
+        let not_regular = || io::Error::new(io::ErrorKind::InvalidInput, "not a regular file");
+        let mut directory: Option<Dir> = None;
+        let mut components = self.relative.components().peekable();
+        while let Some(component) = components.next() {
+            let last = components.peek().is_none();
+            let name = match component {
+                Component::Normal(name) => name,
+                Component::CurDir if last => return Err(not_regular()),
+                Component::CurDir => continue,
+                _ => {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        "invalid native path",
+                    ));
+                }
+            };
+            let parent = directory.as_ref().unwrap_or(&self.root.directory);
+            let mut options = OpenOptions::new();
+            // Backup semantics are required to open a directory handle.
+            options.read(true).custom_flags(if last {
+                FILE_FLAG_OPEN_REPARSE_POINT
+            } else {
+                FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS
+            });
+            let file = match parent.open_with(name, &options) {
+                Ok(file) => file,
+                Err(error) => {
+                    // Match the Unix errors for a final directory, links and
+                    // special files that refuse a plain read open.
+                    if error.kind() != io::ErrorKind::NotFound
+                        && let Ok(info) = parent.symlink_metadata(name)
+                    {
+                        if last && info.is_dir() {
+                            return Err(not_regular());
+                        }
+                        if !info.is_file() && !info.is_dir() {
+                            return Err(special());
+                        }
+                    }
+                    return Err(error);
+                }
+            };
+            // Metadata comes from the opened handle, so it describes the
+            // object this walk continues from. A link reports neither a
+            // file nor a directory.
+            let metadata = file.metadata()?;
+            if last {
+                if metadata.is_dir() {
+                    return Err(not_regular());
+                }
+                if !metadata.is_file() {
+                    return Err(special());
+                }
+                let file = file.into_std();
+                if file.metadata()?.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT == 0 {
+                    return Ok(File::from_std(file));
+                }
+                // A reparse point that is not a link (a cloud placeholder or
+                // deduplicated file) needs its filter driver to supply data,
+                // which the flag bypasses. Reopen it through the verified
+                // parent; cap-std keeps a racing replacement inside the root.
+                let reopened = parent.open_with(name, OpenOptions::new().read(true))?;
+                return if reopened.metadata()?.is_file() {
+                    Ok(reopened)
+                } else {
+                    Err(special())
+                };
+            }
+            if !metadata.is_dir() {
+                return Err(if metadata.is_file() {
+                    io::Error::new(io::ErrorKind::NotADirectory, "not a directory")
+                } else {
+                    special()
+                });
+            }
+            directory = Some(Dir::from_std_file(file.into_std()));
+        }
+        Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "empty native path",
+        ))
+    }
+
+    #[cfg(not(any(unix, windows)))]
     pub(crate) fn open_native_read(&self) -> io::Result<File> {
         self.native_display().map_err(io::Error::other)?;
         self.open(OpenOptions::new().read(true))
@@ -517,7 +633,7 @@ impl FilePath {
             let mut nonce = [0; 16];
             getrandom::fill(&mut nonce).map_err(|error| io::Error::other(error.to_string()))?;
             let name = format!(
-                ".spotiflac-{}.partial",
+                ".mornye-{}.partial",
                 crate::binary::encode(&nonce, "hex").expect("hex encoding")
             );
             #[cfg(unix)]
@@ -625,7 +741,14 @@ impl StagedFile {
             &self.target,
             rustix::fs::RenameFlags::NOREPLACE,
         )?;
-        #[cfg(not(any(target_vendor = "apple", target_os = "linux", target_os = "android")))]
+        #[cfg(windows)]
+        windows::publish_new(&self.parent, &self.name, &self.target)?;
+        #[cfg(not(any(
+            target_vendor = "apple",
+            target_os = "linux",
+            target_os = "android",
+            windows
+        )))]
         {
             self.parent
                 .hard_link(&self.name, &self.parent, &self.target)?;
@@ -679,268 +802,5 @@ impl Drop for OutputGuard {
     }
 }
 
-pub(crate) fn clean(path: &Path) -> PathBuf {
-    let mut result = PathBuf::new();
-    for component in path.components() {
-        match component {
-            Component::CurDir => {}
-            Component::ParentDir => {
-                if result.file_name().is_some_and(|name| name != "..") {
-                    result.pop();
-                } else if !result.has_root() {
-                    result.push("..");
-                }
-            }
-            _ => result.push(component),
-        }
-    }
-    if result.as_os_str().is_empty() {
-        ".".into()
-    } else {
-        result
-    }
-}
-
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use std::io::{Seek, SeekFrom, Write};
-
-    #[cfg(unix)]
-    #[test]
-    fn native_reads_reject_links_at_every_component_and_never_write_or_wait_on_special_files() {
-        use std::io::Read;
-        use std::os::unix::{fs::symlink, net::UnixListener};
-
-        let root = tempfile::tempdir().unwrap();
-        let files = Arc::new(FileRegistry::default())
-            .extension(root.path())
-            .unwrap();
-        std::fs::create_dir_all(root.path().join("album/disc")).unwrap();
-        std::fs::write(root.path().join("album/disc/song.wav"), b"original").unwrap();
-        #[cfg(any(target_os = "linux", target_os = "android"))]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let parent = root.path().join("album");
-            std::fs::set_permissions(&parent, std::fs::Permissions::from_mode(0o111)).unwrap();
-            let result = files
-                .resolve("album/disc/song.wav")
-                .unwrap()
-                .open_native_read();
-            std::fs::set_permissions(&parent, std::fs::Permissions::from_mode(0o700)).unwrap();
-            assert!(result.is_ok(), "execute-only parent: {result:?}");
-        }
-        let mut file = files
-            .resolve("album/disc/song.wav")
-            .unwrap()
-            .open_native_read()
-            .unwrap();
-        let mut data = Vec::new();
-        file.read_to_end(&mut data).unwrap();
-        assert_eq!(data, b"original");
-        assert!(file.write_all(b"changed").is_err());
-        for (target, link) in [
-            ("album", "album-link"),
-            ("album/disc/song.wav", "song-link.wav"),
-            ("missing.wav", "dangling.wav"),
-        ] {
-            symlink(target, root.path().join(link)).unwrap();
-        }
-        for path in ["album-link/disc/song.wav", "song-link.wav", "dangling.wav"] {
-            assert!(
-                files
-                    .resolve(path)
-                    .unwrap()
-                    .open_native_read()
-                    .unwrap_err()
-                    .to_string()
-                    .contains("symlinks")
-            );
-        }
-        assert_eq!(
-            files
-                .resolve("missing.wav")
-                .unwrap()
-                .open_native_read()
-                .unwrap_err()
-                .kind(),
-            io::ErrorKind::NotFound
-        );
-        assert!(
-            std::process::Command::new("mkfifo")
-                .arg(root.path().join("pipe.wav"))
-                .status()
-                .unwrap()
-                .success()
-        );
-        let _socket = UnixListener::bind(root.path().join("socket.wav")).unwrap();
-        for path in ["pipe.wav", "socket.wav"] {
-            assert!(
-                files
-                    .resolve(path)
-                    .unwrap()
-                    .open_native_read()
-                    .unwrap_err()
-                    .to_string()
-                    .contains("special files")
-            );
-        }
-        assert_eq!(
-            std::fs::read(root.path().join("album/disc/song.wav")).unwrap(),
-            b"original"
-        );
-    }
-
-    #[test]
-    fn exclusive_publication_preserves_racing_output_and_cleans_cancelled_stage() {
-        let root = tempfile::tempdir().unwrap();
-        let files = Arc::new(FileRegistry::default())
-            .extension(root.path())
-            .unwrap();
-        let path = files.resolve("track.flac").unwrap();
-        let mut stage = path.stage().unwrap();
-        stage.file.write_all(b"new audio").unwrap();
-        assert!(!path.absolute.exists());
-        let error = stage
-            .publish_new(&|| {
-                // A different publisher creates the destination after the
-                // planner's existence check but before the publication syscall.
-                std::fs::write(&path.absolute, b"other publisher").unwrap();
-                Ok(())
-            })
-            .unwrap_err();
-        assert_eq!(error.kind(), io::ErrorKind::AlreadyExists);
-        assert_eq!(std::fs::read(&path.absolute).unwrap(), b"other publisher");
-
-        let cancelled = files.resolve("cancelled.flac").unwrap();
-        let mut stage = cancelled.stage().unwrap();
-        stage.file.write_all(b"cancelled audio").unwrap();
-        assert_eq!(
-            stage
-                .publish_new(&|| Err("cancelled".into()))
-                .unwrap_err()
-                .to_string(),
-            "cancelled"
-        );
-        assert!(!cancelled.absolute.exists());
-
-        path.remove().unwrap();
-        let mut stage = path.stage().unwrap();
-        stage.file.write_all(b"complete audio").unwrap();
-        stage.publish_new(&|| Ok(())).unwrap();
-        assert_eq!(std::fs::read(&path.absolute).unwrap(), b"complete audio");
-        assert_eq!(std::fs::read_dir(root.path()).unwrap().count(), 1);
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn stage_from_links_same_filesystem_source_and_survives_source_cleanup() {
-        use cap_std::fs::MetadataExt;
-
-        let root = tempfile::tempdir().unwrap();
-        let files = Arc::new(FileRegistry::default())
-            .extension(root.path())
-            .unwrap();
-        let source_path = files.resolve("source.bin").unwrap();
-        std::fs::write(&source_path.absolute, b"source audio").unwrap();
-        let source = source_path.open(OpenOptions::new().read(true)).unwrap();
-        let destination = files.resolve("destination.bin").unwrap();
-        let (stage, promoted) = destination.stage_from(&source_path, &source).unwrap();
-        assert!(promoted);
-        let source_metadata = source.metadata().unwrap();
-        let stage_metadata = stage.file.metadata().unwrap();
-        assert_eq!(source_metadata.dev(), stage_metadata.dev());
-        assert_eq!(source_metadata.ino(), stage_metadata.ino());
-
-        stage.publish_new(&|| Ok(())).unwrap();
-        drop(source);
-        source_path.remove().unwrap();
-        assert_eq!(
-            std::fs::read(&destination.absolute).unwrap(),
-            b"source audio"
-        );
-        assert_eq!(std::fs::read_dir(root.path()).unwrap().count(), 1);
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn stage_from_copies_open_source_after_path_replacement() {
-        let root = tempfile::tempdir().unwrap();
-        let files = Arc::new(FileRegistry::default())
-            .extension(root.path())
-            .unwrap();
-        let source_path = files.resolve("source.bin").unwrap();
-        std::fs::write(&source_path.absolute, b"original audio").unwrap();
-        let mut source = source_path.open(OpenOptions::new().read(true)).unwrap();
-        std::fs::rename(&source_path.absolute, root.path().join("source.old")).unwrap();
-        std::fs::write(&source_path.absolute, b"replacement audio").unwrap();
-        let destination = files.resolve("destination.bin").unwrap();
-        let (mut stage, promoted) = destination.stage_from(&source_path, &source).unwrap();
-        assert!(!promoted);
-        source.seek(SeekFrom::Start(0)).unwrap();
-        std::io::copy(&mut source, &mut stage.file).unwrap();
-        stage.publish_new(&|| Ok(())).unwrap();
-        assert_eq!(
-            std::fs::read(&destination.absolute).unwrap(),
-            b"original audio"
-        );
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn stage_from_copies_open_source_after_path_becomes_symlink() {
-        use std::os::unix::fs::symlink;
-
-        let root = tempfile::tempdir().unwrap();
-        let files = Arc::new(FileRegistry::default())
-            .extension(root.path())
-            .unwrap();
-        let source_path = files.resolve("source.bin").unwrap();
-        std::fs::write(&source_path.absolute, b"original audio").unwrap();
-        let mut source = source_path.open(OpenOptions::new().read(true)).unwrap();
-        std::fs::rename(&source_path.absolute, root.path().join("source.old")).unwrap();
-        symlink("source.old", &source_path.absolute).unwrap();
-        let destination = files.resolve("destination.bin").unwrap();
-        let (mut stage, promoted) = destination.stage_from(&source_path, &source).unwrap();
-        assert!(!promoted);
-        source.seek(SeekFrom::Start(0)).unwrap();
-        std::io::copy(&mut source, &mut stage.file).unwrap();
-        stage.publish_new(&|| Ok(())).unwrap();
-        assert_eq!(
-            std::fs::read(&destination.absolute).unwrap(),
-            b"original audio"
-        );
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn stage_from_preserves_existing_destination_and_cleans_cancelled_stage() {
-        let root = tempfile::tempdir().unwrap();
-        let files = Arc::new(FileRegistry::default())
-            .extension(root.path())
-            .unwrap();
-        let source_path = files.resolve("source.bin").unwrap();
-        std::fs::write(&source_path.absolute, b"source audio").unwrap();
-        let source = source_path.open(OpenOptions::new().read(true)).unwrap();
-        let destination = files.resolve("destination.bin").unwrap();
-        std::fs::write(&destination.absolute, b"existing audio").unwrap();
-
-        let (stage, promoted) = destination.stage_from(&source_path, &source).unwrap();
-        assert!(promoted);
-        let error = stage.publish_new(&|| Ok(())).unwrap_err();
-        assert_eq!(error.kind(), io::ErrorKind::AlreadyExists);
-        assert_eq!(
-            std::fs::read(&destination.absolute).unwrap(),
-            b"existing audio"
-        );
-        assert_eq!(std::fs::read_dir(root.path()).unwrap().count(), 2);
-
-        std::fs::remove_file(&destination.absolute).unwrap();
-        let (stage, promoted) = destination.stage_from(&source_path, &source).unwrap();
-        assert!(promoted);
-        let error = stage.publish_new(&|| Err("cancelled".into())).unwrap_err();
-        assert_eq!(error.to_string(), "cancelled");
-        assert!(!destination.absolute.exists());
-        assert_eq!(std::fs::read_dir(root.path()).unwrap().count(), 1);
-    }
-}
+mod tests;

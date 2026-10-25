@@ -8,21 +8,24 @@ import 'package:analyzer/source/line_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/cover_palette.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/widgets/app_search_field.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
-import 'package:mosix/widgets/collection_scaffold.dart';
-import 'package:mosix/widgets/selection_action_button.dart';
-import 'package:mosix/widgets/selection_bottom_bar.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/track_card.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/theme/cover_palette.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_content_card.dart';
+import 'package:mornye/widgets/album_detail_header.dart';
+import 'package:mornye/widgets/app_search_field.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mornye/widgets/collection_scaffold.dart';
+import 'package:mornye/widgets/selection_action_button.dart';
+import 'package:mornye/widgets/selection_bottom_bar.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/track_card.dart';
+
+import 'support/app_icon_finder.dart';
 
 /// Every Dart source file under `lib/`, used by the source-level contracts
 /// below. Those contracts exist because the duplication they guard against was
@@ -50,7 +53,10 @@ class _IconButtonTooltipVisitor extends RecursiveAstVisitor<void> {
 
   @override
   void visitInstanceCreationExpression(InstanceCreationExpression node) {
-    if (node.constructorName.type.name.lexeme == 'IconButton') {
+    if (const {
+      'IconButton',
+      'AppIconButton',
+    }.contains(node.constructorName.type.name.lexeme)) {
       final hasTooltip = node.argumentList.arguments.any(
         (argument) =>
             argument is NamedArgument && argument.name.lexeme == 'tooltip',
@@ -369,9 +375,9 @@ void main() {
 
       expect(field.decoration!.filled, isTrue);
       expect(border.borderRadius.topLeft.x, AppTokens.standard.radiusSheet);
-      expect(find.byIcon(Icons.clear), findsOneWidget);
+      expect(findAppIcon(Icons.clear), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.clear));
+      await tester.tap(findAppIcon(Icons.clear));
       await tester.pump();
 
       expect(controller.text, isEmpty);
@@ -395,7 +401,7 @@ void main() {
       'local cache identity changes when artwork is replaced in place',
       () async {
         final directory = Directory.systemTemp.createTempSync(
-          'spotiflac-cover-palette-',
+          'mornye-cover-palette-',
         );
         final file = File('${directory.path}/cover.jpg');
         try {
@@ -446,9 +452,12 @@ void main() {
 
       final appBar = tester.widget<SliverAppBar>(find.byType(SliverAppBar));
       expect(appBar.leadingWidth, kToolbarHeight + 12);
-      expect(appBar.actionsPadding, const EdgeInsets.only(right: 12));
+      expect(appBar.actionsPadding, const EdgeInsetsDirectional.only(end: 12));
       final leadingPadding = appBar.leading! as Padding;
-      expect(leadingPadding.padding, const EdgeInsets.only(left: 12));
+      expect(
+        leadingPadding.padding,
+        const EdgeInsetsDirectional.only(start: 12),
+      );
     });
   });
 
@@ -461,7 +470,7 @@ void main() {
       );
 
       expect(find.text('Library'), findsOneWidget);
-      expect(find.byIcon(Icons.arrow_back), findsNothing);
+      expect(findAppIcon(Icons.arrow_back), findsNothing);
     });
 
     testWidgets('page variant shows a back button that pops the route', (
@@ -493,7 +502,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Downloads'), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.tap(findAppIcon(Icons.arrow_back));
       await tester.pumpAndSettle();
       expect(find.text('Downloads'), findsNothing);
     });
@@ -540,7 +549,7 @@ void main() {
           await tester.pump();
 
           final title = find.text('Metadata');
-          final backIcon = find.byIcon(Icons.arrow_back);
+          final backIcon = findAppIcon(Icons.arrow_back);
           expect(
             tester.getRect(title).overlaps(tester.getRect(backIcon)),
             isFalse,
@@ -679,7 +688,7 @@ void main() {
 
       expect(find.text('Song'), findsOneWidget);
       expect(find.text('Artist'), findsOneWidget);
-      expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+      expect(findAppIcon(Icons.play_arrow), findsOneWidget);
     });
 
     testWidgets('selection mode swaps the trailing action for a tick', (
@@ -697,8 +706,8 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.play_arrow), findsNothing);
-      expect(find.byIcon(Icons.check), findsOneWidget);
+      expect(findAppIcon(Icons.play_arrow), findsNothing);
+      expect(findAppIcon(Icons.check), findsOneWidget);
     });
 
     testWidgets('flat style keeps the row transparent', (tester) async {
@@ -712,7 +721,7 @@ void main() {
         ),
       );
 
-      final card = tester.widget<Card>(find.byType(Card));
+      final card = tester.widget<AppContentCard>(find.byType(AppContentCard));
       expect(card.color, Colors.transparent);
     });
 
@@ -734,9 +743,9 @@ void main() {
         ),
       );
 
-      final cardRect = tester.getRect(find.byType(Card));
+      final cardRect = tester.getRect(find.byType(AppContentCard));
       final trailingRect = tester.getRect(find.byKey(trailingKey));
-      // Card's render box includes its 8dp flat-row margin; content itself is
+      // The card's render box includes its 8dp flat-row margin; content is
       // inset another 6dp from the painted card edge.
       expect(cardRect.right - trailingRect.right, 14);
     });
@@ -805,24 +814,32 @@ void main() {
   });
 
   group('selection bar', () {
-    test('root-overlay mounting lives in exactly one place', () {
-      final offenders = _libSources()
-          .where(
-            (file) =>
-                file.readAsStringSync().contains('OverlayEntry(') &&
-                _basename(file) != 'selection_bottom_bar.dart',
-          )
-          .map(_basename)
-          .toList();
+    test(
+      'selection bars and menu popups use their dedicated overlay hosts',
+      () {
+        // Menus own their popup lifecycle; they are not selection bars.
+        const overlayHosts = {
+          'selection_bottom_bar.dart',
+          'app_menu_button.dart',
+        };
+        final offenders = _libSources()
+            .where(
+              (file) =>
+                  file.readAsStringSync().contains('OverlayEntry(') &&
+                  !overlayHosts.contains(_basename(file)),
+            )
+            .map(_basename)
+            .toList();
 
-      expect(
-        offenders,
-        isEmpty,
-        reason:
-            'Selection bars must mount through SelectionOverlayController so '
-            'they animate identically and clear the shell navigation bar.',
-      );
-    });
+        expect(
+          offenders,
+          isEmpty,
+          reason:
+              'Selection bars must mount through SelectionOverlayController so '
+              'they animate identically and clear the shell navigation bar.',
+        );
+      },
+    );
 
     testWidgets('shell host keeps modal routes above the selection bar', (
       tester,

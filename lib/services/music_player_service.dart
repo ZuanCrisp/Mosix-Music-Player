@@ -3,117 +3,74 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/widgets.dart'
     show AppLifecycleState, WidgetsBinding, WidgetsBindingObserver;
-import 'package:mosix/services/playback_notification.dart';
+import 'package:mornye/services/playback_notification.dart';
 import 'package:audio_session/audio_session.dart'
     show
         AudioDevice,
         AudioSession,
         AudioSessionConfiguration,
         AudioInterruptionType;
-import 'package:audioplayers/audioplayers.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:mosix/services/listening_statistics.dart'
-    show ListeningTrack;
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/services/sqlite_helpers.dart'
-    show normalizeLookupText;
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/playback_normalization.dart';
-import 'package:mosix/services/playback_automation.dart';
-import 'package:mosix/services/playback_session_writer.dart';
-import 'package:mosix/services/content_uri_playback_cache.dart';
-import 'package:mosix/services/music_player_runtime.dart';
-import 'package:mosix/services/music_playback_deck.dart';
-import 'package:mosix/services/automix_analysis.dart';
-import 'package:mosix/services/autoplay_personalization.dart';
-import 'package:mosix/services/automix_analyzer.dart';
-import 'package:mosix/models/automix_options.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/services/automix_effect_renderer.dart';
-import 'package:mosix/services/automix_status.dart';
-import 'package:mosix/utils/int_utils.dart';
-import 'package:mosix/utils/ios_container_paths.dart';
-import 'package:mosix/utils/playback_artwork.dart';
-import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/utils/string_utils.dart';
+import 'package:mornye/services/listening_statistics.dart' show ListeningTrack;
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/services/sqlite_helpers.dart' show normalizeLookupText;
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/playback_normalization.dart';
+import 'package:mornye/services/playback_automation.dart';
+import 'package:mornye/services/playback_session_writer.dart';
+import 'package:mornye/services/content_uri_playback_cache.dart';
+import 'package:mornye/services/music_player_runtime.dart';
+import 'package:mornye/services/music_playback_deck.dart';
+import 'package:mornye/services/playback_deck.dart';
+import 'package:mornye/services/automix_analysis.dart';
+import 'package:mornye/services/automix_phase_lock.dart';
+import 'package:mornye/services/autoplay_personalization.dart';
+import 'package:mornye/services/automix_analyzer.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/services/automix_effect_renderer.dart';
+import 'package:mornye/services/automix_status.dart';
+import 'package:mornye/services/music_haptics.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/int_utils.dart';
+import 'package:mornye/utils/playback_artwork.dart';
+import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/services/playable_media.dart';
 
 export 'music_player_runtime.dart';
+export 'playable_media.dart';
 export 'playback_metadata.dart';
+export 'playback_session_restore.dart';
 
 part 'music_player_automix.dart';
 part 'music_player_autoplay.dart';
 
 final _log = AppLogger('MusicPlayer');
 
-void configurePlaybackNotification({
-  required PlaybackNotification presentation,
-  required Future<bool> Function(MediaItem) toggleFavorite,
-}) => musicPlayerRuntime.configureNotification(
-  presentation: presentation,
-  toggleFavorite: toggleFavorite,
-);
-
 /// Muted artwork shares the music session. Recover its Now Playing ownership
 /// after video initialization, including failed or abandoned initialization.
 Future<void> restoreMusicAudioSessionAfterVideo() async =>
     musicPlayerRuntime.handler?.restoreIosNowPlaying();
 
-/// Enables/disables ReplayGain volume normalization and re-applies it to the
-/// track currently playing.
-void setPlaybackNormalizationEnabled(bool enabled) =>
-    musicPlayerRuntime.configure(
-      musicPlayerRuntime.settings.copyWith(playbackNormalization: enabled),
-    );
+/// Gain and rate the player applies to the current track.
+class PlaybackProcessing {
+  const PlaybackProcessing({
+    required this.normalizationGain,
+    required this.direct,
+    required this.autoMixRate,
+  });
 
-void setPlaybackAutomationOptions({
-  required bool enabled,
-  required bool pauseOnMute,
-  required bool playOnHeadphonesConnected,
-}) => musicPlayerRuntime.configure(
-  musicPlayerRuntime.settings.copyWith(
-    playerMode: enabled ? 'internal' : 'external',
-    pauseOnMute: pauseOnMute,
-    playOnHeadphonesConnected: playOnHeadphonesConnected,
-  ),
-);
+  /// Linear volume from ReplayGain normalization; 1 when none applies.
+  final double normalizationGain;
 
-void setAutoMixEnabled(bool enabled) => musicPlayerRuntime.configure(
-  musicPlayerRuntime.settings.copyWith(autoMix: enabled),
-);
+  /// A direct USB or exclusive path that bypasses the system mixer and DSP.
+  final bool direct;
 
-void setAutoMixOptions(AutoMixOptions options) => musicPlayerRuntime.configure(
-  musicPlayerRuntime.settings.copyWith(
-    autoMixDuration: options.durationSeconds,
-    autoMixEffect: options.effect,
-    autoMixSpeed: options.speed,
-    autoMixPitch: options.pitchSemitones,
-    autoMixEcho: options.echo,
-    autoMixLowPass: options.lowPass,
-  ),
-);
-
-void setUsbBitPerfectEnabled(bool enabled) => musicPlayerRuntime.configure(
-  musicPlayerRuntime.settings.copyWith(usbBitPerfect: enabled),
-);
-
-void setUsbOutputOptions({
-  required bool direct,
-  required bool allowDop,
-  bool allowFixedVolume = false,
-  bool dapExclusive = false,
-}) => musicPlayerRuntime.configure(
-  musicPlayerRuntime.settings.copyWith(
-    usbDirect: direct,
-    usbDsdOverPcm: allowDop,
-    usbAllowFixedVolume: allowFixedVolume,
-    dapExclusive: dapExclusive,
-  ),
-);
+  /// AutoMix tempo matching; 1 outside a transition.
+  final double autoMixRate;
+}
 
 /// Refreshes gain tags after a successful file update, including SAF copies.
 void refreshPlaybackNormalization(String source) {
@@ -136,154 +93,6 @@ List<int> buildShuffledQueueOrder({
   ];
 }
 
-final AudioContext _musicAudioContext = AudioContext(
-  android: const AudioContextAndroid(
-    audioFocus: AndroidAudioFocus.none,
-    contentType: AndroidContentType.music,
-    usageType: AndroidUsageType.media,
-    stayAwake: true,
-  ),
-);
-
-class PlayableMedia {
-  final String id;
-  final String source;
-  final String title;
-  final String artist;
-  final String album;
-  final String? artUri;
-  final String? networkArtworkSource;
-  final Duration? duration;
-  final int? bitDepth;
-  final int? sampleRate;
-  final int? bitrate;
-  final String? format;
-  final bool explicit;
-  final String? genre;
-  final bool autoplay;
-
-  const PlayableMedia({
-    required this.id,
-    required this.source,
-    required this.title,
-    required this.artist,
-    this.album = '',
-    this.artUri,
-    this.networkArtworkSource,
-    this.duration,
-    this.bitDepth,
-    this.sampleRate,
-    this.bitrate,
-    this.format,
-    this.explicit = false,
-    this.genre,
-    this.autoplay = false,
-  });
-
-  bool get isContentUri => source.startsWith('content://');
-  bool get isNetwork =>
-      const {'network', 'http', 'https'}.contains(Uri.tryParse(source)?.scheme);
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'source': source,
-    'title': title,
-    'artist': artist,
-    'album': album,
-    if (artUri != null && artUri!.isNotEmpty && networkArtworkSource == null)
-      'artUri': artUri,
-    if (networkArtworkSource != null)
-      'networkArtworkSource': networkArtworkSource,
-    if (duration != null) 'durationMs': duration!.inMilliseconds,
-    if (bitDepth != null && bitDepth! > 0) 'bitDepth': bitDepth,
-    if (sampleRate != null && sampleRate! > 0) 'sampleRate': sampleRate,
-    if (bitrate != null && bitrate! > 0) 'bitrate': bitrate,
-    if (format != null && format!.trim().isNotEmpty) 'format': format,
-    if (explicit) 'explicit': true,
-    if (genre != null) 'genre': genre,
-    if (autoplay) 'autoplay': true,
-  };
-
-  static PlayableMedia? fromJson(
-    Map<String, dynamic> json, {
-    String? iosDocumentsPath,
-  }) {
-    final id = json['id'] as String?;
-    final source = json['source'] as String?;
-    if (id == null || id.isEmpty || source == null || source.isEmpty) {
-      return null;
-    }
-    final durationMs = (json['durationMs'] as num?)?.toInt();
-    var artwork = json['artUri'] as String?;
-    if (artwork != null && iosDocumentsPath != null) {
-      final uri = Uri.tryParse(artwork);
-      if (uri != null && uri.scheme == 'file' && uri.host.isEmpty) {
-        try {
-          final path = uri.toFilePath();
-          final rebased = rebaseIosSandboxPath(path, iosDocumentsPath);
-          if (rebased != path) artwork = Uri.file(rebased).toString();
-        } on UnsupportedError {
-          // Leave malformed or non-local artwork URIs to the image fallback.
-        }
-      }
-    }
-    return PlayableMedia(
-      id: id,
-      source: source,
-      title: json['title'] as String? ?? '',
-      artist: json['artist'] as String? ?? '',
-      album: json['album'] as String? ?? '',
-      artUri: artwork,
-      networkArtworkSource: json['networkArtworkSource'] as String?,
-      duration: (durationMs != null && durationMs > 0)
-          ? Duration(milliseconds: durationMs)
-          : null,
-      bitDepth: readPositiveInt(json['bitDepth']),
-      sampleRate: readPositiveInt(json['sampleRate']),
-      bitrate: readPositiveInt(json['bitrate']),
-      format: json['format']?.toString(),
-      explicit: parseExplicitFlag(json['explicit']) == true,
-      genre: json['genre'] as String?,
-      autoplay: json['autoplay'] == true,
-    );
-  }
-
-  MediaItem toMediaItem({
-    String? resolvedSource,
-    String? resolvedArtwork,
-    String? unknownTitle,
-    String? unknownArtist,
-  }) {
-    final artwork = resolvedArtwork ?? artUri;
-    return MediaItem(
-      id: id,
-      title: title.isEmpty
-          ? unknownTitle ?? musicPlayerRuntime.unknownTitle
-          : title,
-      artist: artist.isEmpty
-          ? unknownArtist ?? musicPlayerRuntime.unknownArtist
-          : artist,
-      album: album.isEmpty ? null : album,
-      duration: duration,
-      artUri: (artwork != null && artwork.isNotEmpty)
-          ? Uri.tryParse(artwork)
-          : null,
-      extras: {
-        'source': source,
-        if (resolvedSource != null && resolvedSource.isNotEmpty)
-          'resolvedSource': resolvedSource,
-        if (bitDepth != null && bitDepth! > 0) 'bit_depth': bitDepth,
-        if (sampleRate != null && sampleRate! > 0) 'sample_rate': sampleRate,
-        if (bitrate != null && bitrate! > 0) 'bitrate': bitrate,
-        if (format != null && format!.trim().isNotEmpty)
-          'format': format!.trim(),
-        if (explicit) 'explicit': true,
-        if (autoplay) 'autoplay': true,
-      },
-    );
-  }
-}
-
 /// Returns a safe source-start position for restored playback. A completed
 /// snapshot starts over instead of immediately completing again on resume.
 Duration normalizedPlaybackResumePosition(
@@ -302,13 +111,14 @@ class MusicPlayerHandler extends BaseAudioHandler
   final MusicPlayerRuntime _runtime;
   PlaybackDependencies get _dependencies => _runtime.dependencies;
   AppSettings get _settings => _runtime.settings;
-  late MusicPlaybackDeck _player;
+  late PlaybackDeck _player;
   late final _MusicAutoMix _autoMix;
   late final _MusicAutoplay _autoplay;
+  late final MusicHaptics _haptics;
   bool _completing = false;
   double _normalizationVolume = 1;
   final _playerSubscriptions =
-      <MusicPlaybackDeck, List<StreamSubscription<dynamic>>>{};
+      <PlaybackDeck, List<StreamSubscription<dynamic>>>{};
   AudioSession? _audioSession;
   late final PlaybackAutomation _playbackAutomation;
   StreamSubscription<double>? _automationVolumeSubscription;
@@ -326,6 +136,7 @@ class MusicPlayerHandler extends BaseAudioHandler
   Future<void>? _disposeFuture;
   bool _initialized = false;
   bool _sourceReady = false;
+  Object? _playbackError;
   Future<void>? _activePlayOperation;
   Future<void> _sourceChangeTail = Future<void>.value();
   Timer? _sleepTimer;
@@ -339,7 +150,6 @@ class MusicPlayerHandler extends BaseAudioHandler
   final Random _random = Random();
   final List<int> _playHistory = [];
 
-  // True when playback was paused because another app took audio focus.
   bool _pausedByInterruption = false;
   bool _interruptionActive = false;
   bool _userPaused = false;
@@ -367,7 +177,11 @@ class MusicPlayerHandler extends BaseAudioHandler
         previous.playerMode != settings.playerMode) {
       _configurePersonalization();
     }
-    if (previous.playbackNormalization != settings.playbackNormalization) {
+    if (previous.playbackNormalization != settings.playbackNormalization ||
+        previous.playbackNormalizationPreamp !=
+            settings.playbackNormalizationPreamp ||
+        previous.playbackNormalizationMode !=
+            settings.playbackNormalizationMode) {
       reapplyNormalization();
     }
     if (previous.autoMix != settings.autoMix ||
@@ -384,6 +198,12 @@ class MusicPlayerHandler extends BaseAudioHandler
         previous.usbBitPerfect != settings.usbBitPerfect) {
       _refreshPlaybackAutomation();
     }
+    if (previous.musicHaptics != settings.musicHaptics ||
+        previous.musicHapticsSensitivity != settings.musicHapticsSensitivity ||
+        previous.musicHapticsStrength != settings.musicHapticsStrength ||
+        previous.playerMode != settings.playerMode) {
+      _updateHaptics();
+    }
     if (previous.autoplay != settings.autoplay ||
         previous.autoplayPersonalization != settings.autoplayPersonalization ||
         previous.localLibraryEnabled != settings.localLibraryEnabled) {
@@ -396,7 +216,14 @@ class MusicPlayerHandler extends BaseAudioHandler
     AutoMixAnalyzer? autoMixAnalyzer,
     AutoMixEffectRenderer? autoMixEffectRenderer,
     AutoplayLibraryLoader? autoplayLibraryLoader,
+    MusicHapticsAnalyzer? hapticsAnalyzer,
+    HapticPulse? hapticPulse,
   }) : _runtime = runtime ?? musicPlayerRuntime {
+    _haptics = MusicHaptics(
+      state: () => playbackState.value,
+      analyzer: hapticsAnalyzer,
+      pulse: hapticPulse,
+    );
     _sourceCache = ContentUriPlaybackCache(
       copy: PlatformBridge.copyContentUriToTemp,
       isDisposed: () => _disposed,
@@ -420,7 +247,8 @@ class MusicPlayerHandler extends BaseAudioHandler
     );
     _playbackAutomation = PlaybackAutomation(
       isPlaying: () =>
-          _player.state == PlayerState.playing || playbackState.value.playing,
+          _player.state == PlaybackDeckState.playing ||
+          playbackState.value.playing,
       canResume: () =>
           !_disposed &&
           !_interruptionActive &&
@@ -512,11 +340,12 @@ class MusicPlayerHandler extends BaseAudioHandler
         if (playing) unawaited(_playbackAutomation.playbackStarted());
       }),
     );
+    _subscriptions.add(mediaItem.listen((_) => _updateHaptics()));
+    _subscriptions.add(playbackState.listen((_) => _updateHaptics()));
     _listeningTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       unawaited(_dependencies.recorder.flush());
     });
-    _player.setReleaseMode(ReleaseMode.stop);
-    unawaited(_player.setAudioContext(_musicAudioContext));
+    unawaited(_player.configureOutput());
     unawaited(_configureAudioSession());
     _refreshPlaybackAutomation();
 
@@ -535,6 +364,30 @@ class MusicPlayerHandler extends BaseAudioHandler
         state == AppLifecycleState.paused) {
       unawaited(restoreIosNowPlaying());
     }
+  }
+
+  /// Haptics follow only decodable local files; streams have no full copy.
+  void _updateHaptics() {
+    if (_disposed) return;
+    final extras = mediaItem.value?.extras;
+    final source = extras?['source']?.toString() ?? '';
+    final resolved = extras?['resolvedSource']?.toString().trim() ?? '';
+    final document = source.startsWith('content://');
+    // Use a stable document identity for both direct playback and AutoMix.
+    // Haptics opens its own SAF input; the player's descriptor is short-lived.
+    final path = document ? source : (resolved.isNotEmpty ? resolved : source);
+    // Desktop has no vibration motor.
+    final local =
+        !isDesktopPlatform &&
+        path.isNotEmpty &&
+        (document || !path.contains('://')) &&
+        _settings.musicHaptics &&
+        _settings.playerMode == 'internal';
+    _haptics.configure(
+      sensitivity: _settings.musicHapticsSensitivity,
+      strength: _settings.musicHapticsStrength,
+    );
+    _haptics.update(local ? path : null);
   }
 
   void _configurePersonalization() {
@@ -580,36 +433,42 @@ class MusicPlayerHandler extends BaseAudioHandler
     }
   }
 
-  void _listenToPlayer(MusicPlaybackDeck player) {
+  void _listenToPlayer(PlaybackDeck player) {
     // Position updates must continue with the display asleep. UI progress is
     // interpolated between updates; querying native playback every frame is
     // unnecessary and would stop preparing AutoMix when there are no frames.
-    player.positionUpdater = TimerPositionUpdater(
-      interval: const Duration(milliseconds: 200),
-      getPosition: player.getCurrentPosition,
-    );
+    player.startPositionUpdates(const Duration(milliseconds: 200));
     _playerSubscriptions[player] = [
-      player.onPlayerStateChanged.listen((state) {
-        if (!identical(player, _player)) return;
-        if (state == PlayerState.paused && player.needsSourceReload) {
-          _userPaused = true;
-          _pausedByInterruption = false;
-          _playbackAutomation.cancelPendingActions();
-        }
-        if (_switchingGeneration != 0 &&
-            (state == PlayerState.stopped ||
-                state == PlayerState.completed ||
-                state == PlayerState.disposed)) {
-          return;
-        }
-        if (state == PlayerState.completed && _shouldIgnoreComplete) {
-          if (_userPaused || _interruptionActive) {
-            _broadcastState(playerState: PlayerState.paused);
+      player.onPlayerStateChanged.listen(
+        (state) {
+          if (!identical(player, _player)) return;
+          if (state == PlaybackDeckState.paused && player.needsSourceReload) {
+            _userPaused = true;
+            _pausedByInterruption = false;
+            _playbackAutomation.cancelPendingActions();
           }
-          return;
-        }
-        _broadcastState(playerState: state);
-      }),
+          if (_switchingGeneration != 0 &&
+              (state == PlaybackDeckState.stopped ||
+                  state == PlaybackDeckState.completed ||
+                  state == PlaybackDeckState.disposed)) {
+            return;
+          }
+          if (state == PlaybackDeckState.completed && _shouldIgnoreComplete) {
+            if (_userPaused || _interruptionActive) {
+              _broadcastState(playerState: PlaybackDeckState.paused);
+            }
+            return;
+          }
+          _broadcastState(playerState: state);
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          // Preparation errors are handled by _loadIndex, including the SAF
+          // fallback. Runtime failures must not look like successful completion.
+          if (_sourceReady || _switchingGeneration == 0) {
+            _reportPlaybackError(player, error, stackTrace);
+          }
+        },
+      ),
       player.onPositionChanged.listen((position) {
         if (identical(player, _player)) _handlePositionChanged(position);
       }),
@@ -626,7 +485,35 @@ class MusicPlayerHandler extends BaseAudioHandler
     ];
   }
 
-  Future<void> _disposeDeck(MusicPlaybackDeck player) async {
+  void _reportPlaybackError(
+    PlaybackDeck player,
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    if (_disposed || !identical(player, _player) || _playbackError != null) {
+      return;
+    }
+    _sourceReady = false;
+    _playbackError = error;
+    _userPaused = true;
+    _pausedByInterruption = false;
+    _playbackAutomation.cancelPendingActions();
+    _log.e('Playback failed for ${mediaItem.value?.title}', error, stackTrace);
+    _broadcastState(playerState: PlaybackDeckState.stopped);
+    final generation = _playRequestGeneration;
+    unawaited(
+      _serializeSourceChange(() async {
+        if (_disposed || generation != _playRequestGeneration) return;
+        await _autoMix.cancel();
+        if (_disposed || generation != _playRequestGeneration) return;
+        await player.stop();
+      }).catchError((Object error) {
+        _log.w('Could not stop failed playback: $error');
+      }),
+    );
+  }
+
+  Future<void> _disposeDeck(PlaybackDeck player) async {
     final subscriptions = _playerSubscriptions.remove(player);
     if (subscriptions == null) return;
     for (final subscription in subscriptions) {
@@ -640,6 +527,8 @@ class MusicPlayerHandler extends BaseAudioHandler
   /// pauses and the UI/notification reflect the real state instead of staying
   /// stuck on "playing".
   Future<void> _configureAudioSession() async {
+    // audio_session models mobile audio focus; desktop has no equivalent.
+    if (isDesktopPlatform) return;
     try {
       final session = await _dependencies.audioSession();
       _audioSession = session;
@@ -659,10 +548,9 @@ class MusicPlayerHandler extends BaseAudioHandler
               return;
             }
 
-            // Another app took focus or a transient interruption began.
             _interruptionActive = true;
             _pausedByInterruption =
-                _player.state == PlayerState.playing ||
+                _player.state == PlaybackDeckState.playing ||
                 playbackState.value.playing;
             unawaited(_pauseForFocusLoss(reason: 'audio interruption'));
           } else {
@@ -670,8 +558,6 @@ class MusicPlayerHandler extends BaseAudioHandler
               return;
             }
 
-            // Focus returned; resume only if we paused due to a transient
-            // (duck/pause) interruption.
             _interruptionActive = false;
             if (_pausedByInterruption &&
                 event.type == AudioInterruptionType.pause &&
@@ -699,11 +585,15 @@ class MusicPlayerHandler extends BaseAudioHandler
 
   void _refreshPlaybackAutomation() {
     if (_disposed) return;
+    // Both follow mobile system volume and audio_session routes, which
+    // desktop does not use.
     final pauseOnMute =
+        !isDesktopPlatform &&
         _settings.playerMode == 'internal' &&
         _settings.pauseOnMute &&
         !_settings.usbBitPerfect;
     final playOnHeadphonesConnected =
+        !isDesktopPlatform &&
         _settings.playerMode == 'internal' &&
         _settings.playOnHeadphonesConnected;
     unawaited(
@@ -763,7 +653,10 @@ class MusicPlayerHandler extends BaseAudioHandler
   }
 
   bool get _shouldIgnoreComplete =>
-      _switchingGeneration != 0 || _interruptionActive || _userPaused;
+      _switchingGeneration != 0 ||
+      _interruptionActive ||
+      _userPaused ||
+      _playbackError != null;
 
   Future<void> _pauseForFocusLoss({required String reason}) async {
     _log.i('Pausing internal player because of $reason');
@@ -772,7 +665,7 @@ class MusicPlayerHandler extends BaseAudioHandler
       await _pausePlayback();
     } catch (e) {
       _log.w('Failed to pause after audio focus loss: $e');
-      if (!_disposed) _broadcastState(playerState: PlayerState.paused);
+      if (!_disposed) _broadcastState(playerState: PlaybackDeckState.paused);
     }
   }
 
@@ -796,6 +689,7 @@ class MusicPlayerHandler extends BaseAudioHandler
   }
 
   Future<void> _activateAudioSession() async {
+    if (isDesktopPlatform) return;
     try {
       final session = _audioSession ?? await _dependencies.audioSession();
       _audioSession = session;
@@ -823,22 +717,23 @@ class MusicPlayerHandler extends BaseAudioHandler
     }
   }
 
-  AudioProcessingState _mapProcessingState(PlayerState state) {
+  AudioProcessingState _mapProcessingState(PlaybackDeckState state) {
     switch (state) {
-      case PlayerState.playing:
-      case PlayerState.paused:
+      case PlaybackDeckState.playing:
+      case PlaybackDeckState.paused:
         return AudioProcessingState.ready;
-      case PlayerState.completed:
+      case PlaybackDeckState.completed:
         return AudioProcessingState.completed;
-      case PlayerState.stopped:
-      case PlayerState.disposed:
+      case PlaybackDeckState.stopped:
+      case PlaybackDeckState.disposed:
         return AudioProcessingState.idle;
     }
   }
 
-  void _broadcastState({PlayerState? playerState, bool? loading}) {
+  void _broadcastState({PlaybackDeckState? playerState, bool? loading}) {
     final state = playerState ?? _player.state;
-    final playing = state == PlayerState.playing;
+    final failed = _playbackError != null;
+    final playing = !failed && state == PlaybackDeckState.playing;
 
     playbackState.add(
       playbackState.value.copyWith(
@@ -854,12 +749,14 @@ class MusicPlayerHandler extends BaseAudioHandler
           MediaAction.skipToPrevious,
           MediaAction.skipToNext,
         },
-        androidCompactActionIndices: _runtime.notification.mornye
-            ? const [1, 2, 3]
-            : const [0, 1, 2],
-        processingState: (loading == true)
+        androidCompactActionIndices: const [1, 2, 3],
+        processingState: failed
+            ? AudioProcessingState.error
+            : (loading == true)
             ? AudioProcessingState.loading
             : _mapProcessingState(state),
+        errorCode: failed ? 1 : null,
+        errorMessage: _playbackError?.toString(),
         playing: playing,
         queueIndex: _index >= 0 ? _index : null,
         speed: _autoMix.rate,
@@ -884,9 +781,7 @@ class MusicPlayerHandler extends BaseAudioHandler
           item: mediaItem.value,
           shuffle: _shuffle,
         ),
-        androidCompactActionIndices: _runtime.notification.mornye
-            ? const [1, 2, 3]
-            : const [0, 1, 2],
+        androidCompactActionIndices: const [1, 2, 3],
       ),
     );
   }
@@ -963,7 +858,7 @@ class MusicPlayerHandler extends BaseAudioHandler
     _autoMix.onPosition(position);
     unawaited(_autoplay.fill());
     if (_restoringSession ||
-        _player.state != PlayerState.playing ||
+        _player.state != PlaybackDeckState.playing ||
         _media.isEmpty ||
         _index < 0 ||
         _index >= _media.length) {
@@ -1014,8 +909,18 @@ class MusicPlayerHandler extends BaseAudioHandler
       path,
       cacheKey: cacheKey,
       displayName: displayName,
+      preampDb: _settings.playbackNormalizationPreamp,
+      preferAlbumGain: _settings.playbackNormalizationMode == 'album',
     );
   }
+
+  /// What the active output path applies to the playing track, for the
+  /// audio information sheet.
+  PlaybackProcessing get processing => PlaybackProcessing(
+    normalizationGain: _normalizationVolume,
+    direct: _player.isDirect,
+    autoMixRate: _autoMix.rate,
+  );
 
   /// Re-applies normalization to the playing track when the setting flips.
   void reapplyNormalization() {
@@ -1243,7 +1148,7 @@ class MusicPlayerHandler extends BaseAudioHandler
           playbackState.value.copyWith(updatePosition: position),
         );
       }
-      _broadcastState(playerState: PlayerState.paused);
+      _broadcastState(playerState: PlaybackDeckState.paused);
     } finally {
       _restoringSession = false;
     }
@@ -1413,6 +1318,7 @@ class MusicPlayerHandler extends BaseAudioHandler
     }
     final generation = ++_playRequestGeneration;
     _sourceReady = false;
+    _playbackError = null;
     // Advance the requested index synchronously so consecutive Next taps do
     // not all target the same song while AutoMix/source preparation awaits.
     _index = index;
@@ -1459,8 +1365,8 @@ class MusicPlayerHandler extends BaseAudioHandler
     if (media.isNetwork) {
       await _player.setNetworkSource(path);
     } else {
-      await _player.setSource(
-        DeviceFileSource(path),
+      await _player.setFileSource(
+        path,
         preferBitPerfect: _settings.usbBitPerfect,
         directUsb: _settings.usbDirect,
         allowFixedVolume: _settings.usbAllowFixedVolume,
@@ -1506,11 +1412,11 @@ class MusicPlayerHandler extends BaseAudioHandler
     // Claim the playing state up front (while the app is still in the
     // foreground window) so audio_service can start its foreground service
     // before the async source resolve below.
-    _broadcastState(playerState: PlayerState.playing, loading: true);
+    _broadcastState(playerState: PlaybackDeckState.playing, loading: true);
     await _claimHardwareMediaButtons();
     if (!_isCurrentPlayRequest(generation, media)) return;
-    if (media.isContentUri) {
-      unawaited(_recoverDocumentArtwork(media, generation));
+    if (!media.isNetwork) {
+      unawaited(_recoverEmbeddedArtwork(media, generation));
     }
     if (media.networkArtworkSource != null) {
       try {
@@ -1546,8 +1452,11 @@ class MusicPlayerHandler extends BaseAudioHandler
       return;
     }
     if (resolved == null) {
-      _log.e('No playable source for ${media.title}');
-      _broadcastState(playerState: PlayerState.stopped);
+      _reportPlaybackError(
+        _player,
+        StateError('Audio file is unavailable'),
+        StackTrace.current,
+      );
       return;
     }
 
@@ -1572,7 +1481,7 @@ class MusicPlayerHandler extends BaseAudioHandler
         displayName: playbackLease?.displayName,
       );
       if (!_isCurrentPlayRequest(generation, media)) return;
-      await _player.setAudioContext(_musicAudioContext);
+      await _player.configureOutput();
       if (!_isCurrentPlayRequest(generation, media)) return;
       await _activateAudioSession();
       if (!_isCurrentPlayRequest(generation, media)) return;
@@ -1644,11 +1553,9 @@ class MusicPlayerHandler extends BaseAudioHandler
       // Some files do not emit onDurationChanged reliably (stuck at 0:00);
       // poll the engine for the real duration as a fallback.
       unawaited(_ensureDurationKnown(media, generation));
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (!_isCurrentPlayRequest(generation, media)) return;
-      _sourceReady = false;
-      _log.e('Playback failed for ${media.title}: $e');
-      _broadcastState(playerState: PlayerState.stopped);
+      _reportPlaybackError(_player, e, stackTrace);
     } finally {
       if (playbackLease != null) {
         await PlatformBridge.closeContentUriPlaybackLease(playbackLease.token);
@@ -1659,11 +1566,11 @@ class MusicPlayerHandler extends BaseAudioHandler
     }
   }
 
-  Future<void> _recoverDocumentArtwork(
+  Future<void> _recoverEmbeddedArtwork(
     PlayableMedia media,
     int generation,
   ) async {
-    final artwork = await resolveMissingDocumentArtworkUri(
+    final artwork = await resolveEmbeddedArtworkUri(
       media.source,
       media.artUri,
       extract: (source) =>
@@ -1793,7 +1700,7 @@ class MusicPlayerHandler extends BaseAudioHandler
     } else if (_repeatMode == AudioServiceRepeatMode.all && _media.isNotEmpty) {
       await _playIndex(0);
     } else {
-      _broadcastState(playerState: PlayerState.completed);
+      _broadcastState(playerState: PlaybackDeckState.completed);
     }
   }
 
@@ -1801,7 +1708,7 @@ class MusicPlayerHandler extends BaseAudioHandler
     if (_completing) return;
     if (_shouldIgnoreComplete) {
       if (_userPaused || _interruptionActive) {
-        _broadcastState(playerState: PlayerState.paused);
+        _broadcastState(playerState: PlaybackDeckState.paused);
       }
       return;
     }
@@ -1849,8 +1756,8 @@ class MusicPlayerHandler extends BaseAudioHandler
       return;
     }
     if ((!_sourceReady ||
-            _player.state == PlayerState.stopped ||
-            _player.state == PlayerState.completed) &&
+            _player.state == PlaybackDeckState.stopped ||
+            _player.state == PlaybackDeckState.completed) &&
         _index >= 0 &&
         _index < _media.length) {
       await _playIndex(
@@ -1869,16 +1776,20 @@ class MusicPlayerHandler extends BaseAudioHandler
       if (generation != _playRequestGeneration || _disposed) return;
       try {
         await _player.resume();
-      } on PlatformException {
-        if (!_player.needsSourceReload) rethrow;
-        _broadcastState(playerState: PlayerState.paused);
+      } catch (error, stackTrace) {
+        if (generation != _playRequestGeneration || _disposed) return;
+        if (_player.needsSourceReload) {
+          _broadcastState(playerState: PlaybackDeckState.paused);
+        } else {
+          _reportPlaybackError(_player, error, stackTrace);
+        }
         return;
       }
       if (generation != _playRequestGeneration || _disposed) {
         await _player.pause();
         return;
       }
-      _broadcastState(playerState: PlayerState.playing);
+      _broadcastState(playerState: PlaybackDeckState.playing);
     });
   }
 
@@ -1922,7 +1833,7 @@ class MusicPlayerHandler extends BaseAudioHandler
       if (generation != _playRequestGeneration || _disposed) return;
       await _player.pause();
       if (generation != _playRequestGeneration || _disposed) return;
-      _broadcastState(playerState: PlayerState.paused);
+      _broadcastState(playerState: PlaybackDeckState.paused);
       await _persistSession(position: await _currentPositionForPersist());
     });
   }
@@ -1993,6 +1904,7 @@ class MusicPlayerHandler extends BaseAudioHandler
     await _player.stop();
     if (generation != _playRequestGeneration || _disposed) return;
     _sourceReady = false;
+    _playbackError = null;
     _activeResolvedPath = null;
     await _cleanupPendingResolvedPaths();
     if (generation != _playRequestGeneration || _disposed) return;
@@ -2007,7 +1919,7 @@ class MusicPlayerHandler extends BaseAudioHandler
     if (generation != _playRequestGeneration || _disposed) return;
     // A stopped session has no current item; this also hides the mini player.
     mediaItem.add(null);
-    _broadcastState(playerState: PlayerState.stopped);
+    _broadcastState(playerState: PlaybackDeckState.stopped);
     await super.stop();
   }
 
@@ -2166,6 +2078,7 @@ class MusicPlayerHandler extends BaseAudioHandler
     await _playbackAutomation.dispose();
     await _sourceChangeTail;
     await _autoMix.dispose();
+    _haptics.dispose();
     for (final sub in _subscriptions) {
       await sub.cancel();
     }
@@ -2179,8 +2092,6 @@ class MusicPlayerHandler extends BaseAudioHandler
   }
 }
 
-MusicPlayerHandler? get musicPlayerHandler => musicPlayerRuntime.handler;
-
 Future<MusicPlayerHandler> initMusicPlayer() => musicPlayerRuntime.initialize();
 
 /// Restores the last persisted playback session (if any) into a freshly
@@ -2188,111 +2099,3 @@ Future<MusicPlayerHandler> initMusicPlayer() => musicPlayerRuntime.initialize();
 /// exist are dropped; content URIs are kept and fail gracefully at play time.
 Future<void> restorePersistedPlaybackSession() =>
     musicPlayerRuntime.restoreSession();
-
-Future<void> restorePlaybackSession(MusicPlayerRuntime runtime) async {
-  try {
-    final database = runtime.dependencies.sessionDatabase;
-    final session = await database.getPlaybackSession();
-    if (session == null) return;
-
-    final rawMedia = session['media'];
-    if (rawMedia is! List) {
-      await database.clearPlaybackSession();
-      return;
-    }
-
-    final items = <PlayableMedia>[];
-    final keptOriginalIndices = <int>[];
-    final iosDocumentsPath = runtime.dependencies.isIOS
-        ? (await getApplicationDocumentsDirectory()).path
-        : null;
-    var artworkRelocated = false;
-    for (var i = 0; i < rawMedia.length; i++) {
-      final entry = rawMedia[i];
-      if (entry is! Map) continue;
-      final media = PlayableMedia.fromJson(
-        Map<String, dynamic>.from(entry),
-        iosDocumentsPath: iosDocumentsPath,
-      );
-      if (media == null) continue;
-      if (!media.isContentUri &&
-          !media.isNetwork &&
-          !await File(media.source).exists()) {
-        continue;
-      }
-      final artwork = await resolveRestoredArtworkUri(
-        media.artUri,
-        loadLibraryCoverPath: () async {
-          final database = runtime.dependencies.libraryDatabase;
-          final row = await database.getById(media.id);
-          if (row != null) return row['coverPath'] as String?;
-          final matches = await database.findByTrackAndArtist(
-            media.title,
-            media.artist,
-          );
-          for (final row in matches) {
-            if (row['filePath'] == media.source) {
-              return row['coverPath'] as String?;
-            }
-          }
-          return null;
-        },
-      );
-      items.add(
-        artwork == media.artUri
-            ? media
-            : PlayableMedia.fromJson({...media.toJson(), 'artUri': artwork})!,
-      );
-      artworkRelocated |= artwork != entry['artUri'];
-      keptOriginalIndices.add(i);
-    }
-    if (items.isEmpty) {
-      await database.clearPlaybackSession();
-      return;
-    }
-
-    // Remap the saved index onto the surviving list; if the current track
-    // itself was dropped, land on the nearest earlier survivor at 0:00.
-    final savedIndex = (session['index'] as num?)?.toInt() ?? 0;
-    var index = 0;
-    for (var i = 0; i < keptOriginalIndices.length; i++) {
-      if (keptOriginalIndices[i] <= savedIndex) index = i;
-    }
-    var position = Duration(
-      milliseconds: (session['positionMs'] as num?)?.toInt() ?? 0,
-    );
-    if (keptOriginalIndices[index] != savedIndex) {
-      position = Duration.zero;
-    }
-
-    final handler = await runtime.initialize();
-    await handler.restoreSession(
-      items: items,
-      index: index,
-      position: position,
-      shuffle: session['shuffle'] == true,
-      originalOrder: [
-        for (final i in keptOriginalIndices)
-          ((rawMedia[i] as Map)['queueOriginalIndex'] as num?)?.toInt() ?? i,
-      ],
-      queueNeedsRewrite: items.length != rawMedia.length || artworkRelocated,
-      repeatMode: AudioServiceRepeatMode.values.firstWhere(
-        (mode) => mode.name == session['repeat'],
-        orElse: () => AudioServiceRepeatMode.none,
-      ),
-    );
-    _log.i(
-      'Restored playback session: ${items.length} track(s), paused at '
-      '${position.inSeconds}s',
-    );
-  } catch (e) {
-    _log.w('Failed to restore playback session: $e');
-  }
-}
-
-Stream<MediaItem?> musicPlayerMediaItemEvents() =>
-    musicPlayerRuntime.mediaItemEvents();
-Stream<PlaybackState> musicPlayerPlaybackStateEvents() =>
-    musicPlayerRuntime.playbackStateEvents();
-Stream<List<MediaItem>> musicPlayerQueueEvents() =>
-    musicPlayerRuntime.queueEvents();

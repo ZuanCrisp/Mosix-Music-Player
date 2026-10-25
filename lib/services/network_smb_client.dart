@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:dart_smb2/dart_smb2.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -99,6 +100,46 @@ class NetworkSmbClient {
         offset += chunk.length;
         progress(offset);
       }
+      checkpoint();
+      await _native.synchronized(() => _pool.fsyncHandle(handle));
+    } finally {
+      await _native.synchronized(() => _pool.closeHandle(handle));
+    }
+  }
+
+  /// Path metadata can lag behind writes on a NAS. Confirm the open file's
+  /// length and bytes before accepting an upload with a different stat size.
+  Future<bool> matchesFile(
+    File file,
+    int length, {
+    required void Function() checkpoint,
+  }) async {
+    checkpoint();
+    final (handle, remoteLength) = await _native.synchronized(
+      () => _pool.openFileWithSize(path),
+    );
+    try {
+      if (remoteLength != length) return false;
+      var received = 0;
+      final remote = await sha256
+          .bind(
+            _readHandle(handle, 0, length).map((chunk) {
+              checkpoint();
+              received += chunk.length;
+              return chunk;
+            }),
+          )
+          .first;
+      final local = await sha256
+          .bind(
+            file.openRead().map((chunk) {
+              checkpoint();
+              return chunk;
+            }),
+          )
+          .first;
+      checkpoint();
+      return received == length && remote == local;
     } finally {
       await _native.synchronized(() => _pool.closeHandle(handle));
     }
@@ -108,23 +149,31 @@ class NetworkSmbClient {
   Stream<Uint8List> read(int start, int end) async* {
     final handle = await _native.synchronized(() => _pool.openFile(path));
     try {
-      var offset = start;
-      while (offset < end && !_closed) {
-        final bytes = await _native.synchronized(
-          () => _pool.readFromHandle(
-            handle,
-            offset: offset,
-            length: min(256 * 1024, end - offset),
-          ),
-        );
-        if (bytes.isEmpty) {
-          throw StateError('SMB file ended before requested range');
-        }
-        offset += bytes.length;
-        yield bytes;
-      }
+      yield* _readHandle(handle, start, end);
     } finally {
       await _native.synchronized(() => _pool.closeHandle(handle));
+    }
+  }
+
+  Stream<Uint8List> _readHandle(
+    Smb2PoolHandle handle,
+    int start,
+    int end,
+  ) async* {
+    var offset = start;
+    while (offset < end && !_closed) {
+      final bytes = await _native.synchronized(
+        () => _pool.readFromHandle(
+          handle,
+          offset: offset,
+          length: min(256 * 1024, end - offset),
+        ),
+      );
+      if (bytes.isEmpty) {
+        throw StateError('SMB file ended before requested range');
+      }
+      offset += bytes.length;
+      yield bytes;
     }
   }
 

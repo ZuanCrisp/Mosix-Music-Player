@@ -65,9 +65,11 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
     }
 
     if (isUrlNotRecognized) {
-      return Card(
+      return AppContentCard(
         elevation: 0,
-        color: colorScheme.errorContainer.withValues(alpha: 0.5),
+        mornyeSurface: false,
+        // Matches ErrorCard: a solid container with its paired on-color.
+        color: colorScheme.errorContainer,
         shape: RoundedRectangleBorder(
           borderRadius: context.tokens.borderRadiusCard,
         ),
@@ -75,7 +77,7 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(Icons.link_off, color: colorScheme.error),
+              Icon(Icons.link_off, color: colorScheme.onErrorContainer),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -84,16 +86,16 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
                     Text(
                       l10n.errorUrlNotRecognized,
                       style: TextStyle(
-                        color: colorScheme.error,
+                        color: colorScheme.onErrorContainer,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       l10n.errorUrlNotRecognizedMessage,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: colorScheme.error),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onErrorContainer,
+                      ),
                     ),
                   ],
                 ),
@@ -117,13 +119,10 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 86,
-            height: 86,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colorScheme.surfaceContainerHighest,
-            ),
+          AppShapeBadge(
+            kind: AppShapes.badge,
+            size: 86,
+            color: colorScheme.surfaceContainerHighest,
             child: Icon(
               Icons.manage_search,
               size: 46,
@@ -178,14 +177,11 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
   void _showSortOptions(ColorScheme colorScheme) {
     var tempSort = _searchSortOption;
     final mornye = context.isMornye;
-    showModalBottomSheet<void>(
+    showAppModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
-      backgroundColor: mornye
-          ? Colors.transparent
-          : colorScheme.surfaceContainerLow,
-      elevation: mornye ? 0 : null,
+      backgroundColor: mornye ? null : colorScheme.surfaceContainerLow,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) {
           final content = SafeArea(
@@ -205,7 +201,8 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
                         ),
                       ),
                       const Spacer(),
-                      TextButton(
+                      ExpressiveButton(
+                        text: true,
                         onPressed: () => setSheetState(
                           () => tempSort = HomeSearchSortOption.defaultOrder,
                         ),
@@ -254,7 +251,7 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
               ),
             ),
           );
-          return mornye ? MornyeGlassPanel.overlay(child: content) : content;
+          return content;
         },
       ),
     );
@@ -342,7 +339,7 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
         const SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: LinearProgressIndicator(),
+            child: AppProgressIndicator.linear(),
           ),
         ),
       if (showEmptySearchResult && !hasActualData)
@@ -460,12 +457,8 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
     required Widget Function(int index, bool showDivider) itemBuilder,
     bool showSortButton = false,
   }) {
-    final sectionColor = Theme.of(context).brightness == Brightness.dark
-        ? Color.alphaBlend(
-            Colors.white.withValues(alpha: 0.08),
-            colorScheme.surface,
-          )
-        : colorScheme.surfaceContainerHighest;
+    // Material result groups are grouped rows, on the settings group tier.
+    final sectionColor = colorScheme.surfaceContainer;
     final mornye = context.isMornye;
 
     return [
@@ -474,9 +467,11 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
           // Aligned with the clamped result list below on wide screens.
           padding:
               (mornye
-                  ? const EdgeInsets.fromLTRB(20, 16, 12, 10)
-                  : const EdgeInsets.fromLTRB(16, 8, 8, 8)) +
-              EdgeInsets.symmetric(horizontal: wideListInset(context)),
+                      ? const EdgeInsetsDirectional.fromSTEB(20, 16, 12, 10)
+                      : const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8))
+                  .add(
+                    EdgeInsets.symmetric(horizontal: wideListInset(context)),
+                  ),
           child: Row(
             children: [
               Expanded(
@@ -493,37 +488,34 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
                         ),
                 ),
               ),
+              // Keeps ExpressiveButton's 48dp minimum touch target.
               if (showSortButton)
-                SizedBox(
-                  height: 32,
-                  child: TextButton.icon(
-                    onPressed: () => _showSortOptions(colorScheme),
-                    icon: mornye
-                        ? null
-                        : Icon(
-                            Icons.swap_vert,
-                            size: 18,
-                            color:
-                                _searchSortOption !=
-                                    HomeSearchSortOption.defaultOrder
-                                ? colorScheme.primary
-                                : colorScheme.onSurfaceVariant,
-                          ),
-                    label: Text(
-                      _searchSortOption != HomeSearchSortOption.defaultOrder
-                          ? _sortOptionLabel(_searchSortOption)
-                          : context.l10n.libraryFilterSort,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color:
-                            _searchSortOption !=
-                                HomeSearchSortOption.defaultOrder
-                            ? colorScheme.primary
-                            : colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      visualDensity: VisualDensity.compact,
+                ExpressiveButton(
+                  text: true,
+                  onPressed: () => _showSortOptions(colorScheme),
+                  icon: mornye
+                      ? null
+                      : Icon(
+                          Icons.swap_vert,
+                          size: 18,
+                          color:
+                              _searchSortOption !=
+                                  HomeSearchSortOption.defaultOrder
+                              ? colorScheme.primary
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  child: Text(
+                    _searchSortOption != HomeSearchSortOption.defaultOrder
+                        ? _sortOptionLabel(_searchSortOption)
+                        : context.l10n.libraryFilterSort,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color:
+                          _searchSortOption != HomeSearchSortOption.defaultOrder
+                          ? colorScheme.primary
+                          : colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -549,21 +541,24 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
                 ),
               );
             }
+            // Connected list: each result is its own surface, separated by a
+            // 2dp gap with tight inner corners instead of row dividers.
+            const inner = Radius.circular(4);
             return StaggeredListItem(
               index: index,
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
+                margin: EdgeInsets.fromLTRB(16, 0, 16, isLast ? 0 : 2),
                 decoration: BoxDecoration(
                   color: sectionColor,
                   borderRadius: BorderRadius.vertical(
-                    top: isFirst ? const Radius.circular(20) : Radius.zero,
-                    bottom: isLast ? const Radius.circular(20) : Radius.zero,
+                    top: isFirst ? const Radius.circular(20) : inner,
+                    bottom: isLast ? const Radius.circular(20) : inner,
                   ),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: Material(
                   color: Colors.transparent,
-                  child: itemBuilder(index, !isLast),
+                  child: itemBuilder(index, false),
                 ),
               ),
             );
@@ -740,31 +735,25 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
             );
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: filterChip('all', context.l10n.historyFilterAll),
-            ),
-            ...filters.map((filter) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: filterChip(
-                  filter.id,
-                  filter.label ?? filter.id,
-                  icon: filter.icon == null
-                      ? null
-                      : _getFilterIcon(filter.icon!),
-                ),
-              );
-            }),
-          ],
+    final chips = [
+      filterChip('all', context.l10n.historyFilterAll),
+      for (final filter in filters)
+        filterChip(
+          filter.id,
+          filter.label ?? filter.id,
+          icon: filter.icon == null ? null : _getFilterIcon(filter.icon!),
         ),
-      ),
+    ];
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16 + wideListInset(context)),
+      // A mouse cannot swipe a clipped row, so desktop windows wrap every
+      // filter onto view.
+      child: isDesktopPlatform
+          ? Wrap(spacing: 8, runSpacing: 8, children: chips)
+          : SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(spacing: 8, children: chips),
+            ),
     );
   }
 
@@ -800,44 +789,57 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
 
   Widget _buildSearchBar() {
     final hasText = _urlController.text.isNotEmpty;
+    // The Material Home keeps the resting field clean; import and paste
+    // appear once it is focused.
+    final showInputActions =
+        context.isMornye ||
+        widget.mode == HomeTabMode.search ||
+        _searchFocusNode.hasFocus;
 
+    final searchingLibrary = _searchingLibrary;
     return AppSearchField(
       controller: _urlController,
       samplesBackdrop: false,
       focusNode: _searchFocusNode,
-      hintText: _getSearchHint(),
+      hintText: searchingLibrary
+          ? context.l10n.librarySearchHint
+          : _getSearchHint(),
       clearTooltip: context.l10n.dialogClear,
       onClear: _clearAndRefresh,
-      prefixIcon: _SearchProviderDropdown(
-        onProviderChanged: () {
-          _lastSearchQuery = null;
-          ref.read(trackProvider.notifier).setSearchFilter(null);
-          setState(() {});
-          final text = _urlController.text.trim();
-          if (text.isNotEmpty &&
-              text.length >= _HomeTabState._minLiveSearchChars) {
-            _performSearch(text);
-          }
-        },
-      ),
+      // Filtering the library needs neither the provider picker nor the
+      // import actions.
+      prefixIcon: searchingLibrary
+          ? null
+          : _SearchProviderDropdown(
+              onProviderChanged: () {
+                _lastSearchQuery = null;
+                ref.read(trackProvider.notifier).setSearchFilter(null);
+                setState(() {});
+                final text = _urlController.text.trim();
+                if (text.isNotEmpty &&
+                    text.length >= _HomeTabState._minLiveSearchChars) {
+                  _performSearch(text);
+                }
+              },
+            ),
       suffixIcon: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (hasText)
-            IconButton(
+            AppIconButton(
               icon: const Icon(Icons.clear),
               onPressed: _clearAndRefresh,
               tooltip: context.l10n.dialogClear,
             )
-          else ...[
-            IconButton(
+          else if (showInputActions && !searchingLibrary) ...[
+            AppIconButton(
               icon: const Icon(Icons.file_upload_outlined),
               onPressed: _isCsvImporting
                   ? null
                   : () => _importCsv(context, ref),
               tooltip: context.l10n.homeImportCsvTooltip,
             ),
-            IconButton(
+            AppIconButton(
               icon: const Icon(Icons.paste),
               onPressed: _pasteFromClipboard,
               tooltip: context.l10n.actionPaste,
@@ -855,6 +857,13 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
 
     final text = _urlController.text.trim();
     if (text.isEmpty) return;
+
+    if (_searchingLibrary) {
+      _libraryQueryDebounce?.cancel();
+      setState(() => _libraryQuery = text);
+      _searchFocusNode.unfocus();
+      return;
+    }
 
     if (looksLikeUrlOrSpotifyUri(text)) {
       _fetchMetadata();

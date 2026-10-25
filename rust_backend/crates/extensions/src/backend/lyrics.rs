@@ -1,9 +1,9 @@
 use super::Backend;
 use crate::files::ExtensionFiles;
 use cap_std::fs::OpenOptions;
+use mornye_core::lyrics::{LyricsResponse, config, file, lrc};
+use mornye_providers::lyrics::{Check, SearchRequest};
 use serde::{Deserialize, Serialize};
-use spotiflac_core::lyrics::{LyricsResponse, config, file, lrc};
-use spotiflac_providers::lyrics::{Check, SearchRequest};
 use std::collections::BTreeMap;
 use std::io::Write;
 
@@ -64,6 +64,47 @@ impl Backend {
         let _operation = self.enter()?;
         let check = || self.check().and_then(|()| check());
         serde_json::to_string(&self.lrc_result(request, &check)?).map_err(|error| error.to_string())
+    }
+
+    /// One provider's lyrics, as JSON in the shape of
+    /// [`Self::get_lyrics_lrc_with_source`]. Ignores `file_path`.
+    pub fn get_lyrics_from_provider(
+        &self,
+        provider: &str,
+        request: &LyricsRequest,
+        check: &Check<'_>,
+    ) -> Result<String, String> {
+        let _operation = self.enter()?;
+        let check = || self.check().and_then(|()| check());
+        let mut response = self
+            .lyrics
+            .fetch_from(
+                provider,
+                SearchRequest {
+                    spotify_id: request.spotify_id.clone(),
+                    track: request.track.clone(),
+                    artist: request.artist.clone(),
+                    duration: request.duration_ms as f64 / 1000.0,
+                    ..SearchRequest::default()
+                },
+                &check,
+            )
+            .map_err(|error| error.to_string())?;
+        check()?;
+        response.normalize_timing();
+        serde_json::to_string(&LrcResult {
+            lyrics: render(&response, request),
+            source: response.source.clone(),
+            sync_type: response.sync_type.clone(),
+            instrumental: response.instrumental,
+        })
+        .map_err(|error| error.to_string())
+    }
+
+    /// The enabled lyrics providers in priority order, as a JSON array.
+    pub fn get_enabled_lyrics_providers_json(&self) -> Result<String, String> {
+        let _operation = self.enter()?;
+        serde_json::to_string(&self.lyrics.enabled_providers()).map_err(|error| error.to_string())
     }
 
     fn lrc_result(&self, request: &LyricsRequest, check: &Check<'_>) -> Result<LrcResult, String> {

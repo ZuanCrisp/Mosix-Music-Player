@@ -111,7 +111,7 @@ checks authenticated WebDAV writes, MKCOL, MOVE, collision handling, sidecars,
 interrupted transfers, lost responses, restart journals, and destination UI in
 both themes. The SMB upload test uses the pinned native library and a disposable
 Samba fixture with encryption mandatory:
-`python3 scripts/test_network_smb3_server.py --port 1446 --writable` and
+`python3 scripts/smb3_fixture_server.py --port 1446 --writable` and
 `TEST_SMB_UPLOAD=1 TEST_SMB_PORT=1446 TEST_SMB_LIBRARY=<host-library> flutter test test/network_smb_upload_test.dart`.
 It validates upload, non-overwriting publication and retry reconciliation in
 existing folders. This host's unprivileged macOS Samba creates new directories
@@ -123,7 +123,7 @@ checks URL/path handling, HTML/WebDAV parsing, authenticated HTTP transport,
 range/HEAD requests, connection persistence/removal and browser navigation.
 
 For the optional signed, authenticated SMB2 test, install `impacket` in a
-temporary Python virtual environment and run `scripts/test_network_smb_server.py`.
+temporary Python virtual environment and run `scripts/smb2_fixture_server.py`.
 Then run `TEST_SMB=1 flutter test test/network_storage_service_test.dart`.
 Set `TEST_SMB_PORT` for the fixture's port (default 1445). For host Flutter tests,
 set `TEST_SMB_LIBRARY` to the matching libsmb2 native binary from the pinned
@@ -139,7 +139,7 @@ https://github.com/ales-drnz/libsmb2-scripts and
 https://github.com/sahlberg/libsmb2.
 
 Samba4 fixture (isolated account database, loopback only, no system service):
-`python3 scripts/test_network_smb3_server.py --dialect SMB3_11 --encryption required`.
+`python3 scripts/smb3_fixture_server.py --dialect SMB3_11 --encryption required`.
 Use `--dialect SMB3_00`, `SMB3_02`, `SMB2_10` or `SMB2_02` to constrain negotiation;
 SMB2 requires `--encryption off`. Guest validation uses `--guest --encryption off`
 on a second port, passed to the test as `TEST_SMB_GUEST_PORT`.
@@ -160,7 +160,7 @@ range transfers and cache reuse. It also exercises the platform decoder with
 silent WAV data through the loopback proxy, including preparation, playback
 and seeking.
 
-`cargo test -p spotiflac-mobile network_tags --lib` from `rust_backend` checks
+`cargo test -p mornye-mobile network_tags --lib` from `rust_backend` checks
 FLAC metadata/cover extraction, seeking past M4A audio to tail tags, and rejection
 of external URLs and large non-range responses. Flutter metadata service tests
 cover shared reads, recoverable failures, and embedded cover caching; the Now

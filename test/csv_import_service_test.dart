@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/services/csv_import_service.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/services/csv_import_service.dart';
 
 void main() {
   test(

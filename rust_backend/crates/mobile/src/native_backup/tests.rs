@@ -270,6 +270,20 @@ fn legacy_split_streams_history_and_retains_category_semantics() {
 }
 
 #[test]
+fn legacy_split_accepts_current_app_marker() {
+    let fixture = Fixture::new();
+    let input = fixture.dir.path().join("backup.json");
+    let history = fixture.dir.path().join("legacy.ndjson");
+    let metadata = fixture.dir.path().join("legacy.json");
+    fs::write(&input, r#"{"magic":"mornye-backup","data":{"history":[]}}"#).unwrap();
+    let request = json!({
+        "operation": "backup_split_legacy", "input_path": input,
+        "ndjson_path": history, "metadata_path": metadata,
+    });
+    assert_eq!(execute(&request, &|| Ok(())).unwrap()["count"], 0);
+}
+
+#[test]
 fn legacy_duplicate_history_uses_last_field_and_invalid_backup_cleans_output() {
     let fixture = Fixture::new();
     let input = fixture.dir.path().join("backup.json");

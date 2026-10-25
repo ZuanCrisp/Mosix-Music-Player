@@ -10,8 +10,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-// Wi-Fi-only download policy: network callback, pause and resume.
-
 internal fun DownloadService.configureNativeWorkerNetworkPolicy(settingsJson: String) {
     nativeWorkerDownloadNetworkMode = try {
         JSONObject(settingsJson).optString("download_network_mode", "any")

@@ -5,19 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/widgets/mornye_selection_pill.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/providers/runtime_profile_provider.dart';
-import 'package:mosix/screens/settings/settings_tab.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/utils/nav_bar_inset.dart';
-import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/widgets/collection_scaffold.dart';
-import 'package:mosix/widgets/mini_player.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
-import 'package:mosix/widgets/mornye_bottom_bar.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mornye/widgets/mornye_selection_pill.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/runtime_profile_provider.dart';
+import 'package:mornye/screens/settings/settings_tab.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/widgets/album_detail_header.dart';
+import 'package:mornye/widgets/collection_scaffold.dart';
+import 'package:mornye/widgets/mini_player.dart';
+import 'package:mornye/widgets/mornye_artist_header.dart';
+import 'package:mornye/widgets/mornye_bottom_bar.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
 
 void main() {
   late MornyeChromeController chrome;
@@ -54,8 +54,8 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          currentMediaItemProvider.overrideWith(
-            (ref) => Stream.value(
+          currentMediaItemProvider.overrideWithBuild(
+            (ref, notifier) => Stream.value(
               withPlayer
                   ? const MediaItem(
                       id: 'track',

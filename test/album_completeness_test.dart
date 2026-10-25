@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/album_completeness.dart';
+import 'package:mornye/services/album_completeness.dart';
 
 String _tableDefinition(String path, String table) => RegExp(
   'CREATE TABLE $table\\s*\\([\\s\\S]*?\\n\\s*\\)',
@@ -139,7 +139,7 @@ print('inventory passed')
 ''',
         jsonEncode({
           'history': _tableDefinition(
-            'lib/services/history_database.dart',
+            'lib/services/history_schema.dart',
             'history',
           ),
           'library': _tableDefinition(

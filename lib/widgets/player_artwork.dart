@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
-import 'package:mosix/services/cover_cache_manager.dart';
+import 'package:mornye/services/cover_cache_manager.dart';
+import 'package:mornye/widgets/app_icon.dart';
 
 class PlayerArtwork extends StatelessWidget {
   /// An HTTP(S) URL, file URI, or absolute local artwork path.
@@ -30,7 +31,7 @@ class PlayerArtwork extends StatelessWidget {
   Widget build(BuildContext context) {
     final placeholder = Container(
       color: colorScheme.surfaceContainerHighest,
-      child: Icon(
+      child: AppIcon(
         Icons.music_note,
         size: iconSize,
         color: colorScheme.onSurfaceVariant,

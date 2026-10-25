@@ -2,6 +2,7 @@
 //! output and publishes it only after this operation succeeds and is synced.
 
 mod ape;
+mod artists;
 mod id3;
 mod mp4;
 mod ogg;
@@ -10,10 +11,12 @@ mod riff;
 pub(super) use id3::cover as embedded_cover;
 
 use super::{CheckedReader, bytes, exact, pair, seek};
-use crate::matching::{lowercase, uppercase};
+use crate::matching::uppercase;
+use artists::{
+    artist_mode_fields, primary_artist, primary_artist_mode, split_artists, tag_separator,
+};
 use regex::Regex;
-use std::borrow::Cow;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::io::{BufReader, Cursor, Read, Seek, SeekFrom, Write};
 use std::sync::LazyLock;
 
@@ -73,21 +76,19 @@ pub fn rewrite_audio_tags(
         let sections = mp4::edit(&mut source, fields, cover, check)?;
         return write_sections(&mut source, output, sections, check);
     }
-    let (head, audio_start) = match format {
+    let section = match format {
         "flac" => flac_header(&mut source, fields, cover, None, check)?,
-        "mp3" => id3::header(&mut source, fields, cover, check)?,
+        "mp3" => {
+            let (data, end) = id3::header(&mut source, fields, cover, check)?;
+            Section {
+                start: 0,
+                end,
+                data,
+            }
+        }
         _ => return Err(format!("unsupported tag writer: {format}")),
     };
-    write_sections(
-        &mut source,
-        output,
-        vec![Section {
-            start: 0,
-            end: audio_start,
-            data: head,
-        }],
-        check,
-    )
+    write_sections(&mut source, output, vec![section], check)
 }
 
 /// Edit FLAC tags, leaving output untouched when the complete metadata header
@@ -109,18 +110,18 @@ pub fn rewrite_flac_tags_if_changed(
         check,
     };
     seek(&mut source, SeekFrom::Start(0))?;
-    let (data, end) = flac_header(
+    let section = flac_header(
         &mut source,
         fields,
         cover.filter(|bytes| !bytes.is_empty()),
         None,
         check,
     )?;
-    if data.len() as u64 == end {
-        seek(&mut source, SeekFrom::Start(0))?;
+    if section.data.len() as u64 == section.end - section.start {
+        seek(&mut source, SeekFrom::Start(section.start))?;
         let mut buffer = [0; 65536];
         let mut unchanged = true;
-        for expected in data.chunks(buffer.len()) {
+        for expected in section.data.chunks(buffer.len()) {
             exact(&mut source, &mut buffer[..expected.len()])?;
             if buffer[..expected.len()] != *expected {
                 unchanged = false;
@@ -132,16 +133,7 @@ pub fn rewrite_flac_tags_if_changed(
             return Ok(false);
         }
     }
-    write_sections(
-        &mut source,
-        output,
-        vec![Section {
-            start: 0,
-            end,
-            data,
-        }],
-        check,
-    )?;
+    write_sections(&mut source, output, vec![section], check)?;
     Ok(true)
 }
 
@@ -162,23 +154,14 @@ pub fn embed_flac_metadata(
         check,
     });
     seek(&mut source, SeekFrom::Start(0))?;
-    let (data, end) = flac_header(
+    let section = flac_header(
         &mut source,
         fields,
         cover.filter(|data| !data.is_empty()),
         Some(artist_tag_mode),
         check,
     )?;
-    write_sections(
-        &mut source,
-        output,
-        vec![Section {
-            start: 0,
-            end,
-            data,
-        }],
-        check,
-    )
+    write_sections(&mut source, output, vec![section], check)
 }
 
 fn validate_fields(fields: &Fields) -> Result<(), String> {
@@ -324,10 +307,8 @@ fn flac_header(
     cover: Option<&[u8]>,
     embed_mode: Option<&str>,
     check: &dyn Fn() -> Result<(), String>,
-) -> Result<(Vec<u8>, u64), String> {
-    if bytes(source, 4)? != b"fLaC" {
-        return Err("fLaC head incorrect".into());
-    }
+) -> Result<Section, String> {
+    let start = super::containers::flac_start(source)?;
     let mut blocks = Vec::new();
     let mut total = 0;
     loop {
@@ -364,18 +345,23 @@ fn flac_header(
     let (vendor, mut comments) = if let Some(index) = index {
         parse_comments(&blocks[index].1)?
     } else {
-        (b"SpotiFLAC".to_vec(), Vec::new())
+        (b"Mosix".to_vec(), Vec::new())
     };
     if let Some(mode) = embed_mode {
         for (key, value) in fields.iter().filter(|(_, value)| !value.is_empty()) {
+            if key.ends_with("_separator") {
+                continue;
+            }
+            let separator = tag_separator(fields, key);
             if matches!(key.as_str(), "ARTIST" | "ALBUMARTIST") {
-                let values = if mode.trim().eq_ignore_ascii_case("split_vorbis") {
-                    split_artists(value)
-                } else if primary_artist_mode(mode) {
-                    vec![primary_artist(value)]
-                } else {
-                    vec![value.clone()]
-                };
+                let values =
+                    if mode.trim().eq_ignore_ascii_case("split_vorbis") && separator.is_empty() {
+                        split_artists(value)
+                    } else if primary_artist_mode(mode) {
+                        vec![primary_artist(value)]
+                    } else {
+                        vec![super::format_metadata_tag_value(value, separator)]
+                    };
                 if !values.is_empty() {
                     set_comment(&mut comments, key, "");
                     for value in values.iter().filter(|value| !value.trim().is_empty()) {
@@ -383,7 +369,11 @@ fn flac_header(
                     }
                 }
             } else {
-                set_comment(&mut comments, key, value);
+                set_comment(
+                    &mut comments,
+                    key,
+                    &super::format_metadata_tag_value(value, separator),
+                );
             }
         }
     } else {
@@ -419,7 +409,11 @@ fn flac_header(
         head.extend(&(data.len() as u32).to_be_bytes()[1..]);
         head.extend(data);
     }
-    Ok((head, audio_start))
+    Ok(Section {
+        start,
+        end: audio_start,
+        data: head,
+    })
 }
 
 fn discard_bytes(
@@ -538,6 +532,7 @@ fn edit_comments(comments: &mut Vec<Vec<u8>>, fields: &Fields) {
             let values = if fields
                 .get("artist_tag_mode")
                 .is_some_and(|mode| mode.trim().eq_ignore_ascii_case("split_vorbis"))
+                && tag_separator(fields, field).is_empty()
             {
                 split_artists(value)
             } else {
@@ -649,72 +644,6 @@ fn metadata_fields(metadata: &super::AudioMetadata, fields: &Fields) -> Fields {
     result
 }
 
-fn primary_artist_mode(mode: &str) -> bool {
-    mode.trim().eq_ignore_ascii_case("primary")
-}
-
-/// The first credited artist, or the trimmed value when nothing separates it.
-/// Dart and Kotlin share this exact separator set so every writer agrees;
-/// Vorbis split mode also recognizes these featured-credit variants.
-fn primary_artist(value: &str) -> String {
-    static SEPARATOR: LazyLock<Regex> = LazyLock::new(|| {
-        Regex::new(r"(?i)\s*[,;&]\s*|\s+x\s+|\s+(?:feat(?:uring|ured|ure)?|ft|with)\.?(?:\s+|$)")
-            .unwrap()
-    });
-    let value = value.trim();
-    SEPARATOR
-        .split(value)
-        .map(str::trim)
-        .find(|part| !part.is_empty())
-        .unwrap_or(value)
-        .to_owned()
-}
-
-/// Applies the "primary" artist tag mode to editor fields before any format
-/// writer runs, so ID3, MP4, APE, RIFF and Vorbis all store the same name.
-fn artist_mode_fields(fields: &Fields) -> Cow<'_, Fields> {
-    if !fields
-        .get("artist_tag_mode")
-        .is_some_and(|mode| primary_artist_mode(mode))
-    {
-        return Cow::Borrowed(fields);
-    }
-    let mut fields = fields.clone();
-    for key in ["artist", "album_artist"] {
-        if let Some(value) = fields.get_mut(key)
-            && !value.trim().is_empty()
-        {
-            *value = primary_artist(value);
-        }
-    }
-    Cow::Owned(fields)
-}
-
-fn split_artists(value: &str) -> Vec<String> {
-    static SPLIT: LazyLock<Regex> = LazyLock::new(|| {
-        Regex::new(
-            r"(?i)\s*(?:,|;|&|\bx\b)\s*|\s+\b(?:feat(?:uring|ured|ure)?|ft|with)\.?(?:\s+|$)",
-        )
-        .unwrap()
-    });
-    let value = value.trim();
-    if value.is_empty() {
-        return Vec::new();
-    }
-    let mut seen = BTreeSet::new();
-    let mut result: Vec<String> = SPLIT
-        .split(value)
-        .map(str::trim)
-        .filter(|part| !part.is_empty())
-        .filter(|part| seen.insert(lowercase(part)))
-        .map(str::to_owned)
-        .collect();
-    if result.is_empty() {
-        result.push(value.into());
-    }
-    result
-}
-
 fn cover_mime(data: &[u8]) -> &'static str {
     if data.starts_with(b"\x89PNG\r\n\x1a\n") {
         "image/png"
@@ -807,393 +736,4 @@ fn picture(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use std::cell::Cell;
-    use std::io;
-    use std::rc::Rc;
-
-    struct CountingReader {
-        data: Cursor<Vec<u8>>,
-        bytes_read: Rc<Cell<usize>>,
-    }
-
-    impl Read for CountingReader {
-        fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
-            let count = self.data.read(buffer)?;
-            self.bytes_read.set(self.bytes_read.get() + count);
-            Ok(count)
-        }
-    }
-
-    impl Seek for CountingReader {
-        fn seek(&mut self, offset: SeekFrom) -> io::Result<u64> {
-            self.data.seek(offset)
-        }
-    }
-
-    /// Shared with the Dart and Kotlin primary-artist tests; keep in sync.
-    #[test]
-    fn split_artist_credits_recognize_variants_without_splitting_band_words() {
-        assert_eq!(
-            split_artists("One Featured Two; Three"),
-            vec!["One", "Two", "Three"]
-        );
-        assert_eq!(split_artists("One feature Two"), vec!["One", "Two"]);
-        assert_eq!(
-            split_artists("Florence and the Machine"),
-            vec!["Florence and the Machine"]
-        );
-        assert_eq!(
-            split_artists("Artist Without Fear"),
-            vec!["Artist Without Fear"]
-        );
-    }
-
-    #[test]
-    fn primary_artist_uses_the_shared_separator_set() {
-        for (input, expected) in [
-            ("Calle 24, Chino Pacas", "Calle 24"),
-            ("Calle 24 & Chino Pacas", "Calle 24"),
-            ("Artist A; Artist B", "Artist A"),
-            ("Artist A feat. Artist B", "Artist A"),
-            ("Artist A Feat Artist B", "Artist A"),
-            ("Artist A ft. Artist B", "Artist A"),
-            ("Artist A featuring Artist B", "Artist A"),
-            ("Artist A featured Artist B", "Artist A"),
-            ("Artist A feature Artist B", "Artist A"),
-            ("Artist A with Artist B", "Artist A"),
-            ("Artist A x Artist B", "Artist A"),
-            ("Artist A X Artist B", "Artist A"),
-            (" , Artist A, Artist B", "Artist A"),
-            ("Malcolm X", "Malcolm X"),
-            ("Artist Without Fear", "Artist Without Fear"),
-            ("Maxx", "Maxx"),
-            ("AC/DC", "AC/DC"),
-            ("  Various Artists  ", "Various Artists"),
-            ("", ""),
-        ] {
-            assert_eq!(primary_artist(input), expected, "{input:?}");
-        }
-    }
-
-    fn editable_flac() -> (Vec<u8>, usize, Fields) {
-        let mut comments = Vec::new();
-        put_string(&mut comments, b"SpotiFLAC");
-        comments.extend(2_u32.to_le_bytes());
-        put_string(&mut comments, b"CUSTOM=preserve");
-        put_string(&mut comments, b"TITLE=Example");
-        let blocks = [
-            (0, vec![0; 34]),
-            (1, vec![0; 16]),
-            (4, comments),
-            (6, picture(b"original cover", &|| Ok(())).unwrap().unwrap()),
-        ];
-        let mut input = b"fLaC".to_vec();
-        for (index, (kind, data)) in blocks.iter().enumerate() {
-            input.push(kind | if index + 1 == blocks.len() { 0x80 } else { 0 });
-            input.extend(&(data.len() as u32).to_be_bytes()[1..]);
-            input.extend(data);
-        }
-        let audio_start = input.len();
-        input.extend([0xff, 0xf8]);
-        input.resize(audio_start + 1024 * 1024, 0x55);
-        let fields = Fields::from([("title".into(), "Example".into())]);
-        (input, audio_start, fields)
-    }
-
-    #[test]
-    fn unchanged_flac_tags_do_not_copy_audio_or_write_output() {
-        for cover in [None, Some(b"original cover".as_slice())] {
-            let (input, audio_start, fields) = editable_flac();
-            let bytes_read = Rc::new(Cell::new(0));
-            let mut source = CountingReader {
-                data: Cursor::new(input),
-                bytes_read: bytes_read.clone(),
-            };
-            let mut output = Vec::new();
-            assert!(
-                !rewrite_flac_tags_if_changed(
-                    &mut source,
-                    &mut output,
-                    &fields,
-                    cover,
-                    &|| Ok(()),
-                )
-                .unwrap()
-            );
-            assert!(output.is_empty());
-            // One header parse, two frame-sync bytes, one exact comparison.
-            assert_eq!(bytes_read.get(), audio_start * 2 + 2);
-        }
-    }
-
-    #[test]
-    fn changed_flac_tags_match_full_rewrite_and_preserve_audio() {
-        let (input, audio_start, _) = editable_flac();
-        for (title, cover) in [
-            ("Changed", None), // Equal-length header with different bytes.
-            ("A longer title", None),
-            ("Example", Some(b"different artwork".as_slice())),
-        ] {
-            let fields = Fields::from([("title".into(), title.into())]);
-            let mut expected = Vec::new();
-            rewrite_audio_tags(
-                &mut Cursor::new(&input),
-                &mut expected,
-                "flac",
-                &fields,
-                cover,
-                &|| Ok(()),
-            )
-            .unwrap();
-            let mut output = Vec::new();
-            assert!(
-                rewrite_flac_tags_if_changed(
-                    &mut Cursor::new(&input),
-                    &mut output,
-                    &fields,
-                    cover,
-                    &|| Ok(()),
-                )
-                .unwrap()
-            );
-            assert_eq!(output, expected);
-            assert!(output.ends_with(&input[audio_start..]));
-        }
-    }
-
-    #[test]
-    fn unchanged_flac_still_validates_frames_and_observes_cancellation() {
-        let (input, audio_start, fields) = editable_flac();
-        let bytes_read = Rc::new(Cell::new(0));
-        let mut source = CountingReader {
-            data: Cursor::new(input.clone()),
-            bytes_read: bytes_read.clone(),
-        };
-        let mut output = Vec::new();
-        let error = rewrite_flac_tags_if_changed(&mut source, &mut output, &fields, None, &|| {
-            if bytes_read.get() >= audio_start + 2 {
-                Err("cancelled".into())
-            } else {
-                Ok(())
-            }
-        })
-        .unwrap_err();
-        assert_eq!(error, "cancelled");
-        assert!(output.is_empty());
-
-        let mut invalid = input;
-        invalid[audio_start] = 0;
-        assert!(
-            rewrite_flac_tags_if_changed(
-                &mut Cursor::new(invalid),
-                &mut output,
-                &fields,
-                None,
-                &|| Ok(()),
-            )
-            .unwrap_err()
-            .contains("sync code")
-        );
-        assert!(output.is_empty());
-    }
-
-    fn flac_with_pictures(lengths: &[usize]) -> (Vec<u8>, usize) {
-        let mut comments = Vec::new();
-        put_string(&mut comments, b"Example vendor");
-        comments.extend(1_u32.to_le_bytes());
-        put_string(&mut comments, b"CUSTOM=preserve");
-        let mut blocks = vec![
-            (0, vec![0; 34]),
-            (2, b"unknown block".to_vec()),
-            (4, comments),
-        ];
-        blocks.extend(lengths.iter().map(|length| (6, vec![0x55; *length])));
-        let mut input = b"fLaC".to_vec();
-        for (index, (kind, data)) in blocks.iter().enumerate() {
-            input.push(kind | if index + 1 == blocks.len() { 0x80 } else { 0 });
-            input.extend(&(data.len() as u32).to_be_bytes()[1..]);
-            input.extend(data);
-        }
-        let audio_start = input.len();
-        input.extend([0xff, 0xf8, 0x12, 0x34, 0x56]);
-        (input, audio_start)
-    }
-
-    #[test]
-    fn replacement_flac_artwork_preserves_other_blocks_and_audio() {
-        let (input, audio_start) = flac_with_pictures(&[131_073, 262_145]);
-        let (without_pictures, _) = flac_with_pictures(&[]);
-        let cover = Some(b"replacement artwork".as_slice());
-        for embed in [false, true] {
-            let fields = Fields::from([(
-                if embed { "TITLE" } else { "title" }.into(),
-                "Changed title".into(),
-            )]);
-            let rewrite = |data: &[u8], cover| {
-                let mut output = Vec::new();
-                if embed {
-                    embed_flac_metadata(
-                        &mut Cursor::new(data),
-                        &mut output,
-                        &fields,
-                        "",
-                        cover,
-                        &|| Ok(()),
-                    )
-                    .unwrap();
-                } else {
-                    rewrite_audio_tags(
-                        &mut Cursor::new(data),
-                        &mut output,
-                        "flac",
-                        &fields,
-                        cover,
-                        &|| Ok(()),
-                    )
-                    .unwrap();
-                }
-                output
-            };
-            let output = rewrite(&input, cover);
-            assert_eq!(output, rewrite(&without_pictures, cover));
-            assert!(output.ends_with(&input[audio_start..]));
-            let retained = rewrite(&input, None);
-            assert!(
-                retained
-                    .windows(131_073)
-                    .any(|bytes| bytes == [0x55; 131_073])
-            );
-            assert!(retained.ends_with(&input[audio_start..]));
-        }
-    }
-
-    #[test]
-    fn discarded_flac_picture_preserves_eof_and_cancellation() {
-        let (input, audio_start) = flac_with_pictures(&[131_073]);
-        let picture_start = audio_start - 131_073;
-        let fields = Fields::new();
-        for available in [0, 1, 65536, 65537, 131_072] {
-            let truncated = &input[..picture_start + available];
-            let mut expected = Vec::new();
-            let error = rewrite_audio_tags(
-                &mut Cursor::new(truncated),
-                &mut expected,
-                "flac",
-                &fields,
-                None,
-                &|| Ok(()),
-            )
-            .unwrap_err();
-            let mut output = Vec::new();
-            assert_eq!(
-                rewrite_audio_tags(
-                    &mut Cursor::new(truncated),
-                    &mut output,
-                    "flac",
-                    &fields,
-                    Some(b"replacement artwork"),
-                    &|| Ok(()),
-                )
-                .unwrap_err(),
-                error
-            );
-            assert!(output.is_empty());
-        }
-        let bytes_read = Rc::new(Cell::new(0));
-        let mut source = CountingReader {
-            data: Cursor::new(input),
-            bytes_read: bytes_read.clone(),
-        };
-        let mut output = Vec::new();
-        assert_eq!(
-            rewrite_flac_tags_if_changed(
-                &mut source,
-                &mut output,
-                &fields,
-                Some(b"replacement artwork"),
-                &|| {
-                    if bytes_read.get() >= picture_start + 65536 {
-                        Err("cancelled".into())
-                    } else {
-                        Ok(())
-                    }
-                },
-            )
-            .unwrap_err(),
-            "cancelled"
-        );
-        assert!(bytes_read.get() < audio_start);
-        assert!(output.is_empty());
-    }
-
-    #[test]
-    fn discarded_flac_pictures_still_count_toward_metadata_limit() {
-        let (input, _) = flac_with_pictures(&vec![0; 65534]);
-        let mut output = Vec::new();
-        assert_eq!(
-            rewrite_audio_tags(
-                &mut Cursor::new(input),
-                &mut output,
-                "flac",
-                &Fields::new(),
-                Some(b"replacement artwork"),
-                &|| Ok(()),
-            )
-            .unwrap_err(),
-            "FLAC metadata block count exceeds 65536"
-        );
-        assert!(output.is_empty());
-    }
-
-    #[test]
-    fn oversized_flac_cover_reencodes_or_omits_invalid_image() {
-        let image = image::DynamicImage::ImageRgba8(image::RgbaImage::from_pixel(
-            3,
-            2,
-            image::Rgba([30, 60, 90, 255]),
-        ));
-        let mut encoded = Cursor::new(Vec::new());
-        image
-            .write_to(&mut encoded, image::ImageFormat::Png)
-            .unwrap();
-        let mut cover = encoded.into_inner();
-        // Valid PNG with trailing data forces the same size fallback as a
-        // large artwork file without an expensive image-generation fixture.
-        cover.resize(16_000_001, 0);
-        let block = picture(&cover, &|| Ok(())).unwrap().unwrap();
-        let mut reader = Cursor::new(block);
-        let mut number = || {
-            let mut value = [0; 4];
-            reader.read_exact(&mut value).unwrap();
-            u32::from_be_bytes(value)
-        };
-        assert_eq!(number(), 3);
-        assert_eq!(number(), 10);
-        assert_eq!(bytes(&mut reader, 10).unwrap(), b"image/jpeg");
-        assert_eq!(bytes(&mut reader, 4).unwrap(), 11_u32.to_be_bytes());
-        assert_eq!(bytes(&mut reader, 11).unwrap(), b"Front Cover");
-        assert_eq!(bytes(&mut reader, 4).unwrap(), 3_u32.to_be_bytes());
-        assert_eq!(bytes(&mut reader, 4).unwrap(), 2_u32.to_be_bytes());
-        assert_eq!(bytes(&mut reader, 4).unwrap(), 24_u32.to_be_bytes());
-        assert_eq!(bytes(&mut reader, 4).unwrap(), [0; 4]);
-        let length = u32::from_be_bytes(bytes(&mut reader, 4).unwrap().try_into().unwrap());
-        assert!(length < 16_000_000);
-        let jpeg = bytes(&mut reader, length as usize).unwrap();
-        assert_eq!(
-            image::ImageReader::new(Cursor::new(jpeg))
-                .with_guessed_format()
-                .unwrap()
-                .into_dimensions()
-                .unwrap(),
-            (3, 2)
-        );
-        cover.fill(0);
-        assert!(picture(&cover, &|| Ok(())).unwrap().is_none());
-        assert_eq!(
-            picture(b"small cover", &|| Err("cancelled".into())).unwrap_err(),
-            "cancelled"
-        );
-    }
-}
+mod tests;

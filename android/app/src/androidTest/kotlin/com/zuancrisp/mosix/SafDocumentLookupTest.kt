@@ -19,7 +19,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SafDocumentLookupTest {
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
-    private val authority = "com.spotiflac.test.documents.lookup"
+    private val authority = "com.mornye.test.documents.lookup"
     private val controlUri = Uri.parse("content://$authority.control")
     private val treeUri = DocumentsContract.buildTreeDocumentUri(authority, "root")
 
@@ -101,6 +101,51 @@ class SafDocumentLookupTest {
         assertEquals(child.uri, findSafChild(context, directory, "Renamed.flac")?.uri)
         assertNull(findSafChild(context, parent, "Renamed.flac"))
         assertNotNull(directory.createDirectory("Created"))
+    }
+
+    @Test
+    fun lyricsRefreshReplacesSidecarBesideOpaqueRootAndNestedDocuments() {
+        val root = reset()
+        val nested = requireNotNull(findSafChild(context, root, "音楽 🎵"))
+        for ((parent, name) in listOf(root to "Song.flac", nested to "歌 🎵.flac")) {
+            val audio = requireNotNull(findSafChild(context, parent, name))
+            val sidecarName = name.substringBeforeLast('.') + ".lrc"
+            val sidecar = requireNotNull(parent.createFile("text/plain", sidecarName))
+            context.contentResolver.openOutputStream(sidecar.uri, "wt")!!.use {
+                it.write("[00:01.00]Old lyrics that must be replaced completely".toByteArray())
+            }
+            context.contentResolver.openOutputStream(audio.uri, "wt")!!.use {
+                it.write("unchanged audio".toByteArray())
+            }
+            val original = context.contentResolver.openInputStream(audio.uri)?.use { it.readBytes() }
+            val replacement = "[00:01.00]<00:01.00>New <00:01.50>words<00:02.00>"
+            assertEquals(parent.uri, context.safParentDir(audio.uri)?.uri)
+            assertTrue(context.writeSafSidecarLrc(audio.uri, replacement))
+            val saved = requireNotNull(findSafChild(context, parent, sidecarName))
+            assertEquals(sidecar.uri, saved.uri)
+            assertEquals(replacement, context.contentResolver.openInputStream(saved.uri)?.bufferedReader()?.use { it.readText() })
+            assertArrayEquals(original, context.contentResolver.openInputStream(audio.uri)?.use { it.readBytes() })
+            if (parent == nested) assertNull(findSafChild(context, root, sidecarName))
+        }
+        assertNull(context.safParentDir(root.uri))
+    }
+
+    @Test
+    fun unavailableParentDoesNotWriteLyricsToTheGrantedRoot() {
+        val root = reset(mode = "no-path")
+        val nested = requireNotNull(findSafChild(context, root, "音楽 🎵"))
+        val audio = requireNotNull(findSafChild(context, nested, "歌 🎵.flac"))
+        assertTrue(!context.writeSafSidecarLrc(audio.uri, "[00:01.00]New lyrics"))
+        assertNull(findSafChild(context, root, "歌 🎵.lrc"))
+        assertNull(findSafChild(context, nested, "歌 🎵.lrc"))
+
+        // Providers without findDocumentPath can still use verified path IDs.
+        val legacy = requireNotNull(findSafChild(context, root, "Legacy"))
+        val legacyAudio = requireNotNull(findSafChild(context, legacy, "Legacy.flac"))
+        assertEquals(legacy.uri, context.safParentDir(legacyAudio.uri)?.uri)
+        assertTrue(context.writeSafSidecarLrc(legacyAudio.uri, "[00:01.00]New lyrics"))
+        assertNotNull(findSafChild(context, legacy, "Legacy.lrc"))
+        assertNull(findSafChild(context, root, "Legacy.lrc"))
     }
 
     @Test

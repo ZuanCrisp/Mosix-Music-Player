@@ -3,10 +3,13 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
-import 'package:mosix/services/sqlite_native_snapshot.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/services/library_cleanup.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/library_schema.dart';
+import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
+import 'package:mornye/services/sqlite_native_snapshot.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/utils/native_platform_name.dart';
 
 typedef NativeLibraryJobRunner =
     Future<Map<String, dynamic>> Function(
@@ -26,7 +29,7 @@ class LibraryNativeAdapter {
     this.temporaryDirectory,
     String? platform,
   }) : _run = nativeJobRunner ?? PlatformBridge.runNativeDataJob,
-       _platform = platform ?? (Platform.isAndroid ? 'android' : 'ios');
+       _platform = platform ?? nativePlatformName();
 
   final Database database;
   final Directory? temporaryDirectory;
@@ -136,7 +139,7 @@ class LibraryNativeAdapter {
       database,
       p.join(directory.path, 'local_library.db'),
       tables: ['library', 'library_path_keys', 'library_sources'],
-      version: 17,
+      version: LibrarySchema.version,
       copyRows: false,
     );
     _check(isCancelled);
@@ -178,6 +181,7 @@ class LibraryNativeAdapter {
     },
     incremental: false,
     preserveMissing: scan.errorCount > 0,
+    preserveMissingPaths: scan.preserveMissingPaths,
     requestId: requestId,
     isCancelled: isCancelled,
   );
@@ -208,6 +212,7 @@ class LibraryNativeAdapter {
     Map<String, dynamic> operation, {
     required bool incremental,
     required bool preserveMissing,
+    List<String>? preserveMissingPaths,
     required String requestId,
     required bool Function() isCancelled,
   }) async {
@@ -224,6 +229,22 @@ class LibraryNativeAdapter {
       if (result['committed'] != true) {
         throw StateError('Native Library staging did not complete');
       }
+      // Rows the native staging could not encode are skipped, not fatal. Log
+      // them and keep their previous entries, as for a platform read error.
+      final invalidRows = (result['invalid_rows'] as num?)?.toInt() ?? 0;
+      final invalidPaths =
+          (result['invalid_row_paths'] as List<dynamic>?)
+              ?.whereType<String>()
+              .toList() ??
+          const <String>[];
+      if (invalidRows > 0) {
+        _log.e(
+          'Skipped $invalidRows invalid scan row(s) for $sourceId: '
+          '${result['invalid_row_error']}',
+        );
+      }
+      final protectedPaths =
+          preserveMissingPaths ?? (preserveMissing ? null : const <String>[]);
       // Native committed:true only describes the private artifact. Cancellation
       // still prevents publication until the owner's transaction commits.
       _check(isCancelled);
@@ -233,7 +254,10 @@ class LibraryNativeAdapter {
         p.join(directory.path, 'local_library.db'),
         result,
         incremental: incremental,
-        preserveMissing: preserveMissing,
+        preserveMissing: preserveMissing || invalidPaths.isNotEmpty,
+        preserveMissingPaths: protectedPaths == null
+            ? null
+            : [...protectedPaths, ...invalidPaths],
         isCancelled: isCancelled,
       );
     } on NativeSqliteSnapshotDetachException catch (error) {
@@ -251,6 +275,7 @@ class LibraryNativeAdapter {
     Map<String, dynamic> nativeResult, {
     required bool incremental,
     required bool preserveMissing,
+    List<String>? preserveMissingPaths,
     required bool Function() isCancelled,
   }) => _attached(privatePath, (alias) async {
     return sqlite.transactionWithBusyRetry(database, (txn) async {
@@ -309,13 +334,13 @@ class LibraryNativeAdapter {
           [sourceId],
         );
       } else {
-        await deleteWhere(
-          preserveMissing
-              ? 'source_id = ? AND (id IN(SELECT id FROM $alias.library) '
-                    'OR file_path IN(SELECT file_path FROM $alias.library))'
-              : 'source_id = ?',
-          [sourceId],
+        final predicate = libraryScanReplacementPredicate(
+          sourceId,
+          stageTable: '$alias.library',
+          preserveMissing: preserveMissing,
+          preserveMissingPaths: preserveMissingPaths,
         );
+        await deleteWhere(predicate.where, predicate.args);
       }
       _check(isCancelled);
       await txn.rawDelete(
@@ -391,7 +416,9 @@ class LibraryNativeAdapter {
             'CREATE INDEX $alias.native_library_snapshot_id '
             'ON library(source_id, id)',
           );
-          await txn.execute('PRAGMA $alias.user_version = 17');
+          await txn.execute(
+            'PRAGMA $alias.user_version = ${LibrarySchema.version}',
+          );
         });
       });
       _check(isCancelled);

@@ -5,8 +5,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 
-// Album ReplayGain accumulation and journal persistence for the native worker.
-
 internal fun DownloadService.writeNativeAlbumReplayGainIfComplete(): Boolean {
     val entries = synchronized(nativeReplayGainEntries) {
         nativeReplayGainEntries.map { JSONObject(it.toString()) }

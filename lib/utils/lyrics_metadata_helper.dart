@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/utils/string_utils.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/string_utils.dart';
 
 final RegExp _lrcDisplayTimestampPattern = RegExp(
   r'^\[\d{1,3}:\d{1,2}(?:[.:]\d{1,3})?\]',
@@ -105,27 +105,22 @@ String _sidecarLrcPath(String path) {
 /// This handles the filesystem case only. SAF (`content://`) files are written
 /// centrally by the Kotlin `reEnrichFile` handler, which still holds the
 /// original document URI, so callers should skip those here (they are detected
-/// and ignored). Best-effort: returns true only when a sidecar was actually
-/// written, and never throws.
+/// and ignored). A requested write must succeed before re-enrich reports
+/// completion; failures propagate to the single-track or batch result.
 Future<bool> writeReEnrichSidecarLrc({
   required String audioFilePath,
   required Map<String, dynamic> reEnrichResult,
 }) async {
   if (reEnrichResult['write_external_lrc'] != true) return false;
 
-  // SAF documents are handled natively in Kotlin; nothing to do from Dart.
   if (isContentUri(audioFilePath)) return false;
 
   final lrc = (reEnrichResult['lyrics'] as String?)?.trim() ?? '';
-  if (lrc.isEmpty) return false;
+  if (lrc.isEmpty) throw StateError('The updated LRC lyrics are empty');
 
-  try {
-    final lrcPath = _sidecarLrcPath(audioFilePath);
-    await File(lrcPath).writeAsString(lrc);
-    return true;
-  } catch (_) {
-    return false;
-  }
+  final lrcPath = _sidecarLrcPath(audioFilePath);
+  await File(lrcPath).writeAsString(lrc);
+  return true;
 }
 
 /// Writes a SAF ".lrc" sidecar after a FFmpeg re-enrich write-back succeeds.
@@ -138,16 +133,17 @@ Future<bool> writeReEnrichSafSidecarLrc({
   required Map<String, dynamic> reEnrichResult,
 }) async {
   if (reEnrichResult['write_external_lrc'] != true) return false;
-  if (!isContentUri(safUri)) return false;
+  if (!isContentUri(safUri)) throw ArgumentError.value(safUri, 'safUri');
 
   final lrc = (reEnrichResult['lyrics'] as String?)?.trim() ?? '';
-  if (lrc.isEmpty) return false;
+  if (lrc.isEmpty) throw StateError('The updated LRC lyrics are empty');
 
-  try {
-    return await PlatformBridge.writeSafSidecarLrc(safUri, lrc);
-  } catch (_) {
-    return false;
+  if (!await PlatformBridge.writeSafSidecarLrc(safUri, lrc)) {
+    throw StateError(
+      'Metadata was saved, but the LRC lyrics file could not be updated',
+    );
   }
+  return true;
 }
 
 Future<void> ensureLyricsMetadataForConversion({

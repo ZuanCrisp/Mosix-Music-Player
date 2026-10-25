@@ -3,17 +3,13 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
 
-class _Settings extends SettingsNotifier {
-  @override
-  AppSettings build() => const AppSettings();
-}
+import 'support/fixed_settings.dart';
 
 class _Queue extends DownloadQueueNotifier {
   @override
@@ -75,7 +71,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         downloadQueueProvider.overrideWith(() => queue),
-        settingsProvider.overrideWith(_Settings.new),
+        settingsProvider.overrideWith(FixedSettingsNotifier.new),
         extensionProvider.overrideWith(() => extensions),
       ],
     );
@@ -120,7 +116,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           downloadQueueProvider.overrideWith(() => queue),
-          settingsProvider.overrideWith(_Settings.new),
+          settingsProvider.overrideWith(FixedSettingsNotifier.new),
           extensionProvider.overrideWith(() => extensions),
         ],
       );

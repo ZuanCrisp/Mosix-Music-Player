@@ -4,10 +4,8 @@ mod archive;
 mod collections;
 mod legacy;
 
-use crate::native_library::dart_date;
-use crate::native_library::path_keys::{
-    build, dart_lower, dart_trim, dart_upper, regex_whitespace,
-};
+use crate::native_library::path_keys::{build, dart_trim, dart_upper, regex_whitespace};
+use crate::native_library::{dart_date, normalized};
 use rusqlite::{Connection, OpenFlags, TransactionBehavior, params, params_from_iter};
 use serde_json::{Map, Value, json};
 use std::{
@@ -139,9 +137,6 @@ fn number(value: &Value) -> Option<i64> {
     value
         .as_i64()
         .or_else(|| value.as_f64().filter(|v| v.is_finite()).map(|v| v as i64))
-}
-fn normalized(value: &str) -> String {
-    dart_lower(dart_trim(value))
 }
 fn date(value: &str) -> Option<(String, i64)> {
     let parsed = dart_date::parse(value)?;

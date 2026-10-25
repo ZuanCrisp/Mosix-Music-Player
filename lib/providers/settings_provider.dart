@@ -1,23 +1,30 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/automix_options.dart';
-import 'package:mosix/constants/app_info.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/secure_storage_options.dart';
-import 'package:mosix/utils/artist_utils.dart';
-import 'package:mosix/utils/audio_format_utils.dart';
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/metadata_separators.dart';
+import 'package:mornye/models/automix_options.dart';
+import 'package:mornye/constants/app_info.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/folder_path_template.dart';
+import 'package:mornye/services/secure_storage_options.dart';
+import 'package:mornye/utils/artist_utils.dart';
+import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/logger.dart';
 
 const _settingsKey = 'app_settings';
 const _settingsCorruptBackupKey = 'app_settings_corrupt_backup';
 const _migrationVersionKey = 'settings_migration_version';
-const _currentMigrationVersion = 11;
+const _currentMigrationVersion = 15;
+
+/// Marked the removed rebrand tour as seen.
+const _retiredUpgradeIntroSeenKey = 'upgrade_intro_mornye_seen';
+const _legacyDefaultLyricsProviders = ['apple_music', 'lrclib'];
 const _spotifyClientSecretKey = 'spotify_client_secret';
 const _retiredBuiltInProviderIds = {'deezer', 'qobuz', 'tidal', 'youtube'};
 final _log = AppLogger('SettingsProvider');
@@ -109,6 +116,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
     'all',
     'albums',
     'singles',
+    'artists',
     'playlists',
   };
   static const Set<String> _extensionVerificationBrowserModeValues = {
@@ -127,6 +135,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
   Future<SharedPreferences> get _prefs => _loadPreferences();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
     aOptions: secureStorageAndroidOptions,
+    mOptions: secureStorageMacOsOptions,
   );
   Future<void>? _saveSettingsFuture;
   bool _saveQueued = false;
@@ -304,6 +313,42 @@ class SettingsNotifier extends Notifier<AppSettings> {
       if (!state.useExtensionProviders) {
         state = state.copyWith(useExtensionProviders: true);
       }
+      // Migration 12: Library badges return to bit depth ("24-bit") by
+      // default; the bitrate default was persisted for every existing user.
+      if (lastMigration < 12 &&
+          state.libraryQualityLabelMode ==
+              AppSettings.libraryQualityLabelBitrate) {
+        state = state.copyWith(
+          libraryQualityLabelMode: AppSettings.libraryQualityLabelBitDepthOnly,
+        );
+      }
+      // Migration 13: Zarz-LRC left Apple Music's Paxsenix
+      // fallback chain. Untouched defaults move to the new defaults; a custom
+      // order keeps the former fallback right after Apple Music.
+      if (lastMigration < 13) {
+        final providers = state.lyricsProviders;
+        if (listEquals(providers, _legacyDefaultLyricsProviders)) {
+          state = state.copyWith(
+            lyricsProviders: const AppSettings().lyricsProviders,
+          );
+        } else if (providers.contains('apple_music') &&
+            !providers.contains('mornye_lyrics')) {
+          state = state.copyWith(
+            lyricsProviders: [
+              for (final provider in providers) ...[
+                provider,
+                if (provider == 'apple_music') 'mornye_lyrics',
+              ],
+            ],
+          );
+        }
+      }
+      // Migration 14 persists the legacy lyrics provider alias normalized by
+      // AppSettings.fromJson without changing the user's provider order.
+      // Migration 15: the rebrand tour is gone, and so is its flag.
+      if (lastMigration < 15) {
+        await prefs.remove(_retiredUpgradeIntroSeenKey);
+      }
       await prefs.setInt(_migrationVersionKey, _currentMigrationVersion);
       await _saveSettings();
     }
@@ -433,7 +478,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
         AppSettings.libraryQualityLabelBitDepth,
       AppSettings.libraryQualityLabelBitDepthBitrate =>
         AppSettings.libraryQualityLabelBitDepthBitrate,
-      _ => AppSettings.libraryQualityLabelBitrate,
+      AppSettings.libraryQualityLabelBitrate =>
+        AppSettings.libraryQualityLabelBitrate,
+      _ => AppSettings.libraryQualityLabelBitDepthOnly,
     };
   }
 
@@ -583,6 +630,20 @@ class SettingsNotifier extends Notifier<AppSettings> {
     _saveSettings();
   }
 
+  void setPlaybackNormalizationPreamp(double db) {
+    state = state.copyWith(
+      playbackNormalizationPreamp: playbackNormalizationPreampFromJson(db),
+    );
+    _saveSettings();
+  }
+
+  void setPlaybackNormalizationMode(String mode) {
+    state = state.copyWith(
+      playbackNormalizationMode: playbackNormalizationModeFromJson(mode),
+    );
+    _saveSettings();
+  }
+
   void setPauseOnMute(bool enabled) {
     state = state.copyWith(pauseOnMute: enabled);
     _saveSettings();
@@ -648,6 +709,30 @@ class SettingsNotifier extends Notifier<AppSettings> {
     _saveSettings();
   }
 
+  void setMusicHaptics(bool enabled) {
+    state = state.copyWith(musicHaptics: enabled);
+    _saveSettings();
+  }
+
+  void setMusicHapticsSensitivity(double value) {
+    state = state.copyWith(
+      musicHapticsSensitivity: musicHapticsLevelFromJson(value),
+    );
+    _saveSettings();
+  }
+
+  void setMusicHapticsStrength(double value) {
+    state = state.copyWith(
+      musicHapticsStrength: musicHapticsLevelFromJson(value),
+    );
+    _saveSettings();
+  }
+
+  void setPlayerCoverStyle(String style) {
+    state = state.copyWith(playerCoverStyle: playerCoverStyleFromJson(style));
+    _saveSettings();
+  }
+
   void setUsbBitPerfect(bool enabled) {
     state = state.copyWith(usbBitPerfect: enabled);
     _saveSettings();
@@ -698,6 +783,17 @@ class SettingsNotifier extends Notifier<AppSettings> {
       state = state.copyWith(artistTagMode: mode);
       _saveSettings();
     }
+  }
+
+  void setMetadataSeparator(String field, String separator) {
+    if (!MetadataSeparators.fields.contains(field) ||
+        MetadataSeparators.validSeparator(separator) != separator) {
+      return;
+    }
+    state = state.copyWith(
+      metadataSeparators: state.metadataSeparators.withField(field, separator),
+    );
+    _saveSettings();
   }
 
   void setKeepScreenOnLyrics(bool enabled) {
@@ -808,6 +904,16 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   void setFolderOrganization(String organization) {
     state = state.copyWith(folderOrganization: organization);
+    _saveSettings();
+  }
+
+  void setFolderPathTemplate(String template) {
+    if (!FolderPathTemplate.isValid(template)) return;
+    state = state.copyWith(
+      folderPathTemplate: template.trim(),
+      folderOrganization: 'custom',
+      separateSingles: false,
+    );
     _saveSettings();
   }
 
@@ -1013,16 +1119,6 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   void setLocalLibraryEnabled(bool enabled) {
     state = state.copyWith(localLibraryEnabled: enabled);
-    _saveSettings();
-  }
-
-  void setLocalLibraryPath(String path) {
-    state = state.copyWith(localLibraryPath: path);
-    _saveSettings();
-  }
-
-  void setLocalLibraryBookmark(String bookmark) {
-    state = state.copyWith(localLibraryBookmark: bookmark);
     _saveSettings();
   }
 

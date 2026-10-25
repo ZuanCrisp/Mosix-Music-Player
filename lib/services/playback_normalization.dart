@@ -6,46 +6,68 @@ class PlaybackNormalizationCache {
   final Future<Map<String, dynamic>> Function(String, {String? displayName})
   readMetadata;
   final void Function(Object)? onReadError;
-  final Map<String, double> _volumes = {};
+  final Map<String, ({double? track, double? album})> _gains = {};
   int _generation = 0;
   static final _gainNumber = RegExp(r'-?\d+(\.\d+)?');
 
   PlaybackNormalizationCache({required this.readMetadata, this.onReadError});
 
   void invalidate(String source) {
-    _volumes.remove(source);
+    _gains.remove(source);
     _generation++;
   }
 
+  /// The player volume for [path]. [preampDb] shifts the -18 LUFS reference
+  /// the tags were written against, so -7 dB targets -25 LUFS. Volume never
+  /// exceeds 1.0: normalization only attenuates and cannot clip.
   Future<double> volumeFor(
+    String path, {
+    String? cacheKey,
+    String? displayName,
+    double preampDb = 0,
+    bool preferAlbumGain = false,
+  }) async {
+    final gains = await _gainsFor(
+      path,
+      cacheKey: cacheKey,
+      displayName: displayName,
+    );
+    final gain = gains == null
+        ? null
+        : preferAlbumGain
+        ? gains.album ?? gains.track
+        : gains.track ?? gains.album;
+    if (gain == null) return 1.0;
+    return pow(10.0, (gain + preampDb) / 20.0).toDouble().clamp(0.0, 1.0);
+  }
+
+  Future<({double? track, double? album})?> _gainsFor(
     String path, {
     String? cacheKey,
     String? displayName,
   }) async {
     final key = cacheKey ?? path;
-    final cached = _volumes[key];
+    final cached = _gains[key];
     if (cached != null) return cached;
     final generation = _generation;
     try {
       final metadata = await readMetadata(path, displayName: displayName);
       if (metadata['error'] != null) {
         onReadError?.call(metadata['error'] as Object);
-        return 1.0;
+        return null;
       }
-      final gain =
-          _gain(metadata['replaygain_track_gain']) ??
-          _gain(metadata['replaygain_album_gain']);
-      final volume = gain == null
-          ? 1.0
-          : pow(10.0, gain / 20.0).toDouble().clamp(0.0, 1.0);
+      final gains = (
+        track: _gain(metadata['replaygain_track_gain']),
+        album: _gain(metadata['replaygain_album_gain']),
+      );
       if (generation == _generation) {
-        if (_volumes.length >= 128) _volumes.remove(_volumes.keys.first);
-        _volumes[key] = volume;
+        if (_gains.length >= 128) _gains.remove(_gains.keys.first);
+        _gains[key] = gains;
       }
-      return volume;
+      return gains;
     } catch (error) {
       onReadError?.call(error);
-      return 1.0;
+      return null;
     }
   }
 

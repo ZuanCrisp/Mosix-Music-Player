@@ -1,10 +1,10 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/providers/player_artwork_video_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/widgets/motion_header_banner.dart';
-import 'package:mosix/widgets/player_artwork.dart';
+import 'package:mornye/providers/player_artwork_video_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/widgets/motion_header_banner.dart';
+import 'package:mornye/widgets/player_artwork.dart';
 import 'package:video_player/video_player.dart';
 
 class MornyePlayerArtwork extends ConsumerStatefulWidget {
@@ -34,17 +34,20 @@ class _MornyePlayerArtworkState extends ConsumerState<MornyePlayerArtwork> {
 
   @override
   Widget build(BuildContext context) {
-    final fallback = Align(
-      alignment: Alignment.topCenter,
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: PlayerArtwork(
-          artUri: widget.mediaItem.artUri?.toString(),
-          colorScheme: Theme.of(context).colorScheme,
-          cacheWidth: PlayerArtwork.transitionCacheWidth(context),
-        ),
-      ),
+    final cover = PlayerArtwork(
+      artUri: widget.mediaItem.artUri?.toString(),
+      colorScheme: Theme.of(context).colorScheme,
+      cacheWidth: PlayerArtwork.transitionCacheWidth(context),
     );
+    // Without a video, the still cover fills its box (a full-screen box is
+    // taller than wide and crops the sides). A video keeps the square cover
+    // at its top while it loads, since its own frame may be wider.
+    final fallback = widget.videoUrl == null
+        ? SizedBox.expand(child: cover)
+        : Align(
+            alignment: Alignment.topCenter,
+            child: AspectRatio(aspectRatio: 1, child: cover),
+          );
     if (MediaQuery.disableAnimationsOf(context) ||
         !ref.watch(settingsProvider.select((s) => s.motionArtworkEnabled))) {
       _displayedSource = null;

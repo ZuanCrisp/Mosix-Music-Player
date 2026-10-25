@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mosix/services/network_library_scanner.dart';
-import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/utils/lyrics_metadata_helper.dart';
+import 'package:mornye/services/network_library_scanner.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/utils/lyrics_metadata_helper.dart';
 
 import '../test/support/library_collections_benchmark.dart';
 import '../test/support/lyrics_usability_benchmark.dart';

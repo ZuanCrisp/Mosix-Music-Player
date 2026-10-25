@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/utils/playback_seek_preview.dart';
-import 'package:mosix/widgets/expressive_seek_track.dart';
-import 'package:mosix/widgets/mornye_player_slider.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/playback_seek_preview.dart';
+import 'package:mornye/widgets/expressive_seek_track.dart';
+import 'package:mornye/widgets/mornye_player_slider.dart';
 
 /// Previews scrubbing locally and seeks once when the gesture ends.
 class PlaybackSeekSlider extends StatefulWidget {
@@ -12,6 +12,14 @@ class PlaybackSeekSlider extends StatefulWidget {
   final PlaybackSeekPreview? preview;
   final bool playing;
 
+  /// Mornye only: a hairline track with no side inset, for the desktop
+  /// player capsule.
+  final bool hairline;
+
+  /// The track reaches both ends of the slider instead of leaving room for
+  /// the thumb, to line up with the artwork above it.
+  final bool edgeAligned;
+
   const PlaybackSeekSlider({
     super.key,
     required this.position,
@@ -19,6 +27,8 @@ class PlaybackSeekSlider extends StatefulWidget {
     required this.onSeek,
     this.preview,
     this.playing = false,
+    this.hairline = false,
+    this.edgeAligned = false,
   });
 
   @override
@@ -113,6 +123,11 @@ class _PlaybackSeekSliderState extends State<PlaybackSeekSlider> {
                   SliderTheme.of(context).inactiveTrackColor ?? Colors.white12,
               value: enabled ? currentMs : 0,
               max: maxMs,
+              trackHeight: widget.hairline ? 2 : 6,
+              height: widget.hairline ? 10 : 44,
+              inset: widget.hairline || widget.edgeAligned
+                  ? 0
+                  : MornyePlayerSlider.horizontalInset,
               onChangeStart: _start,
               onChanged: _preview,
               onChangeEnd: _commit,
@@ -135,6 +150,10 @@ class _PlaybackSeekSliderState extends State<PlaybackSeekSlider> {
               )
             : 0,
         max: maxMs,
+        // Keeps the default 48dp height around the 20dp thumb.
+        padding: widget.edgeAligned
+            ? const EdgeInsets.symmetric(vertical: 14)
+            : null,
         onChangeStart: enabled ? _start : null,
         onChanged: enabled ? _preview : null,
         onChangeEnd: enabled ? _commit : null,

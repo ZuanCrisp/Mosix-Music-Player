@@ -1,3 +1,5 @@
+//! MP4 and M4A tag editing: rewrites the metadata atoms and supports freeform atoms.
+
 pub(super) mod ac4;
 
 use super::{Fields, MAX_TAG_BYTES, Section, bytes, seek};

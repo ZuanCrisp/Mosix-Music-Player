@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
 
 class AppSettingsPage extends ConsumerWidget {
   const AppSettingsPage({super.key});
@@ -30,6 +33,7 @@ class AppSettingsPage extends ConsumerWidget {
             ),
             SliverToBoxAdapter(
               child: SettingsGroup(
+                connected: true,
                 children: [
                   SettingsSwitchItem(
                     icon: Icons.extension,
@@ -140,6 +144,7 @@ class AppSettingsPage extends ConsumerWidget {
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const NavBarSliverSpacer(),
           ],
         ),
       ),
@@ -217,6 +222,10 @@ class AppSettingsPage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
+    // The dialog sits on the root navigator, while this page may live in a
+    // tab or settings detail navigator: popping through the page context
+    // closed the page and left the blocking dialog up.
+    final dialogNavigator = Navigator.of(context, rootNavigator: true);
     showAppDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -226,7 +235,7 @@ class AppSettingsPage extends ConsumerWidget {
             if (context.isMornye)
               const CupertinoActivityIndicator()
             else
-              const CircularProgressIndicator(),
+              const AppLoadingIndicator(),
             const SizedBox(width: 16),
             Expanded(child: Text(context.l10n.cleanupOrphanedDownloads)),
           ],
@@ -237,8 +246,8 @@ class AppSettingsPage extends ConsumerWidget {
       final removed = await ref
           .read(downloadHistoryProvider.notifier)
           .cleanupOrphanedDownloads();
+      dialogNavigator.pop();
       if (context.mounted) {
-        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -250,8 +259,8 @@ class AppSettingsPage extends ConsumerWidget {
         );
       }
     } catch (e) {
+      dialogNavigator.pop();
       if (context.mounted) {
-        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.l10n.snackbarError(context.friendlyError(e))),
@@ -281,7 +290,7 @@ class _UpdateChannelSelector extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
+              AppIcon(
                 context.adaptiveIcon(Icons.new_releases),
                 color: context.isMornye
                     ? colorScheme.primary
@@ -312,27 +321,25 @@ class _UpdateChannelSelector extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              SettingsChoiceChip(
-                expand: true,
+          SettingsSegmentedChoice<String>(
+            selected: currentChannel,
+            onChanged: onChanged,
+            semanticLabel: context.l10n.optionsUpdateChannel,
+            options: [
+              SettingsSegmentOption(
+                value: 'stable',
                 label: context.l10n.channelStable,
-                isSelected: currentChannel == 'stable',
-                onTap: () => onChanged('stable'),
               ),
-              const SizedBox(width: 8),
-              SettingsChoiceChip(
-                expand: true,
+              SettingsSegmentOption(
+                value: 'preview',
                 label: context.l10n.channelPreview,
-                isSelected: currentChannel == 'preview',
-                onTap: () => onChanged('preview'),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(
+              AppIcon(
                 Icons.info_outline,
                 size: 16,
                 color: colorScheme.onSurfaceVariant,
@@ -386,7 +393,7 @@ class _VerificationBrowserModeSelector extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(
+                  AppIcon(
                     context.adaptiveIcon(Icons.open_in_browser),
                     color: context.isMornye
                         ? colorScheme.primary
@@ -420,33 +427,32 @@ class _VerificationBrowserModeSelector extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  SettingsChoiceChip(
-                    expand: true,
+              SettingsSegmentedChoice<String>(
+                selected: normalizedMode,
+                onChanged: onChanged,
+                semanticLabel: context.l10n.extensionVerificationBrowserTitle,
+                options: [
+                  SettingsSegmentOption(
+                    value: 'external_first',
                     label: context.l10n.extensionVerificationBrowserExternal,
-                    isSelected: normalizedMode == 'external_first',
-                    onTap: () => onChanged('external_first'),
                   ),
-                  const SizedBox(width: 8),
-                  SettingsChoiceChip(
-                    expand: true,
+                  SettingsSegmentOption(
+                    value: 'in_app_first',
                     label: context.l10n.extensionVerificationBrowserInApp,
-                    isSelected: normalizedMode == 'in_app_first',
-                    onTap: () => onChanged('in_app_first'),
                   ),
                 ],
               ),
             ],
           ),
         ),
-        Divider(
-          height: 1,
-          thickness: 1,
-          indent: 56,
-          endIndent: 20,
-          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-        ),
+        if (!settingsRowsConnected(context))
+          Divider(
+            height: 1,
+            thickness: 1,
+            indent: 56,
+            endIndent: 20,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
       ],
     );
     return SettingsSearchTarget(

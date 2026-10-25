@@ -1,7 +1,5 @@
 part of 'audio_analysis_widget.dart';
 
-// Spectrogram rendering: interactive view, axis painter, palette.
-
 class _SpectrogramView extends StatelessWidget {
   final ui.Image image;
   final int sampleRate;
@@ -12,6 +10,9 @@ class _SpectrogramView extends StatelessWidget {
   final bool channelLoading;
   final ValueChanged<int> onChannelChanged;
 
+  /// Saves the plot as an image; null while a save or channel load runs.
+  final VoidCallback? onSave;
+
   const _SpectrogramView({
     required this.image,
     required this.sampleRate,
@@ -21,6 +22,7 @@ class _SpectrogramView extends StatelessWidget {
     required this.selectedChannel,
     required this.channelLoading,
     required this.onChannelChanged,
+    required this.onSave,
   });
 
   @override
@@ -35,45 +37,64 @@ class _SpectrogramView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (channels > 1)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    AppChoiceChip(
-                      singleChoice: true,
-                      label: Text(context.l10n.audioAnalysisChannels),
-                      selected: selectedChannel < 0,
-                      onSelected: channelLoading
-                          ? null
-                          : (_) => onChannelChanged(-1),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    for (var channel = 0; channel < channels; channel++) ...[
-                      const SizedBox(width: 6),
-                      AppChoiceChip(
-                        singleChoice: true,
-                        label: Text('Ch ${channel + 1}'),
-                        selected: selectedChannel == channel,
-                        onSelected: channelLoading
-                            ? null
-                            : (_) => onChannelChanged(channel),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ],
-                  ],
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: channels > 1
+                      ? SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              AppChoiceChip(
+                                singleChoice: true,
+                                label: Text(context.l10n.audioAnalysisChannels),
+                                selected: selectedChannel < 0,
+                                onSelected: channelLoading
+                                    ? null
+                                    : (_) => onChannelChanged(-1),
+                              ),
+                              for (
+                                var channel = 0;
+                                channel < channels;
+                                channel++
+                              ) ...[
+                                const SizedBox(width: 6),
+                                AppChoiceChip(
+                                  singleChoice: true,
+                                  label: Text('Ch ${channel + 1}'),
+                                  selected: selectedChannel == channel,
+                                  onSelected: channelLoading
+                                      ? null
+                                      : (_) => onChannelChanged(channel),
+                                ),
+                              ],
+                            ],
+                          ),
+                        )
+                      : const SizedBox.shrink(),
                 ),
-              ),
+                AppIconButton(
+                  key: const ValueKey('audio-analysis-save-spectrogram'),
+                  icon: const AppIcon.adaptive(
+                    Icons.download_outlined,
+                    size: 20,
+                  ),
+                  tooltip: context.l10n.audioAnalysisSaveSpectrogram,
+                  color: labelColor,
+                  onPressed: onSave,
+                ),
+              ],
             ),
+          ),
           if (channelLoading)
             const Padding(
-              padding: EdgeInsets.fromLTRB(12, 8, 12, 0),
-              child: LinearProgressIndicator(minHeight: 2),
+              padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
+              child: AppProgressIndicator.linear(minHeight: 2),
             ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(6, 10, 10, 4),
+            padding: const EdgeInsets.fromLTRB(6, 4, 10, 4),
             child: LayoutBuilder(
               builder: (context, constraints) {
                 const leftGutter = 34.0;
@@ -286,6 +307,141 @@ class _SpectrogramPainter extends CustomPainter {
 }
 
 enum _TextAlignV { rightCenter, topCenter }
+
+final _invalidExportNameChars = RegExp(r'[\\/:*?"<>|\x00-\x1F]');
+
+/// The file name stem for a saved spectrogram: [exportName] when it has
+/// one, otherwise the audio file's name without its extension. Content and
+/// network URIs use their decoded last path segment.
+String audioSpectrogramExportBaseName(String filePath, {String? exportName}) {
+  String sanitize(String value) => value
+      .replaceAll(_invalidExportNameChars, '_')
+      .trim()
+      .replaceAll(RegExp(r'^\.+|\.+$'), '');
+
+  final named = sanitize(exportName ?? '');
+  if (named.isNotEmpty) return named;
+
+  var name = filePath;
+  final uri = Uri.tryParse(filePath);
+  // One-letter schemes are Windows drive letters, not URIs.
+  if (uri != null && uri.scheme.length > 1) {
+    name = uri.pathSegments.isEmpty ? '' : uri.pathSegments.last;
+  }
+  // SAF document IDs keep their folders after decoding ("primary:Music/a").
+  name = name.split(RegExp(r'[/\\:]')).last;
+  final stem = sanitize(p.basenameWithoutExtension(name));
+  return stem.isEmpty ? 'audio' : stem;
+}
+
+/// Draws the spectrogram as the card shows it (axes, grid and the dBFS
+/// legend) under a [title] and a line of [details], and encodes it as PNG.
+/// [scale] multiplies the logical layout into image pixels.
+Future<Uint8List> renderAudioSpectrogramPng({
+  required ui.Image image,
+  required String title,
+  required int sampleRate,
+  required double duration,
+  List<String> details = const [],
+  double scale = 2,
+}) async {
+  const labelColor = Color(0xFFB5B5B5);
+  const padding = 16.0;
+  const plotWidth = 800.0;
+  const plotHeight = plotWidth / 2;
+  const legendHeight = 8.0;
+  const chartWidth = _SpectrogramPainter.leftGutter + plotWidth;
+  const chartHeight = plotHeight + _SpectrogramPainter.bottomGutter;
+
+  TextPainter text(String value, TextStyle style) => TextPainter(
+    text: TextSpan(text: value, style: style),
+    textDirection: TextDirection.ltr,
+    maxLines: 1,
+    ellipsis: '...',
+  )..layout(maxWidth: chartWidth);
+
+  final titlePainter = text(
+    title,
+    const TextStyle(
+      color: Colors.white,
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+    ),
+  );
+  final detailsPainter = text(
+    details.join('   '),
+    const TextStyle(color: labelColor, fontSize: 11),
+  );
+  const legendStyle = TextStyle(color: labelColor, fontSize: 10);
+  final minLabel = text('-120 dBFS', legendStyle);
+  final maxLabel = text('0 dBFS', legendStyle);
+
+  final chartTop =
+      padding + titlePainter.height + 4 + detailsPainter.height + 12;
+  final legendTop = chartTop + chartHeight + 10;
+  final legendRowHeight = math.max(legendHeight, minLabel.height);
+  final width = padding * 2 + chartWidth;
+  final height = legendTop + legendRowHeight + padding;
+
+  final recorder = ui.PictureRecorder();
+  final canvas = Canvas(recorder)..scale(scale);
+  canvas.drawRect(
+    Rect.fromLTWH(0, 0, width, height),
+    Paint()..color = Colors.black,
+  );
+  titlePainter.paint(canvas, const Offset(padding, padding));
+  detailsPainter.paint(
+    canvas,
+    Offset(padding, padding + titlePainter.height + 4),
+  );
+
+  canvas.save();
+  canvas.translate(padding, chartTop);
+  _SpectrogramPainter(
+    image: image,
+    maxFreqHz: sampleRate / 2,
+    durationSec: duration,
+    labelColor: labelColor,
+    gridColor: Colors.white.withValues(alpha: 0.10),
+  ).paint(canvas, const Size(chartWidth, chartHeight));
+  canvas.restore();
+
+  final barLeft = padding + _SpectrogramPainter.leftGutter;
+  final barStart = barLeft + minLabel.width + 8;
+  final barEnd = padding + chartWidth - maxLabel.width - 8;
+  final rowCenter = legendTop + legendRowHeight / 2;
+  minLabel.paint(canvas, Offset(barLeft, rowCenter - minLabel.height / 2));
+  maxLabel.paint(canvas, Offset(barEnd + 8, rowCenter - maxLabel.height / 2));
+  final bar = Rect.fromLTRB(
+    barStart,
+    rowCenter - legendHeight / 2,
+    barEnd,
+    rowCenter + legendHeight / 2,
+  );
+  canvas.drawRRect(
+    RRect.fromRectAndRadius(bar, const Radius.circular(4)),
+    Paint()
+      ..shader = LinearGradient(
+        colors: _SpectrogramView._legendColors(),
+      ).createShader(bar),
+  );
+
+  final picture = recorder.endRecording();
+  final rendered = await picture.toImage(
+    (width * scale).round(),
+    (height * scale).round(),
+  );
+  picture.dispose();
+  try {
+    final bytes = await rendered.toByteData(format: ui.ImageByteFormat.png);
+    if (bytes == null) {
+      throw StateError('Could not encode the spectrogram image');
+    }
+    return bytes.buffer.asUint8List();
+  } finally {
+    rendered.dispose();
+  }
+}
 
 List<int> _spekColorRGB(double intensity) {
   int r, g, b;

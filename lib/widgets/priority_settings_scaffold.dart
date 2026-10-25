@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/settings_group.dart';
 
 class PrioritySettingsScaffold extends StatelessWidget {
   final bool hasChanges;
@@ -55,14 +58,15 @@ class PrioritySettingsScaffold extends StatelessWidget {
           slivers: [
             AppSliverHeader.page(
               title: title,
-              leading: IconButton(
+              leading: AppIconButton(
                 tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => _handleBack(context),
               ),
               actions: [
                 if (hasChanges)
-                  TextButton(
+                  ExpressiveButton(
+                    text: true,
                     onPressed: onSave,
                     child: Text(context.l10n.dialogSave),
                   ),
@@ -90,31 +94,10 @@ class PrioritySettingsScaffold extends StatelessWidget {
                   16 + wideInset,
                   16,
                 ),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: colorScheme.tertiary,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          infoText,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: colorScheme.onTertiaryContainer,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
+                child: SettingsInfoCard(
+                  icon: Icons.info_outline,
+                  message: infoText,
+                  margin: EdgeInsets.zero,
                 ),
               ),
             ),

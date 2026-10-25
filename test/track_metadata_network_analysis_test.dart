@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/screens/track_metadata_screen.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/audio_analysis_widget.dart';
-import 'package:mosix/widgets/hires_check_card.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/screens/track_metadata_screen.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/audio_analysis_widget.dart';
+import 'package:mornye/widgets/hires_check_card.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -66,7 +66,8 @@ void main() {
         await tester.tap(find.byTooltip('Show menu'));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 500));
-        if (protocol == NetworkProtocol.http) {
+        if (protocol == NetworkProtocol.http ||
+            protocol == NetworkProtocol.subsonic) {
           expect(find.text('Delete'), findsNothing);
         } else {
           expect(find.text('Delete'), findsWidgets);

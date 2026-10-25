@@ -1,5 +1,5 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
+import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
 
 var _attachmentSequence = 0;
 

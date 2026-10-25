@@ -220,7 +220,7 @@ pub(super) fn read(request: &Value, check: Check<'_>) -> Result<Value, String> {
     let root: Value =
         serde_json::from_slice(&metadata).map_err(|e| err("backup metadata JSON", e))?;
     let version = root["format_version"].as_u64();
-    if root["magic"] != "spotiflac-backup"
+    if (root["magic"] != "mornye-backup" && root["magic"] != "spotiflac-backup")
         || !matches!(version, Some(2 | 3))
         || !root["data"].is_object()
     {
@@ -232,7 +232,7 @@ pub(super) fn read(request: &Value, check: Check<'_>) -> Result<Value, String> {
     }
     let temporary = output_path(request, "temporary_directory")?;
     let staging = tempfile::Builder::new()
-        .prefix("spotiflac_restore_")
+        .prefix("mornye_restore_")
         .tempdir_in(temporary)
         .map_err(|e| err("create backup staging", e))?;
     let metadata_path = staging.path().join("metadata.json");

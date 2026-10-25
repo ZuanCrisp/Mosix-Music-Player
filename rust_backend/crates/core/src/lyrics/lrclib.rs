@@ -15,7 +15,7 @@ pub struct LrcLibResponse {
     pub synced_lyrics: String,
 }
 
-super::json::go_deserialize!(LrcLibResponse {
+crate::json::lenient_deserialize!(LrcLibResponse {
     "id" => id, "name" => name, "trackname" => track_name,
     "artistname" => artist_name, "albumname" => album_name, "duration" => duration,
     "instrumental" => instrumental, "plainlyrics" => plain_lyrics,

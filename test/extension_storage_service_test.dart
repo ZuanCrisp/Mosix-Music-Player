@@ -4,7 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/extension_storage_service.dart';
+import 'package:mornye/services/extension_storage_service.dart';
+import 'package:mornye/utils/desktop_platform.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -34,7 +35,13 @@ void main() {
       final args = Map<String, dynamic>.from(call.arguments as Map);
       final options = Map<String, dynamic>.from(args['options'] as Map);
       expect(options['resetOnError'], 'false');
+      expect(options['migrateOnAlgorithmChange'], 'true');
       expect(options['migrateWithBackup'], 'true');
+      expect(
+        options['keyCipherAlgorithm'],
+        'RSA_ECB_OAEPwithSHA_256andMGF1Padding',
+      );
+      expect(options['storageCipherAlgorithm'], 'AES_GCM_NoPadding');
       if (call.method == 'read') {
         if (readError != null) throw readError!;
         return values[args['key']];
@@ -85,6 +92,18 @@ void main() {
       }
     },
   );
+
+  test('desktop never moves folders out of the user Documents', () async {
+    debugDesktopPlatformOverride = true;
+    addTearDown(() => debugDesktopPlatformOverride = null);
+    final userFile = await seed('documents/extensions/notes.txt', [1, 2]);
+    final userData = await seed('documents/extension_data/a/b.json', [3]);
+    final storage = await ExtensionStorageService.prepare();
+    expect(await userFile.readAsBytes(), [1, 2]);
+    expect(await userData.readAsBytes(), [3]);
+    expect(await Directory(storage.extensionsDir).list().toList(), isEmpty);
+    expect(await Directory(storage.dataDir).list().toList(), isEmpty);
+  });
 
   test('missing key never replaces encrypted settings and can retry', () async {
     final file = await seed(
@@ -139,6 +158,36 @@ void main() {
         (await ExtensionStorageService.prepare()).masterKey,
         values[keyName],
       );
+      expect(mutations, isEmpty);
+    },
+  );
+
+  test(
+    'failed cipher migration preserves encrypted files and the key',
+    () async {
+      final key = base64Encode(List.filled(32, 4));
+      values[keyName] = key;
+      final file = await seed(
+        'support/extension_data/example.provider/settings.enc',
+        [8, 9, 10],
+      );
+      readError = PlatformException(
+        code: 'Exception encountered',
+        message:
+            'Migration failed after algorithm change '
+            '(Invalid key, key type incompatible with cipher). '
+            'Enable resetOnError=true or call deleteAll().',
+      );
+      await expectLater(
+        ExtensionStorageService.prepare(),
+        throwsA(isA<PlatformException>()),
+      );
+      expect(mutations, isEmpty);
+      expect(values[keyName], key);
+      expect(await file.readAsBytes(), [8, 9, 10]);
+
+      readError = null;
+      expect((await ExtensionStorageService.prepare()).masterKey, key);
       expect(mutations, isEmpty);
     },
   );

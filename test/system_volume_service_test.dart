@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/system_volume_service.dart';
+import 'package:mornye/services/system_volume_service.dart';
 
 void main() {
   test('closing a slider leaves background volume monitoring alive', () async {

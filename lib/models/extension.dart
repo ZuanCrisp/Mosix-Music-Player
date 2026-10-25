@@ -1,6 +1,3 @@
-// Manifest-backed models: extension metadata, capabilities, health, and
-// install results.
-
 class ExtensionRestoreResult {
   final int installed;
   final int alreadyPresent;
@@ -244,6 +241,22 @@ class Extension {
   bool get hasPostProcessing => postProcessing?.enabled ?? false;
   bool get hasServiceHealth => serviceHealth.isNotEmpty;
   bool get hasHomeFeed => capabilities['homeFeed'] == true;
+
+  /// The extension owns its country choices and the setting sent to its API.
+  ExtensionSetting? get homeFeedRegionSetting {
+    if (!hasHomeFeed) return null;
+    final key = capabilities['homeFeedRegionSetting'];
+    if (key is! String || key.isEmpty) return null;
+    return settings.where((setting) {
+      final options = setting.options;
+      return setting.key == key &&
+          (setting.type == 'select' || setting.type == 'string') &&
+          options != null &&
+          options.isNotEmpty &&
+          options.every((code) => RegExp(r'^[a-zA-Z]{2}$').hasMatch(code));
+    }).firstOrNull;
+  }
+
   ExtensionDownloadTransferPolicy get downloadTransferPolicy =>
       ExtensionDownloadTransferPolicy.fromCapabilities(capabilities);
   bool get requiresNativeContainerConversion =>
@@ -572,8 +585,6 @@ class ExtensionHealthStatus {
           [],
     );
   }
-
-  bool get isSupported => status != 'unsupported';
 }
 
 class ExtensionHealthCheckStatus {
@@ -760,6 +771,7 @@ class ExtensionState {
   final bool isLoading;
   final String? error;
   final bool isInitialized;
+  final Map<String, int> settingsRevisions;
 
   const ExtensionState({
     this.extensions = const [],
@@ -769,6 +781,7 @@ class ExtensionState {
     this.isLoading = false,
     this.error,
     this.isInitialized = false,
+    this.settingsRevisions = const {},
   });
 
   ExtensionState copyWith({
@@ -779,6 +792,7 @@ class ExtensionState {
     bool? isLoading,
     String? error,
     bool? isInitialized,
+    Map<String, int>? settingsRevisions,
   }) {
     return ExtensionState(
       extensions: extensions ?? this.extensions,
@@ -789,6 +803,7 @@ class ExtensionState {
       isLoading: isLoading ?? this.isLoading,
       error: error,
       isInitialized: isInitialized ?? this.isInitialized,
+      settingsRevisions: settingsRevisions ?? this.settingsRevisions,
     );
   }
 }

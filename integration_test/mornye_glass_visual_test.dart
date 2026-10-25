@@ -9,17 +9,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/providers/runtime_profile_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/music_player_runtime.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mini_player.dart';
-import 'package:mosix/widgets/mornye_bottom_bar.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/mornye_liquid_backdrop.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/runtime_profile_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/music_player_runtime.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/mini_player.dart';
+import 'package:mornye/widgets/mornye_bottom_bar.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/widgets/mornye_liquid_backdrop.dart';
 
 class _Settings extends SettingsNotifier {
   @override
@@ -70,7 +70,7 @@ void main() {
       artUri: cover.uri,
     );
     final poses = <String, Object?>{};
-    const flatBackdrop = bool.fromEnvironment('SPOTIFLAC_GLASS_FLAT_BACKDROP');
+    const flatBackdrop = bool.fromEnvironment('MORNYE_GLASS_FLAT_BACKDROP');
     Future<void> wait(int milliseconds) async {
       await tester.runAsync(
         () => Future<void>.delayed(Duration(milliseconds: milliseconds)),
@@ -158,7 +158,9 @@ void main() {
         ProviderScope(
           overrides: [
             settingsProvider.overrideWith(_Settings.new),
-            currentMediaItemProvider.overrideWith((ref) => Stream.value(item)),
+            currentMediaItemProvider.overrideWithBuild(
+              (ref, notifier) => Stream.value(item),
+            ),
             playbackStateProvider.overrideWith(
               (ref) => Stream.value(PlaybackState()),
             ),

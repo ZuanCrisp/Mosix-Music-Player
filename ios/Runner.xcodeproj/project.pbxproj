@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		C0CE00000000000000000001 /* ConcertCalendarBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CE00000000000000000002 /* ConcertCalendarBridge.swift */; };
 		A0D100000000000000000001 /* AudioOutputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0D100000000000000000002 /* AudioOutputView.swift */; };
+		A0D100000000000000000003 /* MusicHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0D100000000000000000004 /* MusicHaptics.swift */; };
 		F59500000000000000000011 /* PlayerWidgetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F59500000000000000000001 /* PlayerWidgetState.swift */; };
 		F59500000000000000000012 /* PlayerControlIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F59500000000000000000002 /* PlayerControlIntent.swift */; };
 		F59500000000000000000013 /* PlayerWidgetBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = F59500000000000000000004 /* PlayerWidgetBridge.swift */; };
@@ -73,6 +74,7 @@
 /* Begin PBXFileReference section */
 		C0CE00000000000000000002 /* ConcertCalendarBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcertCalendarBridge.swift; sourceTree = "<group>"; };
 		A0D100000000000000000002 /* AudioOutputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioOutputView.swift; sourceTree = "<group>"; };
+		A0D100000000000000000004 /* MusicHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicHaptics.swift; sourceTree = "<group>"; };
 		F59500000000000000000009 /* PlayerWidget.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = PlayerWidget.xcconfig; sourceTree = "<group>"; };
 		F59500000000000000000001 /* PlayerWidgetState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerWidgetState.swift; sourceTree = "<group>"; };
 		F59500000000000000000002 /* PlayerControlIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerControlIntent.swift; sourceTree = "<group>"; };
@@ -215,6 +217,7 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				F59500000000000000000004 /* PlayerWidgetBridge.swift */,
 				A0D100000000000000000002 /* AudioOutputView.swift */,
+				A0D100000000000000000004 /* MusicHaptics.swift */,
 				C0CE00000000000000000002 /* ConcertCalendarBridge.swift */,
 				F59500000000000000000007 /* Runner.entitlements */,
 				C03400000000000000000002 /* CoreBackend.swift */,
@@ -478,6 +481,7 @@
 				F59500000000000000000012 /* PlayerControlIntent.swift in Sources */,
 				F59500000000000000000013 /* PlayerWidgetBridge.swift in Sources */,
 				A0D100000000000000000001 /* AudioOutputView.swift in Sources */,
+				A0D100000000000000000003 /* MusicHaptics.swift in Sources */,
 				C0CE00000000000000000001 /* ConcertCalendarBridge.swift in Sources */,
 				C03400000000000000000001 /* CoreBackend.swift in Sources */,
 				D08A594730CF000100000001 /* DownloadProgressSubscription.swift in Sources */,
@@ -592,7 +596,7 @@
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				PLAYER_WIDGET_APP_GROUP = group.com.zuancrisp.mosix;
+				PLAYER_WIDGET_APP_GROUP = group.com.zarz.mornye;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
@@ -602,7 +606,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.zuancrisp.mosix;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zarz.mornye;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -619,7 +623,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.zuancrisp.mosix.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zarz.mornye.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -637,7 +641,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.zuancrisp.mosix.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zarz.mornye.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -653,7 +657,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.zuancrisp.mosix.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zarz.mornye.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -776,7 +780,7 @@
 			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				PLAYER_WIDGET_APP_GROUP = group.com.zuancrisp.mosix;
+				PLAYER_WIDGET_APP_GROUP = group.com.zarz.mornye;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
@@ -786,7 +790,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.zuancrisp.mosix;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zarz.mornye;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -800,7 +804,7 @@
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				PLAYER_WIDGET_APP_GROUP = group.com.zuancrisp.mosix;
+				PLAYER_WIDGET_APP_GROUP = group.com.zarz.mornye;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
@@ -810,7 +814,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.zuancrisp.mosix;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zarz.mornye;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;

@@ -2,17 +2,18 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/models/extension.dart';
-import 'package:mosix/services/download_metadata_resolver.dart';
-import 'package:mosix/services/ffmpeg_service.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/replaygain_service.dart';
-import 'package:mosix/utils/artist_utils.dart';
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/utils/lyrics_metadata_helper.dart';
-import 'package:mosix/utils/string_utils.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/metadata_separators.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/models/extension.dart';
+import 'package:mornye/services/download_metadata_resolver.dart';
+import 'package:mornye/services/ffmpeg_service.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/replaygain_service.dart';
+import 'package:mornye/utils/artist_utils.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/utils/lyrics_metadata_helper.dart';
+import 'package:mornye/utils/string_utils.dart';
 
 /// Embeds tags into a local working file; the queue owns publication and state.
 class DownloadMetadataEmbedding {
@@ -116,7 +117,12 @@ class DownloadMetadataEmbedding {
         : _sharedCover(coverUrl, settings.embeddedCoverMaxDimension);
     String? lrcContent;
     try {
-      final metadata = _ffmpegFields(fields, format);
+      final formattedFields = formatDownloadTagFields(
+        applyArtistTagModeToMetadata(fields, settings.artistTagMode),
+        settings.metadataSeparators,
+      );
+      final metadata = _ffmpegFields(formattedFields, format);
+      metadata.addAll(settings.metadataSeparators.writerFields);
       final lyricsEnabled =
           settings.embedLyrics &&
           !DownloadMetadataResolver.shouldSkipLyrics(
@@ -184,7 +190,7 @@ class DownloadMetadataEmbedding {
       if (isM4a) {
         try {
           final ac4Result = await PlatformBridge.writeAC4Metadata(filePath, {
-            ..._ac4Fields(fields, settings.artistTagMode),
+            ..._ac4Fields(formattedFields, artistTagModeJoined),
             if (shouldEmbedLyrics) 'lyrics': ?lrcContent,
           }, validCover ?? '');
           if (ac4Result['handled'] == true) return lrcContent;
@@ -200,6 +206,7 @@ class DownloadMetadataEmbedding {
           final response = await _editMetadata(filePath, {
             ...fields,
             'artist_tag_mode': settings.artistTagMode,
+            ...settings.metadataSeparators.writerFields,
             'cover_path': ?validCover,
             if (shouldEmbedLyrics && lrcContent != null) ...{
               'lyrics': lrcContent,
@@ -253,12 +260,18 @@ class DownloadMetadataEmbedding {
       if (isFlac) {
         // Only FFmpeg needs a second rewrite for repeated Vorbis artist tags.
         if (!embeddedNatively &&
-            settings.artistTagMode == artistTagModeSplitVorbis) {
+            settings.artistTagMode == artistTagModeSplitVorbis &&
+            (settings.metadataSeparators.artist.isEmpty ||
+                settings.metadataSeparators.albumArtist.isEmpty)) {
           try {
             await PlatformBridge.rewriteSplitArtistTags(
               filePath,
-              track.artistName,
-              albumArtist ?? '',
+              settings.metadataSeparators.artist.isEmpty
+                  ? track.artistName
+                  : '',
+              settings.metadataSeparators.albumArtist.isEmpty
+                  ? albumArtist ?? ''
+                  : '',
             );
           } catch (error) {
             _log.w('Failed to rewrite split artist tags: $error');
@@ -456,7 +469,9 @@ class DownloadMetadataEmbedding {
       final path = '${tempDir.path}/cover_embed_$uniqueId.jpg';
       final result = await PlatformBridge.downloadCoverToFile(
         url,
-        Platform.isAndroid || Platform.isIOS ? '' : path,
+        // The backend may only write inside the folders it owns, so it
+        // creates the file and returns its path.
+        PlatformBridge.supportsCoreBackend ? '' : path,
         maxDimension: maxDimension,
       );
       if (result['error'] != null) {

@@ -3,12 +3,15 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_smb2/dart_smb2.dart';
-import 'package:mosix/services/network_storage_error.dart';
+import 'package:mornye/services/local_network_access.dart';
+import 'package:mornye/services/network_storage_error.dart';
 
 void main() {
   test('network diagnostics separate transport, login and share failures', () {
     final cases = <Object, NetworkStorageError>{
       const SocketException('private host'): NetworkStorageError.unreachable,
+      const LocalNetworkPermissionException():
+          NetworkStorageError.localNetworkPermission,
       TimeoutException('private host'): NetworkStorageError.timeout,
       const Smb2Exception('STATUS_LOGON_FAILURE'):
           NetworkStorageError.authentication,

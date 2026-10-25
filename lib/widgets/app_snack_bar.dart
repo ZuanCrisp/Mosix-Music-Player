@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
 
 /// Applies the same transient-message policy to existing snackbar call sites.
 /// A new message replaces the old one instead of building a stale FIFO queue.
@@ -129,13 +131,13 @@ ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showAppSnackBar(
                   children: [
                     Expanded(child: content),
                     if (!actionBelow) ?action,
-                    IconButton(
+                    AppIconButton(
                       tooltip: MaterialLocalizations.of(
                         context,
                       ).closeButtonTooltip,
                       color: theme.colorScheme.onSurface,
                       onPressed: messenger.hideCurrentSnackBar,
-                      icon: const Icon(Icons.close, size: 20),
+                      icon: const AppIcon(Icons.close, size: 20),
                     ),
                   ],
                 );

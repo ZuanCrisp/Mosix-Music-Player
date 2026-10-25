@@ -5,10 +5,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
-import 'package:mosix/models/track.dart';
-import 'package:mosix/services/m3u_playlist_service.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/services/m3u_playlist_service.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/logger.dart';
 
 List<Track> _parsePlaylistInBackground(Map<String, dynamic> request) {
   final content = utf8.decode(request['bytes'] as Uint8List);

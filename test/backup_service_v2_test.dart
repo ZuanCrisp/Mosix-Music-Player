@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:archive/archive_io.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
-import 'package:mosix/services/backup_service.dart';
+import 'package:mornye/services/backup_service.dart';
 
 class _UnreadableArchiveFile extends ArchiveFile {
   _UnreadableArchiveFile(this.failure) : super('history.ndjson', 0, <int>[]);
@@ -41,9 +41,7 @@ void main() {
   test(
     'ZIP backup pages history and streams cover files during restore',
     () async {
-      final root = await Directory.systemTemp.createTemp(
-        'spotiflac-backup-test-',
-      );
+      final root = await Directory.systemTemp.createTemp('mornye-backup-test-');
       addTearDown(() async {
         if (await root.exists()) await root.delete(recursive: true);
       });
@@ -187,6 +185,9 @@ void main() {
         playlistCovers: {},
         extensions: {},
       );
+      expect(envelope['magic'], 'mornye-backup');
+      expect(BackupService.parse(jsonEncode(envelope))!.hasHistory, isTrue);
+      envelope['magic'] = 'spotiflac-backup';
       expect(BackupService.parse(jsonEncode(envelope))!.hasHistory, isTrue);
       envelope['format_version'] = 2;
       final metadata = utf8.encode(jsonEncode(envelope));

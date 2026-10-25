@@ -1,10 +1,13 @@
+//! Signed session protocol helpers: manifest defaults, endpoint and challenge URLs, and stored records.
+
 use crate::manifest::SignedSession;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use hmac::{Hmac, KeyInit, Mac};
+use mornye_core::lower_hex as hex;
+use mornye_network::{HttpResponse, query, url::UrlParts};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use spotiflac_network::{HttpResponse, query, url::UrlParts};
 use std::collections::BTreeMap;
 use std::time::{Duration, UNIX_EPOCH};
 use time::{Date, Month, OffsetDateTime, PrimitiveDateTime, Time};
@@ -14,7 +17,8 @@ pub fn defaults(mut config: SignedSession) -> SignedSession {
     for (value, fallback) in [
         (&mut config.app_version, "ext-1.0"),
         (&mut config.platform, "extension"),
-        (&mut config.callback_url, "spotiflac://session-grant"),
+        (&mut config.callback_url, "mornye://session-grant"),
+        // This is the server's protocol domain, not the app's display name.
         (&mut config.scheme_label, "SPOTIFLAC-HMAC-V1"),
         (&mut config.header_prefix, "X-Sig-"),
         (&mut config.endpoints.bootstrap, "/bootstrap"),
@@ -372,15 +376,6 @@ pub fn random_hex(count: usize) -> Result<String, String> {
     let mut bytes = Zeroizing::new(vec![0; count]);
     getrandom::fill(&mut bytes).map_err(|error| error.to_string())?;
     Ok(hex(&bytes))
-}
-
-fn hex(bytes: &[u8]) -> String {
-    use std::fmt::Write;
-    let mut output = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        let _ = write!(output, "{byte:02x}");
-    }
-    output
 }
 
 fn hmac(key: &[u8], message: &[u8]) -> String {

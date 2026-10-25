@@ -1,28 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:mornye/widgets/app_snack_bar.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons, CupertinoTextField;
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/widgets/extension_row.dart';
-import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/widgets/app_search_field.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_text_field.dart';
+import 'package:mornye/widgets/app_refresh_indicator.dart';
+import 'package:mornye/widgets/extension_row.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/widgets/app_search_field.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/repo_provider.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/animation_utils.dart';
-import 'package:mosix/screens/repo/extension_details_screen.dart';
-import 'package:mosix/services/extension_storage_service.dart';
-import 'package:mosix/utils/nav_bar_inset.dart';
-import 'package:mosix/providers/runtime_profile_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/extension_repo_card.dart';
-import 'package:mosix/widgets/app_choice_chip.dart';
-import 'package:mosix/widgets/expressive_button.dart';
-import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/repo_provider.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/animation_utils.dart';
+import 'package:mornye/screens/repo/extension_details_screen.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/providers/runtime_profile_provider.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/widgets/extension_repo_card.dart';
+import 'package:mornye/widgets/app_choice_chip.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
 
 class RepoTab extends ConsumerStatefulWidget {
   const RepoTab({super.key});
@@ -91,18 +95,26 @@ class _RepoTabState extends ConsumerState<RepoTab> {
       );
     }
     final colorScheme = Theme.of(context).colorScheme;
+    // Controls share the centered column of the extension list on tablets.
+    // Desktop fills the pane with a grid instead, with the same edges as the
+    // other tabs.
+    final edge = 16 + wideListInset(context);
+    final desktopColumns = isDesktopPlatform
+        ? _desktopGridColumns(MediaQuery.sizeOf(context).width - edge * 2)
+        : 1;
 
     return Scaffold(
-      body: RefreshIndicator(
+      body: AppRefreshIndicator(
         onRefresh: () =>
             ref.read(repoProvider.notifier).refresh(forceRefresh: true),
         child: CustomScrollView(
           slivers: [
             AppSliverHeader.tabRoot(
+              alignToContent: true,
               title: context.l10n.storeTitle,
               actions: [
                 if (hasRegistryUrl)
-                  IconButton(
+                  AppIconButton(
                     icon: Icon(
                       context.isMornye ? CupertinoIcons.link : Icons.link,
                     ),
@@ -123,7 +135,8 @@ class _RepoTabState extends ConsumerState<RepoTab> {
             else ...[
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  padding: EdgeInsets.fromLTRB(edge, 8, edge, 8),
+                  // Full width like the Home and Library search fields.
                   child: AppSearchField(
                     controller: _searchController,
                     hintText: context.l10n.storeSearch,
@@ -138,79 +151,62 @@ class _RepoTabState extends ConsumerState<RepoTab> {
               ),
 
               SliverToBoxAdapter(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      _CategoryChip(
-                        label: context.l10n.storeFilterAll,
-                        icon: Icons.apps,
-                        isSelected: selectedCategory == null,
-                        onTap: () =>
-                            ref.read(repoProvider.notifier).setCategory(null),
-                      ),
-                      const SizedBox(width: 8),
-                      _CategoryChip(
-                        label: context.l10n.storeFilterMetadata,
-                        icon: Icons.label_outline,
-                        isSelected: selectedCategory == RepoCategory.metadata,
-                        onTap: () => ref
-                            .read(repoProvider.notifier)
-                            .setCategory(RepoCategory.metadata),
-                      ),
-                      const SizedBox(width: 8),
-                      _CategoryChip(
-                        label: context.l10n.storeFilterDownload,
-                        icon: Icons.download_outlined,
-                        isSelected: selectedCategory == RepoCategory.download,
-                        onTap: () => ref
-                            .read(repoProvider.notifier)
-                            .setCategory(RepoCategory.download),
-                      ),
-                      const SizedBox(width: 8),
-                      _CategoryChip(
-                        label: context.l10n.storeFilterUtility,
-                        icon: Icons.build_outlined,
-                        isSelected: selectedCategory == RepoCategory.utility,
-                        onTap: () => ref
-                            .read(repoProvider.notifier)
-                            .setCategory(RepoCategory.utility),
-                      ),
-                      const SizedBox(width: 8),
-                      _CategoryChip(
-                        label: context.l10n.storeFilterLyrics,
-                        icon: Icons.lyrics_outlined,
-                        isSelected: selectedCategory == RepoCategory.lyrics,
-                        onTap: () => ref
-                            .read(repoProvider.notifier)
-                            .setCategory(RepoCategory.lyrics),
-                      ),
-                      const SizedBox(width: 8),
-                      _CategoryChip(
-                        label: context.l10n.storeFilterIntegration,
-                        icon: Icons.link,
-                        isSelected:
-                            selectedCategory == RepoCategory.integration,
-                        onTap: () => ref
-                            .read(repoProvider.notifier)
-                            .setCategory(RepoCategory.integration),
-                      ),
-                    ],
-                  ),
+                child: _CategoryChipRow(
+                  edge: edge,
+                  children: [
+                    _CategoryChip(
+                      label: context.l10n.storeFilterAll,
+                      icon: Icons.apps,
+                      isSelected: selectedCategory == null,
+                      onTap: () =>
+                          ref.read(repoProvider.notifier).setCategory(null),
+                    ),
+                    _CategoryChip(
+                      label: context.l10n.storeFilterMetadata,
+                      icon: Icons.label_outline,
+                      isSelected: selectedCategory == RepoCategory.metadata,
+                      onTap: () => ref
+                          .read(repoProvider.notifier)
+                          .setCategory(RepoCategory.metadata),
+                    ),
+                    _CategoryChip(
+                      label: context.l10n.storeFilterDownload,
+                      icon: Icons.download_outlined,
+                      isSelected: selectedCategory == RepoCategory.download,
+                      onTap: () => ref
+                          .read(repoProvider.notifier)
+                          .setCategory(RepoCategory.download),
+                    ),
+                    _CategoryChip(
+                      label: context.l10n.storeFilterUtility,
+                      icon: Icons.build_outlined,
+                      isSelected: selectedCategory == RepoCategory.utility,
+                      onTap: () => ref
+                          .read(repoProvider.notifier)
+                          .setCategory(RepoCategory.utility),
+                    ),
+                    _CategoryChip(
+                      label: context.l10n.storeFilterLyrics,
+                      icon: Icons.lyrics_outlined,
+                      isSelected: selectedCategory == RepoCategory.lyrics,
+                      onTap: () => ref
+                          .read(repoProvider.notifier)
+                          .setCategory(RepoCategory.lyrics),
+                    ),
+                    _CategoryChip(
+                      label: context.l10n.storeFilterIntegration,
+                      icon: Icons.link,
+                      isSelected: selectedCategory == RepoCategory.integration,
+                      onTap: () => ref
+                          .read(repoProvider.notifier)
+                          .setCategory(RepoCategory.integration),
+                    ),
+                  ],
                 ),
               ),
 
               if (isLoading && extensions.isEmpty)
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: TrackListSkeleton(itemCount: 6),
-                  ),
-                )
+                SliverToBoxAdapter(child: _RepoListSkeleton(edge: edge))
               else if (error != null && extensions.isEmpty)
                 SliverFillRemaining(child: _buildErrorState(error, colorScheme))
               else if (filteredExtensions.isEmpty)
@@ -224,7 +220,7 @@ class _RepoTabState extends ConsumerState<RepoTab> {
               else ...[
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    padding: EdgeInsets.fromLTRB(edge, 8, edge, 8),
                     child: Text(
                       context.l10n.storeExtensionsCount(
                         filteredExtensions.length,
@@ -236,11 +232,18 @@ class _RepoTabState extends ConsumerState<RepoTab> {
                   ),
                 ),
 
-                if (context.isMornye)
+                if (desktopColumns > 1)
+                  _desktopExtensionGrid(
+                    filteredExtensions,
+                    columns: desktopColumns,
+                    edge: edge,
+                    downloadingId: downloadingId,
+                  )
+                else if (context.isMornye)
                   SliverToBoxAdapter(
                     child: ExtensionRepoCard(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
+                      margin: EdgeInsets.symmetric(
+                        horizontal: edge,
                         vertical: 4,
                       ),
                       child: Column(
@@ -265,6 +268,7 @@ class _RepoTabState extends ConsumerState<RepoTab> {
                 else
                   SliverToBoxAdapter(
                     child: SettingsGroup(
+                      connected: true,
                       children: filteredExtensions.asMap().entries.map((entry) {
                         final index = entry.key;
                         final ext = entry.value;
@@ -285,6 +289,64 @@ class _RepoTabState extends ConsumerState<RepoTab> {
             ],
             const NavBarSliverSpacer(),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Columns of the desktop store grid for [width] of content: one per
+  /// 360dp, up to four.
+  static int _desktopGridColumns(double width) =>
+      ((width + _desktopGridGap) / (360 + _desktopGridGap)).floor().clamp(1, 4);
+
+  static const double _desktopGridGap = 12;
+
+  /// Desktop extensions as a grid of tiles that fills the pane.
+  Widget _desktopExtensionGrid(
+    List<RepoExtension> extensions, {
+    required int columns,
+    required double edge,
+    required String? downloadingId,
+  }) {
+    Widget tile(RepoExtension ext) {
+      final item = _ExtensionItem(
+        extension: ext,
+        showDivider: false,
+        isDownloading: downloadingId == ext.id,
+        onInstall: () => _installExtension(ext),
+        onUpdate: () => _updateExtension(ext),
+        onTap: () => _showExtensionDetails(ext),
+      );
+      return context.isMornye
+          ? ExtensionRepoCard(margin: EdgeInsets.zero, child: item)
+          : SettingsGroup(
+              connected: true,
+              margin: EdgeInsets.zero,
+              children: [item],
+            );
+    }
+
+    final rows = (extensions.length / columns).ceil();
+    return SliverPadding(
+      key: const ValueKey('store-desktop-grid'),
+      padding: EdgeInsets.fromLTRB(edge, 4, edge, 0),
+      sliver: SliverList.builder(
+        itemCount: rows,
+        itemBuilder: (context, row) => Padding(
+          padding: const EdgeInsets.only(bottom: _desktopGridGap),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var column = 0; column < columns; column++) ...[
+                if (column > 0) const SizedBox(width: _desktopGridGap),
+                Expanded(
+                  child: row * columns + column < extensions.length
+                      ? tile(extensions[row * columns + column])
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -319,8 +381,12 @@ class _RepoTabState extends ConsumerState<RepoTab> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              TextField(
+              AppTextField(
                 controller: _repoUrlController,
+                outlined: true,
+                label: context.l10n.storeRepoUrlLabel,
+                hint: context.l10n.storeRepoUrlHint,
+                leading: const Icon(Icons.link),
                 decoration: InputDecoration(
                   hintText: context.l10n.storeRepoUrlHint,
                   labelText: context.l10n.storeRepoUrlLabel,
@@ -384,10 +450,10 @@ class _RepoTabState extends ConsumerState<RepoTab> {
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                child: FilledButton.icon(
+                child: ExpressiveButton(
                   onPressed: _submitRepoUrl,
                   icon: const Icon(Icons.add),
-                  label: Text(context.l10n.storeAddRepoButton),
+                  child: Text(context.l10n.storeAddRepoButton),
                 ),
               ),
             ],
@@ -439,8 +505,12 @@ class _RepoTabState extends ConsumerState<RepoTab> {
                 padding: const EdgeInsets.all(12),
               )
             else
-              TextField(
+              AppTextField(
                 controller: changeUrlController,
+                outlined: true,
+                label: context.l10n.storeNewRepoUrlLabel,
+                hint: context.l10n.storeRepoUrlHint,
+                leading: const Icon(Icons.link),
                 decoration: InputDecoration(
                   hintText: context.l10n.storeRepoUrlHint,
                   labelText: context.l10n.storeNewRepoUrlLabel,
@@ -533,11 +603,11 @@ class _RepoTabState extends ConsumerState<RepoTab> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            FilledButton.icon(
+            ExpressiveButton(
               onPressed: () =>
                   ref.read(repoProvider.notifier).refresh(forceRefresh: true),
               icon: const Icon(Icons.refresh),
-              label: Text(context.l10n.dialogRetry),
+              child: Text(context.l10n.dialogRetry),
             ),
           ],
         ),
@@ -569,7 +639,8 @@ class _RepoTabState extends ConsumerState<RepoTab> {
           ),
           if (hasFilters) ...[
             const SizedBox(height: 8),
-            TextButton(
+            ExpressiveButton(
+              text: true,
               onPressed: () {
                 _searchController.clear();
                 ref.read(repoProvider.notifier).clearSearch();
@@ -591,12 +662,9 @@ class _RepoTabState extends ConsumerState<RepoTab> {
   }
 
   Future<void> _installExtension(RepoExtension ext) async {
-    final tempDir = await getTemporaryDirectory();
-    final storage = await ExtensionStorageService.prepare();
-
     final success = await ref
         .read(repoProvider.notifier)
-        .installExtension(ext.id, tempDir.path, storage.extensionsDir);
+        .installExtensionToDefaultPaths(ext.id);
 
     if (mounted) {
       showAppSnackBar(
@@ -612,11 +680,9 @@ class _RepoTabState extends ConsumerState<RepoTab> {
   }
 
   Future<void> _updateExtension(RepoExtension ext) async {
-    final tempDir = await getTemporaryDirectory();
-
     final success = await ref
         .read(repoProvider.notifier)
-        .updateExtension(ext.id, tempDir.path);
+        .updateExtensionToDefaultPaths(ext.id);
 
     if (mounted) {
       showAppSnackBar(
@@ -632,6 +698,31 @@ class _RepoTabState extends ConsumerState<RepoTab> {
         behavior: SnackBarBehavior.floating,
       );
     }
+  }
+}
+
+/// Category filters scroll sideways on phones. A mouse cannot swipe a clipped
+/// row, so desktop windows wrap every category onto view.
+class _CategoryChipRow extends StatelessWidget {
+  const _CategoryChipRow({required this.edge, required this.children});
+
+  final double edge;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final padding = EdgeInsets.symmetric(horizontal: edge, vertical: 8);
+    if (isDesktopPlatform) {
+      return Padding(
+        padding: padding,
+        child: Wrap(spacing: 8, runSpacing: 8, children: children),
+      );
+    }
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: padding,
+      child: Row(spacing: 8, children: children),
+    );
   }
 }
 
@@ -713,6 +804,99 @@ class _CategoryChip extends ConsumerWidget {
       singleChoice: true,
       selected: isSelected,
       onSelected: (_) => onTap(),
+    );
+  }
+}
+
+/// The store list while the registry loads: real extension rows inside the
+/// same grouped surface, with only their contents shimmering.
+class _RepoListSkeleton extends StatelessWidget {
+  const _RepoListSkeleton({required this.edge});
+
+  /// Horizontal edge of the centered column, as the loaded list uses.
+  final double edge;
+
+  static const _count = 6;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    // Placeholders keep their contrast on the Material group surface.
+    final surface = context.isMornye ? null : settingsGroupColor(context);
+    final rows = [
+      for (var index = 0; index < _count; index++)
+        ExtensionRow(
+          showDivider: index < _count - 1,
+          avatar: ShimmerLoading(
+            surface: surface,
+            child: const SkeletonBox(
+              width: ExtensionAvatar.size,
+              height: ExtensionAvatar.size,
+              borderRadius: 12,
+            ),
+          ),
+          title: ShimmerLoading(
+            surface: surface,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: SkeletonBox(
+                      width: 110 + (index % 3) * 30,
+                      height: 16,
+                      borderRadius: 4,
+                    ),
+                  ),
+                ),
+                SizedBox(width: tokens.gapSm),
+                const SkeletonBox(width: 44, height: 18, borderRadius: 6),
+              ],
+            ),
+          ),
+          subtitle: ShimmerLoading(
+            surface: surface,
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 4),
+                SkeletonBox(
+                  width: double.infinity,
+                  height: 12,
+                  borderRadius: 4,
+                ),
+                SizedBox(height: 6),
+                FractionallySizedBox(
+                  widthFactor: 0.6,
+                  child: SkeletonBox(
+                    width: double.infinity,
+                    height: 12,
+                    borderRadius: 4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          trailingBelowWhenNarrow: true,
+          trailing: ShimmerLoading(
+            surface: surface,
+            child: SkeletonBox(
+              width: 108,
+              height: tokens.minTouchTarget,
+              borderRadius: tokens.minTouchTarget / 2,
+            ),
+          ),
+        ),
+    ];
+    if (context.isMornye) {
+      return ExtensionRepoCard(
+        margin: EdgeInsets.fromLTRB(edge, 12, edge, 4),
+        child: Column(mainAxisSize: MainAxisSize.min, children: rows),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: SettingsGroup(connected: true, children: rows),
     );
   }
 }
@@ -825,85 +1009,79 @@ class _ExtensionItem extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-      trailing: Padding(
-        padding: EdgeInsets.only(left: tokens.gapMd),
-        child: isDownloading
-            ? const AppLoadingIndicator(size: 24)
-            : !context.isMornye
-            ? ExpressiveButton(
-                onPressed: extension.hasUpdate
-                    ? onUpdate
-                    : extension.isInstalled
-                    ? null
-                    : onInstall,
-                outlined: extension.isInstalled && !extension.hasUpdate,
-                tonal: extension.hasUpdate,
-                icon: extension.isInstalled && !extension.hasUpdate
-                    ? const Icon(Icons.check, size: 16)
-                    : null,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-                child: Text(
-                  extension.hasUpdate
-                      ? context.l10n.storeUpdate
-                      : extension.isInstalled
-                      ? context.l10n.storeInstalled
-                      : context.l10n.storeInstall,
-                ),
-              )
-            : extension.hasUpdate
-            ? FilledButton.tonal(
-                onPressed: onUpdate,
-                style: FilledButton.styleFrom(
-                  shape: context.isMornye ? const StadiumBorder() : null,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  minimumSize: Size(0, context.tokens.minTouchTarget),
-                ),
-                child: Text(context.l10n.storeUpdate),
-              )
-            : extension.isInstalled
-            ? OutlinedButton(
-                onPressed: null,
-                style: OutlinedButton.styleFrom(
-                  shape: context.isMornye ? const StadiumBorder() : null,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  minimumSize: Size(0, context.tokens.minTouchTarget),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      context.isMornye
-                          ? CupertinoIcons.check_mark
-                          : Icons.check,
-                      size: 16,
-                      color: colorScheme.outline,
-                    ),
-                    SizedBox(width: tokens.gapXs),
-                    Text(
-                      context.l10n.storeInstalled,
-                      style: TextStyle(color: colorScheme.outline),
-                    ),
-                  ],
-                ),
-              )
-            : FilledButton(
-                onPressed: onInstall,
-                style: FilledButton.styleFrom(
-                  shape: context.isMornye ? const StadiumBorder() : null,
-                  backgroundColor: context.isMornye
-                      ? colorScheme.primary.withValues(alpha: 0.12)
-                      : null,
-                  foregroundColor: context.isMornye
-                      ? colorScheme.primary
-                      : null,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  minimumSize: Size(0, context.tokens.minTouchTarget),
-                ),
-                child: Text(context.l10n.storeInstall),
+      trailingBelowWhenNarrow: true,
+      trailing: isDownloading
+          ? const AppLoadingIndicator(size: 24)
+          : !context.isMornye
+          ? ExpressiveButton(
+              onPressed: extension.hasUpdate
+                  ? onUpdate
+                  : extension.isInstalled
+                  ? null
+                  : onInstall,
+              outlined: extension.isInstalled && !extension.hasUpdate,
+              tonal: extension.hasUpdate,
+              icon: extension.isInstalled && !extension.hasUpdate
+                  ? const Icon(Icons.check, size: 16)
+                  : null,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
               ),
-      ),
+              child: Text(
+                extension.hasUpdate
+                    ? context.l10n.storeUpdate
+                    : extension.isInstalled
+                    ? context.l10n.storeInstalled
+                    : context.l10n.storeInstall,
+              ),
+            )
+          : extension.hasUpdate
+          ? FilledButton.tonal(
+              onPressed: onUpdate,
+              style: FilledButton.styleFrom(
+                shape: context.isMornye ? const StadiumBorder() : null,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                minimumSize: Size(0, context.tokens.minTouchTarget),
+              ),
+              child: Text(context.l10n.storeUpdate),
+            )
+          : extension.isInstalled
+          ? OutlinedButton(
+              onPressed: null,
+              style: OutlinedButton.styleFrom(
+                shape: context.isMornye ? const StadiumBorder() : null,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                minimumSize: Size(0, context.tokens.minTouchTarget),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    context.isMornye ? CupertinoIcons.check_mark : Icons.check,
+                    size: 16,
+                    color: colorScheme.outline,
+                  ),
+                  SizedBox(width: tokens.gapXs),
+                  Text(
+                    context.l10n.storeInstalled,
+                    style: TextStyle(color: colorScheme.outline),
+                  ),
+                ],
+              ),
+            )
+          : FilledButton(
+              onPressed: onInstall,
+              style: FilledButton.styleFrom(
+                shape: context.isMornye ? const StadiumBorder() : null,
+                backgroundColor: context.isMornye
+                    ? colorScheme.primary.withValues(alpha: 0.12)
+                    : null,
+                foregroundColor: context.isMornye ? colorScheme.primary : null,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                minimumSize: Size(0, context.tokens.minTouchTarget),
+              ),
+              child: Text(context.l10n.storeInstall),
+            ),
     );
   }
 }

@@ -9,6 +9,39 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
 
+/// Reference budgets count UI/raster work, not measured display FPS. Keeping
+/// the total span separate avoids treating pipelined build+raster as one phase.
+Map<String, Object> summarizeFrameBudget(
+  List<ui.FrameTiming> frames, {
+  required double refreshHz,
+}) {
+  final hz = refreshHz.isFinite && refreshHz > 0 ? refreshHz : 60.0;
+  final budgetUs = 1000000 / hz;
+  var buildOver = 0;
+  var rasterOver = 0;
+  var phaseOver = 0;
+  var totalOver = 0;
+  for (final frame in frames) {
+    final build = frame.buildDuration.inMicroseconds > budgetUs;
+    final raster = frame.rasterDuration.inMicroseconds > budgetUs;
+    if (build) buildOver++;
+    if (raster) rasterOver++;
+    if (build || raster) phaseOver++;
+    if (frame.totalSpan.inMicroseconds > budgetUs) totalOver++;
+  }
+  return {
+    'refresh_hz': hz,
+    'budget_ms': budgetUs / 1000,
+    'over_budget_frames': phaseOver,
+    'over_budget_percent': frames.isEmpty
+        ? 0.0
+        : phaseOver * 100 / frames.length,
+    'build_over_budget_frames': buildOver,
+    'raster_over_budget_frames': rasterOver,
+    'total_over_budget_frames': totalOver,
+  };
+}
+
 /// Live test bindings otherwise request another engine frame after every draw,
 /// even when the app is idle. Service only frames requested by the framework.
 class PerformanceTestBinding extends IntegrationTestWidgetsFlutterBinding {
@@ -158,6 +191,14 @@ class PerformanceProbe {
       'build_ms': _percentiles(build),
       'raster_ms': _percentiles(raster),
       'total_span_ms': _percentiles(total),
+      'frame_budgets': {
+        for (final hz in [60, 90, 120])
+          '${hz}hz': summarizeFrameBudget(frames, refreshHz: hz.toDouble()),
+        'display': summarizeFrameBudget(
+          frames,
+          refreshHz: tester.view.display.refreshRate,
+        ),
+      },
       'over_16_67ms_frames': missed,
       'over_16_67ms_percent': frames.isEmpty ? 0 : missed * 100 / frames.length,
       'build_over_16_67ms_frames': build
@@ -201,6 +242,10 @@ class PerformanceProbe {
       'budget_hz': 60,
       'budget_ms': _budgetUs / 1000,
       'budget_basis': 'fixed 60 Hz reference, independent of display refresh',
+      'reference_budgets_hz': [60, 90, 120],
+      'frame_budgets_basis':
+          'Fixed references plus the reported display refresh rate; '
+          'reference results do not imply the display ran at that rate.',
       'over_budget_definition':
           'max(buildDuration, rasterDuration) > fixed budget',
       'timing_scope': 'engine FrameTiming phases, not displayed FPS',

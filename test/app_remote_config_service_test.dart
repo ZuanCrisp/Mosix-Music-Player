@@ -6,10 +6,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/screens/settings/donate_page.dart';
-import 'package:mosix/services/app_remote_config_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/screens/settings/donate_page.dart';
+import 'package:mornye/services/app_remote_config_service.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_progress_indicator.dart';
 
 class _TrackedClient extends MockClient {
   _TrackedClient(super.handler);
@@ -108,10 +109,7 @@ void main() {
       final service = AppRemoteConfigService(
         client: MockClient((request) async {
           expect(request.headers['Accept'], 'application/json');
-          expect(
-            request.headers['User-Agent'],
-            startsWith('SpotiFLAC-Mobile/'),
-          );
+          expect(request.headers['User-Agent'], startsWith('Mornye/'));
           return http.Response(
             jsonEncode({
               'donate': {'monthly_goal': _monthlyGoalPayload()},
@@ -136,9 +134,7 @@ void main() {
       expect(find.text('14 supporters'), findsNothing);
       expect(
         tester
-            .widget<LinearProgressIndicator>(
-              find.byType(LinearProgressIndicator),
-            )
+            .widget<AppProgressIndicator>(find.byType(AppProgressIndicator))
             .value,
         0.09,
       );
@@ -167,7 +163,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Monthly development goal'), findsNothing);
-      expect(find.byType(LinearProgressIndicator), findsNothing);
+      expect(find.byType(AppProgressIndicator), findsNothing);
     });
   }
 
@@ -207,9 +203,7 @@ void main() {
       expect(find.text('14 supporters'), findsNothing);
       expect(
         tester
-            .widget<LinearProgressIndicator>(
-              find.byType(LinearProgressIndicator),
-            )
+            .widget<AppProgressIndicator>(find.byType(AppProgressIndicator))
             .value,
         1,
       );

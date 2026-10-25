@@ -1,22 +1,16 @@
 package com.zuancrisp.mosix
 
-import android.content.ContentValues
 import android.content.Context
-import android.net.Uri
-import android.util.Base64
 import android.util.Log
 import com.antonkarpenko.ffmpegkit.FFmpegKit
 import com.antonkarpenko.ffmpegkit.FFmpegSessionCompleteCallback
 import com.zuancrisp.mosix.SafDownloadHandler.mimeTypeForExt
 import com.zuancrisp.mosix.SafDownloadHandler.normalizeExt
-import com.zuancrisp.mosix.NativeFinalizationPolicy.displayAudioQuality
 import com.zuancrisp.mosix.NativeFinalizationPolicy.normalizeAudioCodec
-import com.zuancrisp.mosix.NativeFinalizationPolicy.resolvePreferredDecryptionExtension
 import org.json.JSONObject
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.CancellationException
-import kotlin.math.abs
 import kotlin.math.pow
 
 object NativeDownloadFinalizer {
@@ -271,6 +265,22 @@ object NativeDownloadFinalizer {
 
             result.put("file_path", state.filePath)
             if (state.fileName.isNotBlank()) result.put("file_name", state.fileName)
+            // Extension result fields describe the pre-conversion input.
+            // Publish the actual container with the finalized path and name.
+            val finalName = if (state.filePath.startsWith("content://")) state.fileName else state.filePath
+            val finalExtension = normalizeExt(File(finalName).extension)
+            if (finalExtension.isNotBlank()) {
+                result.put("actual_extension", finalExtension)
+                result.put("output_extension", finalExtension)
+                result.put("actual_container", finalExtension.removePrefix("."))
+                if (result.has("container")) result.put("container", finalExtension.removePrefix("."))
+            }
+            if (!state.audioCodec.isNullOrBlank()) {
+                result.put("audio_codec", state.audioCodec)
+                result.put("format", state.audioCodec)
+            }
+            result.put("requires_container_conversion", false)
+            result.remove("requiresContainerConversion")
             if (state.quality.isNotBlank()) result.put("quality", state.quality)
             result.put("native_finalized", true)
             result.put("history_written", history != null)
@@ -370,7 +380,7 @@ object NativeDownloadFinalizer {
             .toString()
     }
 
-    private fun parseObject(raw: String): JSONObject {
+    internal fun parseObject(raw: String): JSONObject {
         val trimmed = raw.trim()
         if (trimmed.isEmpty()) return JSONObject()
         return try {
@@ -430,650 +440,6 @@ object NativeDownloadFinalizer {
         }
     }
 
-    private fun outputExt(input: FinalizeInput): String {
-        val safExt = input.request.optString("saf_output_ext", "")
-        val ext = safExt.ifBlank { input.request.optString("output_ext", "") }
-        return normalizeExt(ext.ifBlank { ".flac" })
-    }
-
-    private fun finalizeDecryption(
-        context: Context,
-        input: FinalizeInput,
-        state: FinalizeState,
-        shouldCancel: () -> Boolean,
-    ) {
-        val descriptor = input.result.optJSONObject("decryption")
-        val key = descriptor?.optString("key", "")?.trim().orEmpty()
-            .ifBlank { input.result.optString("decryption_key", "").trim() }
-        if (key.isEmpty()) return
-
-        val inputFormat = descriptor?.optString("input_format", "")?.trim().orEmpty().ifBlank { "mov" }
-        val requestedOutputExt = descriptor?.optString("output_extension", "")?.trim().orEmpty()
-        val preferredExt = resolvePreferredDecryptionExtension(state.filePath, requestedOutputExt)
-        val localInput = materializeForFFmpeg(context, input, state)
-        val originalPath = localInput
-
-        var outputPath = buildOutputPath(localInput, preferredExt)
-        var successPath: String? = null
-        var lastOutput = ""
-
-        try {
-            for (candidate in decryptionKeyCandidates(key)) {
-                checkCancelled(shouldCancel)
-                val attempts = mutableListOf<Triple<String, Boolean, Boolean>>()
-                attempts.add(Triple(outputPath, preferredExt == ".flac", false))
-                if (preferredExt == ".flac") {
-                    attempts.add(Triple(buildOutputPath(localInput, ".m4a"), false, false))
-                }
-                if (preferredExt == ".flac" || preferredExt == ".m4a") {
-                    attempts.add(Triple(buildOutputPath(localInput, ".mp4"), false, false))
-                }
-                // MOV muxer fallback for codecs the MP4 muxer rejects (e.g. AC-4):
-                // keeps the .mp4 filename but stores the codec params.
-                attempts.add(Triple(buildOutputPath(localInput, ".mp4"), false, true))
-
-                for ((candidateOutput, mapAudioOnly, forceMov) in attempts) {
-                    val stagedOutput = stagedConversionPath(candidateOutput)
-                    try {
-                        val audioMap = if (mapAudioOnly) "-map 0:a " else ""
-                        // Force the flac muxer when the target extension is
-                        // .flac. Without this override FFmpeg keeps the ISO-BMFF
-                        // stream layout, producing FLAC-in-MP4 under a .flac
-                        // filename which downstream native FLAC tag writers
-                        // cannot read.
-                        val muxerOverride = when {
-                            forceMov -> "-f mov "
-                            candidateOutput.lowercase(Locale.ROOT).endsWith(".flac") -> "-f flac "
-                            else -> ""
-                        }
-                        val command = "-v error -decryption_key ${q(candidate)} -f $inputFormat -i ${q(localInput)} ${audioMap}-c copy ${muxerOverride}${q(stagedOutput)} -y"
-                        val result = runFFmpeg(command, shouldCancel)
-                        lastOutput = result.second
-                        if (result.first && File(stagedOutput).exists() &&
-                            promoteStagedConversion(stagedOutput, candidateOutput)
-                        ) {
-                            successPath = candidateOutput
-                            outputPath = candidateOutput
-                            break
-                        }
-                        File(stagedOutput).delete()
-                    } catch (e: CancellationException) {
-                        File(stagedOutput).delete()
-                        throw e
-                    } catch (e: Exception) {
-                        File(stagedOutput).delete()
-                        throw e
-                    }
-                }
-                if (successPath != null) break
-            }
-
-            val rawDecryptedPath = successPath ?: throw IllegalStateException("decrypt failed: $lastOutput")
-            val decryptedPath = normalizeDecryptedIsoBmffAudioPath(
-                rawDecryptedPath,
-                state,
-                shouldCancel,
-            )
-            replaceStatePath(context, input, state, decryptedPath, deleteOld = true)
-        } finally {
-            if (successPath == null && outputPath != localInput) {
-                File(outputPath).delete()
-            }
-            if (originalPath != successPath && originalPath.startsWith(context.cacheDir.absolutePath)) {
-                File(originalPath).delete()
-            }
-        }
-    }
-
-    private fun normalizeDecryptedIsoBmffAudioPath(
-        path: String,
-        state: FinalizeState,
-        shouldCancel: () -> Boolean,
-    ): String {
-        if (!isMP4ContainerFile(path)) return path
-
-        val probedCodec = probePrimaryAudioCodec(path, shouldCancel)
-        val codec = normalizeAudioCodec(probedCodec.ifBlank { state.audioCodec.orEmpty() })
-        val desiredExt = NativeFinalizationPolicy.isoBmffAudioExtension(codec)
-        state.audioCodec = codec
-        if (path.lowercase(Locale.ROOT).endsWith(desiredExt)) return path
-
-        val target = File(buildOutputPath(path, desiredExt))
-        if (target.exists()) {
-            Log.w(TAG, "Cannot normalize ISO-BMFF audio extension; ${target.name} already exists")
-            return path
-        }
-        val source = File(path)
-        if (!source.renameTo(target)) {
-            Log.w(TAG, "Failed to normalize ISO-BMFF audio extension to ${target.name}")
-            return path
-        }
-        Log.i(
-            TAG,
-            "ISO-BMFF audio renamed: ${source.name} -> ${target.name} " +
-                "(codec=${codec.orEmpty().ifBlank { "unknown" }})",
-        )
-        return target.absolutePath
-    }
-
-    private fun finalizeAutoConversion(
-        context: Context,
-        input: FinalizeInput,
-        state: FinalizeState,
-        shouldCancel: () -> Boolean,
-    ) {
-        val target = NativeFinalizationPolicy.autoConversionTarget(
-            enabled = input.request.optBoolean("auto_convert_downloads", false),
-            format = input.request.optString("auto_convert_format", ""),
-            bitrate = input.request.optString("auto_convert_bitrate", ""),
-        ) ?: return
-        if (
-            NativeFinalizationPolicy.autoConversionAlreadySatisfied(
-                target,
-                state.audioCodec,
-                state.bitrateKbps,
-            )
-        ) return
-
-        val localInput = materializeForFFmpeg(context, input, state)
-        val sourceWasSaf = state.filePath.startsWith("content://")
-        val sameLocalExtension = !sourceWasSaf &&
-            normalizeExt(File(localInput).extension) == target.extension
-        val output = if (sameLocalExtension) {
-            buildOutputPath(localInput, target.extension)
-        } else {
-            uniqueAutoConversionOutputPath(localInput, target.extension)
-        }
-        val stagedOutput = stagedConversionPath(output)
-        val bitrate = "${target.bitrateKbps}k"
-        var adoptedOutput = false
-        try {
-            val command = when (target.codec) {
-                "opus" -> "-v error -hide_banner -i ${q(localInput)} -codec:a libopus -b:a $bitrate -vbr on -compression_level 10 -map 0:a ${q(stagedOutput)} -y"
-                "aac" -> "-v error -hide_banner -i ${q(localInput)} -codec:a aac -b:a $bitrate -map 0:a -f mp4 ${q(stagedOutput)} -y"
-                else -> "-v error -hide_banner -i ${q(localInput)} -codec:a libmp3lame -b:a $bitrate -map 0:a -id3v2_version 3 ${q(stagedOutput)} -y"
-            }
-            val conversion = runFFmpeg(command, shouldCancel)
-            if (!conversion.first || !File(stagedOutput).exists()) {
-                throw IllegalStateException("automatic conversion failed: ${conversion.second}")
-            }
-            val metadataFormat = if (target.codec == "aac") "m4a" else target.codec
-            embedBasicMetadata(context, stagedOutput, input, metadataFormat)
-            if (!promoteStagedConversion(stagedOutput, output)) {
-                throw IllegalStateException("failed to promote automatic conversion output")
-            }
-
-            if (sameLocalExtension) {
-                state.filePath = localInput
-                state.fileName = File(localInput).name
-            } else {
-                replaceStatePath(context, input, state, output, deleteOld = true)
-            }
-            adoptedOutput = true
-        } finally {
-            if (!adoptedOutput) {
-                File(stagedOutput).delete()
-                if (output != localInput) File(output).delete()
-            }
-            if (sourceWasSaf) File(localInput).delete()
-        }
-
-        state.quality = "${if (target.codec == "aac") "AAC" else target.codec.uppercase(Locale.ROOT)} ${target.bitrateKbps}kbps"
-        state.bitDepth = null
-        state.sampleRate = null
-        state.bitrateKbps = target.bitrateKbps
-        state.audioCodec = target.codec
-    }
-
-    private fun uniqueAutoConversionOutputPath(inputPath: String, extension: String): String {
-        val source = File(inputPath)
-        val requested = File(source.parentFile, "${source.nameWithoutExtension}$extension")
-        if (!requested.exists()) return requested.absolutePath
-        for (index in 2..Int.MAX_VALUE) {
-            val candidate = File(
-                source.parentFile,
-                "${source.nameWithoutExtension} ($index)$extension",
-            )
-            if (!candidate.exists()) return candidate.absolutePath
-        }
-        throw IllegalStateException("could not allocate automatic conversion output")
-    }
-
-    private fun finalizeContainerConversion(
-        context: Context,
-        input: FinalizeInput,
-        state: FinalizeState,
-        shouldCancel: () -> Boolean,
-    ) {
-        if (outputExt(input) != ".flac") return
-        val requestedDecryptionExt = requestedDecryptionOutputExt(input)
-        val forceContainerConversion = shouldForceContainerConversion(input, state)
-        if (!forceContainerConversion && requestedDecryptionExt.isNotBlank() && requestedDecryptionExt != ".flac") return
-        val mayNeedContainerConversion = forceContainerConversion ||
-            looksLikeM4a(state.filePath, state.fileName) ||
-            isMP4ContainerFile(state.filePath) ||
-            state.filePath.startsWith("content://")
-        if (!mayNeedContainerConversion) return
-
-        val localInput = materializeForFFmpeg(context, input, state)
-        val deleteLocalInput = state.filePath.startsWith("content://")
-        val output = buildOutputPath(localInput, ".flac")
-        val stagedOutput = stagedConversionPath(output)
-        var adoptedOutput = false
-        var createdOutput = false
-        try {
-            val codec = probePrimaryAudioCodec(localInput, shouldCancel)
-            val isAlreadyNativeFlac = codec == "flac" && isNativeFlacFile(localInput)
-            if (!NativeFinalizationPolicy.shouldAttemptLosslessContainerConversion(
-                    forceContainerConversion,
-                    codec,
-                )
-            ) {
-                Log.d(TAG, "Preserving native container; audio codec is ${codec.ifBlank { "unknown" }}")
-                // The preserved stream is not FLAC but still carries the
-                // requested .flac name. Rename to the real container so the
-                // metadata/ReplayGain writers pick the right format — an
-                // MP4 stream under a .flac name fails "fLaC head incorrect"
-                // on every subsequent write and the file is never repaired.
-                adoptPreservedContainerExtension(state, localInput, codec)
-                return
-            }
-            if (isAlreadyNativeFlac) {
-                Log.d(TAG, "Native FLAC payload detected; publishing as FLAC and embedding metadata")
-                val nativeFlacOutput = if (localInput.lowercase(Locale.ROOT).endsWith(".flac")) {
-                    localInput
-                } else {
-                    File(localInput).copyTo(File(stagedOutput), overwrite = true)
-                    if (!promoteStagedConversion(stagedOutput, output)) {
-                        throw IllegalStateException("failed to publish native FLAC output")
-                    }
-                    createdOutput = true
-                    output
-                }
-                embedBasicMetadata(context, nativeFlacOutput, input, "flac")
-                replaceStatePath(context, input, state, nativeFlacOutput, deleteOld = true)
-                adoptedOutput = true
-                return
-            }
-            convertToStagedFlac(
-                input = localInput,
-                stagedOutput = stagedOutput,
-                codec = codec,
-                execute = { arguments -> runFFmpegArguments(arguments, shouldCancel) },
-                checkCancelled = { checkCancelled(shouldCancel) },
-            )
-            // Tag the staged file before replacing a same-suffix source.
-            embedBasicMetadata(context, stagedOutput, input, "flac")
-            if (!promoteStagedConversion(stagedOutput, output)) {
-                throw IllegalStateException("failed to publish container conversion output")
-            }
-            createdOutput = true
-            replaceStatePath(context, input, state, output, deleteOld = true)
-            adoptedOutput = true
-        } finally {
-            if (!adoptedOutput) {
-                File(stagedOutput).delete()
-                if (createdOutput && output != localInput) File(output).delete()
-            }
-            if (deleteLocalInput) File(localInput).delete()
-        }
-    }
-
-    /// Renames a preserved lossy/unknown stream away from its requested .flac
-    /// name to match its actual container (mirrors the Dart pipeline's
-    /// post-download rename). Local files only: legacy content:// outputs are
-    /// left untouched. No-op when the container cannot be identified.
-    private fun adoptPreservedContainerExtension(
-        state: FinalizeState,
-        localInput: String,
-        codec: String,
-    ) {
-        if (state.filePath.startsWith("content://")) return
-        val currentFile = File(state.filePath)
-        if (!currentFile.exists()) return
-        if (!currentFile.name.lowercase(Locale.ROOT).endsWith(".flac")) return
-
-        val newExt = when {
-            isMP4ContainerFile(localInput) ->
-                NativeFinalizationPolicy.isoBmffAudioExtension(codec)
-            codec == "mp3" -> ".mp3"
-            codec == "opus" -> ".opus"
-            else -> return
-        }
-        val renamed = File(uniqueAutoConversionOutputPath(currentFile.path, newExt))
-        if (!currentFile.renameTo(renamed)) {
-            Log.w(TAG, "Failed to rename preserved container to ${renamed.name}")
-            return
-        }
-        Log.i(TAG, "Preserved container renamed: ${currentFile.name} -> ${renamed.name}")
-        state.filePath = renamed.absolutePath
-        if (state.fileName.isNotBlank()) {
-            state.fileName = renamed.name
-        }
-        state.audioCodec = normalizeAudioCodec(codec)
-    }
-
-    private fun finalizeMetadata(context: Context, input: FinalizeInput, state: FinalizeState) {
-        if (!input.request.optBoolean("embed_metadata", false)) return
-        if (!state.filePath.startsWith("content://")) {
-            embedBasicMetadata(context, state.filePath, input, formatForPath(state.filePath))
-            return
-        }
-
-        val tempPath = SafDownloadHandler.copyContentUriToTemp(context, state.filePath)
-            ?: throw IllegalStateException("failed to copy SAF file for metadata")
-        try {
-            embedBasicMetadata(context, tempPath, input, formatForPath(state.fileName.ifBlank { tempPath }))
-            val tempFile = File(tempPath)
-            val finalName = desiredFileName(input, state, normalizeExt(state.fileName.substringAfterLast('.', "")))
-            val newUri = SafDownloadHandler.writeFileToSaf(
-                context = context,
-                treeUriStr = input.request.optString("saf_tree_uri", ""),
-                relativeDir = input.request.optString("saf_relative_dir", ""),
-                fileName = finalName,
-                mimeType = mimeTypeForExt(finalName.substringAfterLast('.', "")),
-                srcPath = tempFile.absolutePath,
-            ) ?: throw IllegalStateException("failed to write metadata-updated SAF file")
-            if (newUri != state.filePath) SafDownloadHandler.deleteContentUri(context, state.filePath)
-            state.filePath = newUri
-            state.fileName = finalName
-        } finally {
-            File(tempPath).delete()
-        }
-    }
-
-    private fun writeReplayGain(
-        context: Context,
-        input: FinalizeInput,
-        state: FinalizeState,
-        shouldCancel: () -> Boolean,
-    ): JSONObject? {
-        if (!input.request.optBoolean("embed_replaygain", false)) return null
-        val ext = normalizeExt(File(state.filePath).extension)
-        val fileExt = if (state.filePath.startsWith("content://")) {
-            normalizeExt(state.fileName.substringAfterLast('.', ""))
-        } else {
-            ext
-        }
-        if (
-            fileExt != ".flac" &&
-            fileExt != ".m4a" &&
-            fileExt != ".mp4" &&
-            fileExt != ".mp3" &&
-            fileExt != ".opus" &&
-            fileExt != ".ogg"
-        ) return null
-
-        val scanPath = if (state.filePath.startsWith("content://")) {
-            SafDownloadHandler.copyContentUriToTemp(context, state.filePath)
-                ?: throw IllegalStateException("failed to copy SAF file for ReplayGain")
-        } else {
-            state.filePath
-        }
-        val deleteScanPath = scanPath != state.filePath
-        val scan = try {
-            scanReplayGain(scanPath, shouldCancel)
-                ?: throw IllegalStateException("ReplayGain analysis produced no valid measurement")
-        } finally {
-            if (deleteScanPath) File(scanPath).delete()
-        }
-        checkCancelled(shouldCancel)
-        val fields = JSONObject()
-            .put("replaygain_track_gain", scan.trackGain)
-            .put("replaygain_track_peak", scan.trackPeak)
-        writeReplayGainFields(context, state.filePath, fields)
-
-        return JSONObject()
-            .put("album_key", albumKey(input))
-            .put("file_path", state.filePath)
-            .put("file_name", state.fileName)
-            .put("track_id", trackString(input, "id", input.request.optString("spotify_id", input.itemId)))
-            .put("integrated_lufs", scan.integratedLufs)
-            .put("true_peak_linear", scan.truePeakLinear)
-            .put("duration_secs", replayGainDurationSeconds(input))
-            .put("track_gain", scan.trackGain)
-            .put("track_peak", scan.trackPeak)
-    }
-
-    private fun writeReplayGainFields(context: Context, path: String, fields: JSONObject) {
-        if (!path.startsWith("content://")) {
-            writeLocalReplayGainFields(context, path, fields)
-            return
-        }
-
-        val tempPath = SafDownloadHandler.copyContentUriToTemp(context, path)
-            ?: throw IllegalStateException("failed to copy SAF file for ReplayGain write")
-        try {
-            writeLocalReplayGainFields(context, tempPath, fields)
-            val uri = Uri.parse(path)
-            context.contentResolver.openOutputStream(uri, "wt")?.use { output ->
-                File(tempPath).inputStream().use { input -> input.copyTo(output) }
-                SafDownloadHandler.syncOutputStream(output)
-            } ?: throw IllegalStateException("failed to write ReplayGain back to SAF")
-        } finally {
-            File(tempPath).delete()
-        }
-    }
-
-    private fun writeLocalReplayGainFields(context: Context, path: String, fields: JSONObject) {
-        val backend = createCoreBackend(context)
-        val result = parseObject(backend.editFileMetadata(path, fields.toString()))
-        val method = result.optString("method", "")
-        check(
-            result.optBoolean("success", false) &&
-                !result.has("error") &&
-                (method == "native" || method.startsWith("native_")),
-        ) { "ReplayGain native write did not complete: $result" }
-
-        val metadata = parseObject(backend.readFileMetadata(path, ""))
-        check(!metadata.has("error")) { "ReplayGain verification failed: $metadata" }
-        val isOpus = metadata.optString("audio_codec", "") == "opus"
-        for (key in fields.keys()) {
-            // Opus stores only R128 gain, exposed by the Go reader as dB.
-            if (isOpus && key.endsWith("_peak")) continue
-            val expected = fields.optString(key, "").trim().removeSuffix("dB").trim().toDoubleOrNull()
-            val actual = metadata.optString(key, "").trim().removeSuffix("dB").trim().toDoubleOrNull()
-            val tolerance = if (key.endsWith("_gain")) 0.01 else 0.000001
-            check(expected != null && actual != null && abs(actual - expected) <= tolerance) {
-                "ReplayGain verification failed for $key"
-            }
-        }
-    }
-
-    private fun refreshFinalAudioQualityMetadata(context: Context, result: JSONObject, state: FinalizeState) {
-        if (!supportsAudioMetadataProbe(state.filePath, state.fileName)) return
-
-        val probePath = if (state.filePath.startsWith("content://")) {
-            SafDownloadHandler.copyContentUriToTemp(context, state.filePath) ?: return
-        } else {
-            state.filePath
-        }
-        val deleteProbePath = probePath != state.filePath
-
-        try {
-            val metadata = parseObject(createCoreBackend(context).readFileMetadata(probePath, state.fileName))
-            if (metadata.has("error")) return
-
-            if (!metadata.optBoolean("metadataFromFilename", false) &&
-                (metadata.has("audio_codec") || metadata.has("format") ||
-                    metadata.has("replaygain_track_gain") || metadata.has("replaygain_album_gain"))
-            ) {
-                state.replayGainMetadataScanned = true
-                state.hasReplayGain = listOf("replaygain_track_gain", "replaygain_album_gain").any { key ->
-                    val value = metadata.optString(key, "").trim()
-                    val gain = (if (value.endsWith("dB", ignoreCase = true)) value.dropLast(2) else value)
-                        .trim().toDoubleOrNull()
-                    gain != null && gain.isFinite()
-                }
-            }
-
-            if (metadata.has("lyrics") || metadata.has("hasLyrics")) {
-                state.lyricsMetadataScanned = true
-                state.hasEmbeddedLyrics =
-                    metadata.optBoolean("hasLyrics", false) ||
-                    NativeFinalizationPolicy.hasUsableLyricsContent(
-                        metadata.optString("lyrics", ""),
-                    )
-            }
-
-            val bitDepth = optPositiveInt(metadata, "bit_depth")
-            val sampleRate = optPositiveInt(metadata, "sample_rate")
-            val probedCodec = normalizeAudioCodec(
-                metadata.optString("audio_codec", "").ifBlank {
-                    metadata.optString("codec", "").ifBlank {
-                        metadata.optString("format", "")
-                    }
-                }
-            )
-            if (probedCodec != null) {
-                state.audioCodec = probedCodec
-                result.put("audio_codec", probedCodec)
-            }
-            if (bitDepth != null) {
-                state.bitDepth = bitDepth
-                result.put("actual_bit_depth", bitDepth)
-            }
-            if (sampleRate != null) {
-                state.sampleRate = sampleRate
-                result.put("actual_sample_rate", sampleRate)
-            }
-            val bitrateKbps = optPositiveBitrateKbps(metadata, "bitrate")
-                ?: optPositiveBitrateKbps(metadata, "bit_rate")
-            if (bitrateKbps != null) {
-                state.bitrateKbps = bitrateKbps
-                result.put("bitrate", bitrateKbps)
-            }
-
-            val displayQuality = displayAudioQuality(
-                filePath = state.filePath,
-                fileName = state.fileName,
-                bitDepth = state.bitDepth,
-                sampleRate = state.sampleRate,
-                bitrateKbps = state.bitrateKbps,
-                audioCodec = state.audioCodec,
-                storedQuality = state.quality,
-            )
-            if (displayQuality != null) {
-                state.quality = displayQuality
-            }
-        } catch (_: Exception) {
-        } finally {
-            if (deleteProbePath) File(probePath).delete()
-        }
-    }
-
-    private fun supportsAudioMetadataProbe(filePath: String, fileName: String): Boolean {
-        val lowerPath = filePath.trim().lowercase(Locale.ROOT)
-        val lowerName = fileName.trim().lowercase(Locale.ROOT)
-        if (lowerPath.startsWith("content://")) return true
-        return lowerPath.endsWith(".flac") ||
-            lowerPath.endsWith(".m4a") ||
-            lowerPath.endsWith(".mp4") ||
-            lowerPath.endsWith(".aac") ||
-            lowerPath.endsWith(".mp3") ||
-            lowerPath.endsWith(".opus") ||
-            lowerPath.endsWith(".ogg") ||
-            lowerName.endsWith(".flac") ||
-            lowerName.endsWith(".m4a") ||
-            lowerName.endsWith(".mp4") ||
-            lowerName.endsWith(".aac") ||
-            lowerName.endsWith(".mp3") ||
-            lowerName.endsWith(".opus") ||
-            lowerName.endsWith(".ogg")
-    }
-
-    private fun runPostProcessing(
-        context: Context,
-        input: FinalizeInput,
-        state: FinalizeState,
-        shouldCancel: () -> Boolean,
-    ) {
-        if (!input.request.optBoolean("post_processing_enabled", false)) return
-        val metadata = JSONObject()
-            .put("title", trackString(input, "name", input.request.optString("track_name", "")))
-            .put("artist", trackString(input, "artistName", input.request.optString("artist_name", "")))
-            .put("album", trackString(input, "albumName", input.request.optString("album_name", "")))
-            .put(
-                "album_artist",
-                NativeFinalizationPolicy.authoritativeAlbumArtist(
-                    requestValue = requestString(input, "album_artist"),
-                    trackValue = trackString(input, "albumArtist", ""),
-                    providerResultValue = resultString(input, "album_artist"),
-                ),
-            )
-            .put("track_number", trackInt(input, "trackNumber", input.request.optInt("track_number", 0)))
-            .put("disc_number", trackInt(input, "discNumber", input.request.optInt("disc_number", 0)))
-            .put("isrc", trackString(input, "isrc", input.request.optString("isrc", "")))
-            .put("release_date", trackString(input, "releaseDate", input.request.optString("release_date", "")))
-            .put("duration_ms", trackInt(input, "duration", 0) * 1000)
-            .put("cover_url", metadataCoverUrl(input))
-
-        if (state.filePath.startsWith("content://")) {
-            val uri = state.filePath
-            val tempInput = SafDownloadHandler.copyContentUriToTemp(context, uri)
-                ?: throw IllegalStateException("failed to copy SAF file for post-processing")
-            try {
-                val inputObj = JSONObject()
-                    .put("item_id", input.itemId)
-                    .put("path", tempInput)
-                    .put("uri", uri)
-                    .put("name", state.fileName)
-                    .put("mime_type", mimeTypeForExt(state.fileName.substringAfterLast('.', "")))
-                    .put("size", File(tempInput).length())
-                    .put("is_saf", true)
-                checkCancelled(shouldCancel)
-                val response = JSONObject(createCoreBackend(context).runPostProcessing(inputObj.toString(), metadata.toString()))
-                checkCancelled(shouldCancel)
-                if (!response.optBoolean("success", false)) return
-                val newPath = response.optString("new_file_path", "")
-                val outputPath = newPath.ifBlank { tempInput }
-                val outputFile = File(outputPath)
-                if (!outputFile.exists()) return
-                val outputName = if (newPath.isBlank()) state.fileName else outputFile.name
-                val newUri = SafDownloadHandler.writeFileToSaf(
-                    context = context,
-                    treeUriStr = input.request.optString("saf_tree_uri", ""),
-                    relativeDir = input.request.optString("saf_relative_dir", ""),
-                    fileName = outputName,
-                    mimeType = mimeTypeForExt(outputFile.extension),
-                    srcPath = outputFile.absolutePath,
-                ) ?: return
-                if (newUri != uri) SafDownloadHandler.deleteContentUri(context, uri)
-                state.filePath = newUri
-                state.fileName = outputName
-                if (outputPath != tempInput) outputFile.delete()
-            } finally {
-                File(tempInput).delete()
-            }
-            return
-        }
-
-        val inputObj = JSONObject()
-            .put("item_id", input.itemId)
-            .put("path", state.filePath)
-            .put("name", state.fileName)
-            .put("is_saf", false)
-        checkCancelled(shouldCancel)
-        val response = JSONObject(createCoreBackend(context).runPostProcessing(inputObj.toString(), metadata.toString()))
-        checkCancelled(shouldCancel)
-        if (response.optBoolean("success", false)) {
-            val newPath = response.optString("new_file_path", "")
-            if (newPath.isNotBlank() && newPath != state.filePath) {
-                if (isDeferredSafPublish(input)) {
-                    val output = File(newPath)
-                    check(output.isFile && output.length() > 0L) {
-                        "post-processing output missing or empty"
-                    }
-                    // This input is an owned staging file; publication later
-                    // removes the replacement, so retire the old stage now.
-                    File(state.filePath).delete()
-                }
-                state.filePath = newPath
-                state.fileName = File(newPath).name
-            }
-        }
-    }
-
     internal fun materializeForFFmpeg(context: Context, input: FinalizeInput, state: FinalizeState): String {
         if (!state.filePath.startsWith("content://")) return state.filePath
         return SafDownloadHandler.copyContentUriToTemp(context, state.filePath)
@@ -1111,189 +477,6 @@ object NativeDownloadFinalizer {
         if (deleteOld && oldPath != localOutput) File(oldPath).delete()
     }
 
-    private fun validateRequestContract(request: JSONObject) {
-        val version = request.optInt("contract_version", -1)
-        if (version != NATIVE_WORKER_CONTRACT_VERSION) {
-            throw IllegalArgumentException(
-                "unsupported native worker request contract v$version"
-            )
-        }
-
-        val required = listOf("item_id", "service", "track_name", "quality", "storage_mode")
-        val missing = required.filter { request.optString(it, "").trim().isEmpty() }
-        if (missing.isNotEmpty()) {
-            throw IllegalArgumentException(
-                "native worker request missing fields: ${missing.joinToString()}"
-            )
-        }
-    }
-
-    private fun decryptionKeyCandidates(raw: String): List<String> {
-        val candidates = linkedSetOf<String>()
-        fun add(value: String) {
-            val trimmed = value.trim()
-            if (trimmed.isNotEmpty()) candidates.add(trimmed)
-        }
-        val trimmed = raw.trim()
-        if (trimmed.isEmpty()) return emptyList()
-        add(trimmed)
-        val noPrefix = if (trimmed.startsWith("0x", ignoreCase = true)) trimmed.substring(2) else trimmed
-        add(noPrefix)
-        val compactHex = noPrefix.replace(Regex("[^0-9a-fA-F]"), "")
-        if (compactHex.isNotEmpty() && compactHex.length % 2 == 0) add(compactHex)
-        try {
-            val decoded = Base64.decode(noPrefix.replace(Regex("\\s+"), ""), Base64.DEFAULT)
-            if (decoded.isNotEmpty()) {
-                add(decoded.joinToString("") { "%02x".format(it) })
-            }
-        } catch (_: Exception) {
-        }
-        return candidates.toList()
-    }
-
-    private fun looksLikeM4a(path: String, fileName: String): Boolean {
-        val lowerPath = path.lowercase(Locale.ROOT)
-        val lowerName = fileName.lowercase(Locale.ROOT)
-        return lowerPath.endsWith(".m4a") ||
-            lowerPath.endsWith(".mp4") ||
-            lowerName.endsWith(".m4a") ||
-            lowerName.endsWith(".mp4")
-    }
-
-    private fun albumKey(input: FinalizeInput): String {
-        val albumId = trackString(input, "albumId", "")
-        if (albumId.isNotBlank()) return "id:$albumId"
-        val albumName = trackString(input, "albumName", input.request.optString("album_name", ""))
-        val albumArtist = NativeFinalizationPolicy.authoritativeAlbumArtist(
-            requestValue = requestString(input, "album_artist"),
-            trackValue = trackString(input, "albumArtist", ""),
-            providerResultValue = resultString(input, "album_artist"),
-        )
-        return "name:$albumName|$albumArtist"
-    }
-
-    private fun replayGainDurationSeconds(input: FinalizeInput): Double {
-        val duration = NativeFinalizationPolicy.durationMilliseconds(
-            input.request.optLong("duration_ms", 0L),
-            trackInt(input, "duration", 0).toLong(),
-        )
-        return if (duration > 0L) duration / 1000.0 else 1.0
-    }
-
-    private fun buildHistoryRow(input: FinalizeInput, state: FinalizeState): ContentValues {
-        val result = input.result
-        val values = ContentValues()
-        values.put("id", input.itemId)
-        values.put("track_name", result.optString("title", "").ifBlank { trackString(input, "name", input.request.optString("track_name", "")) })
-        values.put("artist_name", result.optString("artist", "").ifBlank { trackString(input, "artistName", input.request.optString("artist_name", "")) })
-        values.put("album_name", result.optString("album", "").ifBlank { trackString(input, "albumName", input.request.optString("album_name", "")) })
-        values.put(
-            "album_artist",
-            normalizeOptional(
-                NativeFinalizationPolicy.authoritativeAlbumArtist(
-                    requestValue = requestString(input, "album_artist"),
-                    trackValue = trackString(input, "albumArtist", ""),
-                    providerResultValue = resultString(input, "album_artist"),
-                ),
-            ),
-        )
-        values.put("cover_url", normalizeOptional(metadataCoverUrl(input).ifBlank { resultString(input, "cover_url") }))
-        values.put("file_path", state.filePath)
-        values.put("storage_mode", input.request.optString("storage_mode", "app"))
-        values.put("download_tree_uri", normalizeOptional(input.request.optString("saf_tree_uri", "")))
-        values.put("saf_relative_dir", normalizeOptional(input.request.optString("saf_relative_dir", "")))
-        values.put("saf_file_name", if (state.filePath.startsWith("content://")) state.fileName else null)
-        values.put("saf_repaired", 0)
-        values.put("service", result.optString("service", "").ifBlank { input.item.optString("service", "") })
-        values.put("downloaded_at", java.time.Instant.now().toString())
-        values.put("isrc", normalizeOptional(result.optString("isrc", "").ifBlank { trackString(input, "isrc", input.request.optString("isrc", "")) }))
-        values.put("spotify_id", normalizeOptional(trackString(input, "id", input.request.optString("spotify_id", ""))))
-        values.put("track_number", positiveOrNull(result.optInt("track_number", 0), trackInt(input, "trackNumber", input.request.optInt("track_number", 0))))
-        values.put("total_tracks", positiveOrNull(result.optInt("total_tracks", 0), trackInt(input, "totalTracks", input.request.optInt("total_tracks", 0))))
-        values.put("disc_number", positiveOrNull(result.optInt("disc_number", 0), trackInt(input, "discNumber", input.request.optInt("disc_number", 0))))
-        values.put("total_discs", positiveOrNull(result.optInt("total_discs", 0), trackInt(input, "totalDiscs", input.request.optInt("total_discs", 0))))
-        values.put("duration", trackInt(input, "duration", input.request.optInt("duration_ms", 0) / 1000))
-        values.put("release_date", normalizeOptional(resultString(input, "release_date").ifBlank { resultString(input, "date").ifBlank { trackString(input, "releaseDate", requestString(input, "release_date")) } }))
-        values.put("quality", state.quality)
-        state.bitDepth?.let { values.put("bit_depth", it) }
-        state.sampleRate?.let { values.put("sample_rate", it) }
-        state.bitrateKbps?.takeIf { it >= 16 }?.let {
-            values.put("bitrate", it)
-        }
-        normalizeAudioCodec(state.audioCodec)?.let { values.put("format", it) }
-        values.put("genre", normalizeOptional(result.optString("genre", "").ifBlank { input.request.optString("genre", "") }))
-        values.put("composer", normalizeOptional(resultString(input, "composer").ifBlank { trackString(input, "composer", requestString(input, "composer")) }))
-        values.put("label", normalizeOptional(result.optString("label", "").ifBlank { input.request.optString("label", "") }))
-        values.put("copyright", normalizeOptional(result.optString("copyright", "").ifBlank { input.request.optString("copyright", "") }))
-        values.put(
-            "explicit",
-            if (
-                result.optBoolean("explicit", false) ||
-                    input.track.optBoolean("explicit", false) ||
-                    input.request.optBoolean("explicit", false)
-            ) 1 else 0,
-        )
-        values.put(
-            "has_lyrics",
-            if (state.hasEmbeddedLyrics || state.externalLrcWritten) 1 else 0,
-        )
-        values.put(
-            "lyrics_metadata_scan_version",
-            if (
-                state.lyricsMetadataScanned ||
-                state.hasEmbeddedLyrics ||
-                state.externalLrcWritten
-            ) 1 else 0,
-        )
-        values.put("has_replaygain", if (state.hasReplayGain) 1 else 0)
-        values.put("replaygain_metadata_scan_version", if (state.replayGainMetadataScanned) 1 else 0)
-        return values
-    }
-
-    private fun historyToJson(values: ContentValues): JSONObject {
-        val json = JSONObject()
-        fun putCamel(column: String, key: String) {
-            if (values.containsKey(column)) json.put(key, values.get(column))
-        }
-        putCamel("id", "id")
-        putCamel("track_name", "trackName")
-        putCamel("artist_name", "artistName")
-        putCamel("album_name", "albumName")
-        putCamel("album_artist", "albumArtist")
-        putCamel("cover_url", "coverUrl")
-        putCamel("file_path", "filePath")
-        putCamel("storage_mode", "storageMode")
-        putCamel("download_tree_uri", "downloadTreeUri")
-        putCamel("saf_relative_dir", "safRelativeDir")
-        putCamel("saf_file_name", "safFileName")
-        json.put("safRepaired", values.getAsInteger("saf_repaired") == 1)
-        putCamel("service", "service")
-        putCamel("downloaded_at", "downloadedAt")
-        putCamel("isrc", "isrc")
-        putCamel("spotify_id", "spotifyId")
-        putCamel("track_number", "trackNumber")
-        putCamel("total_tracks", "totalTracks")
-        putCamel("disc_number", "discNumber")
-        putCamel("total_discs", "totalDiscs")
-        putCamel("duration", "duration")
-        putCamel("release_date", "releaseDate")
-        putCamel("quality", "quality")
-        putCamel("bit_depth", "bitDepth")
-        putCamel("sample_rate", "sampleRate")
-        putCamel("bitrate", "bitrate")
-        putCamel("format", "format")
-        putCamel("genre", "genre")
-        putCamel("composer", "composer")
-        putCamel("label", "label")
-        putCamel("copyright", "copyright")
-        json.put("explicit", values.getAsInteger("explicit") == 1)
-        json.put("hasLyrics", values.getAsInteger("has_lyrics") == 1)
-        json.put("lyricsMetadataScanVersion", values.getAsInteger("lyrics_metadata_scan_version") ?: 0)
-        json.put("hasReplayGain", values.getAsInteger("has_replaygain") == 1)
-        json.put("replayGainMetadataScanVersion", values.getAsInteger("replaygain_metadata_scan_version") ?: 0)
-        return json
-    }
-
     internal fun trackString(input: FinalizeInput, key: String, fallback: String): String =
         cleanMetadataString(input.track.optString(key, "")).ifBlank { cleanMetadataString(fallback) }
 
@@ -1303,20 +486,31 @@ object NativeDownloadFinalizer {
     internal fun resultString(input: FinalizeInput, key: String): String =
         cleanMetadataString(input.result.optString(key, ""))
 
+    internal fun resolvedAlbumArtist(input: FinalizeInput): String =
+        NativeFinalizationPolicy.authoritativeAlbumArtist(
+            requestValue = requestString(input, "album_artist"),
+            trackValue = trackString(input, "albumArtist", ""),
+            providerResultValue = resultString(input, "album_artist"),
+        )
+
     internal fun metadataCoverUrl(input: FinalizeInput): String =
-        trackString(input, "coverUrl", requestString(input, "cover_url"))
+        NativeFinalizationPolicy.metadataCoverUrl(
+            resultValue = resultString(input, "cover_url"),
+            requestValue = requestString(input, "cover_url"),
+            trackValue = trackString(input, "coverUrl", ""),
+        )
 
     internal fun trackInt(input: FinalizeInput, key: String, fallback: Int): Int {
         val value = input.track.optInt(key, 0)
         return if (value > 0) value else fallback
     }
 
-    private fun optPositiveInt(obj: JSONObject, key: String): Int? {
+    internal fun optPositiveInt(obj: JSONObject, key: String): Int? {
         val value = obj.optInt(key, 0)
         return if (value > 0) value else null
     }
 
-    private fun optPositiveBitrateKbps(obj: JSONObject, key: String): Int? {
+    internal fun optPositiveBitrateKbps(obj: JSONObject, key: String): Int? {
         val value = optPositiveInt(obj, key) ?: return null
         val kbps = if (value >= 10000) {
             Math.round(value / 1000.0).toInt()
@@ -1331,12 +525,7 @@ object NativeDownloadFinalizer {
         return if (value > 0) value else null
     }
 
-    private fun normalizeOptional(value: String?): String? {
-        val trimmed = cleanMetadataString(value)
-        return trimmed.ifBlank { null }
-    }
-
-    private fun cleanMetadataString(value: String?): String {
+    internal fun cleanMetadataString(value: String?): String {
         val trimmed = value?.trim().orEmpty()
         return if (trimmed.equals("null", ignoreCase = true)) "" else trimmed
     }

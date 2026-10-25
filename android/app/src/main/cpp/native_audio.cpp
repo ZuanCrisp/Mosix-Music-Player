@@ -1,6 +1,7 @@
 #include <jni.h>
 #include <oboe/Oboe.h>
 #include <wavpack.h>
+#include "flac_pcm_source.h"
 
 #include <algorithm>
 #include <atomic>
@@ -209,9 +210,10 @@ public:
 };
 Handles<ExclusiveOutput> outputs;
 Handles<DsdDecoder> decoders;
+Handles<FlacPcmSource> flacSources;
 }
 
-#define JNI_AUDIO(name) Java_com_zarz_spotiflac_NativeAudio_##name
+#define JNI_AUDIO(name) Java_com_zarz_mornye_NativeAudio_##name
 extern "C" {
 JNIEXPORT jlong JNICALL JNI_AUDIO(openOboe)(JNIEnv *env, jobject, jint rate, jint channels, jint bits, jint device) {
     try { return outputs.add(std::make_shared<ExclusiveOutput>(rate, channels, bits, device)); }
@@ -292,4 +294,41 @@ JNIEXPORT void JNICALL JNI_AUDIO(seekWavPack)(JNIEnv *env, jobject, jlong handle
     } catch (const std::exception &e) { report(env, e); }
 }
 JNIEXPORT void JNICALL JNI_AUDIO(closeWavPack)(JNIEnv *, jobject, jlong handle) { decoders.remove(handle); }
+JNIEXPORT jlong JNICALL JNI_AUDIO(openFlac)(JNIEnv *env, jobject, jstring path) {
+    const char *text = env->GetStringUTFChars(path, nullptr);
+    if (!text) return 0;
+    try {
+        auto source = std::make_shared<FlacPcmSource>(text);
+        env->ReleaseStringUTFChars(path, text);
+        text = nullptr;
+        return flacSources.add(std::move(source));
+    } catch (const std::exception &e) {
+        if (text) env->ReleaseStringUTFChars(path, text);
+        report(env, e); return 0;
+    }
+}
+JNIEXPORT jlongArray JNICALL JNI_AUDIO(infoFlac)(JNIEnv *env, jobject, jlong handle) {
+    try {
+        auto source = flacSources.get(handle);
+        jlong data[]{source->rate, source->channels, source->bits, static_cast<jlong>(source->samples)};
+        auto result = env->NewLongArray(4);
+        if (result) env->SetLongArrayRegion(result, 0, 4, data);
+        return result;
+    } catch (const std::exception &e) { report(env, e); return nullptr; }
+}
+JNIEXPORT jint JNICALL JNI_AUDIO(readFlac)(JNIEnv *env, jobject, jlong handle, jobject buffer, jint bits) {
+    try {
+        auto *data = static_cast<uint8_t *>(env->GetDirectBufferAddress(buffer));
+        const auto capacity = env->GetDirectBufferCapacity(buffer);
+        require(data && capacity > 0 && capacity <= 262144, "Invalid FLAC PCM buffer");
+        return static_cast<jint>(flacSources.get(handle)->read(data, static_cast<size_t>(capacity), bits));
+    } catch (const std::exception &e) { report(env, e); return 0; }
+}
+JNIEXPORT void JNICALL JNI_AUDIO(seekFlac)(JNIEnv *env, jobject, jlong handle, jlong sample) {
+    try {
+        require(sample >= 0, "Invalid FLAC seek position");
+        flacSources.get(handle)->seek(static_cast<uint64_t>(sample));
+    } catch (const std::exception &e) { report(env, e); }
+}
+JNIEXPORT void JNICALL JNI_AUDIO(closeFlac)(JNIEnv *, jobject, jlong handle) { flacSources.remove(handle); }
 }

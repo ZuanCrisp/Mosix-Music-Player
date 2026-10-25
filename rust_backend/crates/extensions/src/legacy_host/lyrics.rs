@@ -1,9 +1,9 @@
 use crate::runtime::{Control, ExtensionServices};
 use cap_std::fs::OpenOptions;
+use mornye_core::lyrics::{file, lrc};
+use mornye_providers::lyrics::SearchRequest;
 use rquickjs::{Ctx, Function, Object};
 use serde_json::json;
-use spotiflac_core::lyrics::{file, lrc};
-use spotiflac_providers::lyrics::SearchRequest;
 use std::sync::Arc;
 
 pub(super) fn register<'js>(

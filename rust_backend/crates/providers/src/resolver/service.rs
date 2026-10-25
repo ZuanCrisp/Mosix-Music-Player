@@ -1,16 +1,17 @@
+//! Platform resolver service that resolves URLs and Spotify tracks to other platforms, with caching.
+
 use super::{Check, Metadata, Resolution, Resolver, ResolverError, check_active};
+use crate::coalescer::{Coalescer, Flight, Waiter};
 use crate::lyrics::{LyricsError, builtin::TrackResolver};
 use std::collections::BTreeMap;
 use std::panic::{AssertUnwindSafe, catch_unwind};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
 
 const POSITIVE_TTL: Duration = Duration::from_secs(30 * 60);
 const NEGATIVE_TTL: Duration = Duration::from_secs(5 * 60);
 const MAX_CACHE: usize = 500;
-const MAX_FLIGHTS: usize = 64;
-const POLL: Duration = Duration::from_millis(25);
 type Outcome = Result<Resolution, ResolverError>;
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -23,20 +24,6 @@ struct Key {
     cached: bool,
 }
 
-#[derive(Default)]
-struct Flight {
-    waiters: AtomicUsize,
-    result: Mutex<Option<Outcome>>,
-    ready: Condvar,
-}
-
-struct Waiter(Arc<Flight>);
-impl Drop for Waiter {
-    fn drop(&mut self) {
-        self.0.waiters.fetch_sub(1, Ordering::AcqRel);
-    }
-}
-
 struct CacheEntry {
     value: Outcome,
     expires: Instant,
@@ -45,8 +32,7 @@ struct CacheEntry {
 struct State {
     region: String,
     generation: u64,
-    active: usize,
-    flights: BTreeMap<Key, Arc<Flight>>,
+    flights: Coalescer<Key, Outcome>,
     cache: BTreeMap<(String, String), CacheEntry>,
 }
 
@@ -72,8 +58,7 @@ impl PlatformResolverService {
                 state: Mutex::new(State {
                     region: "US".into(),
                     generation: 0,
-                    active: 0,
-                    flights: BTreeMap::new(),
+                    flights: Coalescer::default(),
                     cache: BTreeMap::new(),
                 }),
                 idle: Condvar::new(),
@@ -82,7 +67,7 @@ impl PlatformResolverService {
     }
 
     pub fn set_region(&self, region: &str) -> Result<(), ResolverError> {
-        let region = spotiflac_core::matching::uppercase(region.trim());
+        let region = mornye_core::matching::uppercase(region.trim());
         let mut state = self.inner.state.lock().unwrap();
         self.inner.check(&|| Ok(()))?;
         state.region = if region.len() == 2 && region.bytes().all(|byte| byte.is_ascii_uppercase())
@@ -148,26 +133,21 @@ impl PlatformResolverService {
                 artist: hint.artist.clone(),
                 cached,
             };
-            let existing = state
-                .flights
-                .get(&key)
-                .filter(|flight| flight.waiters.load(Ordering::Acquire) > 0)
-                .cloned();
+            let existing = state.flights.existing(&key);
             let (flight, start) = if let Some(flight) = existing {
                 (flight, false)
             } else {
-                if state.active >= MAX_FLIGHTS {
+                if state.flights.is_full() {
                     return Err(ResolverError::Busy);
                 }
-                let flight = Arc::new(Flight::default());
+                let flight = Flight::new(());
                 state.flights.insert(key.clone(), Arc::clone(&flight));
-                state.active += 1;
                 (flight, true)
             };
-            flight.waiters.fetch_add(1, Ordering::AcqRel);
+            flight.join();
             (key, flight, start)
         };
-        let _waiter = Waiter(Arc::clone(&flight));
+        let _waiter = Waiter::new(Arc::clone(&flight));
         if start {
             let inner = Arc::clone(&self.inner);
             let worker_key = key.clone();
@@ -176,13 +156,11 @@ impl PlatformResolverService {
                 .name("platform-resolver".into())
                 .spawn(move || {
                     let check = || {
-                        if inner.closed.load(Ordering::Acquire) {
-                            Err("platform resolver closed".into())
-                        } else if worker_flight.waiters.load(Ordering::Acquire) == 0 {
-                            Err("platform resolution cancelled".into())
-                        } else {
-                            Ok(())
-                        }
+                        worker_flight.check(
+                            &inner.closed,
+                            "platform resolver closed",
+                            "platform resolution cancelled",
+                        )
                     };
                     let result = catch_unwind(AssertUnwindSafe(|| {
                         inner.resolver.resolve(
@@ -207,21 +185,13 @@ impl PlatformResolverService {
                     .finish(&key, &flight, Err(ResolverError::Failed(error.to_string())));
             }
         }
-        loop {
-            self.inner.check(check)?;
-            let result = flight.result.lock().unwrap();
-            if let Some(result) = result.as_ref() {
-                self.inner.check(check)?;
-                return result.clone();
-            }
-            drop(flight.ready.wait_timeout(result, POLL).unwrap());
-        }
+        flight.wait(|| self.inner.check(check))?
     }
 
     pub fn shutdown(&self) {
         self.inner.closed.store(true, Ordering::Release);
         let mut state = self.inner.state.lock().unwrap();
-        while state.active != 0 {
+        while state.flights.active() != 0 {
             state = self.inner.idle.wait(state).unwrap();
         }
         state.cache.clear();
@@ -267,7 +237,7 @@ impl Inner {
         }
     }
 
-    fn finish(&self, key: &Key, flight: &Arc<Flight>, result: Outcome) {
+    fn finish(&self, key: &Key, flight: &Arc<Flight<Outcome>>, result: Outcome) {
         let mut state = self.state.lock().unwrap();
         if key.cached
             && key.generation == state.generation
@@ -301,23 +271,15 @@ impl Inner {
                 },
             );
         }
-        *flight.result.lock().unwrap() = Some(result);
-        flight.ready.notify_all();
-        if state
-            .flights
-            .get(key)
-            .is_some_and(|current| Arc::ptr_eq(current, flight))
-        {
-            state.flights.remove(key);
-        }
-        state.active -= 1;
-        self.idle.notify_all();
+        state.flights.finish(key, flight, result, &self.idle);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::coalescer::MAX_FLIGHTS;
+    use std::sync::atomic::AtomicUsize;
 
     #[derive(Default)]
     struct Probe {
@@ -390,8 +352,7 @@ mod tests {
                 .values()
                 .next()
                 .unwrap()
-                .waiters
-                .load(Ordering::Acquire)
+                .waiters()
                 == 2
         });
         cancelled.store(true, Ordering::Release);
@@ -432,7 +393,7 @@ mod tests {
             ),
             Err(ResolverError::Cancelled(_))
         ));
-        until(|| service.inner.state.lock().unwrap().active == 0);
+        until(|| service.inner.state.lock().unwrap().flights.active() == 0);
         assert!(service.inner.state.lock().unwrap().cache.is_empty());
         let waiting = {
             let service = service.clone();
@@ -447,7 +408,7 @@ mod tests {
         );
         assert_eq!(service.set_region("ID"), Err(ResolverError::Closed));
         assert_eq!(service.clear_cache(), Err(ResolverError::Closed));
-        assert_eq!(service.inner.state.lock().unwrap().active, 0);
+        assert_eq!(service.inner.state.lock().unwrap().flights.active(), 0);
     }
 
     #[test]

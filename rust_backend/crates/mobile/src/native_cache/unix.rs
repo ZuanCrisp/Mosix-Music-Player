@@ -1,3 +1,5 @@
+//! Unix implementation of native cache directory operations, driven by JSON requests.
+
 use rusqlite::{Connection, OpenFlags, TransactionBehavior};
 use rustix::fd::OwnedFd;
 use rustix::fs::{

@@ -1,3 +1,5 @@
+//! Date parsing and token based date formatting for filename templates.
+
 use chrono::{Datelike, NaiveDate, NaiveDateTime, Timelike};
 use regex::Regex;
 use std::sync::LazyLock;

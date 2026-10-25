@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/automix_options.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/theme_settings.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/widgets/automix_settings.dart';
-import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/automix_options.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/theme_settings.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/widgets/automix_settings.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_slider.dart';
 
 void main() {
   testWidgets(
@@ -41,17 +42,19 @@ void main() {
           ),
         ),
       );
-      final slider = tester.widget<Slider>(find.byType(Slider).first);
+      final slider = tester.widget<AppSlider>(find.byType(AppSlider).first);
       slider.onChanged!(45);
       await tester.pump();
       expect(container.read(settingsProvider).autoMixDuration, 5);
-      expect(find.text('Mix duration: 45 s'), findsOneWidget);
+      expect(find.text('45 s'), findsOneWidget);
       slider.onChangeEnd!(45);
       await tester.pump();
       expect(container.read(settingsProvider).autoMixDuration, 45);
       container.read(settingsProvider.notifier).setUsbBitPerfect(true);
       await tester.pump();
-      for (final slider in tester.widgetList<Slider>(find.byType(Slider))) {
+      for (final slider in tester.widgetList<AppSlider>(
+        find.byType(AppSlider),
+      )) {
         expect(slider.onChanged, isNull);
       }
       await tester.tap(find.text('Transition effect'));
@@ -126,7 +129,7 @@ void main() {
         );
         expect(find.byType(BottomSheet), findsNothing);
         expect(find.text('Custom'), findsOneWidget);
-        expect(find.byType(Slider), findsNWidgets(2));
+        expect(find.byType(AppSlider), findsNWidgets(2));
         expect(tester.takeException(), isNull);
       },
     );

@@ -1,7 +1,7 @@
 [bindings.kotlin]
-package_name = "com.spotiflac.backend"
-cdylib_name = "spotiflac_mobile"
+package_name = "com.mornye.backend"
+cdylib_name = "mornye_mobile"
 
 [bindings.swift]
-module_name = "SpotiFLACBackend"
-ffi_module_name = "SpotiFLACBackendFFI"
+module_name = "MosixBackend"
+ffi_module_name = "MosixBackendFFI"

@@ -1,22 +1,23 @@
-import 'dart:io';
-
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/utils/audio_format_utils.dart';
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/services/history_database.dart';
-import 'package:mosix/services/library_queue_store.dart';
-import 'package:mosix/services/library_cleanup.dart';
-import 'package:mosix/services/library_search.dart';
-import 'package:mosix/services/library_database_models.dart';
-import 'package:mosix/services/library_duplicates.dart';
-import 'package:mosix/services/library_native_adapter.dart';
-import 'package:mosix/services/library_row_mapper.dart';
-import 'package:mosix/services/library_schema.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/services/history_database.dart';
+import 'package:mornye/services/library_queue_store.dart';
+import 'package:mornye/services/library_file_sizes.dart';
+import 'package:mornye/services/library_cleanup.dart';
+import 'package:mornye/services/library_search.dart';
+import 'package:mornye/services/library_database_models.dart';
+import 'package:mornye/services/library_duplicates.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/services/library_ingestion_store.dart';
+import 'package:mornye/services/library_native_adapter.dart';
+import 'package:mornye/services/library_row_mapper.dart';
+import 'package:mornye/services/library_schema.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
 
 export 'library_database_models.dart';
 
@@ -34,13 +35,6 @@ class LibraryDatabase {
   static const String visibleLibraryView = LibrarySchema.visibleView;
   static const String searchFtsTable = LibrarySchema.searchFtsTable;
   static const String lookupSummaryTable = LibrarySchema.lookupSummaryTable;
-  static const String _scanStageTable = 'library_scan_stage';
-  static const String _scanStagePathKeysTable = 'library_scan_path_keys_stage';
-  static const String _incrementalStageTable = 'library_incremental_stage';
-  static const String _incrementalStagePathKeysTable =
-      'library_incremental_path_keys_stage';
-  static const String _downloadedLibraryIdsStageTable =
-      'library_downloaded_ids_stage';
   // v4 records ReplayGain availability; older rows rescan once.
   static const int audioMetadataScanVersion = libraryAudioMetadataScanVersion;
 
@@ -49,6 +43,11 @@ class LibraryDatabase {
   static final sqlite.SingleFlightInitializer<Database> _database =
       sqlite.SingleFlightInitializer<Database>();
   bool _historyAttached = false;
+  LibraryFileSizes? _fileSizes;
+  late final LibraryIngestionStore _ingestion = LibraryIngestionStore(
+    openDatabase: () => database,
+    ensureHistoryAttached: _ensureHistoryAttached,
+  );
   // null means this database connection has not attempted FTS setup yet.
   // false is a completed capability/setup result and must not be retried.
   bool? _searchFtsAvailable;
@@ -79,6 +78,11 @@ class LibraryDatabase {
 
   bool get searchFtsAvailable => _searchFtsAvailable ?? false;
 
+  Future<Map<String, Map<String, dynamic>>> readNetworkScanRows(
+    String sourceId,
+    List<String> paths,
+  ) => _ingestion.readNetworkScanRows(sourceId, paths);
+
   /// Keeps native scan output native through parsing, indexing and the atomic
   /// source swap. The stream implementation remains the desktop/test adapter.
   Future<({int inserted, int skipped})> replaceSourceScanFile(
@@ -86,45 +90,12 @@ class LibraryDatabase {
     LibraryScanNDJSONFile scan, {
     required String requestId,
     required bool Function() isCancelled,
-  }) async {
-    if (isCancelled()) throw StateError('Library scan cancelled');
-    if (PlatformBridge.supportsCoreBackend) {
-      final db = await database;
-      await _ensureHistoryAttached(db);
-      final result = await LibraryNativeAdapter(db).importScanFile(
-        sourceId,
-        scan,
-        requestId: requestId,
-        isCancelled: isCancelled,
-      );
-      return (
-        inserted: (result['inserted'] as num).toInt(),
-        skipped: (result['skipped'] as num).toInt(),
-      );
-    }
-    Stream<Map<String, dynamic>> validatedRows() async* {
-      var count = 0;
-      await for (final row in scan.rows()) {
-        if (isCancelled()) {
-          throw StateError('Library scan cancelled during ingestion');
-        }
-        count++;
-        yield row;
-      }
-      if (count != scan.expectedCount) {
-        throw FormatException(
-          'Library scan row count mismatch: decoded $count, '
-          'expected ${scan.expectedCount}',
-        );
-      }
-    }
-
-    return replaceSourceStream(
-      sourceId,
-      validatedRows(),
-      preserveMissing: scan.errorCount > 0,
-    );
-  }
+  }) => _ingestion.replaceSourceScanFile(
+    sourceId,
+    scan,
+    requestId: requestId,
+    isCancelled: isCancelled,
+  );
 
   /// Exports timestamps directly from the DB on the worker. Android's adapter
   /// backfills zero SAF timestamps in bounded ContentResolver batches first.
@@ -149,18 +120,14 @@ class LibraryDatabase {
     required bool isSaf,
     required String requestId,
     required bool Function() isCancelled,
-  }) async {
-    final db = await database;
-    await _ensureHistoryAttached(db);
-    return LibraryNativeAdapter(db).scanIncremental(
-      sourceId,
-      folderPath,
-      snapshotPath,
-      isSaf: isSaf,
-      requestId: requestId,
-      isCancelled: isCancelled,
-    );
-  }
+  }) => _ingestion.scanIncrementalNative(
+    sourceId,
+    folderPath,
+    snapshotPath,
+    isSaf: isSaf,
+    requestId: requestId,
+    isCancelled: isCancelled,
+  );
 
   Future<List<LibrarySearchHit>> searchLibrary({
     required String query,
@@ -187,7 +154,7 @@ class LibraryDatabase {
   Future<void> _ensureHistoryAttached(Database db) async {
     if (_historyAttached) return;
     await HistoryDatabase.instance.database;
-    final dbPath = await getApplicationDocumentsDirectory();
+    final dbPath = await sqlite.appDatabaseDirectory();
     final historyPath = join(dbPath.path, 'history.db');
     try {
       await db.execute('ATTACH DATABASE ? AS history_db', [historyPath]);
@@ -219,95 +186,18 @@ class LibraryDatabase {
     return '${normalizeLookupText(albumName)}|${normalizeLookupText(albumArtist ?? artistName)}';
   }
 
-  Future<void> upsert(Map<String, dynamic> json, {String? sourceId}) async {
-    final db = await database;
-    await sqlite.transactionWithBusyRetry(db, (txn) async {
-      await txn.insert(
-        'library',
-        LibraryRowMapper.encode(json, sourceId: sourceId),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-      final batch = txn.batch();
-      _putPathKeysInBatch(
-        batch,
-        json['id'] as String,
-        json['filePath'] as String?,
-      );
-      await batch.commit(noResult: true);
-    });
-  }
+  Future<void> upsert(Map<String, dynamic> json, {String? sourceId}) =>
+      _ingestion.upsert(json, sourceId: sourceId);
 
   Future<void> upsertBatch(
     List<Map<String, dynamic>> items, {
     String? sourceId,
-  }) async {
-    if (items.isEmpty) return;
-    final db = await database;
-    await sqlite.transactionWithBusyRetry(db, (txn) async {
-      final batch = txn.batch();
-      for (final json in items) {
-        batch.insert(
-          'library',
-          LibraryRowMapper.encode(json, sourceId: sourceId),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-        _putPathKeysInBatch(
-          batch,
-          json['id'] as String,
-          json['filePath'] as String?,
-        );
-      }
-      await batch.commit(noResult: true);
-    });
-    _log.i('Batch inserted ${items.length} items');
-  }
+  }) => _ingestion.upsertBatch(items, sourceId: sourceId);
 
   /// Removes rows from one source whose normalized path keys already exist in
   /// download History, without materializing either database's paths in Dart.
-  Future<int> deleteDownloadedRowsForSource(String sourceId) async {
-    final db = await database;
-    await _ensureHistoryAttached(db);
-    const downloadedMatch = '''
-      EXISTS (
-        SELECT 1
-        FROM library_path_keys lk
-        JOIN history_db.history_path_keys hk ON hk.path_key = lk.path_key
-        WHERE lk.item_id = library.id
-      )
-    ''';
-    await db.execute('DROP TABLE IF EXISTS $_downloadedLibraryIdsStageTable');
-    await db.execute(
-      'CREATE TEMP TABLE $_downloadedLibraryIdsStageTable '
-      '(id TEXT PRIMARY KEY)',
-    );
-    try {
-      await db.rawInsert(
-        'INSERT INTO $_downloadedLibraryIdsStageTable(id) '
-        'SELECT id FROM library '
-        'WHERE source_id = ? AND $downloadedMatch',
-        [sourceId],
-      );
-      final countRows = await db.rawQuery(
-        'SELECT COUNT(*) AS count FROM $_downloadedLibraryIdsStageTable',
-      );
-      final count = Sqflite.firstIntValue(countRows) ?? 0;
-      if (count == 0) return 0;
-
-      await sqlite.transactionWithBusyRetry(db, (txn) async {
-        await txn.rawDelete(
-          'DELETE FROM library_path_keys WHERE item_id IN '
-          '(SELECT id FROM $_downloadedLibraryIdsStageTable)',
-        );
-        await txn.rawDelete(
-          'DELETE FROM library WHERE id IN '
-          '(SELECT id FROM $_downloadedLibraryIdsStageTable)',
-        );
-      });
-      return count;
-    } finally {
-      await db.execute('DROP TABLE IF EXISTS $_downloadedLibraryIdsStageTable');
-    }
-  }
+  Future<int> deleteDownloadedRowsForSource(String sourceId) =>
+      _ingestion.deleteDownloadedRowsForSource(sourceId);
 
   /// Upserts incremental scan rows after filtering them through the attached
   /// History path-key index. This keeps the hot incremental path independent
@@ -315,137 +205,10 @@ class LibraryDatabase {
   Future<({int upserted, int skipped})> upsertBatchExcludingHistory(
     List<Map<String, dynamic>> items, {
     required String sourceId,
-  }) async {
-    if (items.isEmpty) return (upserted: 0, skipped: 0);
-    final db = await database;
-    await _ensureHistoryAttached(db);
-    await db.execute('DROP TABLE IF EXISTS $_incrementalStageTable');
-    await db.execute('DROP TABLE IF EXISTS $_incrementalStagePathKeysTable');
-    await db.execute(
-      'CREATE TEMP TABLE $_incrementalStageTable '
-      'AS SELECT * FROM library WHERE 0',
-    );
-    await db.execute(
-      'CREATE UNIQUE INDEX idx_${_incrementalStageTable}_id '
-      'ON $_incrementalStageTable(id)',
-    );
-    await db.execute(
-      'CREATE UNIQUE INDEX idx_${_incrementalStageTable}_path '
-      'ON $_incrementalStageTable(file_path)',
-    );
-    await db.execute('''
-      CREATE TEMP TABLE $_incrementalStagePathKeysTable (
-        item_id TEXT NOT NULL,
-        path_key TEXT NOT NULL,
-        PRIMARY KEY (item_id, path_key)
-      )
-    ''');
-    await db.execute(
-      'CREATE INDEX idx_${_incrementalStagePathKeysTable}_key '
-      'ON $_incrementalStagePathKeysTable(path_key)',
-    );
+  }) => _ingestion.upsertBatchExcludingHistory(items, sourceId: sourceId);
 
-    try {
-      final batch = db.batch();
-      final stagedIds = <String>{};
-      for (final json in items) {
-        final id = json['id'] as String?;
-        if (id == null || id.trim().isEmpty) {
-          throw const FormatException('Library scan row has no valid id');
-        }
-        batch.insert(
-          _incrementalStageTable,
-          LibraryRowMapper.encode(json, sourceId: sourceId),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-        sqlite.putPathKeysInBatch(
-          batch,
-          _incrementalStagePathKeysTable,
-          id,
-          json['filePath'] as String?,
-          // The stage starts empty: only a repeated id has keys to replace.
-          replaceExisting: !stagedIds.add(id),
-        );
-      }
-      await batch.commit(noResult: true);
-
-      const historyMatch =
-          '''
-        EXISTS (
-          SELECT 1
-          FROM $_incrementalStagePathKeysTable sk
-          JOIN history_db.history_path_keys hk ON hk.path_key = sk.path_key
-          WHERE sk.item_id = s.id
-        )
-      ''';
-      final skippedRows = await db.rawQuery(
-        'SELECT COUNT(*) AS count FROM $_incrementalStageTable s '
-        'WHERE $historyMatch',
-      );
-      final skipped = Sqflite.firstIntValue(skippedRows) ?? 0;
-      final stagedRows = await db.rawQuery(
-        'SELECT COUNT(*) AS count FROM $_incrementalStageTable',
-      );
-      final staged = Sqflite.firstIntValue(stagedRows) ?? 0;
-      final columns = (await db.rawQuery(
-        'PRAGMA table_info(library)',
-      )).map((row) => row['name'] as String).toList(growable: false);
-      final columnList = columns.join(', ');
-      final selectedColumns = columns.map((column) => 's.$column').join(', ');
-
-      await sqlite.transactionWithBusyRetry(db, (txn) async {
-        await txn.rawDelete('''
-          DELETE FROM library_path_keys
-          WHERE item_id IN (
-            SELECT s.id FROM $_incrementalStageTable s WHERE NOT $historyMatch
-          )
-        ''');
-        await txn.rawInsert('''
-          INSERT OR REPLACE INTO library ($columnList)
-          SELECT $selectedColumns FROM $_incrementalStageTable s
-          WHERE NOT $historyMatch
-        ''');
-        await txn.rawInsert('''
-          INSERT OR IGNORE INTO library_path_keys(item_id, path_key)
-          SELECT sk.item_id, sk.path_key
-          FROM $_incrementalStagePathKeysTable sk
-          JOIN $_incrementalStageTable s ON s.id = sk.item_id
-          WHERE NOT $historyMatch
-        ''');
-      });
-      return (upserted: staged - skipped, skipped: skipped);
-    } finally {
-      await db.execute('DROP TABLE IF EXISTS $_incrementalStagePathKeysTable');
-      await db.execute('DROP TABLE IF EXISTS $_incrementalStageTable');
-    }
-  }
-
-  Future<void> replaceAll(List<Map<String, dynamic>> items) async {
-    final db = await database;
-    await sqlite.transactionWithBusyRetry(db, (txn) async {
-      await txn.delete('library_path_keys');
-      await txn.delete('library');
-      if (items.isEmpty) {
-        return;
-      }
-
-      final batch = txn.batch();
-      for (final json in items) {
-        batch.insert(
-          'library',
-          LibraryRowMapper.encode(json),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-        _putPathKeysInBatch(
-          batch,
-          json['id'] as String,
-          json['filePath'] as String?,
-        );
-      }
-      await batch.commit(noResult: true);
-    });
-    _log.i('Replaced library with ${items.length} items');
-  }
+  Future<void> replaceAll(List<Map<String, dynamic>> items) =>
+      _ingestion.replaceAll(items);
 
   /// Stages scan rows in bounded, independently committed batches, then swaps
   /// only this source in one short transaction. Download-history exclusion is
@@ -455,135 +218,12 @@ class LibraryDatabase {
     Stream<Map<String, dynamic>> items, {
     int batchSize = 300,
     bool preserveMissing = false,
-  }) async {
-    if (batchSize <= 0) {
-      throw ArgumentError.value(batchSize, 'batchSize', 'Must be positive');
-    }
-    final db = await database;
-    await _ensureHistoryAttached(db);
-    await db.execute('DROP TABLE IF EXISTS $_scanStageTable');
-    await db.execute('DROP TABLE IF EXISTS $_scanStagePathKeysTable');
-    await db.execute(
-      'CREATE TEMP TABLE $_scanStageTable AS SELECT * FROM library WHERE 0',
-    );
-    await db.execute(
-      'CREATE UNIQUE INDEX idx_${_scanStageTable}_id '
-      'ON $_scanStageTable(id)',
-    );
-    await db.execute(
-      'CREATE UNIQUE INDEX idx_${_scanStageTable}_path '
-      'ON $_scanStageTable(file_path)',
-    );
-    await db.execute('''
-      CREATE TEMP TABLE $_scanStagePathKeysTable (
-        item_id TEXT NOT NULL,
-        path_key TEXT NOT NULL,
-        PRIMARY KEY (item_id, path_key)
-      )
-    ''');
-    await db.execute(
-      'CREATE INDEX idx_${_scanStagePathKeysTable}_key '
-      'ON $_scanStagePathKeysTable(path_key)',
-    );
-
-    var streamed = 0;
-    try {
-      var batch = db.batch();
-      var pending = 0;
-      Future<void> flush() async {
-        if (pending == 0) return;
-        await batch.commit(noResult: true);
-        batch = db.batch();
-        pending = 0;
-      }
-
-      final stagedIds = <String>{};
-      await for (final json in items) {
-        final id = json['id'] as String?;
-        if (id == null || id.trim().isEmpty) {
-          throw const FormatException('Library scan row has no valid id');
-        }
-        batch.insert(
-          _scanStageTable,
-          LibraryRowMapper.encode(json, sourceId: sourceId),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-        sqlite.putPathKeysInBatch(
-          batch,
-          _scanStagePathKeysTable,
-          id,
-          json['filePath'] as String?,
-          // The stage starts empty: only a repeated id has keys to replace.
-          replaceExisting: !stagedIds.add(id),
-        );
-        streamed++;
-        pending++;
-        if (pending >= batchSize) await flush();
-      }
-      await flush();
-
-      const historyMatch =
-          '''
-        EXISTS (
-          SELECT 1
-          FROM $_scanStagePathKeysTable sk
-          JOIN history_db.history_path_keys hk ON hk.path_key = sk.path_key
-          WHERE sk.item_id = s.id
-        )
-      ''';
-      final skippedRows = await db.rawQuery(
-        'SELECT COUNT(*) AS count FROM $_scanStageTable s '
-        'WHERE $historyMatch',
-      );
-      final skipped = Sqflite.firstIntValue(skippedRows) ?? 0;
-      final stagedRows = await db.rawQuery(
-        'SELECT COUNT(*) AS count FROM $_scanStageTable',
-      );
-      final staged = Sqflite.firstIntValue(stagedRows) ?? 0;
-      final columns = (await db.rawQuery(
-        'PRAGMA table_info(library)',
-      )).map((row) => row['name'] as String).toList(growable: false);
-      final columnList = columns.join(', ');
-      final selectedColumns = columns.map((column) => 's.$column').join(', ');
-
-      await sqlite.transactionWithBusyRetry(db, (txn) async {
-        await deleteReplacedLibraryScanRows(
-          txn,
-          sourceId,
-          stageTable: _scanStageTable,
-          preserveMissing: preserveMissing,
-        );
-        await txn.rawDelete('''
-          DELETE FROM library_path_keys
-          WHERE item_id IN (
-            SELECT s.id FROM $_scanStageTable s WHERE NOT $historyMatch
-          )
-        ''');
-        await txn.rawInsert('''
-          INSERT OR REPLACE INTO library ($columnList)
-          SELECT $selectedColumns FROM $_scanStageTable s
-          WHERE NOT $historyMatch
-        ''');
-        await txn.rawInsert('''
-          INSERT OR IGNORE INTO library_path_keys(item_id, path_key)
-          SELECT sk.item_id, sk.path_key
-          FROM $_scanStagePathKeysTable sk
-          JOIN $_scanStageTable s ON s.id = sk.item_id
-          WHERE NOT $historyMatch
-        ''');
-      });
-      final inserted = staged - skipped;
-      _log.i(
-        'Streamed $streamed rows, staged $staged unique rows, and swapped '
-        '$inserted into Library source '
-        '$sourceId ($skipped downloads excluded)',
-      );
-      return (inserted: inserted, skipped: skipped);
-    } finally {
-      await db.execute('DROP TABLE IF EXISTS $_scanStagePathKeysTable');
-      await db.execute('DROP TABLE IF EXISTS $_scanStageTable');
-    }
-  }
+  }) => _ingestion.replaceSourceStream(
+    sourceId,
+    items,
+    batchSize: batchSize,
+    preserveMissing: preserveMissing,
+  );
 
   Future<List<LocalLibrarySource>> getSources() async {
     final db = await database;
@@ -789,9 +429,15 @@ class LibraryDatabase {
     return (await getQueueTrackPageResult(request)).rows;
   }
 
-  Future<LibraryQueueStore> _queueStore() async {
+  Future<LibraryQueueStore> _queueStore([QueueLibraryDbQuery? request]) async {
     final db = await database;
     await _ensureHistoryAttached(db);
+    if (request != null && isLibrarySizeSort(request.sortMode)) {
+      await (_fileSizes ??= LibraryFileSizes(db)).refresh(
+        includeLocal: request.includeLocal && request.source != 'downloaded',
+        includeHistory: request.source != 'local',
+      );
+    }
     return LibraryQueueStore(
       db,
       historyFts: HistoryDatabase.instance.searchFtsAvailable,
@@ -801,12 +447,13 @@ class LibraryDatabase {
 
   Future<QueueLibraryDbPage> getQueueTrackPageResult(
     QueueLibraryDbQuery request,
-  ) async => (await _queueStore()).trackPage(request);
+  ) async => (await _queueStore(request)).trackPage(request);
 
   Future<QueueLibraryCounts> getQueueCounts(
     QueueLibraryDbQuery request,
   ) async => (await _queueStore()).counts(request);
 
+  @visibleForTesting
   Future<List<Map<String, dynamic>>> getQueueAlbumPage(
     QueueLibraryDbQuery request,
   ) async {
@@ -815,7 +462,7 @@ class LibraryDatabase {
 
   Future<QueueLibraryDbPage> getQueueAlbumPageResult(
     QueueLibraryDbQuery request,
-  ) async => (await _queueStore()).albumPage(request);
+  ) async => (await _queueStore(request)).albumPage(request);
 
   /// Album artists across downloaded and scanned music, excluding duplicate paths.
   Future<List<Map<String, dynamic>>> getQueueArtistPage(
@@ -998,27 +645,15 @@ class LibraryDatabase {
     );
   }
 
-  Future<List<String>> getCoverPaths({int? limit, int? offset}) async {
-    final db = await database;
-    final rows = await db.query(
-      'library',
-      columns: ['cover_path'],
-      where: 'cover_path IS NOT NULL AND cover_path != ""',
-      limit: limit,
-      offset: offset,
-    );
-    return rows
-        .map((row) => row['cover_path'] as String?)
-        .whereType<String>()
-        .toList(growable: false);
-  }
-
   /// Physical copies sharing one ISRC, excluding inactive NAS sources and
   /// alternate index/URI references to the same file. Best quality comes first.
   Future<List<IsrcDuplicateGroup>> findIsrcDuplicateGroups() async {
     final db = await database;
     await _ensureHistoryAttached(db);
-    return readIsrcDuplicateGroups(db);
+    return readIsrcDuplicateGroups(
+      db,
+      loadNetworkConnections: NetworkStorageService.instance.connections,
+    );
   }
 
   Future<List<String>> getPhysicalFileIds(Iterable<String> filePaths) async =>
@@ -1246,6 +881,7 @@ class LibraryDatabase {
     await db.close();
     _database.reset();
     _historyAttached = false;
+    _fileSizes = null;
     _searchFtsAvailable = null;
   }
 
@@ -1271,45 +907,6 @@ class LibraryDatabase {
       );
     }
     return result;
-  }
-
-  /// Uses the already normalized, backfilled timestamps from the scan caller.
-  /// Bounded writes avoid a second query and a library-sized StringBuffer.
-  Future<String> writeFileModTimesSnapshot(
-    Map<String, int> fileModTimes,
-  ) async {
-    final tempDir = await getTemporaryDirectory();
-    final file = File(
-      join(
-        tempDir.path,
-        'library_file_mod_times_${DateTime.now().microsecondsSinceEpoch}.tsv',
-      ),
-    );
-    try {
-      final output = await file.open(mode: FileMode.write);
-      try {
-        final buffer = StringBuffer();
-        for (final entry in fileModTimes.entries) {
-          if (entry.key.isEmpty) continue;
-          buffer
-            ..write(entry.value)
-            ..write('\t')
-            ..writeln(entry.key);
-          if (buffer.length >= 64 * 1024) {
-            await output.writeString(buffer.toString());
-            buffer.clear();
-          }
-        }
-        if (buffer.isNotEmpty) await output.writeString(buffer.toString());
-        await output.flush();
-      } finally {
-        await output.close();
-      }
-    } catch (_) {
-      if (await file.exists()) await file.delete();
-      rethrow;
-    }
-    return file.path;
   }
 
   Future<void> updateFileModTimes(Map<String, int> fileModTimes) async {

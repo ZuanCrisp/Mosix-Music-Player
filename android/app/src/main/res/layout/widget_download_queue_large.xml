@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 4x2 and taller: status chip, display-size percent, track, wavy progress. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent">
+    <ImageView android:id="@+id/widget_background" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:scaleType="fitXY" android:src="@drawable/widget_shape_container" android:tint="@color/widgetBackground"
+        android:importantForAccessibility="no" />
+    <!-- RemoteViews cannot inflate plain spacer Views; gravity places the rows. -->
+    <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent" android:padding="16dp">
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="32dp" android:layout_gravity="top|start"
+            android:background="@drawable/widget_shape_pill" android:backgroundTint="@color/widgetAccentContainer"
+            android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="10dp" android:paddingEnd="12dp">
+            <ImageView android:id="@+id/widget_icon" android:layout_width="18dp" android:layout_height="18dp"
+                android:src="@drawable/ic_widget_download" android:tint="@color/widgetOnAccentContainer"
+                android:importantForAccessibility="no" />
+            <TextView android:id="@+id/widget_status" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginStart="6dp" android:fontFamily="sans-serif-medium" android:includeFontPadding="false"
+                android:text="@string/download_widget_status_idle" android:textColor="@color/widgetOnAccentContainer"
+                android:textSize="13sp" />
+        </LinearLayout>
+        <TextView android:id="@+id/widget_queue" android:layout_width="wrap_content" android:layout_height="32dp"
+            android:layout_gravity="top|end" android:fontFamily="sans-serif-medium" android:gravity="center"
+            android:includeFontPadding="false" android:textColor="@color/widgetTextSecondary" android:textSize="13sp"
+            android:visibility="gone" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="bottom"
+            android:orientation="vertical">
+            <TextView android:id="@+id/widget_percent" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:fontFamily="sans-serif" android:includeFontPadding="false" android:letterSpacing="-0.03"
+                android:textColor="@color/widgetAccent" android:textSize="44sp" android:textStyle="bold" android:visibility="gone" />
+            <TextView android:id="@+id/widget_title" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="4dp" android:ellipsize="end" android:fontFamily="sans-serif" android:includeFontPadding="false"
+                android:singleLine="true" android:text="@string/download_widget_idle_title" android:textColor="@color/widgetTextPrimary"
+                android:textSize="18sp" android:textStyle="bold" />
+            <TextView android:id="@+id/widget_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="3dp" android:ellipsize="end" android:fontFamily="sans-serif-medium" android:singleLine="true"
+                android:text="@string/download_widget_idle" android:textColor="@color/widgetTextSecondary" android:textSize="13sp" />
+            <ImageView android:id="@+id/widget_wave" android:layout_width="match_parent" android:layout_height="16dp"
+                android:layout_marginTop="12dp" android:scaleType="fitXY" android:importantForAccessibility="no" android:visibility="gone" />
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>

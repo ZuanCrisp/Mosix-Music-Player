@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/local_library_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/utils/clickable_metadata.dart';
-import 'package:mosix/utils/local_playback.dart';
-import 'package:mosix/widgets/audio_quality_badges.dart';
-import 'package:mosix/widgets/track_card.dart';
-import 'package:mosix/widgets/in_library_badge.dart';
-import 'package:mosix/widgets/preview_button.dart';
-import 'package:mosix/widgets/track_collection_quick_actions.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/clickable_metadata.dart';
+import 'package:mornye/controllers/local_playback.dart';
+import 'package:mornye/widgets/audio_quality_badges.dart';
+import 'package:mornye/widgets/track_card.dart';
+import 'package:mornye/widgets/in_library_badge.dart';
+import 'package:mornye/widgets/preview_button.dart';
+import 'package:mornye/widgets/track_collection_quick_actions.dart';
 
 /// Track row shared by the album and playlist screens. Tap offers another
 /// download when quality variants are enabled, otherwise it plays the local
@@ -29,6 +31,9 @@ class TrackListTile extends ConsumerWidget {
   final VoidCallback? onToggleSelection;
   final VoidCallback? onEnterSelectionMode;
 
+  /// [leading] is cover art. See [TrackCard.leadingArtwork].
+  final bool leadingArtwork;
+
   const TrackListTile({
     super.key,
     required this.track,
@@ -41,11 +46,17 @@ class TrackListTile extends ConsumerWidget {
     this.isSelected = false,
     this.onToggleSelection,
     this.onEnterSelectionMode,
+    this.leadingArtwork = false,
   }) : assert(!isSelectionMode || onToggleSelection != null);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
+    // Material rows mark the current track; Mornye rows show no
+    // current-track state.
+    final playback = context.isMornye
+        ? null
+        : ref.watch(catalogTrackPlaybackUiProvider(catalogTrackKey(track)));
 
     final isQueued = ref.watch(
       downloadQueueLookupProvider.select(
@@ -74,6 +85,9 @@ class TrackListTile extends ConsumerWidget {
       style: TrackCardStyle.flat,
       isSelectionMode: isSelectionMode,
       isSelected: isSelected,
+      isCurrent: playback?.isCurrent ?? false,
+      isPlaying: playback?.isPlaying ?? false,
+      leadingArtwork: leadingArtwork,
       leading: leading,
       title: track.name,
       subtitle: TrackMetadataBadgesLine(
@@ -153,5 +167,89 @@ class TrackListTile extends ConsumerWidget {
     }
 
     onDownload();
+  }
+
+  /// What a tap on the row does, for the desktop song table: offers another
+  /// quality, plays the local copy, or downloads [track].
+  static Future<void> activate(
+    BuildContext context,
+    WidgetRef ref,
+    Track track, {
+    required bool isInHistory,
+    required void Function({bool forceQualityPicker}) onDownload,
+  }) async {
+    if (ref.read(downloadQueueLookupProvider).byTrackId.containsKey(track.id)) {
+      return;
+    }
+    final settings = ref.read(settingsProvider);
+    final isInLocalLibrary =
+        settings.localLibraryEnabled &&
+        settings.localLibraryShowDuplicates &&
+        ref
+            .read(localLibraryProvider)
+            .existsInLibrary(
+              isrc: track.isrc,
+              trackName: track.name,
+              artistName: track.artistName,
+            );
+    if (settings.allowQualityVariants && (isInHistory || isInLocalLibrary)) {
+      onDownload(forceQualityPicker: true);
+      return;
+    }
+    if (await playLocalIfAvailable(context, ref, track)) return;
+    onDownload();
+  }
+}
+
+/// Explicit, Dolby Atmos and In Library badges of a [TrackListTile], for the
+/// title cell of the desktop song table. Quality has its own column there.
+class TrackListTileBadges extends ConsumerWidget {
+  const TrackListTileBadges({
+    super.key,
+    required this.track,
+    required this.isInHistory,
+  });
+
+  final Track track;
+  final bool isInHistory;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final showLocalLibraryIndicator = ref.watch(
+      settingsProvider.select(
+        (s) => s.localLibraryEnabled && s.localLibraryShowDuplicates,
+      ),
+    );
+    final isInLocalLibrary =
+        showLocalLibraryIndicator &&
+        ref.watch(
+          localLibraryProvider.select(
+            (state) => state.existsInLibrary(
+              isrc: track.isrc,
+              trackName: track.name,
+              artistName: track.artistName,
+            ),
+          ),
+        );
+    final badges = [
+      ...buildQualityBadges(
+        audioQuality: null,
+        audioModes: track.audioModes,
+        colorScheme: colorScheme,
+        explicit: track.isExplicit,
+      ),
+      if (isInLocalLibrary || isInHistory) const InLibraryBadge(),
+    ];
+    if (badges.isEmpty) return const SizedBox.shrink();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final (index, badge) in badges.indexed) ...[
+          if (index > 0) const SizedBox(width: 4),
+          badge,
+        ],
+      ],
+    );
   }
 }

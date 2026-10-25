@@ -9,6 +9,19 @@ This tests lossless WavPack DSD decoding, channel order, seek alignment, native
 LE/BE packing and DoP packing against known bytes. It is packaged only in the
 instrumentation test APK.
 
+## Synthetic 24-bit PCM fixture
+
+`pcm24-pattern.flac` contains 0.1 seconds of stereo 24-bit/96-kHz audio with
+constant integer samples `1193047` and `-1193047` in its left/right channels.
+The nonzero low bits detect truncation to 16-bit PCM. It tests native FLAC
+decoding, lossless padding to 32-bit output, seeking and SAF descriptor lifetime.
+Generate with FFmpeg:
+
+```sh
+ffmpeg -f lavfi -i 'aevalsrc=1193047/8388608|-1193047/8388608:s=96000:d=0.1' \
+  -c:a flac -sample_fmt s32 -bits_per_raw_sample 24 pcm24-pattern.flac
+```
+
 ## Synthetic motion artwork fixtures
 
 `motion-probe-h264.mp4` and `motion-probe-hevc.mp4` contain one second of the

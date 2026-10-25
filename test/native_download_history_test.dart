@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/services/native_download_history.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/services/native_download_history.dart';
 
 void main() {
   for (final alreadyExists in [false, true]) {

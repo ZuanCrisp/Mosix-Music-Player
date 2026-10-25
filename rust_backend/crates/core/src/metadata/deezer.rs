@@ -1,5 +1,5 @@
 use super::TrackMetadata;
-use crate::lyrics::json::go_deserialize;
+use crate::json::lenient_deserialize;
 
 mod catalog;
 pub use catalog::*;
@@ -20,7 +20,7 @@ pub struct Track {
     pub album: Album,
     pub contributors: Option<Vec<Artist>>,
 }
-go_deserialize!(Track {
+lenient_deserialize!(Track {
     "id" => id, "title" => title, "duration" => duration, "track_position" => track_position,
     "disk_number" => disk_number, "isrc" => isrc, "link" => link, "release_date" => release_date,
     "explicit_lyrics" => explicit_lyrics, "explicit_content_lyrics" => explicit_content_lyrics,
@@ -37,7 +37,7 @@ pub struct Artist {
     pub picture_xl: String,
     pub nb_fan: isize,
 }
-go_deserialize!(Artist {
+lenient_deserialize!(Artist {
     "id" => id, "name" => name, "picture" => picture, "picture_medium" => picture_medium,
     "picture_big" => picture_big, "picture_xl" => picture_xl, "nb_fan" => nb_fan,
 });
@@ -53,7 +53,7 @@ pub struct Album {
     pub release_date: String,
     pub record_type: String,
 }
-go_deserialize!(Album {
+lenient_deserialize!(Album {
     "id" => id, "title" => title, "cover" => cover, "cover_medium" => cover_medium,
     "cover_big" => cover_big, "cover_xl" => cover_xl, "release_date" => release_date, "record_type" => record_type,
 });
@@ -62,7 +62,7 @@ go_deserialize!(Album {
 pub struct Tracks {
     pub data: Option<Vec<Track>>,
 }
-go_deserialize!(Tracks { "data" => data, });
+lenient_deserialize!(Tracks { "data" => data, });
 
 impl Track {
     pub fn artist_display(&self) -> String {

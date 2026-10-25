@@ -1,9 +1,6 @@
 // ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
 part of 'download_queue_provider.dart';
 
-/// The per-item download pipeline: metadata enrichment, output resolution,
-/// the native download call, decrypt/convert/embed finalization, and the
-/// history hand-off. Queue scheduling stays in the main file.
 extension _SingleItemDownload on DownloadQueueNotifier {
   Future<String?> _runPostProcessingHooks(
     String filePath,
@@ -92,6 +89,7 @@ class _DownloadRun {
   bool effectiveSafMode = false;
   String effectiveOutputDir = '';
   String? appOutputDir;
+  String? customFolderPath;
   String? safFileName;
   bool qualityVariantCollisionOnly = false;
   String? safBaseName;
@@ -110,12 +108,12 @@ class _DownloadRun {
 
   late DownloadResult result;
 
-  // Success-path state shared between finalization stages.
   String? filePath;
   bool wasExisting = false;
   String actualQuality = '';
   String? resultOutputExt;
   bool shouldPreserveNativeM4a = false;
+  bool forceContainerConversion = false;
 
   /// Filled by the SAF embed op from the local temp so the final quality
   /// probe doesn't have to copy the published file back out of SAF.
@@ -333,6 +331,12 @@ class _DownloadRun {
   Future<void> _resolveOutputTarget() async {
     quality = item.qualityOverride ?? n.state.audioQuality;
     if (quality == 'DEFAULT') quality = n.state.audioQuality;
+    customFolderPath = await n._resolveCustomFolderPath(
+      trackToDownload,
+      item,
+      settings,
+      quality,
+    );
     final isSafMode = !isNetworkDownload && n._isSafMode(settings);
     final relativeOutputDir = isSafMode || isNetworkDownload
         ? n._buildRelativeOutputDir(
@@ -340,6 +344,7 @@ class _DownloadRun {
             settings.folderOrganization,
             separateSingles: settings.separateSingles,
             albumFolderStructure: settings.albumFolderStructure,
+            customFolderPath: customFolderPath,
             createPlaylistFolder: settings.createPlaylistFolder,
             useAlbumArtistForFolders: settings.useAlbumArtistForFolders,
             usePrimaryArtistOnly: settings.usePrimaryArtistOnly,
@@ -358,6 +363,7 @@ class _DownloadRun {
             settings.folderOrganization,
             separateSingles: settings.separateSingles,
             albumFolderStructure: settings.albumFolderStructure,
+            customFolderPath: customFolderPath,
             createPlaylistFolder: settings.createPlaylistFolder,
             useAlbumArtistForFolders: settings.useAlbumArtistForFolders,
             usePrimaryArtistOnly: settings.usePrimaryArtistOnly,
@@ -583,6 +589,7 @@ class _DownloadRun {
               settings.folderOrganization,
               separateSingles: settings.separateSingles,
               albumFolderStructure: settings.albumFolderStructure,
+              customFolderPath: customFolderPath,
               createPlaylistFolder: settings.createPlaylistFolder,
               useAlbumArtistForFolders: settings.useAlbumArtistForFolders,
               usePrimaryArtistOnly: settings.usePrimaryArtistOnly,
@@ -650,13 +657,16 @@ class _DownloadRun {
     final resultIsKnownLossyAudio =
         isLossyAudioFormat(resultAudioFormat) &&
         !isInconclusiveAudioCodec(resultAudioFormat);
-    final requiresContainerConversion =
+    forceContainerConversion =
         result.requiresContainerConversion ||
         (!resultIsKnownLossyAudio &&
             n._shouldRequestContainerConversion(actualService, safOutputExt));
     final preferredOutputExt = n._extensionPreferredOutputExt(actualService);
     shouldPreserveNativeM4a =
-        !requiresContainerConversion &&
+        // M4A/MP4 may contain FLAC. A requested FLAC output must reach the
+        // codec probe even if the extension did not ask for conversion.
+        safOutputExt != '.flac' &&
+        !forceContainerConversion &&
         (resultOutputExt == '.m4a' ||
             resultOutputExt == '.mp4' ||
             preferredOutputExt == '.m4a' ||
@@ -994,8 +1004,6 @@ class _DownloadRun {
       await _embedLocalFlac(path);
     } else if (metadataEmbeddingEnabled &&
         !isContentUriPath &&
-        effectiveSafMode &&
-        result.deferredSafPublish &&
         !isFlacFile &&
         !isM4aFile &&
         !wasExisting) {
@@ -1004,16 +1012,32 @@ class _DownloadRun {
           path.toLowerCase().endsWith('.ogg') ||
           resultOutputExt == '.opus' ||
           resultOutputExt == '.ogg';
-      await _embedFinalMetadata(
-        path,
-        format: isOpus ? 'opus' : 'mp3',
-        writeExternalLrc: false,
-      );
+      final isMp3 =
+          path.toLowerCase().endsWith('.mp3') || resultOutputExt == '.mp3';
+      if (isOpus || isMp3) {
+        await _embedFinalMetadata(
+          path,
+          format: isOpus ? 'opus' : 'mp3',
+          writeExternalLrc: false,
+        );
+      }
     }
   }
 
   void _markFinalOutputAsFlac() {
-    result.markFlacContainer();
+    final path = filePath;
+    String? name;
+    if (path != null) {
+      name = finalizedAudioFileName(
+        fileName: effectiveSafMode
+            ? (finalSafFileName ?? safFileName ?? result.fileName ?? 'track')
+            : File(path).uri.pathSegments.last,
+        localPath: path,
+        fallbackExtension: '.flac',
+      );
+      if (effectiveSafMode) finalSafFileName = name;
+    }
+    result.markFlacContainer(path: path, name: name);
     resultOutputExt = '.flac';
   }
 
@@ -1141,8 +1165,7 @@ class _DownloadRun {
   }
 
   Future<void> _preserveSafNativeM4a(String currentFilePath) async {
-    // Decrypted streams are already in their final format.
-    // Converting e.g. eac3 M4A to FLAC would produce fake upscaled output.
+    // Preserve explicitly requested M4A/MP4 output, including spatial audio.
     _log.d('M4A/MP4 file detected (SAF), preserving native container...');
     final preserveExt = currentFilePath.toLowerCase().endsWith('.mp4')
         ? '.mp4'
@@ -1204,7 +1227,7 @@ class _DownloadRun {
               codec == 'flac' && await FFmpegService.isNativeFlacFile(tempPath);
           final shouldAttemptConversion =
               shouldAttemptLosslessContainerConversion(
-                forceConversion: true,
+                forceConversion: forceContainerConversion,
                 probedCodec: codec,
               );
           if (!shouldAttemptConversion) {
@@ -1216,6 +1239,13 @@ class _DownloadRun {
             final preserveExt = resultOutputExt == '.mp4' ? '.mp4' : '.m4a';
             final newFileName = '${safBaseName ?? 'track'}$preserveExt';
             producedFileName = newFileName;
+            if (metadataEmbeddingEnabled) {
+              await _embedFinalMetadata(
+                tempPath,
+                format: 'm4a',
+                writeExternalLrc: false,
+              );
+            }
             return (tempPath, newFileName);
           } else if (isAlreadyNativeFlac) {
             _log.d(
@@ -1267,7 +1297,9 @@ class _DownloadRun {
       if (newUri != null) {
         filePath = newUri;
         finalSafFileName = producedFileName;
-        _markFinalOutputAsFlac();
+        if (branch == 'nativeFlac' || branch == 'convert') {
+          _markFinalOutputAsFlac();
+        }
       } else if (branch == 'nativeFlac') {
         _log.w('Failed to write native FLAC to SAF');
       } else if (branch == 'convert') {
@@ -1339,7 +1371,7 @@ class _DownloadRun {
               await FFmpegService.isNativeFlacFile(currentFilePath);
           final shouldAttemptConversion =
               shouldAttemptLosslessContainerConversion(
-                forceConversion: true,
+                forceConversion: forceContainerConversion,
                 probedCodec: codec,
               );
           if (!shouldAttemptConversion) {
@@ -1347,6 +1379,7 @@ class _DownloadRun {
               'Preserving native container; audio codec is ${codec ?? 'unknown'}, '
               'no FLAC container conversion needed.',
             );
+            await _preserveLocalNativeM4a(currentFilePath);
           } else if (isAlreadyNativeFlac) {
             _log.d(
               'Native FLAC payload detected; ensuring .flac '
@@ -1767,13 +1800,7 @@ class _DownloadRun {
     }
 
     _log.e('Download failed: $errorMsg (type: $errorTypeStr)');
-    n.updateItemStatus(
-      item.id,
-      DownloadStatus.failed,
-      error: errorMsg,
-      errorType: errorType,
-    );
-    n._failedInSession++;
+    n._recordFailedDownload(item.id, error: errorMsg, errorType: errorType);
 
     try {
       await PlatformBridge.cleanupConnections();
@@ -1791,13 +1818,11 @@ class _DownloadRun {
     _log.e('Exception: $e', e, stackTrace);
 
     if (isNetworkDownload) {
-      n.updateItemStatus(
+      n._recordFailedDownload(
         item.id,
-        DownloadStatus.failed,
         error: 'Network download failed. Retry keeps prepared audio: $e',
         errorType: DownloadErrorType.unknown,
       );
-      n._failedInSession++;
       return;
     }
 
@@ -1848,13 +1873,7 @@ class _DownloadRun {
       return;
     }
 
-    n.updateItemStatus(
-      item.id,
-      DownloadStatus.failed,
-      error: errorMsg,
-      errorType: errorType,
-    );
-    n._failedInSession++;
+    n._recordFailedDownload(item.id, error: errorMsg, errorType: errorType);
 
     try {
       await PlatformBridge.cleanupConnections();

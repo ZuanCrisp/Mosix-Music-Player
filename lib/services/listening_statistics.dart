@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/utils/string_utils.dart';
+import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/utils/string_utils.dart';
 import 'package:sqflite/sqflite.dart';
 
 final _log = AppLogger('ListeningStatistics');
@@ -324,6 +324,10 @@ class ListeningStatisticsStore {
     final db = await _open();
     return readListeningSummary(db, start, end);
   }
+
+  /// Runs a read-only aggregate against the statistics database.
+  Future<T> read<T>(Future<T> Function(DatabaseExecutor db) query) async =>
+      query(await _open());
 
   Future<void> clear() async => (await _open()).delete('listening');
 }

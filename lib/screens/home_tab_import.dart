@@ -112,7 +112,7 @@ extension _HomeTabCsvImport on _HomeTabState {
                         }),
                       )
                     else
-                      CheckboxListTile(
+                      AppCheckboxListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text(l10n.homeSkipAlreadyDownloaded),
                         value: skipDownloaded,

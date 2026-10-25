@@ -1,52 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/widget_root"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_download_bg"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:padding="12dp">
-
-    <ImageView
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:contentDescription="@null"
-        android:src="@mipmap/ic_launcher" />
-
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:layout_weight="1"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/widget_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/widgetTextPrimary"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/widget_subtitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/widgetTextSecondary"
-            android:textSize="11sp" />
-
-        <ProgressBar
-            android:id="@+id/widget_progress"
-            style="@android:style/Widget.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:layout_marginTop="6dp"
-            android:max="100"
-            android:progressTint="@color/widgetAccent" />
+<!-- 4x1: progress ring with the percent, the track, and a queue chip. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent">
+    <ImageView android:id="@+id/widget_background" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:scaleType="fitXY" android:src="@drawable/widget_shape_container" android:tint="@color/widgetBackground"
+        android:importantForAccessibility="no" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
+        android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="10dp" android:paddingEnd="16dp">
+        <FrameLayout android:layout_width="56dp" android:layout_height="56dp">
+            <ImageView android:id="@+id/widget_ring" android:layout_width="match_parent" android:layout_height="match_parent"
+                android:src="@drawable/widget_disc_tonal" android:importantForAccessibility="no" />
+            <ImageView android:id="@+id/widget_icon" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                android:src="@drawable/ic_widget_download" android:tint="@color/widgetOnAccentContainer" android:importantForAccessibility="no" />
+            <TextView android:id="@+id/widget_percent" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="center" android:fontFamily="sans-serif-medium" android:includeFontPadding="false"
+                android:letterSpacing="-0.02" android:textColor="@color/widgetOnAccentContainer" android:textSize="15sp"
+                android:textStyle="bold" android:visibility="gone" />
+        </FrameLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp"
+            android:layout_weight="1" android:orientation="vertical">
+            <TextView android:id="@+id/widget_title" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:ellipsize="end" android:fontFamily="sans-serif" android:includeFontPadding="false" android:singleLine="true"
+                android:text="@string/download_widget_name" android:textColor="@color/widgetTextPrimary" android:textSize="16sp"
+                android:textStyle="bold" />
+            <TextView android:id="@+id/widget_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="3dp" android:ellipsize="end" android:fontFamily="sans-serif-medium" android:singleLine="true"
+                android:text="@string/download_widget_idle" android:textColor="@color/widgetTextSecondary" android:textSize="13sp" />
+        </LinearLayout>
+        <TextView android:id="@+id/widget_queue" android:layout_width="wrap_content" android:layout_height="32dp"
+            android:layout_marginStart="10dp" android:background="@drawable/widget_shape_pill"
+            android:backgroundTint="@color/widgetAccentContainer" android:fontFamily="sans-serif-medium" android:gravity="center"
+            android:includeFontPadding="false" android:paddingStart="12dp" android:paddingEnd="12dp"
+            android:textColor="@color/widgetOnAccentContainer" android:textSize="13sp" android:visibility="gone" />
     </LinearLayout>
-</LinearLayout>
+</FrameLayout>

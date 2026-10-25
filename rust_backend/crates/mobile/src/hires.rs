@@ -1,6 +1,6 @@
 use crate::cancellation::RequestLease;
 use crate::tags::{check_lease, open_audio_file};
-use spotiflac_core::media::hires::{self, HiResCheckOptions};
+use mornye_core::media::hires::{self, HiResCheckOptions};
 use std::sync::Arc;
 
 #[derive(Debug, thiserror::Error, uniffi::Error)]
@@ -80,8 +80,7 @@ mod tests {
 
     #[test]
     fn replacement_verification_is_exposed_and_fails_closed() {
-        let dir =
-            std::env::temp_dir().join(format!("spotiflac-hires-verify-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("mornye-hires-verify-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("dir");
         let original = dir.join("original.wav");
         let replacement = dir.join("replacement.wav");
@@ -128,8 +127,7 @@ mod tests {
 
     #[test]
     fn unsupported_formats_are_not_errors_and_bad_options_are() {
-        let dir =
-            std::env::temp_dir().join(format!("spotiflac-hires-export-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("mornye-hires-export-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("dir");
         let mp3 = dir.join("song.mp3");
         std::fs::write(&mp3, b"ID3\x04\x00\x00\x00\x00\x00\x00junk").expect("write");

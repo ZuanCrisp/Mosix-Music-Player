@@ -2,20 +2,22 @@ import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart' show ShareParams, SharePlus, XFile;
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/library_collections_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/providers/user_profile_provider.dart';
-import 'package:mosix/services/backup_service.dart';
-import 'package:mosix/services/history_database.dart';
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/providers/library_collections_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/providers/user_profile_provider.dart';
+import 'package:mornye/services/backup_service.dart';
+import 'package:mornye/services/history_database.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
 
 class BackupRestorePage extends ConsumerStatefulWidget {
   const BackupRestorePage({super.key});
@@ -349,11 +351,7 @@ class _BackupRestorePageState extends ConsumerState<BackupRestorePage> {
                       : l10n.backupSelectAtLeastOne,
                   onTap: _isBusy || !_hasSelection ? null : _createBackup,
                   trailing: _isExporting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
+                      ? const AppLoadingIndicator(size: 20, strokeWidth: 2)
                       : null,
                   showDivider: false,
                 ),
@@ -372,11 +370,7 @@ class _BackupRestorePageState extends ConsumerState<BackupRestorePage> {
                   subtitle: l10n.backupImportSectionDescription,
                   onTap: _isBusy ? null : _restoreBackup,
                   trailing: _isImporting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
+                      ? const AppLoadingIndicator(size: 20, strokeWidth: 2)
                       : null,
                   showDivider: false,
                 ),
@@ -403,7 +397,7 @@ class _ContentRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: theme.colorScheme.onSurfaceVariant),
+          AppIcon(icon, size: 18, color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 10),
           Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
         ],

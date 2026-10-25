@@ -4,21 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/download_history_provider.dart';
-import 'package:mosix/providers/local_library_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/screens/settings/library_settings_page.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/settings_group.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/providers/download_history_provider.dart';
+import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/screens/settings/library_settings_page.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/settings_group.dart';
 
-class _Settings extends SettingsNotifier {
-  @override
-  AppSettings build() => const AppSettings(localLibraryEnabled: true);
-}
+import 'support/fixed_settings.dart';
 
 class _Library extends LocalLibraryNotifier {
   _Library(this._initial, this._cleanup);
@@ -91,7 +89,11 @@ Future<void> _mount(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        settingsProvider.overrideWith(_Settings.new),
+        settingsProvider.overrideWith(
+          () => FixedSettingsNotifier(
+            const AppSettings(localLibraryEnabled: true),
+          ),
+        ),
         localLibraryProvider.overrideWith(() => library),
         downloadHistoryProvider.overrideWith(() => history),
       ],
@@ -110,6 +112,38 @@ Future<void> _mount(
 
 void main() {
   for (final mornye in [false, true]) {
+    testWidgets('source shows the scan failure reason (Mornye: $mornye)', (
+      tester,
+    ) async {
+      const error =
+          'The previous library scan was interrupted. Scan again to continue.';
+      final library = _Library(
+        LocalLibraryState(
+          totalCount: 1877,
+          sources: const [
+            LocalLibrarySource(
+              id: 'music',
+              path: '/music',
+              displayName: 'Saved music',
+              trackCount: 1877,
+              lastScanError: error,
+            ),
+          ],
+        ),
+        () async => 0,
+      );
+      await _mount(
+        tester,
+        mornye: mornye,
+        library: library,
+        history: _History(0, () async => 0),
+      );
+      await tester.scrollUntilVisible(find.text('Saved music'), 200);
+      await tester.pumpAndSettle();
+      expect(find.textContaining(error), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('failed load shows saved folder and offers retry ($mornye)', (
       tester,
     ) async {
@@ -162,7 +196,7 @@ void main() {
       expect(
         find.descendant(
           of: _cleanupRow,
-          matching: find.byType(CircularProgressIndicator),
+          matching: find.byType(AppLoadingIndicator),
         ),
         findsOneWidget,
       );

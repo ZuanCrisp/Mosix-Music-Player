@@ -2,16 +2,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/constants/app_info.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/providers/extension_provider.dart';
+import 'package:mornye/constants/app_info.dart';
+import 'package:mornye/services/extension_storage_service.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/providers/extension_provider.dart';
 
 final _log = AppLogger('StoreProvider');
 final RegExp _leadingVersionPrefix = RegExp(r'^v');
 const _registryUrlPrefKey = 'store_registry_url';
 
-int compareVersions(String v1, String v2) {
+int _compareVersions(String v1, String v2) {
   final parts1 = v1.replaceAll(_leadingVersionPrefix, '').split('.');
   final parts2 = v2.replaceAll(_leadingVersionPrefix, '').split('.');
 
@@ -101,7 +102,7 @@ class RepoExtension {
 
   bool get requiresNewerApp {
     if (minAppVersion == null || minAppVersion!.isEmpty) return false;
-    return compareVersions(minAppVersion!, AppInfo.version) > 0;
+    return _compareVersions(minAppVersion!, AppInfo.version) > 0;
   }
 }
 
@@ -381,6 +382,19 @@ class RepoNotifier extends Notifier<RepoState> {
         apply: (notifier, path) => notifier.installExtension(path),
       ),
     );
+  }
+
+  /// Installs [extensionId] using the app's temp and extension directories.
+  Future<bool> installExtensionToDefaultPaths(String extensionId) async {
+    final tempDir = await getTemporaryDirectory();
+    final storage = await ExtensionStorageService.prepare();
+    return installExtension(extensionId, tempDir.path, storage.extensionsDir);
+  }
+
+  /// Updates [extensionId] using the app's temp directory.
+  Future<bool> updateExtensionToDefaultPaths(String extensionId) async {
+    final tempDir = await getTemporaryDirectory();
+    return updateExtension(extensionId, tempDir.path);
   }
 
   Future<bool> updateExtension(String extensionId, String tempDir) {

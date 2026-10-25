@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/utils/retail_barcode.dart';
-import 'package:mosix/widgets/metadata_barcode.dart';
+import 'package:mornye/utils/retail_barcode.dart';
+import 'package:mornye/widgets/metadata_barcode.dart';
 
 void main() {
   test('encodes a valid UPC-A with its native retail symbology', () {

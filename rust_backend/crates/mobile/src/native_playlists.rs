@@ -1,9 +1,11 @@
 //! The existing playlist import contract, executed on the native data worker.
 //! CSV remains line-based for compatibility with existing exports/imports.
+use crate::native_library::path_keys::dart_trim as trim;
+use mornye_core::fs::write_atomic;
 use serde_json::{Value, json};
 use std::{
     collections::HashMap,
-    io::{BufWriter, Write},
+    io::{self, BufWriter, Write},
     path::Path,
 };
 
@@ -38,32 +40,34 @@ pub(crate) fn execute(
                 .parent()
                 .filter(|parent| !parent.as_os_str().is_empty())
                 .unwrap_or(Path::new("."));
-            let mut staging = tempfile::Builder::new()
-                .prefix(".spotiflac-m3u-")
-                .tempfile_in(parent)
-                .map_err(|e| e.to_string())?;
-            {
-                let mut file = BufWriter::with_capacity(64 * 1024, staging.as_file_mut());
-                file.write_all(b"#EXTM3U\n").map_err(|e| e.to_string())?;
-                for entry in entries {
-                    check()?;
-                    let duration = entry["duration"].as_i64().filter(|n| *n > 0).unwrap_or(-1);
-                    let artist = trim(entry["artist"].as_str().unwrap_or_default());
-                    let title = entry["name"].as_str().unwrap_or_default();
-                    let display = if artist.is_empty() {
-                        title.to_owned()
-                    } else {
-                        format!("{artist} - {title}")
-                    };
-                    let source = entry["path"].as_str().ok_or("Missing M3U entry path")?;
-                    writeln!(file, "#EXTINF:{duration},{display}\n{source}")
-                        .map_err(|e| e.to_string())?;
-                }
-                file.flush().map_err(|e| e.to_string())?;
-            }
-            staging.as_file().sync_all().map_err(|e| e.to_string())?;
-            check()?;
-            staging.persist(path).map_err(|e| e.to_string())?;
+            write_atomic(
+                parent,
+                Path::new(path),
+                ".mornye-m3u-",
+                |staging| {
+                    let mut file = BufWriter::with_capacity(64 * 1024, staging);
+                    file.write_all(b"#EXTM3U\n")?;
+                    for entry in entries {
+                        check().map_err(io::Error::other)?;
+                        let duration = entry["duration"].as_i64().filter(|n| *n > 0).unwrap_or(-1);
+                        let artist = trim(entry["artist"].as_str().unwrap_or_default());
+                        let title = entry["name"].as_str().unwrap_or_default();
+                        let display = if artist.is_empty() {
+                            title.to_owned()
+                        } else {
+                            format!("{artist} - {title}")
+                        };
+                        let source = entry["path"]
+                            .as_str()
+                            .ok_or_else(|| io::Error::other("Missing M3U entry path"))?;
+                        writeln!(file, "#EXTINF:{duration},{display}\n{source}")?;
+                    }
+                    file.flush()
+                },
+                || check().map_err(io::Error::other),
+                false,
+            )
+            .map_err(|e| e.to_string())?;
             Ok(json!({"output_path": path, "committed": true}))
         }
         _ => Err("Unknown playlist operation".into()),
@@ -87,10 +91,6 @@ fn lines(content: &str) -> Vec<&str> {
     }
     result.push(&content[start..]);
     result
-}
-
-fn trim(value: &str) -> &str {
-    value.trim_matches(|character: char| character.is_whitespace() || character == '\u{feff}')
 }
 
 fn track(

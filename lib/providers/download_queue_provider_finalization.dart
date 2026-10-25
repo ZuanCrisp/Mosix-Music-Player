@@ -622,9 +622,21 @@ extension _DownloadQueueFinalization on DownloadQueueNotifier {
 
     final stagingLabel = qualityVariantStagingLabel(item.id);
     final localPathSegments = File(filePath).uri.pathSegments;
-    final currentFileName = storageMode == 'saf'
+    final logicalFileName = storageMode == 'saf'
         ? (fileName ?? result['file_name']?.toString() ?? '')
         : (localPathSegments.isEmpty ? '' : localPathSegments.last);
+    final outputExtension =
+        DownloadResult.fromMap(result).outputExtension(path: filePath) ??
+        '.flac';
+    // Deferred SAF still points to a local file. Its logical name came from
+    // the provider before conversion and must use the finalized container.
+    final currentFileName = isContentUri(filePath)
+        ? logicalFileName
+        : finalizedAudioFileName(
+            fileName: logicalFileName,
+            localPath: filePath,
+            fallbackExtension: outputExtension,
+          );
     final variantFileName = applyQualityVariantFilenameLabel(
       fileName: currentFileName,
       stagingLabel: stagingLabel,

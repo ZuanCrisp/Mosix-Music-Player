@@ -4,9 +4,9 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/automix_options.dart';
-import 'package:mosix/services/audio_analysis_jobs.dart';
-import 'package:mosix/services/automix_effect_renderer.dart';
+import 'package:mornye/models/automix_options.dart';
+import 'package:mornye/services/audio_analysis_jobs.dart';
+import 'package:mornye/services/automix_effect_renderer.dart';
 
 void main() {
   late Directory temporary;
@@ -45,11 +45,42 @@ void main() {
     renderer.dispose();
   });
 
+  test('faster effects read enough source to fill the overlap', () async {
+    List<String>? captured;
+    final renderer = AutoMixEffectRenderer(
+      temporaryDirectory: () async => temporary,
+      jobs: AudioAnalysisJobs<bool>(
+        start: (arguments) async {
+          captured = arguments;
+          return (id: 1, completed: Future.value(false));
+        },
+        cancel: (_) async {},
+      ),
+    );
+    await renderer.render(
+      '/missing.flac',
+      start: const Duration(seconds: 10),
+      duration: const Duration(seconds: 4),
+      options: const AutoMixOptions(effect: AutoMixEffect.custom, speed: 1.2),
+    );
+    final input = captured!.indexOf('-i');
+    // 4 s of output at 1.2× needs 4.8 s of the outgoing song.
+    expect(captured![input - 1], '4.800000');
+    expect(captured![captured!.lastIndexOf('-t') + 1], '4.000000');
+    renderer.dispose();
+  });
+
   test(
     'real filters change pitch, attenuate highs, and generate delayed echoes',
     () async {
-      final ffmpeg = Platform.environment['SPOTIFLAC_TEST_FFMPEG'] ?? 'ffmpeg';
-      final probe = await Process.run(ffmpeg, ['-version']);
+      final ffmpeg = Platform.environment['MORNYE_TEST_FFMPEG'] ?? 'ffmpeg';
+      final ProcessResult probe;
+      try {
+        probe = await Process.run(ffmpeg, ['-version']);
+      } on ProcessException {
+        markTestSkipped('Host FFmpeg is unavailable');
+        return;
+      }
       expect(probe.exitCode, 0);
       final jobs = AudioAnalysisJobs<bool>(
         start: (arguments) async => (
@@ -65,7 +96,11 @@ void main() {
         jobs: jobs,
         temporaryDirectory: () async => temporary,
       );
-      Future<Float64List> signal(String source, AutoMixOptions options) async {
+      Future<Float64List> signal(
+        String source,
+        AutoMixOptions options, {
+        bool bassHandoff = false,
+      }) async {
         final input = File('${temporary.path}/input.wav');
         final generated = await Process.run(ffmpeg, [
           '-y',
@@ -83,6 +118,7 @@ void main() {
           start: Duration.zero,
           duration: const Duration(seconds: 3),
           options: options,
+          bassHandoff: bassHandoff,
         );
         expect(tail, isNotNull);
         final pcm = '${temporary.path}/output.pcm';
@@ -150,6 +186,29 @@ void main() {
           .fold<double>(0, (p, value) => max(p, value.abs()));
       expect(peak(1.68), greaterThan(0.05));
       expect(peak(1.86), greaterThan(0.02));
+      final bass = await signal(
+        'sine=frequency=80:sample_rate=48000',
+        const AutoMixOptions(),
+        bassHandoff: true,
+      );
+      final treble = await signal(
+        'sine=frequency=1000:sample_rate=48000',
+        const AutoMixOptions(),
+        bassHandoff: true,
+      );
+      double level(Float64List samples, double start, double end) {
+        final slice = samples
+            .skip((start * 48000).round())
+            .take(((end - start) * 48000).round());
+        return sqrt(
+          slice.fold<double>(0, (sum, sample) => sum + sample * sample) /
+              slice.length,
+        );
+      }
+
+      expect(level(bass, 0.03, 0.15), greaterThan(0.08));
+      expect(level(bass, 2, 3), lessThan(0.02));
+      expect(level(treble, 2, 3), greaterThan(0.07));
       renderer.dispose();
     },
   );

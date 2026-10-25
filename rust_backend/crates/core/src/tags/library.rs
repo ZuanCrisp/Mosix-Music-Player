@@ -2,7 +2,9 @@
 
 use super::{AudioMetadata, CoverArt, file::ObservedReader, read_container_format, read_tags};
 use crate::lyrics::lrc::has_usable_content;
-use crate::media::{mp3_quality, ogg_quality, probe_mp4_quality, probe_quality, riff_quality};
+use crate::media::{
+    adts_quality, mp3_quality, ogg_quality, probe_mp4_quality, probe_quality, riff_quality,
+};
 use serde_json::{Value, json};
 use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
@@ -149,12 +151,14 @@ fn read(
     }
     if let Ok(metadata) = metadata {
         apply_tags(&mut result, metadata, format, path, hint)?;
+    } else if let Err(error) = metadata {
+        result["metadataReadError"] = error.into();
     }
-    // MP4 and RIFF probe quality independently of whether tags are present.
+    // Missing ID3 or MP4 tags do not mean the audio stream is unreadable.
     if !tagged
         && !matches!(
             format,
-            "m4a" | "mp4" | "aac" | "wav" | "aiff" | "aif" | "aifc"
+            "mp3" | "m4a" | "mp4" | "aac" | "adts" | "wav" | "aiff" | "aif" | "aifc"
         )
     {
         return Ok(result);
@@ -168,11 +172,23 @@ fn read(
         "flac" => probe_quality(file, &|| Ok(())),
         "m4a" | "mp4" | "aac" => probe_mp4_quality(file, &|| Ok(())),
         "mp3" => mp3_quality(file, size as i64),
+        "adts" => adts_quality(file, size as i64),
         "ogg" | "opus" => ogg_quality(file, size as i64, path),
         "wav" | "aiff" | "aif" | "aifc" => riff_quality(file, size as i64, format != "wav"),
         _ => return Ok(result),
     };
     if let Ok(quality) = quality {
+        let readable_without_tags = quality.sample_rate > 0
+            && match format {
+                "mp3" | "adts" => quality.bitrate > 0,
+                "m4a" | "mp4" | "aac" => !quality.codec.is_empty(),
+                _ => false,
+            };
+        if !tagged && readable_without_tags {
+            // Use the real display name and unknown artist/album, never the
+            // staged filename or cache directory used by a SAF fallback.
+            apply_tags(&mut result, AudioMetadata::default(), format, path, hint)?;
+        }
         for (key, value) in [
             ("bitDepth", quality.bit_depth),
             ("sampleRate", quality.sample_rate),
@@ -188,7 +204,7 @@ fn read(
                     / (quality.total_samples as f64 / quality.sample_rate as f64)
                     / 1000.0) as i64
             }
-            "mp3" | "ogg" | "opus" => quality.bitrate / 1000,
+            "mp3" | "adts" | "ogg" | "opus" => quality.bitrate / 1000,
             "m4a" | "mp4" | "aac" => {
                 let mapped = match quality.codec.trim().to_lowercase().as_str() {
                     "flac" => "flac",
@@ -228,6 +244,7 @@ fn apply_tags(
         .as_object_mut()
         .unwrap()
         .remove("metadataFromFilename");
+    result.as_object_mut().unwrap().remove("metadataReadError");
     result["trackName"] = if tags.title.is_empty() {
         filename(if hint.is_empty() { path } else { hint }).into()
     } else {

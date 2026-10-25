@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:dart_smb2/dart_smb2.dart';
-import 'package:mosix/services/network_storage_service.dart';
+import 'package:mornye/services/network_storage_service.dart';
 
 typedef SmbListingInput = ({List<Smb2DirEntry> files, String path});
 

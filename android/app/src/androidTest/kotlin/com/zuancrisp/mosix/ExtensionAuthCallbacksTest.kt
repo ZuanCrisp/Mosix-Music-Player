@@ -11,7 +11,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class ExtensionAuthCallbacksTest {
-    private val uri = Uri.parse("spotiflac://session-grant?state=nonce&grant=grant")
+    private val uri = Uri.parse("mornye://session-grant?state=nonce&grant=grant")
 
     @Test
     fun coldCallbackWaitsForReadyBackendAndDrainsOnlyOnce() = runBlocking {
@@ -57,11 +57,11 @@ class ExtensionAuthCallbacksTest {
         val callbacks = ExtensionAuthCallbacks()
         for (invalid in listOf(
             "https://session-grant?state=nonce&grant=grant",
-            "spotiflac://unknown?state=nonce&code=code",
-            "spotiflac://session-grant?grant=grant",
-            "spotiflac://callback?state=nonce",
+            "mornye://unknown?state=nonce&code=code",
+            "mornye://session-grant?grant=grant",
+            "mornye://callback?state=nonce",
         )) assertFalse(callbacks.offer(Uri.parse(invalid)))
-        assertTrue(callbacks.offer(Uri.parse("spotiflac://callback?state=oauth&code=code")))
+        assertTrue(callbacks.offer(Uri.parse("mornye://callback?state=oauth&code=code")))
         callbacks.drain {
             assertEquals("oauth", it.state)
             assertEquals("code", it.code)

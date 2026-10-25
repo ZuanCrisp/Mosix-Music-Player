@@ -3,12 +3,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_player_queue.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/mornye_player_queue.dart';
 
 class _Player extends MusicPlayerController {
   int? jumpedTo;
@@ -54,8 +54,8 @@ void main() {
           overrides: [
             settingsProvider.overrideWith(_Settings.new),
             musicPlayerControllerProvider.overrideWithValue(player),
-            currentMediaItemProvider.overrideWith(
-              (ref) => Stream.value(queue[1]),
+            currentMediaItemProvider.overrideWithBuild(
+              (ref, notifier) => Stream.value(queue[1]),
             ),
             playQueueProvider.overrideWith((ref) => Stream.value(queue)),
             playbackStateProvider.overrideWith(

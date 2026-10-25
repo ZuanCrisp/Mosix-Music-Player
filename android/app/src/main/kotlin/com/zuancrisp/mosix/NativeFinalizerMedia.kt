@@ -7,7 +7,7 @@ import com.zuancrisp.mosix.SafDownloadHandler.mimeTypeForExt
 import com.zuancrisp.mosix.SafDownloadHandler.normalizeExt
 import com.zuancrisp.mosix.NativeFinalizationPolicy.applyQualityVariantFilenameLabel
 import com.zuancrisp.mosix.NativeFinalizationPolicy.artistTagValue
-import com.zuancrisp.mosix.NativeFinalizationPolicy.authoritativeAlbumArtist
+import com.zuancrisp.mosix.NativeFinalizationPolicy.metadataTagValue
 import com.zuancrisp.mosix.NativeFinalizationPolicy.formatIndexTag
 import com.zuancrisp.mosix.NativeFinalizationPolicy.logicalOutputFileName
 import com.zuancrisp.mosix.NativeFinalizationPolicy.removeQualityVariantStagingLabel
@@ -17,10 +17,6 @@ import java.io.File
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.util.Locale
-
-
-// Metadata embedding, cover download, external LRC, and quality-variant
-// filename helpers for NativeDownloadFinalizer.
 
 internal fun NativeDownloadFinalizer.qualityVariantFilenameLabel(state: NativeDownloadFinalizer.FinalizeState): String? {
     return NativeFinalizationPolicy.qualityVariantFilenameLabel(
@@ -250,11 +246,7 @@ internal fun NativeDownloadFinalizer.embedBasicMetadata(context: Context, path: 
     val album = resultString(input, "album").ifBlank {
         trackString(input, "albumName", requestString(input, "album_name"))
     }
-    val albumArtist = authoritativeAlbumArtist(
-        requestValue = requestString(input, "album_artist"),
-        trackValue = trackString(input, "albumArtist", ""),
-        providerResultValue = resultString(input, "album_artist"),
-    )
+    val albumArtist = resolvedAlbumArtist(input)
     val date = resultString(input, "release_date").ifBlank {
         resultString(input, "date").ifBlank {
             trackString(input, "releaseDate", requestString(input, "release_date"))
@@ -296,6 +288,7 @@ internal fun NativeDownloadFinalizer.embedBasicMetadata(context: Context, path: 
         NativeFinalizationPolicy.hasUsableLyricsContent(lyrics) &&
         !lyrics.trim().equals("[instrumental:true]", ignoreCase = true)
     val artistTagMode = input.request.optString("artist_tag_mode", "")
+    val separators = input.request.optJSONObject("metadata_separators") ?: JSONObject()
     // FLAC, MP3, Opus, and M4A all have backend tag writers that edit the
     // tag block atomically without an ffmpeg remux (which drops foreign
     // frames and rewrites the whole container). The backend answers
@@ -316,6 +309,9 @@ internal fun NativeDownloadFinalizer.embedBasicMetadata(context: Context, path: 
                 .put("label", label)
                 .put("copyright", copyright)
                 .put("comment", comment)
+            for (key in listOf("artist", "album_artist", "composer", "genre")) {
+                fields.put("${key}_separator", separators.optString(key, ""))
+            }
             if (trackNumberValue > 0) fields.put("track_number", trackNumberValue.toString())
             if (totalTracksValue > 0) fields.put("track_total", totalTracksValue.toString())
             if (discNumberValue > 0) fields.put("disc_number", discNumberValue.toString())
@@ -354,15 +350,15 @@ internal fun NativeDownloadFinalizer.embedBasicMetadata(context: Context, path: 
     // must store the same primary artist when that mode is selected.
     val metadataPairs = mutableListOf(
         "title" to title,
-        "artist" to artistTagValue(artist, artistTagMode),
+        "artist" to metadataTagValue(artistTagValue(artist, artistTagMode), separators.optString("artist")),
         "album" to album,
-        "album_artist" to artistTagValue(albumArtist, artistTagMode),
+        "album_artist" to metadataTagValue(artistTagValue(albumArtist, artistTagMode), separators.optString("album_artist")),
         "date" to date,
         "track" to trackNumber,
         "disc" to discNumber,
         "isrc" to isrc,
-        "composer" to composer,
-        "genre" to genre,
+        "composer" to metadataTagValue(composer, separators.optString("composer")),
+        "genre" to metadataTagValue(genre, separators.optString("genre")),
         labelKey to label,
         "copyright" to copyright,
         "comment" to comment,

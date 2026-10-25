@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/constants/app_info.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/constants/app_info.dart';
+import 'package:mornye/utils/logger.dart';
 
 final _log = AppLogger('AppRemoteConfig');
 
@@ -162,7 +162,7 @@ class DonateConfig {
     return DonateConfig(
       enabled: json['enabled'] as bool? ?? true,
       title: _readString(json['title']).isEmpty
-          ? 'Support Mosix'
+          ? 'Support ${AppInfo.appName}'
           : _mobileDonationText(_readString(json['title'])),
       message: _readString(json['message']).isEmpty
           ? 'Optional support helps cover tools, testing devices, and hosting.'
@@ -184,16 +184,41 @@ class DonateConfig {
 
   factory DonateConfig.fallback() {
     return const DonateConfig(
-      enabled: false,
-      title: 'Support Mosix',
+      enabled: true,
+      title: 'Support ${AppInfo.appName}',
       message: 'Optional support helps cover dev tools and testing devices.',
-      methods: [],
+      methods: [
+        DonateMethod(
+          id: 'kofi',
+          title: 'Ko-fi',
+          subtitle: 'ko-fi.com/zarzet',
+          url: AppInfo.kofiUrl,
+          icon: 'kofi',
+          color: 0xFFFF5E5B,
+        ),
+        DonateMethod(
+          id: 'github-sponsors',
+          title: 'GitHub Sponsors',
+          subtitle: 'github.com/sponsors/zarzet',
+          url: AppInfo.githubSponsorsUrl,
+          icon: 'github',
+          color: 0xFF2D333B,
+        ),
+        DonateMethod(
+          id: 'usdt-trc20',
+          title: 'USDT (TRC20)',
+          subtitle: 'TL7iAqjq9M8BwVMi9AtHvuAGHtdwEvsDta',
+          walletAddress: 'TL7iAqjq9M8BwVMi9AtHvuAGHtdwEvsDta',
+          icon: 'crypto',
+          color: 0xFF26A17B,
+        ),
+      ],
       supporters: [],
       notices: [
         'Not selling early access, premium features, or paywalls',
         'Funds go to dev tools and testing devices',
         'Your support helps keep this project active',
-        'Donation links are not configured',
+        'Supporter list can be updated from the app API',
       ],
     );
   }
@@ -249,7 +274,7 @@ class MonthlyDonationGoal {
       period: _readString(json['period']),
       title: _mobileDonationText(
         _readNullableString(json['title']) ??
-            'Monthly Mosix development goal',
+            'Monthly ${AppInfo.appName} development goal',
       ),
       description: _mobileDonationText(_readString(json['description'])),
       progressPercent: (_readFiniteNumber(json['progress_percent']) ?? 0).clamp(
@@ -375,9 +400,7 @@ class AppRemoteConfigService {
     // its caller. Cached config and dismissal helpers need no HTTP resources.
     final client = _client ?? http.Client();
     try {
-      if (endpoint.trim().isEmpty) return null;
-
-    final uri = Uri.parse(endpoint).replace(
+      final uri = Uri.parse(endpoint).replace(
         queryParameters: {
           'platform': Platform.isAndroid ? 'android' : Platform.operatingSystem,
           'version': AppInfo.version,
@@ -391,7 +414,7 @@ class AppRemoteConfigService {
             uri,
             headers: {
               'Accept': 'application/json',
-              'User-Agent': 'Mosix/${AppInfo.version}',
+              'User-Agent': '${AppInfo.appName}/${AppInfo.version}',
             },
           )
           .timeout(const Duration(seconds: 8));
@@ -486,8 +509,8 @@ String _readString(Object? value) {
 }
 
 String _mobileDonationText(String text) => text.replaceAll(
-  RegExp(r'\bMosix(?:[ -]+Mobile)?\b', caseSensitive: false),
-  'Mosix',
+  RegExp(r'\bSpotiFLAC(?:[ -]+Mobile)?\b', caseSensitive: false),
+  AppInfo.appName,
 );
 
 double? _readFiniteNumber(Object? value) {

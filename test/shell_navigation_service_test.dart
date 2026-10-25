@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/services/shell_navigation_service.dart';
-import 'package:mosix/widgets/view_queue_snackbar_action.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/services/shell_navigation_service.dart';
+import 'package:mornye/widgets/view_queue_snackbar_action.dart';
 
 void main() {
   for (final (separateSearch, showRepo) in [

@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/id3v23_lyrics.dart';
+import 'package:mornye/services/id3v23_lyrics.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

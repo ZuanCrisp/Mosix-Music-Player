@@ -3,16 +3,20 @@ import 'dart:io';
 
 import 'package:integration_test/integration_test_driver.dart';
 
-/// Run on dedicated emulators with --keep-app-running: `flutter drive` otherwise
-/// uninstalls the app when it finishes. Use --profile on Android and --debug on
-/// iOS simulators. SPOTIFLAC_PERFORMANCE_REPORT selects the host JSON output;
+/// Run on dedicated emulators without user data. A signing mismatch can make
+/// `flutter drive` uninstall an existing app during installation, even with
+/// --keep-app-running. That flag only prevents uninstalling when the run ends.
+/// Use --profile on Android and macOS, and --debug on iOS simulators.
+/// Keep the macOS window visible: hiding or fully covering it can suspend
+/// animation clocks and frame delivery, invalidating active measurements.
+/// MORNYE_PERFORMANCE_REPORT selects the host JSON output;
 /// screenshots are PNGs beside that report. The aggregate target is
 /// integration_test/mornye_performance_test.dart.
 Future<void> main() => integrationDriver(
   responseDataCallback: (data) async {
     final output = File(
-      Platform.environment['SPOTIFLAC_PERFORMANCE_REPORT'] ??
-          '/tmp/spotiflac-performance.json',
+      Platform.environment['MORNYE_PERFORMANCE_REPORT'] ??
+          '/tmp/mornye-performance.json',
     );
     await output.parent.create(recursive: true);
     final screenshots = data?['screenshots'];

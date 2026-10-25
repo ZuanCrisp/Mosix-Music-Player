@@ -1,14 +1,16 @@
+//! Backend cover art handling: downloading, resizing, extracting from audio files, and caching.
+
 use super::Backend;
 use cap_std::fs::OpenOptions;
-use spotiflac_core::app_version::AppVersion;
-use spotiflac_core::cover::{MAX_DOWNLOAD_BYTES, resize};
-use spotiflac_core::tags::{CoverArt, extract_cover};
-use spotiflac_network::{
+use mornye_core::app_version::AppVersion;
+use mornye_core::cover::{MAX_DOWNLOAD_BYTES, resize};
+use mornye_core::tags::{CoverArt, extract_cover};
+use mornye_network::{
     HttpRequest, NetworkService, NetworkSession, random_user_agent, url::UrlParts,
 };
 use std::cell::RefCell;
 use std::collections::BTreeMap;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::Path;
 use std::sync::{Arc, Condvar, Mutex};
@@ -273,7 +275,7 @@ impl Backend {
         read: impl FnOnce(&crate::files::FilePath, &str, &Check<'_>) -> Result<CoverArt, String>,
         check: &Check<'_>,
     ) -> Result<String, String> {
-        let format = spotiflac_core::tags::library_extension(audio_path, hint);
+        let format = mornye_core::tags::library_extension(audio_path, hint);
         // The scan's MP4-family reader also accepts .mp4/.aac. The standalone
         // cover export deliberately keeps its narrower legacy suffix policy.
         let format = matches!(format.as_str(), "mp4" | "aac").then_some("m4a");
@@ -337,7 +339,7 @@ impl Backend {
         let png = files.resolve_legacy(&path("png").to_string_lossy())?;
         for cached in [&jpg, &png] {
             cached.native_display()?;
-            if cached.metadata().is_ok_and(|metadata| metadata.is_file()) {
+            if reusable_cached_cover(cached) {
                 return Ok(cached.display());
             }
         }
@@ -362,7 +364,7 @@ impl Backend {
             ));
         }
         let mut cover = read(&input, &format, &check)?;
-        if let Ok(resized) = spotiflac_core::cover::library_thumbnail(&cover.data, &check) {
+        if let Ok(resized) = mornye_core::cover::library_thumbnail(&cover.data, &check) {
             cover.mime = if resized.starts_with(b"\x89PNG") {
                 "image/png"
             } else if resized.starts_with(b"\xff\xd8") {
@@ -378,7 +380,7 @@ impl Backend {
         check()?;
         let output = if cover.mime.contains("png") { png } else { jpg };
         let _lock = files.lock(&output, &check)?;
-        if output.metadata().is_ok_and(|metadata| metadata.is_file()) {
+        if reusable_cached_cover(&output) {
             return Ok(output.display());
         }
         output
@@ -452,6 +454,19 @@ fn read_cover(
     extract_cover(&mut file, format, check)
 }
 
+fn reusable_cached_cover(path: &crate::files::FilePath) -> bool {
+    if !path.metadata().is_ok_and(|metadata| metadata.is_file()) {
+        return false;
+    }
+    // Re-extract legacy ID3 JPEG caches written with a leading NUL. Keep
+    // other existing formats under the original cache reuse policy.
+    let mut header = [0; 4];
+    path.open(OpenOptions::new().read(true))
+        .and_then(|mut file| file.read_exact(&mut header))
+        .is_err()
+        || header != [0, 0xff, 0xd8, 0xff]
+}
+
 fn output_permissions(
     output: &crate::files::FilePath,
 ) -> Result<Option<cap_std::fs::Permissions>, String> {
@@ -504,6 +519,50 @@ mod tests {
 
     fn cover() -> Cover {
         Cover::new(&NetworkService::new().unwrap(), "1".into())
+    }
+
+    #[test]
+    fn padded_id3_cache_is_replaced_without_changing_the_audio() {
+        let directory = tempfile::tempdir().unwrap();
+        let data = directory.path().join("data");
+        let backend = Backend::new(
+            &directory.path().join("sources"),
+            &data,
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            "1",
+            crate::RuntimeLimits::default(),
+        )
+        .unwrap();
+        let jpeg = b"\xff\xd8\xff\xe0";
+        let mut picture = b"\0image/jpeg\0\x03\0\0".to_vec();
+        picture.extend(jpeg);
+        let mut frame = b"APIC".to_vec();
+        frame.extend((picture.len() as u32).to_be_bytes());
+        frame.extend([0, 0]);
+        frame.extend(picture);
+        let mut audio = b"ID3\x03\0\0\0\0\0".to_vec();
+        audio.push(frame.len() as u8);
+        audio.extend(frame);
+        let source = data.join("track.mp3");
+        std::fs::write(&source, &audio).unwrap();
+        let cache = data.join("covers");
+        let save = || {
+            backend
+                .save_cover_to_cache_with_hint_and_key(
+                    source.to_str().unwrap(),
+                    "",
+                    cache.to_str().unwrap(),
+                    "track",
+                    &|| Ok(()),
+                )
+                .unwrap()
+        };
+        let cached = save();
+        assert_eq!(std::fs::read(&cached).unwrap(), jpeg);
+        std::fs::write(&cached, [b"\0".as_slice(), jpeg].concat()).unwrap();
+        assert_eq!(save(), cached);
+        assert_eq!(std::fs::read(&cached).unwrap(), jpeg);
+        assert_eq!(std::fs::read(&source).unwrap(), audio);
     }
 
     #[test]

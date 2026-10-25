@@ -5,9 +5,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/services/download_request_payload.dart';
-import 'package:mosix/utils/audio_format_utils.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/services/backend/backend_channel.dart';
+import 'package:mornye/services/desktop_diagnostics.dart';
+import 'package:mornye/services/download_request_payload.dart';
+import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/hash_utils.dart';
+import 'package:mornye/utils/logger.dart';
+
+part 'platform_bridge/bridge_codec.dart';
+part 'platform_bridge/bridge_events.dart';
+part 'platform_bridge/bridge_library_scan.dart';
+part 'platform_bridge/bridge_lookup_cache.dart';
+part 'platform_bridge/bridge_native_worker.dart';
+part 'platform_bridge/bridge_saf.dart';
 
 final _log = AppLogger('PlatformBridge');
 
@@ -17,119 +29,6 @@ const foregroundServiceStartNotAllowedCode =
 bool isForegroundServiceStartNotAllowed(Object error) {
   return error is PlatformException &&
       error.code == foregroundServiceStartNotAllowedCode;
-}
-
-Object? _decodeJsonInBackground(String json) => jsonDecode(json);
-String _encodeJsonInBackground(Object? value) => jsonEncode(value);
-
-class _NativeDataJobState {
-  bool dispatched = false;
-  bool cancelled = false;
-}
-
-String _encodeBoundedLookupCacheInBackground(Map<String, dynamic> entries) {
-  final result = StringBuffer('{');
-  var bytes = 2; // Opening and closing braces.
-  var count = 0;
-  for (final entry in entries.entries) {
-    final fragment =
-        '${_encodeJsonInBackground(entry.key)}:${_encodeJsonInBackground(entry.value)}';
-    final entryBytes = utf8.encode(fragment).length;
-    final separatorBytes = count == 0 ? 0 : 1;
-    if (entryBytes > PlatformBridge._persistentCacheMaxEntryBytes ||
-        bytes + separatorBytes + entryBytes >
-            PlatformBridge._persistentCacheMaxBytes) {
-      continue;
-    }
-    if (count > 0) result.write(',');
-    result.write(fragment);
-    bytes += separatorBytes + entryBytes;
-    count++;
-  }
-  result.write('}');
-  return result.toString();
-}
-
-Object? _decodeJsonFileInBackground(String path) {
-  final contents = File(path).readAsStringSync();
-  return contents.isEmpty ? null : jsonDecode(contents);
-}
-
-class LibraryScanNDJSONFile {
-  final File file;
-  final int expectedCount;
-  final int errorCount;
-
-  const LibraryScanNDJSONFile({
-    required this.file,
-    required this.expectedCount,
-    this.errorCount = 0,
-  });
-
-  Stream<Map<String, dynamic>> rows() async* {
-    await for (final line
-        in file
-            .openRead()
-            .transform(utf8.decoder)
-            .transform(const LineSplitter())) {
-      if (line.trim().isEmpty) continue;
-      final decoded = jsonDecode(line);
-      if (decoded is! Map) {
-        throw const FormatException('Library scan NDJSON row is not an object');
-      }
-      yield Map<String, dynamic>.from(decoded);
-    }
-  }
-
-  Future<void> delete() async {
-    try {
-      if (await file.exists()) await file.delete();
-    } catch (_) {}
-    // Remove the resumable scan checkpoint after ingestion.
-    try {
-      final checkpoint = File('${file.path}.state');
-      if (await checkpoint.exists()) await checkpoint.delete();
-    } catch (_) {}
-  }
-}
-
-class ExtensionSessionGrantEvent {
-  final String extensionId;
-  final bool success;
-
-  const ExtensionSessionGrantEvent({
-    required this.extensionId,
-    required this.success,
-  });
-}
-
-/// Folder picked via the native iOS document picker: the filesystem path plus
-/// the security-scoped bookmark that re-grants access across app launches.
-class IosPickedDirectory {
-  final String path;
-  final String bookmark;
-
-  const IosPickedDirectory({required this.path, required this.bookmark});
-}
-
-class IosSecurityScopedAccess {
-  final String path;
-  final String token;
-
-  const IosSecurityScopedAccess({required this.path, required this.token});
-}
-
-class ContentUriPlaybackLease {
-  final String path;
-  final String token;
-
-  final String? displayName;
-
-  const ContentUriPlaybackLease({
-    required this.path,
-    required this.token,
-    this.displayName,
-  });
 }
 
 class InstallationState {
@@ -167,52 +66,13 @@ bool shouldResetRestoredInstallation({
       installState.freshPackageInstall;
 }
 
-class _BridgeCacheEntry {
-  final Map<String, dynamic> value;
-  final DateTime expiresAt;
-  final int bytes;
-
-  const _BridgeCacheEntry({
-    required this.value,
-    required this.expiresAt,
-    required this.bytes,
-  });
-
-  bool get isExpired => DateTime.now().isAfter(expiresAt);
-}
-
-class _BridgeListCacheEntry {
-  final List<Map<String, dynamic>> value;
-  final DateTime expiresAt;
-  final int bytes;
-
-  const _BridgeListCacheEntry({
-    required this.value,
-    required this.expiresAt,
-    required this.bytes,
-  });
-
-  bool get isExpired => DateTime.now().isAfter(expiresAt);
-}
-
-class _BridgeInFlight<T> {
-  final String requestId;
-  final String scopeKey;
-  final Future<T> future;
-
-  const _BridgeInFlight({
-    required this.requestId,
-    required this.scopeKey,
-    required this.future,
-  });
-}
-
 class PlatformBridge {
   /// Sentinel shared with Android's foreground service for progress reports
   /// that contain a percentage but no byte counts.
   static const int notificationPercentTotal = 10000;
 
-  static const _channel = MethodChannel('com.zuancrisp.mosix/backend');
+  /// MethodChannel on Android and iOS, the Rust library on desktop.
+  static BackendChannel get _channel => backendChannel;
 
   static int _nativeDataJobSerial = 0;
   static final _nativeDataJobs = <String, Set<_NativeDataJobState>>{};
@@ -289,17 +149,16 @@ class PlatformBridge {
   static const _bridgeCacheMaxBytes = 8 * 1024 * 1024;
   static const _persistentCacheMaxEntryBytes = 1024 * 1024;
   static const _persistentCacheMaxBytes = 2 * 1024 * 1024;
-  static const _lookupCachePersistDebounce = Duration(milliseconds: 500);
+  static const _defaultLookupCachePersistDebounce = Duration(milliseconds: 500);
+  static Duration _lookupCachePersistDebounce =
+      _defaultLookupCachePersistDebounce;
   static const _metadataPersistentCacheKey = 'bridge_metadata_lookup_cache_v1';
-  static const _downloadProgressEvents = EventChannel(
-    'com.zuancrisp.mosix/download_progress_stream',
-  );
-  static const _libraryScanProgressEvents = EventChannel(
-    'com.zuancrisp.mosix/library_scan_progress_stream',
-  );
-  static final Map<String, _BridgeCacheEntry> _metadataCache = {};
-  static final Map<String, _BridgeCacheEntry> _urlHandleCache = {};
-  static final Map<String, _BridgeListCacheEntry> _customSearchCache = {};
+  static final Map<String, _BridgeCacheEntry<Map<String, dynamic>>>
+  _metadataCache = {};
+  static final Map<String, _BridgeCacheEntry<Map<String, dynamic>>>
+  _urlHandleCache = {};
+  static final Map<String, _BridgeCacheEntry<List<Map<String, dynamic>>>>
+  _customSearchCache = {};
   static final Map<String, Future<Map<String, dynamic>>> _metadataInFlight = {};
   static final Map<String, Future<Map<String, dynamic>?>> _urlHandleInFlight =
       {};
@@ -327,12 +186,18 @@ class PlatformBridge {
   static final StreamController<List<String>>
   _iosBackgroundDownloadExpirationEvents =
       StreamController<List<String>>.broadcast();
+  static final StreamController<String> _discordPresenceStatusEvents =
+      StreamController<String>.broadcast();
+  static final StreamController<String> _libraryFolderChangeEvents =
+      StreamController<String>.broadcast();
   static bool _backendEventHandlerInstalled = false;
 
-  static bool get supportsCoreBackend => Platform.isAndroid || Platform.isIOS;
+  /// The Rust backend answers on Android and iOS through the MethodChannel
+  /// and on desktop through dart:ffi, with plain filesystem paths.
+  static bool get supportsCoreBackend =>
+      Platform.isAndroid || Platform.isIOS || isDesktopPlatform;
 
-  static bool get supportsExtensionSystem =>
-      Platform.isAndroid || Platform.isIOS;
+  static bool get supportsExtensionSystem => supportsCoreBackend;
 
   static Stream<ExtensionSessionGrantEvent> extensionSessionGrantEvents() {
     _ensureBackendEventHandler();
@@ -361,6 +226,71 @@ class PlatformBridge {
 
   static Future<void> processPendingExtensionCallbacks() =>
       _channel.invokeMethod<void>('processPendingExtensionCallbacks');
+
+  /// Desktop only: hands a `mornye://` URL the OS delivered to the backend.
+  /// Returns false when it is not an extension callback. The backend then
+  /// raises `extensionAuthCallbackReceived`, as the mobile hosts do.
+  static Future<bool> queueExtensionCallbackUrl(String url) async {
+    if (!isDesktopPlatform) return false;
+    final queued = await _channel.invokeMethod<bool>(
+      'queueExtensionCallbackUrl',
+      {'url': url},
+    );
+    return queued == true;
+  }
+
+  /// Desktop only: keeps the computer from idle sleeping while downloads
+  /// run. Idempotent; returns whether the OS granted the request.
+  static Future<bool> beginKeepAwake({
+    String reason = 'Downloading music',
+  }) async {
+    if (!isDesktopPlatform) return false;
+    final granted = await _channel.invokeMethod<bool>('beginKeepAwake', {
+      'reason': reason,
+    });
+    return granted == true;
+  }
+
+  /// Desktop only: releases [beginKeepAwake]. Safe without a prior begin.
+  static Future<void> endKeepAwake() async {
+    if (!isDesktopPlatform) return;
+    await _channel.invokeMethod<bool>('endKeepAwake');
+  }
+
+  /// Desktop Discord Rich Presence (`discordPresenceInitialize`, `Update`,
+  /// `Clear`, `Shutdown`) over Discord's local IPC in the Rust backend.
+  static Future<T?> invokeDiscordPresence<T>(
+    String method, [
+    Object? arguments,
+  ]) => _channel.invokeMethod<T>(method, arguments);
+
+  /// Desktop Discord status changes: `active` or `unavailable`.
+  static Stream<String> discordPresenceStatusEvents() {
+    _ensureBackendEventHandler();
+    return _discordPresenceStatusEvents.stream;
+  }
+
+  /// Desktop only: replaces the watched library folders. Returns the folders
+  /// that are being watched.
+  static Future<List<String>> watchLibraryFolders(List<String> paths) async {
+    if (!isDesktopPlatform) return const [];
+    final watched = await _channel.invokeMethod<List<dynamic>>(
+      'watchLibraryFolders',
+      {'paths': paths},
+    );
+    return [for (final path in watched ?? const []) path.toString()];
+  }
+
+  static Future<void> unwatchLibraryFolders() async {
+    if (!isDesktopPlatform) return;
+    await _channel.invokeMethod<void>('unwatchLibraryFolders');
+  }
+
+  /// Desktop watched library roots whose content changed (throttled).
+  static Stream<String> libraryFolderChangeEvents() {
+    _ensureBackendEventHandler();
+    return _libraryFolderChangeEvents.stream;
+  }
 
   static Future<String?> consumeVerificationNotification() =>
       _channel.invokeMethod<String>('consumeVerificationNotification');
@@ -406,6 +336,15 @@ class PlatformBridge {
           return null;
         case 'libraryStorageChanged':
           _libraryStorageEvents.add(null);
+          return null;
+        case 'discordPresenceStatus':
+          final status = call.arguments;
+          if (status is String) _discordPresenceStatusEvents.add(status);
+          return null;
+        case 'libraryFolderChanged':
+          final args = call.arguments;
+          final root = args is Map ? args['root']?.toString() ?? '' : '';
+          if (root.isNotEmpty) _libraryFolderChangeEvents.add(root);
           return null;
         case 'extensionVerificationNotificationTapped':
           _verificationNotificationEvents.add(null);
@@ -455,7 +394,7 @@ class PlatformBridge {
 
   static Future<Map<String, dynamic>> _cachedInvoke(
     String cacheKey,
-    Map<String, _BridgeCacheEntry> cache,
+    Map<String, _BridgeCacheEntry<Map<String, dynamic>>> cache,
     Map<String, Future<Map<String, dynamic>>> inFlight,
     Duration ttl,
     String persistentCacheKey,
@@ -499,7 +438,7 @@ class PlatformBridge {
   }
 
   static Map<String, dynamic>? _getCachedMap(
-    Map<String, _BridgeCacheEntry> cache,
+    Map<String, _BridgeCacheEntry<Map<String, dynamic>>> cache,
     String key,
   ) {
     _pruneExpiredBridgeCache(cache);
@@ -513,13 +452,13 @@ class PlatformBridge {
   }
 
   static void _putCachedMap(
-    Map<String, _BridgeCacheEntry> cache,
+    Map<String, _BridgeCacheEntry<Map<String, dynamic>>> cache,
     String key,
     Map<String, dynamic> value,
     Duration ttl,
     String persistentCacheKey,
   ) {
-    _putMemoryCachedMap(cache, key, value, ttl);
+    _putMemoryCached<Map<String, dynamic>>(cache, key, value, ttl);
     _scheduleLookupCachePersist(
       cache,
       persistentCacheKey,
@@ -558,7 +497,9 @@ class PlatformBridge {
     return bytes;
   }
 
-  static void _pruneExpiredBridgeCache(Map<String, _BridgeCacheEntry> cache) {
+  static void _pruneExpiredBridgeCache<T>(
+    Map<String, _BridgeCacheEntry<T>> cache,
+  ) {
     if (cache.isEmpty) return;
     final now = DateTime.now();
     cache.removeWhere((_, entry) => now.isAfter(entry.expiresAt));
@@ -635,7 +576,7 @@ class PlatformBridge {
   static Future<void> _restorePersistentCache(
     SharedPreferences prefs,
     String prefsKey,
-    Map<String, _BridgeCacheEntry> target,
+    Map<String, _BridgeCacheEntry<Map<String, dynamic>>> target,
     int generation,
   ) async {
     final raw = prefs.getString(prefsKey);
@@ -679,7 +620,7 @@ class PlatformBridge {
   }
 
   static Future<void> _persistLookupCache(
-    Map<String, _BridgeCacheEntry> cache,
+    Map<String, _BridgeCacheEntry<Map<String, dynamic>>> cache,
     String prefsKey,
     int generation,
   ) async {
@@ -713,8 +654,15 @@ class PlatformBridge {
     }
   }
 
+  /// Shortens the lookup cache persist debounce so tests need not wait the
+  /// production delay. Null restores the default.
+  @visibleForTesting
+  static set lookupCachePersistDebounceForTesting(Duration? value) {
+    _lookupCachePersistDebounce = value ?? _defaultLookupCachePersistDebounce;
+  }
+
   static void _scheduleLookupCachePersist(
-    Map<String, _BridgeCacheEntry> cache,
+    Map<String, _BridgeCacheEntry<Map<String, dynamic>>> cache,
     String prefsKey,
     int generation,
   ) {
@@ -728,7 +676,7 @@ class PlatformBridge {
   }
 
   static Future<void> _flushLookupCachePersist(
-    Map<String, _BridgeCacheEntry> cache,
+    Map<String, _BridgeCacheEntry<Map<String, dynamic>>> cache,
     String prefsKey,
     int generation,
   ) {
@@ -880,9 +828,7 @@ class PlatformBridge {
   }
 
   static Stream<Map<String, dynamic>> downloadProgressStream() {
-    return _downloadProgressEvents.receiveBroadcastStream().map(
-      _decodeMapResult,
-    );
+    return _channel.downloadProgressEvents().map(_decodeMapResult);
   }
 
   static Future<void> exitApp() async {
@@ -952,7 +898,7 @@ class PlatformBridge {
   /// exactly like an OS deep link.
   static Future<bool> startIosWebAuthSession(
     String url, {
-    String callbackScheme = 'spotiflac',
+    String callbackScheme = 'mornye',
   }) async {
     final result = await _channel.invokeMethod('startWebAuthSession', {
       'url': url,
@@ -1151,7 +1097,7 @@ class PlatformBridge {
   static Future<ContentUriPlaybackLease?> openContentUriPlaybackLease(
     String uri,
   ) async {
-    if (!Platform.isAndroid || !uri.startsWith('content://')) return null;
+    if (!Platform.isAndroid || !isContentUri(uri)) return null;
     final result = await _channel.invokeMethod('safOpenPlaybackLease', {
       'uri': uri,
     });
@@ -1262,17 +1208,6 @@ class PlatformBridge {
     return result as bool? ?? false;
   }
 
-  static Future<bool> shareMultipleContentUris(
-    List<String> uris, {
-    String title = '',
-  }) async {
-    final result = await _channel.invokeMethod('shareMultipleContentUris', {
-      'uris': uris,
-      'title': title,
-    });
-    return result as bool? ?? false;
-  }
-
   static Future<String> getLyricsLRC(
     String spotifyId,
     String trackName,
@@ -1304,6 +1239,31 @@ class PlatformBridge {
       'file_path': filePath ?? '',
       'duration_ms': durationMs,
     });
+  }
+
+  /// Lyrics from one enabled provider only, in the shape of
+  /// [getLyricsLRCWithSource]. Throws when that provider has none.
+  static Future<Map<String, dynamic>> getLyricsFromProvider(
+    String provider, {
+    required String trackName,
+    required String artistName,
+    String spotifyId = '',
+    int durationMs = 0,
+  }) {
+    return _invokeMap('getLyricsFromProvider', {
+      'provider': provider,
+      'spotify_id': spotifyId,
+      'track_name': trackName,
+      'artist_name': artistName,
+      'duration_ms': durationMs,
+    });
+  }
+
+  /// The enabled lyrics providers in priority order, including installed
+  /// lyrics extensions as `extension:<id>`.
+  static Future<List<String>> getEnabledLyricsProviders() async {
+    final result = await _channel.invokeMethod('getEnabledLyricsProviders');
+    return _decodeStringListResult(result, 'getEnabledLyricsProviders');
   }
 
   static Future<Map<String, dynamic>> embedLyricsToFile(
@@ -1370,12 +1330,6 @@ class PlatformBridge {
     await _channel.invokeMethod('setLyricsProviders', {
       'providers_json': providersJSON,
     });
-  }
-
-  static Future<List<Map<String, dynamic>>>
-  getAvailableLyricsProviders() async {
-    final result = await _channel.invokeMethod('getAvailableLyricsProviders');
-    return _decodeMapListResult(result, 'getAvailableLyricsProviders');
   }
 
   /// Sets advanced lyrics fetch options used by provider-specific integrations.
@@ -1717,12 +1671,7 @@ class PlatformBridge {
   }
 
   static Future<void> _deleteFileIfExists(String path) async {
-    try {
-      final file = File(path);
-      if (await file.exists()) {
-        await file.delete();
-      }
-    } catch (_) {}
+    await deleteFileQuietly(File(path));
   }
 
   static Future<Directory> _nativeWorkerPayloadDir() async {
@@ -2173,7 +2122,7 @@ class PlatformBridge {
       );
       if (generation == _lookupCacheGeneration &&
           _customSearchInFlight[cacheKey]?.requestId == requestId) {
-        _putMemoryCachedMapList(
+        _putMemoryCached<List<Map<String, dynamic>>>(
           _customSearchCache,
           cacheKey,
           decoded,
@@ -2223,7 +2172,7 @@ class PlatformBridge {
         if (generation == _lookupCacheGeneration &&
             decoded != null &&
             _isCacheableURLHandleResult(decoded)) {
-          _putMemoryCachedMap(
+          _putMemoryCached<Map<String, dynamic>>(
             _urlHandleCache,
             cacheKey,
             decoded,
@@ -2258,10 +2207,12 @@ class PlatformBridge {
     return type == 'album' || type == 'playlist' || type == 'artist';
   }
 
-  static void _putMemoryCachedMap(
-    Map<String, _BridgeCacheEntry> cache,
+  /// Admits [value] under the shared per-entry and per-cache budgets,
+  /// evicting the oldest entries first. Each cache map is budgeted on its own.
+  static void _putMemoryCached<T>(
+    Map<String, _BridgeCacheEntry<T>> cache,
     String key,
-    Map<String, dynamic> value,
+    T value,
     Duration ttl,
   ) {
     _pruneExpiredBridgeCache(cache);
@@ -2274,7 +2225,7 @@ class PlatformBridge {
             retained + bytes > _bridgeCacheMaxBytes)) {
       retained -= cache.remove(cache.keys.first)!.bytes;
     }
-    cache[key] = _BridgeCacheEntry(
+    cache[key] = _BridgeCacheEntry<T>(
       value: value,
       expiresAt: DateTime.now().add(ttl),
       bytes: bytes,
@@ -2282,10 +2233,10 @@ class PlatformBridge {
   }
 
   static List<Map<String, dynamic>>? _getCachedMapList(
-    Map<String, _BridgeListCacheEntry> cache,
+    Map<String, _BridgeCacheEntry<List<Map<String, dynamic>>>> cache,
     String key,
   ) {
-    _pruneExpiredBridgeListCache(cache);
+    _pruneExpiredBridgeCache(cache);
     final entry = cache[key];
     if (entry == null) return null;
     if (entry.isExpired) {
@@ -2293,37 +2244,6 @@ class PlatformBridge {
       return null;
     }
     return _copyMapList(entry.value);
-  }
-
-  static void _putMemoryCachedMapList(
-    Map<String, _BridgeListCacheEntry> cache,
-    String key,
-    List<Map<String, dynamic>> value,
-    Duration ttl,
-  ) {
-    _pruneExpiredBridgeListCache(cache);
-    cache.remove(key);
-    final bytes = _payloadBytes(value) + key.length * 2;
-    if (bytes > _bridgeCacheMaxEntryBytes) return;
-    var retained = cache.values.fold<int>(0, (sum, item) => sum + item.bytes);
-    while (cache.isNotEmpty &&
-        (cache.length >= _bridgeCacheMaxEntries ||
-            retained + bytes > _bridgeCacheMaxBytes)) {
-      retained -= cache.remove(cache.keys.first)!.bytes;
-    }
-    cache[key] = _BridgeListCacheEntry(
-      value: value,
-      expiresAt: DateTime.now().add(ttl),
-      bytes: bytes,
-    );
-  }
-
-  static void _pruneExpiredBridgeListCache(
-    Map<String, _BridgeListCacheEntry> cache,
-  ) {
-    if (cache.isEmpty) return;
-    final now = DateTime.now();
-    cache.removeWhere((_, entry) => now.isAfter(entry.expiresAt));
   }
 
   static Future<String?> findURLHandler(String url) async {
@@ -2351,7 +2271,7 @@ class PlatformBridge {
   }
 
   /// Streaming-platform links for a track, keyed by song.link platform ID.
-  /// Served from the Go-side memory cache; throws when the lookup fails.
+  /// Served from the native backend's memory cache; throws when the lookup fails.
   static Future<Map<String, String>> getTrackPlatformLinks({
     String spotifyId = '',
     String isrc = '',
@@ -2413,6 +2333,69 @@ class PlatformBridge {
     }
   }
 
+  // Android reports process exits natively; desktop uses the session marker
+  // in DesktopDiagnostics.
+
+  static Future<Map<String, dynamic>?> getPendingAppCrash() async {
+    if (isDesktopPlatform) return DesktopDiagnostics.instance?.pendingCrash();
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return null;
+    return _decodeNullableMapResult(
+      await _channel.invokeMethod('getPendingAppCrash'),
+      'getPendingAppCrash',
+    );
+  }
+
+  static Future<void> dismissAppCrash(String id) async {
+    if (isDesktopPlatform) return DesktopDiagnostics.instance?.dismiss(id);
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    await _channel.invokeMethod<void>('dismissAppCrash', {'id': id});
+  }
+
+  static Future<Map<String, dynamic>?> getLatestAppCrash() async {
+    if (isDesktopPlatform) return DesktopDiagnostics.instance?.latestCrash();
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return null;
+    return _decodeNullableMapResult(
+      await _channel.invokeMethod('getLatestAppCrash'),
+      'getLatestAppCrash',
+    );
+  }
+
+  static Future<void> markAppCrashShown(String id) async {
+    if (isDesktopPlatform) return DesktopDiagnostics.instance?.markShown(id);
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    await _channel.invokeMethod<void>('markAppCrashShown', {'id': id});
+  }
+
+  static Future<void> recordAppRuntimeError({
+    required String error,
+    required String stack,
+    required String logs,
+  }) async {
+    if (isDesktopPlatform) {
+      return DesktopDiagnostics.instance?.recordRuntimeError(
+        error: error,
+        stack: stack,
+        logs: logs,
+      );
+    }
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    await _channel.invokeMethod<void>('recordAppRuntimeError', {
+      'error': error,
+      'stack': stack,
+      'logs': logs,
+    });
+  }
+
+  static Future<Map<String, dynamic>?> getLibraryScanExitInfo({
+    required int startedAfter,
+  }) async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return null;
+    final result = await _channel.invokeMethod('getLibraryScanExitInfo', {
+      'started_after': startedAfter,
+    });
+    return _decodeNullableMapResult(result, 'getLibraryScanExitInfo');
+  }
+
   static Future<void> setLibraryCoverCacheDir(String cacheDir) async {
     await _channel.invokeMethod('setLibraryCoverCacheDir', {
       'cache_dir': cacheDir,
@@ -2446,20 +2429,6 @@ class PlatformBridge {
     );
   }
 
-  static Future<Map<String, dynamic>> scanLibraryFolderIncrementalFromSnapshot(
-    String folderPath,
-    String snapshotPath,
-  ) async {
-    final result = await _channel.invokeMethod(
-      'scanLibraryFolderIncrementalFromSnapshot',
-      {'folder_path': folderPath, 'snapshot_path': snapshotPath},
-    );
-    return _decodeRequiredMapResultAsync(
-      result,
-      'scanLibraryFolderIncrementalFromSnapshot',
-    );
-  }
-
   static Future<LibraryScanNDJSONFile> scanSafTreeToNDJSONFile(
     String treeUri, {
     bool forceFullScan = false,
@@ -2487,77 +2456,69 @@ class PlatformBridge {
       'method': method,
       'arguments': arguments,
     });
-    var hash = 0x811c9dc5;
-    for (final byte in utf8.encode(identity)) {
-      hash ^= byte;
-      hash = (hash * 0x01000193) & 0xffffffff;
-    }
+    final hash = fnv1a32(utf8.encode(identity));
     final output = File(
       '${scanDir.path}${Platform.pathSeparator}'
       'library_scan_${hash.toRadixString(16).padLeft(8, '0')}.ndjson',
     );
-    try {
-      if (isCancelled?.call() == true) {
-        throw StateError('Library scan cancelled before native scan');
-      }
-      if (forceFullScan) {
-        // An explicit rescan must not resume metadata from an earlier attempt.
-        for (final file in [output, File('${output.path}.state')]) {
-          if (await file.exists()) await file.delete();
-        }
-        // Preserve covers referenced by the current DB until ingestion succeeds.
-        // Fresh paths bypass native disk and Flutter image caches together.
-        final covers = Directory('${scanDir.path}/library_covers');
-        await covers.create(recursive: true);
-        final freshCovers = await covers.createTemp('full_scan_');
-        await setLibraryCoverCacheDir(freshCovers.path);
-      }
-      if (isCancelled?.call() == true) {
-        throw StateError('Library scan cancelled before native scan');
-      }
-      final result = await _channel.invokeMethod(method, {
-        ...arguments,
-        'output_path': output.path,
-      });
-      if (result is! Map) {
-        throw FormatException('$method returned ${result.runtimeType}');
-      }
-      if (result['cancelled'] == true) {
-        throw FormatException('$method returned a cancelled partial scan');
-      }
-      final errors = result['error_count'];
-      if (errors is! num ||
-          !errors.isFinite ||
-          errors < 0 ||
-          errors != errors.toInt()) {
-        throw FormatException('$method returned an invalid error count');
-      }
-      final pathValue = result['path'];
-      final countValue = result['count'];
-      if (pathValue is! String || pathValue.trim().isEmpty) {
-        throw FormatException('$method returned an invalid output path');
-      }
-      if (countValue is! num ||
-          !countValue.isFinite ||
-          countValue < 0 ||
-          countValue != countValue.toInt()) {
-        throw FormatException('$method returned an invalid row count');
-      }
-      final path = pathValue;
-      final count = countValue.toInt();
-      final file = File(path);
-      if (!await file.exists()) {
-        throw FormatException('$method did not create its output file');
-      }
-      return LibraryScanNDJSONFile(
-        file: file,
-        expectedCount: count,
-        errorCount: errors.toInt(),
-      );
-    } catch (_) {
-      // Keep partial output; native SAF scan resumes from its sidecar.
-      rethrow;
+    // Partial output is kept on failure; native SAF scan resumes from its sidecar.
+    if (isCancelled?.call() == true) {
+      throw StateError('Library scan cancelled before native scan');
     }
+    if (forceFullScan) {
+      // An explicit rescan must not resume metadata from an earlier attempt.
+      for (final file in [output, File('${output.path}.state')]) {
+        if (await file.exists()) await file.delete();
+      }
+      // Preserve covers referenced by the current DB until ingestion succeeds.
+      // Fresh paths bypass native disk and Flutter image caches together.
+      final covers = Directory('${scanDir.path}/library_covers');
+      await covers.create(recursive: true);
+      final freshCovers = await covers.createTemp('full_scan_');
+      await setLibraryCoverCacheDir(freshCovers.path);
+    }
+    if (isCancelled?.call() == true) {
+      throw StateError('Library scan cancelled before native scan');
+    }
+    final result = await _channel.invokeMethod(method, {
+      ...arguments,
+      'output_path': output.path,
+    });
+    if (result is! Map) {
+      throw FormatException('$method returned ${result.runtimeType}');
+    }
+    if (result['cancelled'] == true) {
+      throw FormatException('$method returned a cancelled partial scan');
+    }
+    final errors = result['error_count'];
+    if (errors is! num ||
+        !errors.isFinite ||
+        errors < 0 ||
+        errors != errors.toInt()) {
+      throw FormatException('$method returned an invalid error count');
+    }
+    final pathValue = result['path'];
+    final countValue = result['count'];
+    if (pathValue is! String || pathValue.trim().isEmpty) {
+      throw FormatException('$method returned an invalid output path');
+    }
+    if (countValue is! num ||
+        !countValue.isFinite ||
+        countValue < 0 ||
+        countValue != countValue.toInt()) {
+      throw FormatException('$method returned an invalid row count');
+    }
+    final path = pathValue;
+    final count = countValue.toInt();
+    final file = File(path);
+    if (!await file.exists()) {
+      throw FormatException('$method did not create its output file');
+    }
+    return LibraryScanNDJSONFile(
+      file: file,
+      expectedCount: count,
+      errorCount: errors.toInt(),
+    );
   }
 
   static Future<Map<String, dynamic>> scanSafTreeIncremental(
@@ -2570,21 +2531,6 @@ class PlatformBridge {
       'existing_files': jsonEncode(existingFiles),
     });
     return _decodeRequiredMapResultAsync(result, 'scanSafTreeIncremental');
-  }
-
-  static Future<Map<String, dynamic>> scanSafTreeIncrementalFromSnapshot(
-    String treeUri,
-    String snapshotPath,
-  ) async {
-    _ensureBackendEventHandler();
-    final result = await _channel.invokeMethod(
-      'scanSafTreeIncrementalFromSnapshot',
-      {'tree_uri': treeUri, 'snapshot_path': snapshotPath},
-    );
-    return _decodeRequiredMapResultAsync(
-      result,
-      'scanSafTreeIncrementalFromSnapshot',
-    );
   }
 
   static Future<Map<String, int>> getSafFileModTimes(List<String> uris) async {
@@ -2600,9 +2546,7 @@ class PlatformBridge {
   }
 
   static Stream<Map<String, dynamic>> libraryScanProgressStream() {
-    return _libraryScanProgressEvents.receiveBroadcastStream().map(
-      _decodeMapResult,
-    );
+    return _channel.libraryScanProgressEvents().map(_decodeMapResult);
   }
 
   static Future<void> cancelLibraryScan() async {
@@ -2725,18 +2669,6 @@ class PlatformBridge {
     throw FormatException(
       'Expected list result from $method, got ${decoded.runtimeType}',
     );
-  }
-
-  static List<Map<String, dynamic>> _decodeMapListResult(
-    dynamic result,
-    String method,
-  ) {
-    return _decodeRequiredListResult(result, method).map((entry) {
-      if (entry is Map) return entry.cast<String, dynamic>();
-      throw FormatException(
-        'Expected map entry from $method, got ${entry.runtimeType}',
-      );
-    }).toList();
   }
 
   static Future<List<Map<String, dynamic>>> _decodeMapListResultAsync(
@@ -2865,7 +2797,7 @@ class PlatformBridge {
   }) async {
     final input = <String, dynamic>{};
     if (itemId != null && itemId.isNotEmpty) input['item_id'] = itemId;
-    if (filePath.startsWith('content://')) {
+    if (isContentUri(filePath)) {
       input['uri'] = filePath;
     } else {
       input['path'] = filePath;
@@ -2876,12 +2808,12 @@ class PlatformBridge {
     });
     if (result['success'] != true) return result;
 
-    // The Go/Rust result uses new_file_path; the queue consumes file_path.
+    // The native result uses new_file_path; the queue consumes file_path.
     // SAF publishes back to its document URI after processing a temporary file.
     final uri = result['new_file_uri'];
     final path = result['new_file_path'];
     final legacyPath = result['file_path'];
-    if (filePath.startsWith('content://') && uri is String && uri.isNotEmpty) {
+    if (isContentUri(filePath) && uri is String && uri.isNotEmpty) {
       result['file_path'] = uri;
     } else if (path is String && path.isNotEmpty) {
       result['file_path'] = path;

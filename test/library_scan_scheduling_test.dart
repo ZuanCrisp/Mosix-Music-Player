@@ -2,15 +2,19 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/local_library_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/services/platform_bridge.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/notification_service.dart';
+import 'package:mornye/utils/local_library_scan_prefs.dart';
 
 class _Settings extends SettingsNotifier {
   @override
@@ -26,6 +30,7 @@ class _Database implements LibraryDatabase {
   List<LocalLibrarySource> sources;
   Future<List<LocalLibrarySource>> Function()? sourceRead;
   bool failLookup = false;
+  bool failScanErrorWrite = false;
   int? countOverride;
   Future<({int inserted, int skipped})> Function()? fullReplacement;
 
@@ -70,6 +75,9 @@ class _Database implements LibraryDatabase {
   }
 
   @override
+  Future<int> deleteDownloadedRowsForSource(String sourceId) async => 0;
+
+  @override
   Future<void> updateSourceState(
     String sourceId, {
     bool? enabled,
@@ -79,10 +87,18 @@ class _Database implements LibraryDatabase {
     String? lastScanError,
     bool clearLastScanError = false,
   }) async {
+    if (lastScanError != null && failScanErrorWrite) {
+      throw StateError('Could not save scan failure');
+    }
     sources = [
       for (final source in sources)
         source.id == sourceId
-            ? source.copyWith(enabled: enabled, available: available)
+            ? source.copyWith(
+                enabled: enabled,
+                available: available,
+                lastScanError: lastScanError,
+                clearLastScanError: clearLastScanError,
+              )
             : source,
     ];
   }
@@ -100,7 +116,9 @@ Future<void> _waitFor(bool Function() condition) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const backend = MethodChannel('com.zuancrisp.mosix/backend');
+  AndroidFlutterLocalNotificationsPlugin.registerWith();
+  SharedPreferences.setMockInitialValues({});
+  const backend = MethodChannel('com.zarz.mornye/backend');
   const paths = MethodChannel('plugins.flutter.io/path_provider');
   const notifications = MethodChannel(
     'dexterous.com/flutter/local_notifications',
@@ -115,10 +133,12 @@ void main() {
   late LocalLibraryAvailabilityProbe probe;
   late List<(String, Completer<String>)> scans;
   late List<String> calls;
+  late List<MethodCall> notificationCalls;
   var completeOnCancel = false;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    await (await SharedPreferences.getInstance()).clear();
     directory = await Directory.systemTemp.createTemp('library-scheduling-');
     database = _Database([
       for (final id in ['active', 'reconnect'])
@@ -136,12 +156,13 @@ void main() {
     probe = (path, {bookmark}) async => available[path];
     scans = [];
     calls = [];
+    notificationCalls = [];
     completeOnCancel = false;
     messenger.setMockMethodCallHandler(paths, (_) async => directory.path);
-    messenger.setMockMethodCallHandler(
-      notifications,
-      (call) async => call.method == 'initialize' ? true : null,
-    );
+    messenger.setMockMethodCallHandler(notifications, (call) async {
+      notificationCalls.add(call);
+      return call.method == 'initialize' ? true : null;
+    });
     messenger.setMockMethodCallHandler(backend, (call) async {
       calls.add(call.method);
       if (call.method == 'scanLibraryFolderIncremental') {
@@ -182,12 +203,207 @@ void main() {
     messenger.setMockMethodCallHandler(paths, null);
     messenger.setMockMethodCallHandler(notifications, null);
     await directory.delete(recursive: true);
+    debugDefaultTargetPlatformOverride = null;
   });
 
   Future<void> reconnect() async {
     available['${directory.path}/reconnect'] = true;
     await library.refreshSourceAvailability(scanReconnected: true);
   }
+
+  Future<void> restartLibrary() async {
+    container.dispose();
+    container = ProviderContainer(
+      overrides: [
+        settingsProvider.overrideWith(_Settings.new),
+        localLibraryProvider.overrideWith(
+          () => LocalLibraryNotifier(
+            database: database,
+            availabilityProbe: probe,
+          ),
+        ),
+      ],
+    );
+    library = container.read(localLibraryProvider.notifier);
+    await _waitFor(() => !container.read(localLibraryProvider).isLoading);
+  }
+
+  test(
+    'Android crash details are recovered and retained without manual logs',
+    () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(localLibraryActiveScanStartedAtKey, 100);
+      await prefs.setString(localLibraryActiveScanSourceKey, 'active');
+      var exitReads = 0;
+      messenger.setMockMethodCallHandler(backend, (call) async {
+        if (call.method == 'getLibraryScanExitInfo') {
+          exitReads++;
+          expect((call.arguments as Map)['started_after'], 100);
+          return {
+            'reason': 'Native crash',
+            'description': 'SIGSEGV in example codec',
+            'timestamp': 200,
+            'status': 11,
+          };
+        }
+        return null;
+      });
+      await restartLibrary();
+      final state = container.read(localLibraryProvider);
+      expect(state.sources.first.lastScanError, contains('Native crash'));
+      expect(
+        state.sources.first.lastScanError,
+        contains('SIGSEGV in example codec'),
+      );
+      expect(state.totalCount, 1);
+      expect(exitReads, 1);
+      final shows = notificationCalls
+          .where((call) => call.method == 'show')
+          .length;
+      await restartLibrary();
+      expect(exitReads, 1);
+      expect(
+        notificationCalls.where((call) => call.method == 'show').length,
+        shows,
+      );
+      expect(
+        container.read(localLibraryProvider).sources.first.lastScanError,
+        contains('Native crash'),
+      );
+    },
+  );
+
+  for (final failErrorWrite in [false, true]) {
+    test(
+      'restart reports an interrupted scan with auto-scan off (save failure: $failErrorWrite)',
+      () async {
+        final previousCount = container.read(localLibraryProvider).totalCount;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(localLibraryActiveScanSourceKey, 'active');
+        database.failScanErrorWrite = failErrorWrite;
+        container.dispose();
+        container = ProviderContainer(
+          overrides: [
+            settingsProvider.overrideWith(_Settings.new),
+            localLibraryProvider.overrideWith(
+              () => LocalLibraryNotifier(
+                database: database,
+                availabilityProbe: probe,
+              ),
+            ),
+          ],
+        );
+        library = container.read(localLibraryProvider.notifier);
+        await _waitFor(() => !container.read(localLibraryProvider).isLoading);
+        final state = container.read(localLibraryProvider);
+        expect(state.isScanning, isFalse);
+        expect(state.loadFailed, isFalse);
+        expect(state.totalCount, previousCount);
+        expect(scans, isEmpty);
+        expect(prefs.getString(localLibraryActiveScanSourceKey), 'active');
+        if (!failErrorWrite) {
+          expect(state.sources.first.lastScanError, contains('interrupted'));
+        }
+        final shows = notificationCalls.where((call) => call.method == 'show');
+        final failure = shows.last.arguments as Map;
+        expect(failure['title'], 'Library scan failed');
+        expect(failure['body'], contains('interrupted'));
+        expect(
+          notificationCalls.any((call) => call.method == 'cancel'),
+          isTrue,
+        );
+        final notificationCount = shows.length;
+        await library.reloadFromStorage();
+        expect(
+          notificationCalls.where((call) => call.method == 'show').length,
+          notificationCount,
+        );
+      },
+    );
+  }
+
+  test(
+    'a scan failure remains visible when saving the error also fails',
+    () async {
+      final previousCount = container.read(localLibraryProvider).totalCount;
+      database.failScanErrorWrite = true;
+      final active = library.startSourceScan('active');
+      await _waitFor(() => scans.length == 1);
+      scans.single.$2.completeError(
+        PlatformException(code: 'scan_failed', message: 'Invalid audio header'),
+      );
+      await active;
+      final state = container.read(localLibraryProvider);
+      expect(state.isScanning, isFalse);
+      expect(state.totalCount, previousCount);
+      expect(
+        state.sources.first.lastScanError,
+        contains('Invalid audio header'),
+      );
+      final failure =
+          notificationCalls.lastWhere((call) => call.method == 'show').arguments
+              as Map;
+      expect(failure['title'], 'Library scan failed');
+      expect(failure['body'], contains('Invalid audio header'));
+      expect(
+        (await SharedPreferences.getInstance()).getString(
+          localLibraryActiveScanSourceKey,
+        ),
+        isNull,
+      );
+    },
+  );
+
+  test(
+    'a delayed progress notification cannot overwrite a scan failure',
+    () async {
+      final entered = Completer<void>();
+      final release = Completer<void>();
+      messenger.setMockMethodCallHandler(notifications, (call) async {
+        if (call.method == 'show' &&
+            (call.arguments as Map)['body'].toString().contains('track.flac')) {
+          if (!entered.isCompleted) entered.complete();
+          await release.future;
+        }
+        notificationCalls.add(call);
+        return call.method == 'initialize' ? true : null;
+      });
+      messenger.setMockMethodCallHandler(backend, (call) async {
+        if (call.method == 'scanLibraryFolderIncremental') {
+          final response = Completer<String>();
+          scans.add((
+            (call.arguments as Map)['folder_path'] as String,
+            response,
+          ));
+          return response.future;
+        }
+        if (call.method == 'getLibraryScanProgress') {
+          return {
+            'scanned_files': 785,
+            'total_files': 1877,
+            'progress_pct': 42,
+            'current_file': 'track.flac',
+          };
+        }
+        return null;
+      });
+      final active = library.startSourceScan('active');
+      await entered.future.timeout(const Duration(seconds: 5));
+      scans.single.$2.completeError(StateError('Scan stopped'));
+      await _waitFor(() => !container.read(localLibraryProvider).isScanning);
+      release.complete();
+      await active;
+      final shows = notificationCalls
+          .where((call) => call.method == 'show')
+          .toList();
+      expect((shows.last.arguments as Map)['title'], 'Library scan failed');
+      expect((shows.last.arguments as Map)['body'], contains('Scan stopped'));
+      expect(
+        (shows.last.arguments as Map)['id'],
+        NotificationService.libraryScanId,
+      );
+    },
+  );
 
   test('concurrent starts own one preflight and one native scan', () async {
     final pending = Completer<bool?>();
@@ -275,6 +491,67 @@ void main() {
       );
     }
   }
+
+  test('a finished scan keeps the files it could not read', () async {
+    var progress = <String, Object>{
+      'is_complete': true,
+      'error_count': 3,
+      'failures': [
+        {'path': '/music/A/broken.flac', 'message': 'invalid FLAC header'},
+        {
+          'path':
+              'content://example.documents/tree/primary%3AMusic/document/'
+              'primary%3AMusic%2FB%2Fcut.mp3',
+          'message': 'Input/output error',
+        },
+      ],
+    };
+    messenger.setMockMethodCallHandler(backend, (call) async {
+      if (call.method == 'scanLibraryFolderIncremental') {
+        return '{"files":[],"totalFiles":4,"skippedCount":1}';
+      }
+      if (call.method == 'getLibraryScanProgress') return progress;
+      return null;
+    });
+
+    await library.startSourceScan('active');
+    var state = container.read(localLibraryProvider);
+    expect(state.scanErrorCount, 3);
+    final failures = state.scanFailures['active']!;
+    expect(failures.count, 3);
+    expect(failures.files.map((file) => file.fileName), [
+      'broken.flac',
+      'cut.mp3',
+    ]);
+    expect(failures.files.map((file) => file.folder), ['/music/A', 'Music/B']);
+    expect(failures.files.last.message, 'Input/output error');
+
+    await restartLibrary();
+    state = container.read(localLibraryProvider);
+    expect(state.scanFailures['active']?.files, hasLength(2));
+
+    // A clean scan forgets the old list.
+    progress = {'is_complete': true, 'error_count': 0};
+    await library.startSourceScan('active');
+    expect(container.read(localLibraryProvider).scanFailures, isEmpty);
+    await restartLibrary();
+    expect(container.read(localLibraryProvider).scanFailures, isEmpty);
+
+    // A removed folder takes its list with it.
+    progress = {
+      'is_complete': true,
+      'error_count': 1,
+      'failures': [
+        {'path': '/music/broken.flac', 'message': 'EIO'},
+      ],
+    };
+    await library.startSourceScan('active');
+    expect(container.read(localLibraryProvider).scanFailures, hasLength(1));
+    await library.removeSource('active');
+    expect(container.read(localLibraryProvider).scanFailures, isEmpty);
+    await restartLibrary();
+    expect(container.read(localLibraryProvider).scanFailures, isEmpty);
+  });
 
   test('paused scan retains reconnect work until it completes', () async {
     final active = library.startSourceScan('active');

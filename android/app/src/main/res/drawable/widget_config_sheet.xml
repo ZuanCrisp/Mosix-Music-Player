@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom sheet surface with Expressive extra-large top corners. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/widgetBackground" />
+    <corners android:topLeftRadius="28dp" android:topRightRadius="28dp" />
+</shape>

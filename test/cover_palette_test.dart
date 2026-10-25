@@ -1,11 +1,48 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/theme/cover_palette.dart';
+import 'package:mornye/theme/cover_palette.dart';
 
 void main() {
+  ByteData pixels(List<(Color, int)> runs) {
+    final data = ByteData(runs.fold(0, (sum, run) => sum + run.$2) * 4);
+    var offset = 0;
+    for (final (color, count) in runs) {
+      for (var i = 0; i < count; i++, offset += 4) {
+        data
+          ..setUint8(offset, (color.r * 255).round())
+          ..setUint8(offset + 1, (color.g * 255).round())
+          ..setUint8(offset + 2, (color.b * 255).round())
+          ..setUint8(offset + 3, 255);
+      }
+    }
+    return data;
+  }
+
+  test('a dark cover with one clear colour keeps that colour, not gray', () {
+    // Mostly black art with a pale avocado strip, as in issue #658.
+    final color = coverSourceColor(
+      pixels([
+        (const Color(0xff050505), 65),
+        (const Color(0xffd4ddac), 30),
+        (const Color(0xff6a6e72), 5),
+      ]),
+    )!;
+    final hsl = HSLColor.fromColor(color);
+    expect(hsl.hue, inInclusiveRange(60, 80));
+    expect(hsl.saturation, greaterThan(0.3));
+  });
+
+  test('a small colourful detail does not tint a neutral cover', () {
+    final color = coverSourceColor(
+      pixels([(const Color(0xff808080), 95), (const Color(0xffff0000), 5)]),
+    )!;
+    expect(HSLColor.fromColor(color).saturation, lessThan(0.1));
+  });
+
   testWidgets(
     'same-path cover replacement refreshes palette and decoded image',
     (tester) async {

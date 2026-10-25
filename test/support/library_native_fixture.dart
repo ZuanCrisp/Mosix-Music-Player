@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/services/library_row_mapper.dart';
-import 'package:mosix/services/library_schema.dart';
-import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
+import 'package:mornye/services/library_row_mapper.dart';
+import 'package:mornye/services/library_schema.dart';
+import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
 
 Map<String, dynamic> nativeLibraryTrack(
   String id, {
@@ -30,7 +30,7 @@ Future<void> createNativeLibraryFixture(
   String historyPath = ':memory:',
 }) async {
   await LibrarySchema.create(db, LibrarySchema.version);
-  await db.execute('PRAGMA user_version = 17');
+  await db.execute('PRAGMA user_version = ${LibrarySchema.version}');
   await db.execute('PRAGMA recursive_triggers = ON');
   await db.execute('ATTACH DATABASE ? AS history_db', [historyPath]);
   await db.execute(

@@ -1,4 +1,4 @@
-import 'package:mosix/services/platform_bridge.dart';
+import 'package:mornye/services/platform_bridge.dart';
 
 typedef NativeCacheJobRunner =
     Future<Map<String, dynamic>> Function(

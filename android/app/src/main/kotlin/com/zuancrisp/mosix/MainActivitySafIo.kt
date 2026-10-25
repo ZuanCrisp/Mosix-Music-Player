@@ -1,7 +1,10 @@
 package com.zuancrisp.mosix
 
+import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.os.ParcelFileDescriptor
+import android.provider.DocumentsContract
 import android.system.Os
 import android.system.OsConstants
 import androidx.documentfile.provider.DocumentFile
@@ -9,12 +12,10 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
+import java.time.Instant
 import java.util.Locale
 
-// SAF/MediaStore URI IO helpers: temp copies, writes, sidecars, and the
-// SAF post-processing pipeline.
-
-internal fun MainActivity.errorJson(message: String): String {
+internal fun errorJson(message: String): String {
         val obj = JSONObject()
         obj.put("success", false)
         obj.put("error", message)
@@ -28,7 +29,7 @@ internal fun MainActivity.errorJson(message: String): String {
      * which require READ_MEDIA_AUDIO / READ_EXTERNAL_STORAGE permission
      * instead of SAF tree permission.
      */
-internal fun MainActivity.isMediaStoreUri(uri: Uri): Boolean {
+internal fun isMediaStoreUri(uri: Uri): Boolean {
         val authority = uri.authority ?: return false
         return authority == "media" ||
                authority.startsWith("media.") ||
@@ -38,7 +39,7 @@ internal fun MainActivity.isMediaStoreUri(uri: Uri): Boolean {
     /**
      * Resolve extension from a MediaStore URI by querying DISPLAY_NAME or MIME_TYPE.
      */
-internal fun MainActivity.resolveMediaStoreExt(uri: Uri, fallbackExt: String?): String {
+internal fun Context.resolveMediaStoreExt(uri: Uri, fallbackExt: String?): String {
         try {
             contentResolver.query(uri, arrayOf(android.provider.MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
                 if (cursor.moveToFirst()) {
@@ -58,7 +59,7 @@ internal fun MainActivity.resolveMediaStoreExt(uri: Uri, fallbackExt: String?): 
         return fallbackExt ?: ""
     }
 
-internal fun MainActivity.extFromFileName(name: String): String {
+internal fun extFromFileName(name: String): String {
         return when {
             name.endsWith(".m4a") -> ".m4a"
             name.endsWith(".mp4") -> ".mp4"
@@ -78,7 +79,7 @@ internal fun MainActivity.extFromFileName(name: String): String {
         }
     }
 
-internal fun MainActivity.extFromMimeType(mime: String?): String {
+internal fun extFromMimeType(mime: String?): String {
         return when (mime) {
             "audio/mp4" -> ".m4a"
             "audio/aac" -> ".aac"
@@ -95,7 +96,8 @@ internal fun MainActivity.extFromMimeType(mime: String?): String {
     }
 
 /** [displayName] skips a provider name query when the caller already listed it. */
-internal fun MainActivity.copyUriToTemp(
+internal fun Context.copyUriToTemp(
+    coreBackend: CoreBackend,
     uri: Uri,
     fallbackExt: String? = null,
     displayName: String? = null,
@@ -126,7 +128,7 @@ internal fun MainActivity.copyUriToTemp(
                     "Mosix",
                     "SAF denied for MediaStore URI, trying MediaStore fallback: $uri",
                 )
-                val result = copyMediaStoreUriToTemp(uri, fallbackExt)
+                val result = copyMediaStoreUriToTemp(coreBackend, uri, fallbackExt)
                 if (result != null) {
                     return result
                 }
@@ -151,7 +153,7 @@ internal fun MainActivity.copyUriToTemp(
      * This handles the case where SAF tree traversal returns MediaStore URIs
      * that the SAF document provider cannot access.
      */
-internal fun MainActivity.copyMediaStoreUriToTemp(uri: Uri, fallbackExt: String?): String? {
+internal fun Context.copyMediaStoreUriToTemp(coreBackend: CoreBackend, uri: Uri, fallbackExt: String?): String? {
         try {
             val ext = resolveMediaStoreExt(uri, fallbackExt)
             val suffix = ext.ifBlank { ".tmp" }
@@ -174,7 +176,7 @@ internal fun MainActivity.copyMediaStoreUriToTemp(uri: Uri, fallbackExt: String?
         }
     }
 
-internal fun MainActivity.buildUriDisplayName(
+internal fun Context.buildUriDisplayName(
         uri: Uri,
         displayNameHint: String? = null,
         fallbackExt: String? = null,
@@ -195,7 +197,7 @@ internal fun MainActivity.buildUriDisplayName(
         return if (ext.isNullOrBlank()) "audio" else "audio$ext"
     }
 
-internal fun MainActivity.buildLibraryCoverCacheKey(stablePath: String, lastModified: Long): String {
+internal fun buildLibraryCoverCacheKey(stablePath: String, lastModified: Long): String {
         val normalizedPath = stablePath.trim()
         if (normalizedPath.isEmpty()) return ""
         return if (lastModified > 0L) "$normalizedPath|$lastModified" else normalizedPath
@@ -217,7 +219,8 @@ internal fun isSeekableSafDescriptor(descriptor: ParcelFileDescriptor): Boolean 
 
 /** Read-only metadata uses a seekable descriptor first. Capability belongs to
  * this descriptor: a pipe or revoked URI must not disable other providers. */
-private fun MainActivity.readMetadataFromUri(
+private fun Context.readMetadataFromUri(
+    coreBackend: CoreBackend,
     uri: Uri,
     displayNameHint: String? = null,
     fallbackExt: String? = null,
@@ -235,7 +238,7 @@ private fun MainActivity.readMetadataFromUri(
             }
         },
         fallbackRead = {
-            val tempPath = copyUriToTemp(uri, fallbackExt, displayName = displayName)
+            val tempPath = copyUriToTemp(coreBackend, uri, fallbackExt, displayName = displayName)
             if (tempPath == null) null else try {
                 read(tempPath, displayName)
             } finally {
@@ -250,18 +253,24 @@ private fun MainActivity.readMetadataFromUri(
     )
 }
 
-internal fun MainActivity.readAudioMetadataFromUri(
+internal fun Context.readAudioMetadataFromUri(
+    coreBackend: CoreBackend,
     uri: Uri,
     displayNameHint: String? = null,
     fallbackExt: String? = null,
     coverCacheKey: String = "",
     onFailure: (String) -> Unit = {},
 ): JSONObject? = readMetadataFromUri(
-    uri, displayNameHint, fallbackExt,
+    coreBackend, uri, displayNameHint, fallbackExt,
     acceptRead = {
         val fromFilename = it.optBoolean("metadataFromFilename", false)
         if (fromFilename) {
-            throw IOException("Audio tags unreadable; only filename-derived metadata available")
+            val detail = it.optString("metadataReadError", "").trim()
+            throw IOException(if (detail.isEmpty()) {
+                "Audio tags unreadable; only filename-derived metadata available"
+            } else {
+                "Audio metadata read failed: $detail"
+            })
         }
         !fromFilename
     },
@@ -275,6 +284,9 @@ internal fun MainActivity.readAudioMetadataFromUri(
                 put("artistName", "Unknown Artist")
                 put("albumName", "Unknown Album")
                 put("filePath", uri.toString())
+                // The Rust readers stamp their rows; the library import
+                // requires the same scan time on this platform row.
+                put("scannedAt", Instant.now().toString())
                 put("format", name.substringAfterLast('.').lowercase(Locale.ROOT))
                 put("sampleRate", source.rate)
                 put("bitDepth", 1)
@@ -292,23 +304,26 @@ internal fun MainActivity.readAudioMetadataFromUri(
 
 /** The Hi-Res check reads only a window from the middle of the file, so a
  * seekable descriptor avoids copying the whole track out of SAF. */
-internal fun MainActivity.checkHiResAuthenticityFromUri(
+internal fun Context.checkHiResAuthenticityFromUri(
+    coreBackend: CoreBackend,
     uri: Uri,
     optionsJson: String,
-): JSONObject? = readMetadataFromUri(uri) { path, _ ->
+): JSONObject? = readMetadataFromUri(coreBackend, uri) { path, _ ->
     JSONObject(coreBackend.checkHiResAuthenticity(path, optionsJson))
 }?.put("file_path", uri.toString())
 
-internal fun MainActivity.readCompleteMetadataFromUri(
+internal fun Context.readCompleteMetadataFromUri(
+    coreBackend: CoreBackend,
     uri: Uri,
     displayNameHint: String? = null,
-): JSONObject? = readMetadataFromUri(uri, displayNameHint) { path, name ->
+): JSONObject? = readMetadataFromUri(coreBackend, uri, displayNameHint) { path, name ->
     JSONObject(coreBackend.readFileMetadata(path, name)).takeUnless { it.has("error") }
 }
 
 /** Keep the resolved audio descriptor alive for quality and artwork reads.
  * Only nonseekable providers need a staged audio copy. */
-internal fun MainActivity.scanCueFromUri(
+internal fun Context.scanCueFromUri(
+    coreBackend: CoreBackend,
     cuePath: String,
     audioUri: Uri,
     audioName: String,
@@ -316,7 +331,7 @@ internal fun MainActivity.scanCueFromUri(
     modTime: Long,
     cacheKey: String,
 ): String {
-    val result = readMetadataFromUri(audioUri, audioName) { path, name ->
+    val result = readMetadataFromUri(coreBackend, audioUri, audioName) { path, name ->
         JSONObject().put("rows", coreBackend.scanCueForLibraryWithResolvedAudio(
             cuePath, path, name, virtualPrefix, modTime, cacheKey,
         ))
@@ -325,7 +340,7 @@ internal fun MainActivity.scanCueFromUri(
 }
 
 /** Seekable remote documents need only tag reads, not a full audio download. */
-internal fun MainActivity.extractCoverFromUri(uri: Uri, outputPath: String) {
+internal fun Context.extractCoverFromUri(coreBackend: CoreBackend, uri: Uri, outputPath: String) {
     val name = buildUriDisplayName(uri)
     contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
         if (isSeekableSafDescriptor(descriptor)) {
@@ -334,14 +349,14 @@ internal fun MainActivity.extractCoverFromUri(uri: Uri, outputPath: String) {
         }
     }
     // Providers exposing a pipe cannot support random-access tag readers.
-    val tempPath = copyUriToTemp(uri, displayName = name)
+    val tempPath = copyUriToTemp(coreBackend, uri, displayName = name)
         ?: error("Failed to read document artwork")
     try {
         coreBackend.extractCoverToFile(tempPath, outputPath)
     } finally { File(tempPath).delete() }
 }
 
-internal fun MainActivity.writeUriFromPath(uri: Uri, srcPath: String): Boolean {
+internal fun Context.writeUriFromPath(uri: Uri, srcPath: String): Boolean {
         val srcFile = File(srcPath)
         if (!srcFile.exists()) return false
         contentResolver.openOutputStream(uri, "wt")?.use { output ->
@@ -357,22 +372,40 @@ internal fun MainActivity.writeUriFromPath(uri: Uri, srcPath: String): Boolean {
      * The child URI must be a tree-based document URI (e.g. from SAF tree scan).
      * Returns a DocumentFile that supports findFile() for sibling lookup.
      */
-internal fun MainActivity.safParentDir(childUri: Uri): DocumentFile? {
+internal fun Context.safParentDir(childUri: Uri): DocumentFile? {
         try {
-            val docId = android.provider.DocumentsContract.getDocumentId(childUri)
-            if (docId.isNullOrEmpty()) return null
+            val docId = DocumentsContract.getDocumentId(childUri)
+            val treeDocId = DocumentsContract.getTreeDocumentId(childUri)
+            if (docId.isNullOrEmpty() || treeDocId.isNullOrEmpty() || docId == treeDocId) return null
+
+            // Document IDs are opaque, including when they contain slashes.
+            // Ask the provider for the ancestry instead of treating IDs as paths.
+            val path = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                try {
+                    DocumentsContract.findDocumentPath(contentResolver, childUri)?.path
+                } catch (_: Exception) {
+                    null
+                }
+            } else null
+            if (path != null) {
+                if (path.size < 2 || path.first() != treeDocId || path.last() != docId) return null
+                val parentUri = DocumentsContract.buildDocumentUriUsingTree(
+                    childUri, path[path.lastIndex - 1]
+                )
+                return DocumentFile.fromTreeUri(this, parentUri)
+            }
+
+            // Older providers may only expose path-like IDs. Accept that
+            // fallback only if the candidate actually lists this document.
             val lastSlash = docId.lastIndexOf('/')
             if (lastSlash <= 0) return null
-
-            val parentDocId = docId.substring(0, lastSlash)
-            val treeDocId = android.provider.DocumentsContract.getTreeDocumentId(childUri)
-            if (treeDocId.isNullOrEmpty()) return null
-
-            val parentUri = android.provider.DocumentsContract.buildDocumentUriUsingTree(
-                childUri, parentDocId
+            val parentUri = DocumentsContract.buildDocumentUriUsingTree(
+                childUri, docId.substring(0, lastSlash)
             )
-            return DocumentFile.fromTreeUri(this, parentUri)
-                ?: DocumentFile.fromSingleUri(this, parentUri)
+            val parent = DocumentFile.fromTreeUri(this, parentUri) ?: return null
+            val name = DocumentFile.fromSingleUri(this, childUri)?.name ?: return null
+            val child = findSafChild(this, parent, name) ?: return null
+            return parent.takeIf { DocumentsContract.getDocumentId(child.uri) == docId }
         } catch (e: Exception) {
             android.util.Log.w("Mosix", "Failed to get SAF parent dir: ${e.message}")
             return null
@@ -383,10 +416,10 @@ internal fun MainActivity.safParentDir(childUri: Uri): DocumentFile? {
      * Write a ".lrc" sidecar next to a SAF audio document. The sidecar reuses
      * the audio file's base name (e.g. "Song.flac" -> "Song.lrc") and is created
      * in the same parent directory. Used by re-enrich when the user's lyrics
-     * mode requests an external/both sidecar. Best-effort: failures are logged
-     * and swallowed so they never abort the metadata enrichment itself.
+     * mode requests an external/both sidecar. Callers must handle false so a
+     * failed lyrics write cannot be reported as a successful refresh.
      */
-internal fun MainActivity.writeSafSidecarLrc(audioUri: Uri, lrcContent: String): Boolean {
+internal fun Context.writeSafSidecarLrc(audioUri: Uri, lrcContent: String): Boolean {
         if (lrcContent.isBlank()) return false
         try {
             val parent = safParentDir(audioUri) ?: run {
@@ -422,11 +455,16 @@ internal fun MainActivity.writeSafSidecarLrc(audioUri: Uri, lrcContent: String):
         }
     }
 
-internal fun MainActivity.runPostProcessingSafV2(fileUriStr: String, metadataJson: String, itemId: String): String {
+internal fun Context.runPostProcessingSafV2(
+    coreBackend: CoreBackend,
+    fileUriStr: String,
+    metadataJson: String,
+    itemId: String,
+): String {
     val uri = Uri.parse(fileUriStr)
     val doc = DocumentFile.fromSingleUri(this, uri)
         ?: return errorJson("SAF file not found")
-    val tempInput = copyUriToTemp(uri) ?: return errorJson("Failed to copy SAF file to temp")
+    val tempInput = copyUriToTemp(coreBackend, uri) ?: return errorJson("Failed to copy SAF file to temp")
     return withOwnedTemporaryMediaFile(File(tempInput)) {
         val inputObj = JSONObject()
         inputObj.put("item_id", itemId)

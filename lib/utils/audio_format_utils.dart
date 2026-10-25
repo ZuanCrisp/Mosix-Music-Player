@@ -1,5 +1,6 @@
-import 'package:mosix/utils/int_utils.dart';
-import 'package:mosix/utils/string_utils.dart';
+import 'package:mornye/utils/hash_utils.dart';
+import 'package:mornye/utils/int_utils.dart';
+import 'package:mornye/utils/string_utils.dart';
 
 /// Audio format/quality helpers shared by the download queue and history
 /// providers.
@@ -290,11 +291,7 @@ int? _bitrateFromQuality(String? quality) {
 }
 
 String qualityVariantStagingLabel(String itemId) {
-  var hash = 0x811c9dc5;
-  for (final byte in itemId.codeUnits) {
-    hash ^= byte;
-    hash = (hash * 0x01000193) & 0xffffffff;
-  }
+  final hash = fnv1a32(itemId.codeUnits);
   return 'qv_${hash.toRadixString(16).padLeft(8, '0')}';
 }
 

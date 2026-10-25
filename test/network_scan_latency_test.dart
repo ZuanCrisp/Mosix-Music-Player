@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/network_library_scanner.dart';
-import 'package:mosix/services/network_storage_service.dart';
+import 'package:mornye/services/network_library_scanner.dart';
+import 'package:mornye/services/network_storage_service.dart';
 
 class _Storage extends NetworkStorageService {
   _Storage(this.protocol);
@@ -34,7 +34,7 @@ void main() {
       addTearDown(() => directory.delete(recursive: true));
       final storage = _Storage(protocol);
       addTearDown(storage.dispose);
-      const channel = MethodChannel('com.zuancrisp.mosix/backend');
+      const channel = MethodChannel('com.zarz.mornye/backend');
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       addTearDown(() => messenger.setMockMethodCallHandler(channel, null));

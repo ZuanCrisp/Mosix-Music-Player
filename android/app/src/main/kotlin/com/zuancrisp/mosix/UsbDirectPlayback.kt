@@ -13,9 +13,9 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.os.PowerManager
-import com.spotiflac.backend.UsbDirectOutput
-import com.spotiflac.backend.UsbOutputFormat
-import com.spotiflac.backend.UsbHardwareVolume
+import com.mornye.backend.UsbDirectOutput
+import com.mornye.backend.UsbOutputFormat
+import com.mornye.backend.UsbHardwareVolume
 import io.flutter.plugin.common.MethodCall
 import java.nio.ByteBuffer
 
@@ -171,7 +171,8 @@ internal class UsbDirectPlayback(private val context: Context, private val emit:
                 }
                 val f = requireNotNull(format)
                 request.done(mapOf("ready" to true, "device" to (request.device.productName ?: "USB audio"),
-                    "sampleRate" to rate, "bitDepth" to bits, "duration" to durationUs / 1000,
+                    "sampleRate" to rate, "bitDepth" to f.bits.toInt(), "sourceBitDepth" to bits,
+                    "duration" to durationUs / 1000,
                     "transport" to f.encoding, "carrierRate" to f.sampleRate.toLong(), "driver" to "usb_direct",
                     "volume" to volumeMap(audio.volume()),
                     "volumeBlocked" to (!audio.volume().available && !allowFixedVolume)), null)

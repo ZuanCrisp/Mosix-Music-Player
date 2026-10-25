@@ -112,7 +112,6 @@ extension _DownloadQueueReplayGain on DownloadQueueNotifier {
     }
   }
 
-  /// Write album ReplayGain tags to a single file.
   Future<void> _writeAlbumReplayGain(
     String filePath,
     String albumGain,

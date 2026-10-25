@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/services/music_player_service.dart';
+import 'package:mornye/services/music_player_service.dart';
 import 'package:video_player/video_player.dart';
 
 /// The mini player prepares the current offline cover, paused and silent.

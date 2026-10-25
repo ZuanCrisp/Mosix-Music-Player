@@ -4,12 +4,13 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/services/download_metadata_embedding.dart';
-import 'package:mosix/services/ffmpeg_service.dart';
-import 'package:mosix/utils/artist_utils.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/metadata_separators.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/services/download_metadata_embedding.dart';
+import 'package:mornye/services/ffmpeg_service.dart';
+import 'package:mornye/utils/artist_utils.dart';
 
 class EmbeddingHarness {
   final events = <String>[];
@@ -62,9 +63,70 @@ class EmbeddingHarness {
   }
 }
 
+/// Cover eviction deletes files without awaiting, so poll until [check] holds.
+Future<void> _eventually(
+  Future<bool> Function() check, {
+  Duration timeout = const Duration(seconds: 2),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (!await check()) {
+    if (DateTime.now().isAfter(deadline)) {
+      fail('Condition not met within ${timeout.inMilliseconds} ms');
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
+}
+
+Future<void> _expectDeleted(Iterable<String> paths) => _eventually(() async {
+  for (final path in paths) {
+    if (await File(path).exists()) return false;
+  }
+  return true;
+});
+
 void main() {
+  test(
+    'download separators reach native tags and FFmpeg fallback without changing the track',
+    () async {
+      const track = Track(
+        id: 'example',
+        name: 'Title, unchanged',
+        artistName: 'A, B',
+        albumName: 'Album',
+        albumArtist: 'C, D',
+        duration: 100,
+        composer: 'E; F',
+        genre: 'Rock, Pop',
+      );
+      const settings = AppSettings(
+        embedLyrics: false,
+        metadataSeparators: MetadataSeparators(
+          artist: ' / ',
+          albumArtist: '; ',
+          composer: ' | ',
+          genre: '; ',
+        ),
+      );
+      final harness = EmbeddingHarness(nativeSuccess: false);
+      await harness.service.embed(
+        '/example/song.mp3',
+        track,
+        settings: settings,
+        extensionState: const ExtensionState(),
+        format: 'mp3',
+      );
+      expect(harness.nativeWrites.single['artist'], 'A, B');
+      expect(harness.nativeWrites.single['artist_separator'], ' / ');
+      expect(harness.fallbackWrites.single['ARTIST'], 'A / B');
+      expect(harness.fallbackWrites.single['ALBUMARTIST'], 'C; D');
+      expect(harness.fallbackWrites.single['COMPOSER'], 'E | F');
+      expect(harness.fallbackWrites.single['GENRE'], 'Rock; Pop');
+      expect(harness.fallbackWrites.single['TITLE'], 'Title, unchanged');
+      expect(track.artistName, 'A, B');
+    },
+  );
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zuancrisp.mosix/backend');
+  const channel = MethodChannel('com.zarz.mornye/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late Directory directory;
@@ -132,6 +194,34 @@ void main() {
     messenger.setMockMethodCallHandler(channel, null);
     await directory.delete(recursive: true);
   });
+
+  for (final format in ['flac', 'm4a', 'mp3', 'opus']) {
+    test(
+      '$format embeds enriched artwork at the configured resolution',
+      () async {
+        final cover = await File(
+          '${directory.path}/full-size.png',
+        ).writeAsBytes([1, 2, 3]);
+        final harness = EmbeddingHarness(
+          loadCover: (url, dimension) async {
+            expect(url, 'https://example.test/cover/3000.jpg');
+            expect(dimension, 0);
+            return cover.path;
+          },
+        );
+        await harness.service.embed(
+          '${directory.path}/song.$format',
+          track.copyWith(coverUrl: 'https://example.test/cover/3000.jpg'),
+          settings: const AppSettings(embedLyrics: false),
+          extensionState: const ExtensionState(),
+          format: format,
+        );
+        expect(harness.nativeWrites.single['cover_path'], cover.path);
+        harness.service.clearCoverCache();
+        await _expectDeleted([cover.path]);
+      },
+    );
+  }
 
   for (final format in ['flac', 'm4a', 'mp3', 'opus']) {
     test(
@@ -405,7 +495,7 @@ void main() {
         coverFile.path,
       ]);
       harness.service.clearCoverCache();
-      await Future<void>.delayed(Duration.zero);
+      await _expectDeleted([coverFile.path]);
       expect(await coverFile.exists(), isFalse);
     },
   );
@@ -443,7 +533,10 @@ void main() {
         '${directory.path}/cover-200.jpg',
       );
       harness.service.clearCoverCache();
-      await Future<void>.delayed(Duration.zero);
+      await _expectDeleted([
+        '${directory.path}/cover-100.jpg',
+        '${directory.path}/cover-200.jpg',
+      ]);
     },
   );
 
@@ -469,6 +562,7 @@ void main() {
         );
       }
       expect(paths.length, 9);
+      await _expectDeleted([paths['https://example.test/cover-1']!]);
       expect(
         await File(paths['https://example.test/cover-0']!).exists(),
         isTrue,
@@ -478,7 +572,7 @@ void main() {
         isFalse,
       );
       harness.service.clearCoverCache();
-      await Future<void>.delayed(Duration.zero);
+      await _expectDeleted(paths.values);
       for (final path in paths.values) {
         expect(await File(path).exists(), isFalse);
       }

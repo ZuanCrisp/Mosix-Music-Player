@@ -7,10 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/screens/setup_screen.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/screens/setup_screen.dart';
 
 class _Settings extends SettingsNotifier {
   @override
@@ -20,7 +20,7 @@ class _Settings extends SettingsNotifier {
   Future<void> ensureLoaded() async {}
 }
 
-const _backend = MethodChannel('com.zuancrisp.mosix/backend');
+const _backend = MethodChannel('com.zarz.mornye/backend');
 const _device = MethodChannel('dev.fluttercommunity.plus/device_info');
 const _permissions = MethodChannel('flutter.baseflow.com/permissions/methods');
 const _treeUri =

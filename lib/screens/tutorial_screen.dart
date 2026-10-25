@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/widgets/scroll_edge_fade.dart';
-import 'package:mosix/widgets/app_search_field.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/widgets/scroll_edge_fade.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/app_progress_indicator.dart';
+import 'package:mornye/widgets/app_search_field.dart';
+import 'package:mornye/widgets/expressive_button.dart';
 
 class TutorialScreen extends ConsumerStatefulWidget {
   const TutorialScreen({super.key});
@@ -17,26 +25,6 @@ class _TutorialScreenState extends ConsumerState<TutorialScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   static const int _totalPages = 6;
-
-  double _responsiveScale({
-    required BuildContext context,
-    double min = 0.82,
-    double max = 1.08,
-    double baseShortestSide = 390,
-  }) {
-    final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-    final scale = shortestSide / baseShortestSide;
-    if (scale < min) return min;
-    if (scale > max) return max;
-    return scale;
-  }
-
-  double _effectiveTextScale(BuildContext context) {
-    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
-    if (textScale < 1.0) return 1.0;
-    if (textScale > 1.4) return 1.4;
-    return textScale;
-  }
 
   @override
   void dispose() {
@@ -77,8 +65,8 @@ class _TutorialScreenState extends ConsumerState<TutorialScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final isLastPage = _currentPage == _totalPages - 1;
-    final scale = _responsiveScale(context: context, min: 0.86, max: 1.05);
-    final textScale = _effectiveTextScale(context);
+    final scale = responsiveScale(context: context, min: 0.86, max: 1.05);
+    final textScale = effectiveTextScale(context);
     final topBarPaddingH = 24 * scale;
     final topBarPaddingV = 16 * scale;
     final pageIndicatorHeight = 8 * scale;
@@ -87,201 +75,227 @@ class _TutorialScreenState extends ConsumerState<TutorialScreen> {
     final bottomGap = (32 * scale) + ((textScale - 1) * 8);
     final actionButtonHeight = (56 * scale) + ((textScale - 1) * 6);
 
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: topBarPaddingH,
-                vertical: topBarPaddingV,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: _currentPage > 0 ? 1.0 : 0.0,
-                    child: IconButton.filledTonal(
-                      onPressed: _currentPage > 0 ? _prevPage : null,
-                      tooltip: MaterialLocalizations.of(
-                        context,
-                      ).backButtonTooltip,
-                      icon: const Icon(Icons.arrow_back),
-                      style: IconButton.styleFrom(
-                        backgroundColor: colorScheme.surfaceContainerHighest,
+        child: _desktopColumn(
+          Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: topBarPaddingH,
+                  vertical: topBarPaddingV,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      opacity: _currentPage > 0 ? 1.0 : 0.0,
+                      child: AppIconButton.filledTonal(
+                        onPressed: _currentPage > 0 ? _prevPage : null,
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).backButtonTooltip,
+                        icon: const Icon(Icons.arrow_back),
+                        style: IconButton.styleFrom(
+                          backgroundColor: colorScheme.surfaceContainerHighest,
+                          foregroundColor: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+
+                    ExpressiveButton(
+                      text: true,
+                      onPressed: _skipTutorial,
+                      style: TextButton.styleFrom(
                         foregroundColor: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-
-                  TextButton(
-                    onPressed: _skipTutorial,
-                    style: TextButton.styleFrom(
-                      foregroundColor: colorScheme.onSurfaceVariant,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                    ),
-                    child: Text(
-                      l10n.setupSkip,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (page) => setState(() => _currentPage = page),
-                children: [
-                  _TutorialPage(
-                    index: 0,
-                    currentIndex: _currentPage,
-                    icon: Icons.waving_hand_rounded,
-                    iconColor: Colors.amber,
-                    title: l10n.tutorialWelcomeTitle,
-                    description: l10n.tutorialWelcomeDesc,
-                    content: _buildFeatureList(context, [
-                      (Icons.travel_explore_rounded, l10n.tutorialWelcomeTip1),
-                      (Icons.high_quality_rounded, l10n.tutorialWelcomeTip2),
-                      (Icons.auto_awesome_rounded, l10n.tutorialWelcomeTip3),
-                    ]),
-                  ),
-                  _TutorialPage(
-                    index: 1,
-                    currentIndex: _currentPage,
-                    icon: Icons.search_rounded,
-                    title: l10n.tutorialSearchTitle,
-                    description: l10n.tutorialSearchDesc,
-                    content: const _InteractiveSearchExample(),
-                  ),
-                  _TutorialPage(
-                    index: 2,
-                    currentIndex: _currentPage,
-                    icon: Icons.download_rounded,
-                    title: l10n.tutorialDownloadTitle,
-                    description: l10n.tutorialDownloadDesc,
-                    content: const _InteractiveDownloadExample(),
-                  ),
-                  _TutorialPage(
-                    index: 3,
-                    currentIndex: _currentPage,
-                    icon: Icons.library_music_rounded,
-                    title: l10n.tutorialLibraryTitle,
-                    description: l10n.tutorialLibraryDesc,
-                    content: _buildFeatureList(context, [
-                      (Icons.downloading_rounded, l10n.tutorialLibraryTip1),
-                      (Icons.play_circle_fill, l10n.tutorialLibraryTip2),
-                      (Icons.grid_view_rounded, l10n.tutorialLibraryTip3),
-                    ]),
-                  ),
-                  _TutorialPage(
-                    index: 4,
-                    currentIndex: _currentPage,
-                    icon: Icons.extension_rounded,
-                    title: l10n.tutorialExtensionsTitle,
-                    description: l10n.tutorialExtensionsDesc,
-                    content: _buildFeatureList(context, [
-                      (Icons.extension_rounded, l10n.tutorialExtensionsTip1),
-                      (
-                        Icons.add_circle_outline_rounded,
-                        l10n.tutorialExtensionsTip2,
-                      ),
-                      (Icons.sync_rounded, l10n.tutorialExtensionsTip3),
-                    ]),
-                  ),
-                  _TutorialPage(
-                    index: 5,
-                    currentIndex: _currentPage,
-                    icon: Icons.settings_rounded,
-                    title: l10n.tutorialSettingsTitle,
-                    description: l10n.tutorialSettingsDesc,
-                    content: Column(
-                      children: [
-                        _buildFeatureList(context, [
-                          (
-                            Icons.folder_open_rounded,
-                            l10n.tutorialSettingsTip1,
-                          ),
-                          (Icons.tune_rounded, l10n.tutorialSettingsTip2),
-                          (Icons.palette_rounded, l10n.tutorialSettingsTip3),
-                        ]),
-                        const SizedBox(height: 24),
-                        _AnimatedReadyCard(text: l10n.tutorialReadyMessage),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_totalPages, (index) {
-                      final isActive = _currentPage == index;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOutBack,
-                        margin: EdgeInsets.symmetric(horizontal: 4 * scale),
-                        height: pageIndicatorHeight,
-                        width: isActive
-                            ? activeIndicatorWidth
-                            : pageIndicatorWidth,
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? colorScheme.primary
-                              // Visible on AMOLED black, unlike
-                              // surfaceContainerHighest.
-                              : colorScheme.onSurfaceVariant.withValues(
-                                  alpha: 0.4,
-                                ),
-                          borderRadius: BorderRadius.circular(4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
-                      );
-                    }),
-                  ),
-                  SizedBox(height: bottomGap),
-                  Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 400),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: actionButtonHeight,
-                        child: FilledButton(
-                          onPressed: _nextPage,
-                          style: FilledButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: Text(
+                        l10n.setupSkip,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  onPageChanged: (page) => setState(() => _currentPage = page),
+                  children: [
+                    _TutorialPage(
+                      index: 0,
+                      currentIndex: _currentPage,
+                      icon: Icons.waving_hand_rounded,
+                      title: l10n.tutorialWelcomeTitle,
+                      description: l10n.tutorialWelcomeDesc,
+                      content: _buildFeatureList(context, [
+                        (
+                          Icons.travel_explore_rounded,
+                          l10n.tutorialWelcomeTip1,
+                        ),
+                        (Icons.high_quality_rounded, l10n.tutorialWelcomeTip2),
+                        (Icons.auto_awesome_rounded, l10n.tutorialWelcomeTip3),
+                      ]),
+                    ),
+                    _TutorialPage(
+                      index: 1,
+                      currentIndex: _currentPage,
+                      icon: Icons.search_rounded,
+                      title: l10n.tutorialSearchTitle,
+                      description: l10n.tutorialSearchDesc,
+                      content: const _InteractiveSearchExample(),
+                    ),
+                    _TutorialPage(
+                      index: 2,
+                      currentIndex: _currentPage,
+                      icon: Icons.download_rounded,
+                      title: l10n.tutorialDownloadTitle,
+                      description: l10n.tutorialDownloadDesc,
+                      content: const _InteractiveDownloadExample(),
+                    ),
+                    _TutorialPage(
+                      index: 3,
+                      currentIndex: _currentPage,
+                      icon: Icons.library_music_rounded,
+                      title: l10n.tutorialLibraryTitle,
+                      description: l10n.tutorialLibraryDesc,
+                      content: _buildFeatureList(context, [
+                        (Icons.downloading_rounded, l10n.tutorialLibraryTip1),
+                        (Icons.play_circle_fill, l10n.tutorialLibraryTip2),
+                        (Icons.grid_view_rounded, l10n.tutorialLibraryTip3),
+                      ]),
+                    ),
+                    _TutorialPage(
+                      index: 4,
+                      currentIndex: _currentPage,
+                      icon: Icons.extension_rounded,
+                      title: l10n.tutorialExtensionsTitle,
+                      description: l10n.tutorialExtensionsDesc,
+                      content: _buildFeatureList(context, [
+                        (Icons.extension_rounded, l10n.tutorialExtensionsTip1),
+                        (
+                          Icons.add_circle_outline_rounded,
+                          l10n.tutorialExtensionsTip2,
+                        ),
+                        (Icons.sync_rounded, l10n.tutorialExtensionsTip3),
+                      ]),
+                    ),
+                    _TutorialPage(
+                      index: 5,
+                      currentIndex: _currentPage,
+                      icon: Icons.settings_rounded,
+                      title: l10n.tutorialSettingsTitle,
+                      description: l10n.tutorialSettingsDesc,
+                      content: Column(
+                        children: [
+                          _buildFeatureList(context, [
+                            (
+                              Icons.folder_open_rounded,
+                              l10n.tutorialSettingsTip1,
                             ),
+                            (Icons.tune_rounded, l10n.tutorialSettingsTip2),
+                            (Icons.palette_rounded, l10n.tutorialSettingsTip3),
+                          ]),
+                          const SizedBox(height: 24),
+                          _AnimatedReadyCard(text: l10n.tutorialReadyMessage),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(_totalPages, (index) {
+                        final isActive = _currentPage == index;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutBack,
+                          margin: EdgeInsets.symmetric(horizontal: 4 * scale),
+                          height: pageIndicatorHeight,
+                          width: isActive
+                              ? activeIndicatorWidth
+                              : pageIndicatorWidth,
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? colorScheme.primary
+                                // Visible on AMOLED black, unlike
+                                // surfaceContainerHighest.
+                                : colorScheme.onSurfaceVariant.withValues(
+                                    alpha: 0.4,
+                                  ),
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                          child: Text(
-                            isLastPage ? l10n.setupGetStarted : l10n.setupNext,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                        );
+                      }),
+                    ),
+                    SizedBox(height: bottomGap),
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 400),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: actionButtonHeight,
+                          child: ExpressiveButton(
+                            onPressed: _nextPage,
+                            style: FilledButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(28),
+                              ),
+                            ),
+                            child: Text(
+                              isLastPage
+                                  ? l10n.setupGetStarted
+                                  : l10n.setupNext,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
+    if (!isDesktopPlatform) return scaffold;
+    // Enter moves on, as the default button of a desktop window would.
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.enter): _nextPage,
+        const SingleActivator(LogicalKeyboardKey.numpadEnter): _nextPage,
+      },
+      child: Focus(autofocus: true, child: scaffold),
+    );
   }
+
+  /// Desktop windows keep the tour in one centered column.
+  Widget _desktopColumn(Widget child) => isDesktopPlatform
+      ? Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: child,
+          ),
+        )
+      : child;
 
   Widget _buildFeatureList(
     BuildContext context,
@@ -426,21 +440,12 @@ class _InteractiveSearchExampleState extends State<_InteractiveSearchExample> {
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutBack,
             child: _showResult
+                // The result is a plain row inside the demo frame, not a
+                // second card.
                 ? Padding(
                     padding: const EdgeInsets.only(top: 16),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Row(
                         children: [
                           Container(
@@ -594,10 +599,10 @@ class _InteractiveDownloadExampleState
                     if (_isDownloading)
                       ClipRRect(
                         borderRadius: BorderRadius.circular(6),
-                        child: LinearProgressIndicator(
+                        child: AppProgressIndicator.linear(
                           value: _progress,
                           minHeight: 12,
-                          backgroundColor: colorScheme.surfaceContainerHighest,
+                          trackColor: colorScheme.surfaceContainerHighest,
                           color: colorScheme.primary,
                         ),
                       )
@@ -623,42 +628,54 @@ class _InteractiveDownloadExampleState
                     : context.l10n.tutorialStartDownloadSemantics,
                 child: GestureDetector(
                   onTap: _startDownload,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    padding: EdgeInsets.all(buttonPadding),
-                    decoration: BoxDecoration(
-                      color: _isCompleted ? Colors.green : colorScheme.primary,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              (_isCompleted
-                                      ? Colors.green
-                                      : colorScheme.primary)
-                                  .withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
+                  // The visual can shrink on narrow screens; the hit box
+                  // keeps the minimum touch target.
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: context.tokens.minTouchTarget,
+                      minHeight: context.tokens.minTouchTarget,
                     ),
-                    child: _isDownloading
-                        ? SizedBox(
-                            width: buttonIconSize,
-                            height: buttonIconSize,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              color: colorScheme.onPrimary,
+                    child: Center(
+                      widthFactor: 1,
+                      heightFactor: 1,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: EdgeInsets.all(buttonPadding),
+                        decoration: BoxDecoration(
+                          color: _isCompleted
+                              ? colorScheme.tertiary
+                              : colorScheme.primary,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  (_isCompleted
+                                          ? colorScheme.tertiary
+                                          : colorScheme.primary)
+                                      .withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
                             ),
-                          )
-                        : ExcludeSemantics(
-                            child: Icon(
-                              _isCompleted
-                                  ? Icons.check_rounded
-                                  : Icons.download_rounded,
-                              color: colorScheme.onPrimary,
-                              size: buttonIconSize,
-                            ),
-                          ),
+                          ],
+                        ),
+                        child: _isDownloading
+                            ? AppLoadingIndicator(
+                                size: buttonIconSize,
+                                color: colorScheme.onPrimary,
+                              )
+                            : ExcludeSemantics(
+                                child: Icon(
+                                  _isCompleted
+                                      ? Icons.check_rounded
+                                      : Icons.download_rounded,
+                                  color: _isCompleted
+                                      ? colorScheme.onTertiary
+                                      : colorScheme.onPrimary,
+                                  size: buttonIconSize,
+                                ),
+                              ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -677,8 +694,6 @@ class _TutorialPage extends StatelessWidget {
   final String title;
   final String description;
   final Widget content;
-  final Color? iconColor;
-
   const _TutorialPage({
     required this.index,
     required this.currentIndex,
@@ -686,7 +701,6 @@ class _TutorialPage extends StatelessWidget {
     required this.title,
     required this.description,
     required this.content,
-    this.iconColor,
   });
 
   @override
@@ -734,15 +748,13 @@ class _TutorialPage extends StatelessWidget {
                       ),
                       padding: EdgeInsets.all(iconPadding),
                       decoration: BoxDecoration(
-                        color: (iconColor ?? colorScheme.primary).withValues(
-                          alpha: 0.15,
-                        ),
+                        color: colorScheme.primary.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         icon,
                         size: iconSize,
-                        color: iconColor ?? colorScheme.primary,
+                        color: colorScheme.primary,
                       ),
                     ),
                     SizedBox(height: iconTextGap),
@@ -777,7 +789,7 @@ class _TutorialPage extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: contentGap),
-                    content, // The content itself now handles its own internal animations
+                    content,
                     SizedBox(height: bottomGap),
                   ],
                 ),

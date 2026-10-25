@@ -141,7 +141,7 @@ class NativeDownloadContainerTest {
                     assertEquals(height, bounds.outHeight)
                     assertTrue(descriptor.statSize > 0)
                     if (width == 3000) {
-                        val preview = com.spotiflac.backend.readLibraryMetadataFromDescriptor(
+                        val preview = com.mornye.backend.readLibraryMetadataFromDescriptor(
                             descriptor.fd, input.name, "2026-10-09T00:00:00Z", true, null,
                         ).coverBytes
                         android.graphics.BitmapFactory.decodeByteArray(preview, 0, preview.size, bounds)
@@ -200,6 +200,64 @@ class NativeDownloadContainerTest {
         } finally {
             root.deleteRecursively()
         }
+    }
+
+    @Test
+    fun requestedFlacUsesTheActualStreamDespiteM4aProviderAndDecryptionHints() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val root = File(context.cacheDir, "lossless-container-${System.nanoTime()}").apply { mkdirs() }
+        try {
+            for ((codec, requested, expected) in listOf(
+                Triple("flac", ".flac", "flac"),
+                Triple("flac", ".m4a", "m4a"),
+                Triple("aac", ".flac", "m4a"),
+            )) {
+                val input = File(root, "track-$codec-$expected.m4a")
+                val fixture = NativeDownloadFinalizer.runFFmpegArguments(arrayOf(
+                    "-v", "error", "-f", "lavfi", "-i", "sine=frequency=997:sample_rate=48000",
+                    "-t", "0.3", "-c:a", codec, "-strict", "-2", "-f", "mp4", input.path,
+                ))
+                assertTrue(fixture.second, fixture.first)
+                assertTrue(isMP4ContainerFile(input.path))
+                fun decodedAudio(file: File, name: String): ByteArray {
+                    val pcm = File(root, name)
+                    val decoded = NativeDownloadFinalizer.runFFmpegArguments(arrayOf(
+                        "-v", "error", "-i", file.path, "-map", "0:a:0",
+                        "-c:a", "pcm_s32le", "-f", "s32le", "-y", pcm.path,
+                    ))
+                    assertTrue(decoded.second, decoded.first)
+                    return pcm.readBytes()
+                }
+                val before = decodedAudio(input, "before.pcm")
+                val request = JSONObject()
+                    .put("contract_version", 1).put("item_id", "example-track")
+                    .put("service", "example-provider").put("track_name", "Lossless container test")
+                    .put("artist_name", "Example artist").put("album_name", "Example album")
+                    .put("quality", "LOSSLESS").put("storage_mode", "app")
+                    .put("output_ext", requested).put("embed_metadata", true)
+                val result = NativeDownloadFinalizer.finalize(
+                    context, "example-track", request.toString(), "{}",
+                    JSONObject().put("success", true).put("file_path", input.path)
+                        .put("file_name", input.name).put("audio_codec", "m4a")
+                        .put("output_extension", ".m4a")
+                        .put("decryption", JSONObject().put("output_extension", ".m4a")),
+                    "{\"save_download_history\":false}",
+                )
+                assertTrue(result.toString(), result.getBoolean("success"))
+                assertTrue(result.toString(), result.getBoolean("native_finalized"))
+                val output = File(result.getString("file_path"))
+                assertEquals(expected, output.extension)
+                assertEquals(".$expected", result.getString("actual_extension"))
+                assertEquals(".$expected", result.getString("output_extension"))
+                assertEquals(expected, result.getString("actual_container"))
+                assertFalse(result.getBoolean("requires_container_conversion"))
+                assertEquals(expected == "flac", NativeDownloadFinalizer.isNativeFlacFile(output.path))
+                assertEquals(codec, NativeDownloadFinalizer.probePrimaryAudioCodec(output.path))
+                assertTrue("$codec -> $expected changed decoded audio", before.contentEquals(decodedAudio(output, "after.pcm")))
+                val tags = JSONObject(backend.readFileMetadata(output.path, output.name))
+                assertEquals("Lossless container test", tags.getString("title"))
+            }
+        } finally { root.deleteRecursively() }
     }
 
     @Test

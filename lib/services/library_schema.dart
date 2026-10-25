@@ -2,17 +2,17 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/services/library_database_models.dart';
-import 'package:mosix/services/library_row_mapper.dart';
-import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
-import 'package:mosix/utils/ios_container_paths.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/services/library_database_models.dart';
+import 'package:mornye/services/library_row_mapper.dart';
+import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
+import 'package:mornye/utils/ios_container_paths.dart';
+import 'package:mornye/utils/logger.dart';
 
 final _log = AppLogger('LibraryDatabase');
 
 /// Schema lifecycle is independent of collection reads and scan transactions.
 abstract final class LibrarySchema {
-  static const version = 17;
+  static const version = 18;
   static const visibleView = 'library_visible';
   static const searchFtsTable = 'library_search_fts';
   static const lookupSummaryTable = 'library_lookup_summary';
@@ -32,6 +32,7 @@ abstract final class LibrarySchema {
         cover_path TEXT,
         scanned_at TEXT NOT NULL,
         file_mod_time INTEGER,
+        network_file_version TEXT,
         isrc TEXT,
         track_number INTEGER,
         total_tracks INTEGER,
@@ -182,6 +183,14 @@ abstract final class LibrarySchema {
     if (oldVersion < 17) {
       // Reinstall the triggers and repair counts created by older upserts.
       await _createLookupSummary(db);
+    }
+    if (oldVersion < 18) {
+      await sqlite.addColumnIfMissing(
+        db,
+        'library',
+        'network_file_version',
+        'TEXT',
+      );
     }
   }
 

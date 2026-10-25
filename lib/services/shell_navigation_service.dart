@@ -90,19 +90,23 @@ class ShellNavigationService {
   static bool _showSearchTab = false;
   static Object? _tabSelectionOwner;
   static ValueChanged<ShellTab>? _tabSelectionHandler;
+  static bool Function(String id)? _libraryLinkHandler;
 
   static void registerTabSelectionHandler({
     required Object owner,
     required ValueChanged<ShellTab> handler,
+    bool Function(String id)? libraryLinkHandler,
   }) {
     _tabSelectionOwner = owner;
     _tabSelectionHandler = handler;
+    _libraryLinkHandler = libraryLinkHandler;
   }
 
   static void unregisterTabSelectionHandler(Object owner) {
     if (!identical(_tabSelectionOwner, owner)) return;
     _tabSelectionOwner = null;
     _tabSelectionHandler = null;
+    _libraryLinkHandler = null;
   }
 
   static bool requestTab(ShellTab tab) {
@@ -111,6 +115,12 @@ class ShellNavigationService {
     handler(tab);
     return true;
   }
+
+  /// Opens a Library sidebar link (`downloads`, `songs`, ...) where the
+  /// shell has them, the Mornye desktop sidebar. Returns false elsewhere, so
+  /// callers fall back to [requestTab].
+  static bool requestLibraryLink(String id) =>
+      _libraryLinkHandler?.call(id) ?? false;
 
   static void syncState({
     required int currentTabIndex,
@@ -140,8 +150,35 @@ class ShellNavigationService {
     return null;
   }
 
+  static Object? _settingsDetailOwner;
+  static ValueGetter<NavigatorState?>? _settingsDetailNavigator;
+
+  /// Registers the desktop Settings detail pane, whose pages Escape and Back
+  /// close while Settings is the active destination.
+  static void registerSettingsDetailNavigator({
+    required Object owner,
+    required ValueGetter<NavigatorState?> navigator,
+  }) {
+    _settingsDetailOwner = owner;
+    _settingsDetailNavigator = navigator;
+  }
+
+  static void unregisterSettingsDetailNavigator(Object owner) {
+    if (!identical(_settingsDetailOwner, owner)) return;
+    _settingsDetailOwner = null;
+    _settingsDetailNavigator = null;
+  }
+
   static NavigatorState? activeTabNavigator() =>
       _activeTabNavigatorKey()?.currentState;
+
+  /// The navigator whose pages Back closes in the active destination.
+  /// Settings has no tab navigator; on desktop its detail pane stands in.
+  static NavigatorState? activeBackNavigator() {
+    final key = _activeTabNavigatorKey();
+    if (key != null) return key.currentState;
+    return _settingsDetailNavigator?.call();
+  }
 }
 
 /// Track the top page in each tab. Dialogs keep the underlying page's contrast;

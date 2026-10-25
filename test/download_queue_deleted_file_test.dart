@@ -1,17 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/source_deletion_events.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/source_deletion_events.dart';
 
-class _Settings extends SettingsNotifier {
-  @override
-  AppSettings build() => const AppSettings();
-}
+import 'support/fixed_settings.dart';
 
 class _Extensions extends ExtensionNotifier {
   @override
@@ -109,7 +105,7 @@ void main() {
         );
         final container = ProviderContainer(
           overrides: [
-            settingsProvider.overrideWith(_Settings.new),
+            settingsProvider.overrideWith(FixedSettingsNotifier.new),
             downloadQueueProvider.overrideWith(() => _Queue(initial)),
           ],
         );
@@ -145,7 +141,7 @@ void main() {
       );
       final container = ProviderContainer(
         overrides: [
-          settingsProvider.overrideWith(_Settings.new),
+          settingsProvider.overrideWith(FixedSettingsNotifier.new),
           extensionProvider.overrideWith(_Extensions.new),
           downloadQueueProvider.overrideWith(
             () => _Queue(
@@ -194,7 +190,7 @@ void main() {
       final initial = const DownloadQueueState().copyWith(items: [item]);
       final container = ProviderContainer(
         overrides: [
-          settingsProvider.overrideWith(_Settings.new),
+          settingsProvider.overrideWith(FixedSettingsNotifier.new),
           downloadQueueProvider.overrideWith(() => _Queue(initial)),
         ],
       );

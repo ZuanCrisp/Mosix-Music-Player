@@ -1,6 +1,10 @@
 use chrono::{DateTime, Datelike, Timelike, Utc};
 use serde::Serialize;
 
+// The rule conversion is pure, so host tests cover it on every platform.
+#[cfg(all(any(windows, test), not(any(target_os = "android", target_os = "ios"))))]
+mod windows_zone;
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LocalTime {
@@ -67,7 +71,12 @@ pub(crate) fn zone_at(timestamp: i64) -> (i32, String, String) {
     }
 }
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+#[cfg(windows)]
+fn load_zone() -> (tz::TimeZone, String) {
+    windows_zone::load()
+}
+
+#[cfg(not(any(target_os = "android", target_os = "ios", windows)))]
 fn load_zone() -> (tz::TimeZone, String) {
     use std::io::Read;
     let load = |path: &std::path::Path| {

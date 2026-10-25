@@ -1,0 +1,381 @@
+name: Desktop
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "macos/**"
+      - "linux/**"
+      - "windows/**"
+      - "lib/widgets/duplicate_review_sheet.dart"
+      - "test/duplicate_review_sheet_test.dart"
+      - "test/settings_bottom_inset_test.dart"
+      - "rust_backend/**"
+      - "third_party/**"
+      - "scripts/build_rust_backend.sh"
+      - "scripts/build_rust_backend_windows.ps1"
+      - "scripts/setup_flutter_windows_arm64.ps1"
+      - "scripts/prepare_flutter_sdk.dart"
+      - "patches/flutter/**"
+      - "test/flutter_sdk_patches_test.dart"
+      - "test/semantics_geometry_regression_test.dart"
+      - "scripts/check_windows_bundle.ps1"
+      - "scripts/embed_rust_backend_macos.sh"
+      - "scripts/fetch_desktop_ffmpeg.sh"
+      - "scripts/embed_ffmpeg_macos.sh"
+      - "pubspec.yaml"
+      - "pubspec.lock"
+      - ".fvmrc"
+      - ".github/workflows/desktop.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-macos:
+    name: macOS app (universal)
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Select Xcode 26.1.1
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.1.1.app
+          xcodebuild -version
+
+      - name: Activate pinned Rust toolchain
+        working-directory: rust_backend
+        run: rustup show
+
+      - name: Cache Cargo registry and build output
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            rust_backend/target
+          key: cargo-${{ runner.os }}-desktop-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-${{ hashFiles('rust_backend/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-desktop-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-
+
+      - name: Build Rust desktop library
+        run: bash scripts/build_rust_backend.sh desktop
+
+      # The from-source LGPL build takes a while; it only changes with the
+      # script, which pins every source archive.
+      - name: Cache LGPL FFmpeg build
+        id: ffmpeg-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: build/ffmpeg/macos-universal
+          key: ffmpeg-macos-universal-${{ hashFiles('scripts/fetch_desktop_ffmpeg.sh') }}
+
+      - name: Build LGPL FFmpeg
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        run: bash scripts/fetch_desktop_ffmpeg.sh macos-universal
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: "stable"
+          flutter-version-file: .fvmrc
+          cache: true
+
+      - name: Cache pub dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Prepare and test Flutter framework patch
+        run: |
+          dart scripts/prepare_flutter_sdk.dart
+          flutter test --no-pub test/semantics_geometry_regression_test.dart
+
+      # The Xcode "Embed Rust Backend" and "Embed FFmpeg" phases embed the
+      # library and the FFmpeg tools built above.
+      - name: Build macOS app
+        env:
+          MORNYE_SKIP_RUST_BUILD: "1"
+          MORNYE_REQUIRE_FFMPEG: "1"
+        run: |
+          flutter build macos --release --target lib/main.dart \
+            --dart-define="GIT_COMMIT=$(git rev-parse --short=8 HEAD)"
+
+      - name: Verify and package macOS app
+        run: |
+          app="build/macos/Build/Products/Release/Mornye.app"
+          library="$app/Contents/Frameworks/libmornye_desktop.dylib"
+          test -s "$library"
+          ffmpeg_dir="$app/Contents/Resources/ffmpeg"
+          test -x "$ffmpeg_dir/ffmpeg"
+          test -x "$ffmpeg_dir/ffprobe"
+          # Some lipo releases accept only one architecture per -verify_arch.
+          for binary in "$library" "$ffmpeg_dir/ffmpeg" "$ffmpeg_dir/ffprobe"; do
+            for arch in arm64 x86_64; do
+              lipo "$binary" -verify_arch "$arch"
+            done
+          done
+          "$ffmpeg_dir/ffmpeg" -hide_banner -version > /dev/null
+          "$ffmpeg_dir/ffprobe" -hide_banner -version > /dev/null
+          test -s "$ffmpeg_dir/LICENSE.txt"
+          test -s "$ffmpeg_dir/SOURCE.txt"
+          if "$ffmpeg_dir/ffmpeg" -hide_banner -buildconf | grep -E -- '--enable-(gpl|nonfree)'; then
+            echo "The bundled FFmpeg is GPL or nonfree." >&2
+            exit 1
+          fi
+          codesign --verify --deep --strict "$app"
+          mkdir -p build/desktop
+          ditto -c -k --sequesterRsrc --keepParent "$app" build/desktop/Mornye-macos-universal.zip
+
+      - name: Upload macOS app artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-macos
+          if-no-files-found: error
+          path: build/desktop/Mornye-macos-universal.zip
+
+  build-linux:
+    name: Linux bundle (${{ matrix.flutter_arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - flutter_arch: x64
+            runner: ubuntu-22.04
+          - flutter_arch: arm64
+            runner: ubuntu-22.04-arm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Flutter Linux toolchain, plugin libraries (libsecret, GStreamer for
+      # audioplayers, json-glib for ffmpeg_kit, ALSA for volume_controller,
+      # libmpv for media_kit playback) and libclang for the rquickjs bindings.
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          # The image's libunwind-14-dev blocks GStreamer's libunwind-dev
+          # dependency; asking for it first lets apt replace the LLVM one.
+          sudo apt-get install -y libunwind-dev
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config zip \
+            libgtk-3-dev liblzma-dev libsecret-1-dev libstdc++-12-dev \
+            libjson-glib-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            libasound2-dev libclang-dev libmpv-dev
+
+      # The arm64 runner image ships without rustup.
+      - name: Install rustup
+        run: |
+          if ! command -v rustup >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
+              sh -s -- -y --profile minimal --default-toolchain none
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          fi
+
+      - name: Activate pinned Rust toolchain
+        working-directory: rust_backend
+        run: rustup show
+
+      - name: Cache Cargo registry and build output
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            rust_backend/target
+          key: cargo-${{ runner.os }}-${{ runner.arch }}-desktop-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-${{ hashFiles('rust_backend/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-${{ runner.arch }}-desktop-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-
+
+      - name: Build Rust desktop library
+        run: bash scripts/build_rust_backend.sh desktop
+
+      - name: Fetch LGPL FFmpeg
+        run: bash scripts/fetch_desktop_ffmpeg.sh "linux-${{ matrix.flutter_arch }}"
+
+      - name: Setup Flutter
+        if: matrix.flutter_arch == 'x64'
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: "stable"
+          flutter-version-file: .fvmrc
+          cache: true
+
+      # Flutter publishes no Linux arm64 SDK archive; a clone of the release
+      # tag downloads the arm64 Dart SDK and engine on first run.
+      - name: Setup Flutter (arm64)
+        if: matrix.flutter_arch == 'arm64'
+        run: |
+          flutter_version="$(jq -r .flutter .fvmrc)"
+          git clone --depth 1 --branch "$flutter_version" \
+            https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
+
+      - name: Cache pub dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Prepare Flutter framework patch
+        run: dart scripts/prepare_flutter_sdk.dart
+
+      # linux/CMakeLists.txt installs the library and the FFmpeg tools staged
+      # above into lib/ and lib/ffmpeg/.
+      - name: Test desktop duplicate review and updater
+        run: flutter test --reporter expanded test/duplicate_review_sheet_test.dart test/desktop_updater_test.dart test/settings_bottom_inset_test.dart test/semantics_geometry_regression_test.dart
+
+      - name: Build Linux bundle
+        run: |
+          flutter build linux --release --target lib/main.dart \
+            --dart-define="GIT_COMMIT=$(git rev-parse --short=8 HEAD)"
+
+      - name: Verify and package Linux bundle
+        run: |
+          bundle="build/linux/${{ matrix.flutter_arch }}/release/bundle"
+          test -x "$bundle/mornye"
+          test -s "$bundle/lib/libmornye_desktop.so"
+          ffmpeg_dir="$bundle/lib/ffmpeg"
+          for tool in ffmpeg ffprobe; do
+            test -x "$ffmpeg_dir/$tool"
+            "$ffmpeg_dir/$tool" -hide_banner -version > /dev/null
+          done
+          test -s "$ffmpeg_dir/LICENSE.txt"
+          test -s "$ffmpeg_dir/SOURCE.txt"
+          if "$ffmpeg_dir/ffmpeg" -hide_banner -buildconf | grep -E -- '--enable-(gpl|nonfree)'; then
+            echo "The bundled FFmpeg is GPL or nonfree." >&2
+            exit 1
+          fi
+          mkdir -p build/desktop
+          (cd "$bundle" && zip -r -y "$GITHUB_WORKSPACE/build/desktop/Mornye-linux-${{ matrix.flutter_arch }}.zip" .)
+
+      - name: Upload Linux bundle artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-linux-${{ matrix.flutter_arch }}
+          if-no-files-found: error
+          path: build/desktop/Mornye-linux-${{ matrix.flutter_arch }}.zip
+
+  build-windows:
+    name: Windows app (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: windows-2022
+            rust_target: x86_64-pc-windows-msvc
+          - arch: arm64
+            runner: windows-11-arm
+            rust_target: aarch64-pc-windows-msvc
+    # Informational until the Windows build is proven in CI. Remove this once
+    # a run of this job is green.
+    continue-on-error: true
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # rquickjs uses its prebuilt Windows MSVC bindings, so the job needs no
+      # LLVM; the runner's MSVC toolchain is enough.
+      - name: Activate pinned Rust toolchain
+        working-directory: rust_backend
+        run: |
+          rustup show
+          rustup target add ${{ matrix.rust_target }}
+
+      - name: Cache Cargo registry and build output
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            rust_backend/target
+          key: cargo-${{ runner.os }}-${{ matrix.arch }}-desktop-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-${{ hashFiles('rust_backend/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-${{ matrix.arch }}-desktop-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-
+
+      # Runs the Windows-only extension sandbox and junction tests.
+      - name: Test Rust core and extensions
+        working-directory: rust_backend
+        run: cargo test -p mornye-extensions -p mornye-core --target ${{ matrix.rust_target }}
+
+      - name: Build Rust desktop library
+        run: ./scripts/build_rust_backend_windows.ps1 -Target ${{ matrix.rust_target }}
+
+      # Git Bash provides curl, unzip and sha256sum for the fetch script.
+      - name: Fetch LGPL FFmpeg
+        shell: bash
+        run: bash scripts/fetch_desktop_ffmpeg.sh windows-${{ matrix.arch }}
+
+      - name: Setup Flutter
+        if: matrix.arch == 'x64'
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: "stable"
+          flutter-version-file: .fvmrc
+          cache: true
+
+      - name: Setup native ARM64 Flutter
+        if: matrix.arch == 'arm64'
+        run: ./scripts/setup_flutter_windows_arm64.ps1
+
+      - name: Cache pub dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~\AppData\Local\Pub\Cache
+          key: pub-${{ runner.os }}-${{ matrix.arch }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-${{ matrix.arch }}-
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Prepare Flutter framework patch
+        run: dart scripts/prepare_flutter_sdk.dart
+
+      # windows/CMakeLists.txt installs the library built above next to
+      # mornye.exe and the FFmpeg tools staged above into ffmpeg\.
+      - name: Test desktop duplicate review and updater
+        run: flutter test --reporter expanded test/duplicate_review_sheet_test.dart test/desktop_updater_test.dart test/settings_bottom_inset_test.dart test/semantics_geometry_regression_test.dart
+
+      - name: Build Windows app
+        run: |
+          $commit = git rev-parse --short=8 HEAD
+          flutter build windows --release --target lib/main.dart --dart-define="GIT_COMMIT=$commit"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify and package Windows app
+        run: |
+          $bundle = 'build\windows\${{ matrix.arch }}\runner\Release'
+          ./scripts/check_windows_bundle.ps1 -BundleDir $bundle -Arch ${{ matrix.arch }}
+          New-Item -ItemType Directory -Force build\desktop | Out-Null
+          Compress-Archive -Path "$bundle\*" -DestinationPath build\desktop\Mornye-windows-${{ matrix.arch }}.zip -Force
+
+      - name: Upload Windows app artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-windows-${{ matrix.arch }}
+          if-no-files-found: error
+          path: build/desktop/Mornye-windows-${{ matrix.arch }}.zip

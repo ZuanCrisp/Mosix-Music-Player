@@ -5,12 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/app_state_database.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/app_state_database.dart';
+
+import 'support/fixed_settings.dart';
+import 'support/virtual_time.dart';
 
 const _earlyTrack = Track(
   id: 'example:early',
@@ -20,17 +23,13 @@ const _earlyTrack = Track(
   duration: 180,
 );
 
-class _Settings extends SettingsNotifier {
-  @override
-  AppSettings build() =>
-      const AppSettings(downloadDirectory: '/fixture/output');
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  // The waits run on virtual time, including the 350 ms persistence debounce
+  // they must outlast.
   test(
     'startup restores, merges and retries only complete owned snapshots',
-    () async {
+    () => VirtualTime().run(() async {
       SharedPreferences.setMockInitialValues({
         'app_state_migrated_queue_to_sqlite_v1': true,
         'download_queue_user_paused_v1': true,
@@ -147,7 +146,13 @@ void main() {
       });
       addTearDown(() => messenger.setMockMethodCallHandler(sqlite, null));
       ProviderContainer scope() => ProviderContainer(
-        overrides: [settingsProvider.overrideWith(_Settings.new)],
+        overrides: [
+          settingsProvider.overrideWith(
+            () => FixedSettingsNotifier(
+              const AppSettings(downloadDirectory: '/fixture/output'),
+            ),
+          ),
+        ],
       );
 
       final container = scope();
@@ -405,6 +410,6 @@ void main() {
       expect([writes, deletes], [7, 0]);
       explicitRetry.dispose();
       await (await AppStateDatabase.instance.database).close();
-    },
+    }),
   );
 }

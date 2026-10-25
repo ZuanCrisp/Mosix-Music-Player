@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:mosix/services/cover_cache_manager.dart';
-import 'package:mosix/constants/app_info.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
-import 'package:mosix/screens/upgrade_intro_screen.dart';
+import 'package:mornye/services/cover_cache_manager.dart';
+import 'package:mornye/constants/app_info.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -38,49 +39,133 @@ class AboutPage extends StatelessWidget {
             ),
 
             SliverToBoxAdapter(
-              child: SettingsGroup(
-                children: [
-                  SettingsItem(
-                    icon: Icons.new_releases,
-                    title: context.l10n.upgradeIntroReplay,
-                    showDivider: false,
-                    onTap: () =>
-                        Navigator.of(context, rootNavigator: true).push<void>(
-                          MaterialPageRoute(
-                            builder: (_) => const UpgradeIntroScreen(),
-                            fullscreenDialog: true,
-                          ),
-                        ),
-                  ),
-                ],
+              child: SettingsSectionHeader(
+                title: context.l10n.aboutContributors,
               ),
             ),
             SliverToBoxAdapter(
-              child: SettingsSectionHeader(title: 'Maintainer'),
-            ),
-            SliverToBoxAdapter(
               child: SettingsGroup(
+                connected: true,
                 children: [
                   _ContributorItem(
-                    name: 'ZuanCrisp',
-                    description: 'Mosix maintainer',
-                    githubUsername: 'ZuanCrisp',
+                    name: AppInfo.mobileAuthor,
+                    description: context.l10n.aboutMobileDeveloper,
+                    githubUsername: AppInfo.mobileAuthor,
+                    showDivider: true,
+                  ),
+                  _ContributorItem(
+                    name: 'Amonoman',
+                    description: context.l10n.aboutLogoArtist,
+                    githubUsername: 'Amonoman',
+                    showDivider: true,
+                  ),
+                  _ContributorItem(
+                    name: 'Ruubiiiii',
+                    description:
+                        'Provided many APIs and backend resources. A huge help for the project!',
+                    githubUsername: 'Ruubiiiii',
                     showDivider: false,
                   ),
                 ],
               ),
             ),
+
+            SliverToBoxAdapter(
+              child: SettingsSectionHeader(
+                title: context.l10n.aboutTranslators,
+              ),
+            ),
+            const SliverToBoxAdapter(child: _TranslatorsSection()),
+
+            SliverToBoxAdapter(
+              child: SettingsSectionHeader(
+                title: context.l10n.aboutSpecialThanks,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                connected: true,
+                children: [
+                  _ContributorItem(
+                    name: 'binimum',
+                    description: context.l10n.aboutBinimumDesc,
+                    githubUsername: 'binimum',
+                    showDivider: true,
+                  ),
+                  _ContributorItem(
+                    name: 'sachinsenal0x64',
+                    description: context.l10n.aboutSachinsenalDesc,
+                    githubUsername: 'sachinsenal0x64',
+                    showDivider: true,
+                  ),
+                  _AboutSettingsItem(
+                    icon: Icons.swap_horiz_rounded,
+                    title: 'UniTune',
+                    subtitle: context.l10n.aboutUnituneDesc,
+                    onTap: () => _launchUrl(
+                      'https://github.com/FlazeIGuess/unitune-api',
+                    ),
+                    showDivider: true,
+                  ),
+                  _AboutSettingsItem(
+                    icon: Icons.library_music_outlined,
+                    title: 'MusicBrainz',
+                    subtitle: context.l10n.aboutMusicBrainzDesc,
+                    onTap: () => _launchUrl('https://musicbrainz.org'),
+                    showDivider: true,
+                  ),
+                  _AboutSettingsItem(
+                    icon: Icons.hub_outlined,
+                    title: 'Squigly',
+                    subtitle: context.l10n.aboutSquiglyDesc,
+                    onTap: () => _launchUrl('https://squigly.link'),
+                    showDivider: true,
+                  ),
+                  _AboutSettingsItem(
+                    icon: Icons.lyrics_outlined,
+                    title: 'Zarz-LRC',
+                    subtitle: context.l10n.lyricsProviderZarzLrcDesc,
+                    onTap: () =>
+                        _launchUrl('https://api.zarz.moe/apple-music/docs'),
+                    showDivider: true,
+                  ),
+                  _AboutSettingsItem(
+                    icon: Icons.lyrics_outlined,
+                    title: 'Paxsenix',
+                    subtitle: context.l10n.aboutPaxsenixSubtitle,
+                    onTap: () => _launchUrl('https://lyrics.paxsenix.org'),
+                    showDivider: false,
+                  ),
+                ],
+              ),
+            ),
+
             SliverToBoxAdapter(
               child: SettingsSectionHeader(title: context.l10n.aboutLinks),
             ),
             SliverToBoxAdapter(
               child: SettingsGroup(
+                connected: true,
                 children: [
                   _AboutSettingsItem(
                     icon: Icons.phone_android,
-                    title: 'Mosix source',
+                    title: context.l10n.aboutMobileSource,
                     subtitle: 'github.com/${AppInfo.githubRepo}',
                     onTap: () => _launchUrl(AppInfo.githubUrl),
+                    showDivider: true,
+                  ),
+                  _AboutSettingsItem(
+                    icon: Icons.lyrics_outlined,
+                    title: context.l10n.aboutLyricsWebsite,
+                    subtitle: 'lyrics.zarz.moe',
+                    onTap: () => _launchUrl('https://lyrics.zarz.moe'),
+                    showDivider: true,
+                  ),
+                  _AboutSettingsItem(
+                    icon: Icons.monitor_heart_outlined,
+                    title: context.l10n.aboutServiceStatus,
+                    subtitle: 'status.zarz.moe',
+                    onTap: () => _launchUrl('https://status.zarz.moe'),
                     showDivider: true,
                   ),
                   _AboutSettingsItem(
@@ -88,6 +173,38 @@ class AboutPage extends StatelessWidget {
                     title: context.l10n.aboutReportIssue,
                     subtitle: context.l10n.aboutReportIssueSubtitle,
                     onTap: () => _launchUrl('${AppInfo.githubUrl}/issues/new'),
+                    showDivider: true,
+                  ),
+                  _AboutSettingsItem(
+                    icon: Icons.lightbulb_outline,
+                    title: context.l10n.aboutFeatureRequest,
+                    subtitle: context.l10n.aboutFeatureRequestSubtitle,
+                    onTap: () => _launchUrl('${AppInfo.githubUrl}/issues/new'),
+                    showDivider: false,
+                  ),
+                ],
+              ),
+            ),
+
+            SliverToBoxAdapter(
+              child: SettingsSectionHeader(title: context.l10n.aboutSocial),
+            ),
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                connected: true,
+                children: [
+                  _AboutSettingsItem(
+                    icon: Icons.telegram,
+                    title: context.l10n.aboutTelegramChannel,
+                    subtitle: context.l10n.aboutTelegramChannelSubtitle,
+                    onTap: () => _launchUrl('https://t.me/mornyeupdates'),
+                    showDivider: true,
+                  ),
+                  _AboutSettingsItem(
+                    icon: Icons.forum_outlined,
+                    title: context.l10n.aboutTelegramChat,
+                    subtitle: context.l10n.aboutTelegramChatSubtitle,
+                    onTap: () => _launchUrl('https://t.me/mornyecommunity'),
                     showDivider: false,
                   ),
                 ],
@@ -99,12 +216,25 @@ class AboutPage extends StatelessWidget {
             ),
             SliverToBoxAdapter(
               child: SettingsGroup(
+                connected: true,
                 children: [
                   _AboutSettingsItem(
                     icon: Icons.info_outline,
                     title: context.l10n.aboutVersion,
                     subtitle:
                         'v${AppInfo.displayVersion} (build ${AppInfo.buildNumber})',
+                    showDivider: true,
+                  ),
+                  _AboutSettingsItem(
+                    icon: Icons.policy_outlined,
+                    title: MaterialLocalizations.of(context).licensesPageTitle,
+                    subtitle: AppInfo.license,
+                    onTap: () => showLicensePage(
+                      context: context,
+                      applicationName: AppInfo.appName,
+                      applicationVersion: AppInfo.displayVersion,
+                      applicationLegalese: AppInfo.copyright,
+                    ),
                     showDivider: false,
                   ),
                 ],
@@ -129,6 +259,7 @@ class AboutPage extends StatelessWidget {
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const NavBarSliverSpacer(),
           ],
         ),
       ),
@@ -147,7 +278,10 @@ class _AppHeaderCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final cardColor = isDark
+    // Material sits on the settings group tier beside the groups below.
+    final cardColor = !context.isMornye
+        ? settingsGroupColor(context)
+        : isDark
         ? Color.alphaBlend(
             Colors.white.withValues(alpha: 0.08),
             colorScheme.surface,
@@ -180,6 +314,8 @@ class _AppHeaderCard extends StatelessWidget {
                   color: colorScheme.primary,
                   shape: BoxShape.circle,
                 ),
+                // The asset is the bare mark, so inset it within the disc.
+                padding: EdgeInsets.all(logoSize * 0.24),
                 child: Image.asset(
                   'assets/images/logo-transparent.png',
                   color: colorScheme.onPrimary,
@@ -279,7 +415,7 @@ class _ContributorItem extends StatelessWidget {
                       width: 40,
                       height: 40,
                       color: colorScheme.surfaceContainerHighest,
-                      child: Icon(
+                      child: AppIcon(
                         Icons.person,
                         color: colorScheme.onSurfaceVariant,
                         size: 20,
@@ -289,7 +425,7 @@ class _ContributorItem extends StatelessWidget {
                       width: 40,
                       height: 40,
                       color: colorScheme.surfaceContainerHighest,
-                      child: Icon(
+                      child: AppIcon(
                         Icons.person,
                         color: colorScheme.onSurfaceVariant,
                         size: 20,
@@ -313,12 +449,15 @@ class _ContributorItem extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+                AppIcon(
+                  Icons.chevron_right,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ],
             ),
           ),
         ),
-        if (showDivider)
+        if (showDivider && !settingsRowsConnected(context))
           Divider(
             height: 1,
             thickness: 1,
@@ -446,7 +585,9 @@ class _TranslatorsSection extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final cardColor = isDark
+    final cardColor = !context.isMornye
+        ? settingsGroupColor(context)
+        : isDark
         ? Color.alphaBlend(
             Colors.white.withValues(alpha: 0.08),
             colorScheme.surface,
@@ -560,7 +701,7 @@ class _AboutSettingsItem extends StatelessWidget {
                 SizedBox(
                   width: 40,
                   height: 40,
-                  child: Icon(
+                  child: AppIcon(
                     context.adaptiveIcon(icon),
                     color: context.isMornye
                         ? colorScheme.primary
@@ -586,7 +727,7 @@ class _AboutSettingsItem extends StatelessWidget {
                   ),
                 ),
                 if (onTap != null)
-                  Icon(
+                  AppIcon(
                     Icons.chevron_right,
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -594,7 +735,7 @@ class _AboutSettingsItem extends StatelessWidget {
             ),
           ),
         ),
-        if (showDivider)
+        if (showDivider && !settingsRowsConnected(context))
           Divider(
             height: 1,
             thickness: 1,

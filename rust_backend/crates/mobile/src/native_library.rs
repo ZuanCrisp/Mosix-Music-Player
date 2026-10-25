@@ -5,6 +5,7 @@ pub(crate) mod dart_date;
 pub(crate) mod path_keys;
 
 use crate::manager::ExtensionManager;
+use chrono::Utc;
 use rusqlite::{Connection, OpenFlags, TransactionBehavior, params, params_from_iter};
 use serde_json::{Map, Value, json};
 use std::{
@@ -14,7 +15,7 @@ use std::{
     time::Duration,
 };
 
-const SCHEMA_VERSION: i64 = 17;
+const SCHEMA_VERSION: i64 = 18;
 const SCAN_VERSION: i64 = 4;
 const BATCH_SIZE: usize = 300;
 const MAX_ROW_BYTES: usize = 16 * 1024 * 1024;
@@ -28,6 +29,7 @@ const COLUMNS: &[(&str, &str)] = &[
     ("coverPath", "cover_path"),
     ("scannedAt", "scanned_at"),
     ("fileModTime", "file_mod_time"),
+    ("networkFileVersion", "network_file_version"),
     ("isrc", "isrc"),
     ("trackNumber", "track_number"),
     ("totalTracks", "total_tracks"),
@@ -159,7 +161,7 @@ pub(crate) fn scan_incremental(
     import(request, Some(&delta), check)
 }
 
-fn normalized(value: &str) -> String {
+pub(crate) fn normalized(value: &str) -> String {
     path_keys::dart_lower(path_keys::dart_trim(value))
 }
 
@@ -211,9 +213,21 @@ fn scan_timestamp(value: &str) -> i64 {
         .unwrap_or(0)
 }
 
+/// Rows built outside the Rust readers, such as the Android DSD/WavPack row,
+/// carry no scan time. Stamp them with the import time instead of rejecting
+/// the whole scan.
+fn stamped(row: &Value) -> Option<Value> {
+    if !row.is_object() || !row["scannedAt"].is_null() {
+        return None;
+    }
+    let mut copy = row.clone();
+    copy["scannedAt"] = dart_date::iso_utc(&Utc::now()).into();
+    Some(copy)
+}
+
 fn incremental_row(row: &Value) -> Result<Value, String> {
-    let mut canonical = row.clone();
-    let timestamp = text(row, "scannedAt")?;
+    let mut canonical = stamped(row).unwrap_or_else(|| row.clone());
+    let timestamp = text(&canonical, "scannedAt")?;
     let parsed =
         dart_date::parse(timestamp).ok_or("Invalid incremental Library scannedAt timestamp")?;
     let formatted = dart_date::iso(&parsed);
@@ -249,6 +263,8 @@ fn incremental_row(row: &Value) -> Result<Value, String> {
 }
 
 fn encode(row: &Value, source: &str) -> Result<Map<String, Value>, String> {
+    let stamped = stamped(row);
+    let row = stamped.as_ref().unwrap_or(row);
     if !row.is_object() || path_keys::dart_trim(text(row, "id")?).is_empty() {
         return Err("Library scan row has no valid id".into());
     }
@@ -380,6 +396,11 @@ fn import(request: &Value, delta: Option<&Value>, check: Check<'_>) -> Result<Va
     );
     let android = request["platform"] == "android";
     let mut streamed = 0_usize;
+    let mut invalid = 0_u64;
+    let mut first_invalid = None::<String>;
+    // The owner protects these paths during publication, as it does for
+    // platform read errors. Past 256 entries it preserves every missing row.
+    let mut invalid_paths = Vec::<String>::new();
     let mut pending = Vec::with_capacity(BATCH_SIZE);
     let mut flush = |rows: &mut Vec<Value>| -> Result<(), String> {
         if rows.is_empty() {
@@ -391,12 +412,28 @@ fn import(request: &Value, delta: Option<&Value>, check: Check<'_>) -> Result<Va
             .map_err(|e| error("stage transaction", e))?;
         for row in rows.drain(..) {
             check()?;
-            let row = if delta.is_some() {
-                incremental_row(&row)?
+            // One corrupt row is reported and skipped. It must not discard the
+            // rest of an otherwise valid scan; the swap below keeps the file's
+            // previous entry, as it does for a platform read error.
+            let encoded = if delta.is_some() {
+                incremental_row(&row).and_then(|canonical| encode(&canonical, source))
             } else {
-                row
+                encode(&row, source)
             };
-            let mapped = encode(&row, source)?;
+            let mapped = match encoded {
+                Ok(mapped) => mapped,
+                Err(message) => {
+                    invalid += 1;
+                    let path = row["filePath"].as_str().unwrap_or("<no path>");
+                    if first_invalid.is_none() {
+                        first_invalid = Some(format!("{path}: {message}"));
+                    }
+                    if invalid_paths.len() < 256 && path != "<no path>" {
+                        invalid_paths.push(path.to_owned());
+                    }
+                    continue;
+                }
+            };
             let fields = columns
                 .iter()
                 .map(|column| sql_value(mapped.get(column).unwrap_or(&Value::Null)))
@@ -556,7 +593,8 @@ fn import(request: &Value, delta: Option<&Value>, check: Check<'_>) -> Result<Va
     } else {
         let errors = request["error_count"]
             .as_u64()
-            .ok_or("Full scan requires nonnegative error_count")?;
+            .ok_or("Full scan requires nonnegative error_count")?
+            + invalid;
         let where_clause = if errors > 0 {
             "source_id = ? AND (id IN(SELECT id FROM native_library_stage) OR file_path IN(SELECT file_path FROM native_library_stage))"
         } else {
@@ -579,7 +617,7 @@ fn import(request: &Value, delta: Option<&Value>, check: Check<'_>) -> Result<Va
         .commit()
         .map_err(|e| error("commit Library swap", e))?;
     Ok(
-        json!({"committed":true,"inserted":staged-skipped,"upserted":staged-skipped,"skipped":skipped+excluded_existing as i64,"scanned_count":streamed,"deleted_count":deleted,"skippedCount":delta.map(|d|d["skippedCount"].clone()).unwrap_or(json!(0)),"totalFiles":delta.map(|d|d["totalFiles"].clone()).unwrap_or(json!(streamed))}),
+        json!({"committed":true,"inserted":staged-skipped,"upserted":staged-skipped,"skipped":skipped+excluded_existing as i64,"scanned_count":streamed,"invalid_rows":invalid,"invalid_row_error":first_invalid,"invalid_row_paths":invalid_paths,"deleted_count":deleted,"skippedCount":delta.map(|d|d["skippedCount"].clone()).unwrap_or(json!(0)),"totalFiles":delta.map(|d|d["totalFiles"].clone()).unwrap_or(json!(streamed))}),
     )
 }
 

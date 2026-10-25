@@ -1,8 +1,6 @@
 use crate::cancellation::RequestLease;
-use spotiflac_extensions::environment::{
-    EnvironmentError, ExtensionEnvironment as CoreEnvironment,
-};
-use spotiflac_extensions::{ExtensionError, ExtensionRuntime, RuntimeLimits};
+use mornye_extensions::environment::{EnvironmentError, ExtensionEnvironment as CoreEnvironment};
+use mornye_extensions::{ExtensionError, ExtensionRuntime, RuntimeLimits};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
@@ -10,7 +8,7 @@ use std::sync::{Arc, Mutex};
 /// Explicit close and object destruction both release only these grants.
 #[derive(uniffi::Object)]
 pub struct DownloadDirectoryScope {
-    grants: Mutex<Option<Vec<spotiflac_extensions::files::TemporaryGrant>>>,
+    grants: Mutex<Option<Vec<mornye_extensions::files::TemporaryGrant>>>,
 }
 
 #[uniffi::export]
@@ -88,8 +86,9 @@ impl From<ExtensionError> for JsExtensionError {
     }
 }
 
-/// Migration runtime. Calls must run off the UI thread. The complete extension
-/// manager and network/file/auth hosts are not yet wired into the mobile app.
+/// Standalone runtime for a single extension script. Used by instrumentation
+/// tests; the app routes through `ExtensionManager`. Calls must run off the UI
+/// thread.
 #[derive(uniffi::Object)]
 pub struct JsExtension {
     inner: Arc<ExtensionRuntime>,
@@ -192,8 +191,10 @@ impl ExtensionEnvironment {
         allow_http: bool,
         insecure_tls: bool,
     ) -> Result<(), JsExtensionError> {
+        // Accepted for binding compatibility and ignored: TLS verification is never disabled.
+        let _ = insecure_tls;
         self.inner
-            .set_network_compatibility_options(allow_http, insecure_tls)
+            .set_network_compatibility_options(allow_http)
             .map_err(Into::into)
     }
 

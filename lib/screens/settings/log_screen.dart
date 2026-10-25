@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_content_card.dart';
+import 'package:mornye/widgets/app_crash_banner.dart';
+import 'package:mornye/widgets/expressive_button.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart' show ShareParams, SharePlus;
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
-import 'package:mosix/widgets/app_search_field.dart';
-import 'package:mosix/utils/ordered_range_selection.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_menu_button.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mornye/widgets/app_search_field.dart';
+import 'package:mornye/utils/ordered_range_selection.dart';
 
-final RegExp _domainPattern = RegExp(
-  r'domain:\s*([^\s,]+)',
-  caseSensitive: false,
-);
+part 'log_screen_widgets.dart';
 
 class LogScreen extends StatefulWidget {
   const LogScreen({super.key});
@@ -37,13 +41,13 @@ class _LogScreenState extends State<LogScreen> {
   void initState() {
     super.initState();
     LogBuffer().addListener(_onLogUpdate);
-    LogBuffer().startGoLogPolling();
+    LogBuffer().startNativeLogPolling();
   }
 
   @override
   void dispose() {
     LogBuffer().removeListener(_onLogUpdate);
-    LogBuffer().stopGoLogPolling();
+    LogBuffer().stopNativeLogPolling();
     _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -181,10 +185,9 @@ class _LogScreenState extends State<LogScreen> {
   }
 
   void _shareLogs() async {
+    final subject = '${context.l10n.appName} Logs';
     final logs = await LogBuffer().exportWithDeviceInfo();
-    SharePlus.instance.share(
-      ShareParams(text: logs, subject: 'Mosix Logs'),
-    );
+    SharePlus.instance.share(ShareParams(text: logs, subject: subject));
   }
 
   void _shareSelectedLogs() {
@@ -193,7 +196,7 @@ class _LogScreenState extends State<LogScreen> {
     SharePlus.instance.share(
       ShareParams(
         text: formatLogEntries(selectedInUserOrder),
-        subject: 'Mosix Logs',
+        subject: '${context.l10n.appName} Logs',
       ),
     );
   }
@@ -227,13 +230,39 @@ class _LogScreenState extends State<LogScreen> {
     );
   }
 
+  Future<void> _showLevelPicker(BuildContext context) async {
+    final colorScheme = Theme.of(context).colorScheme;
+    final level = await showAppBottomSheet<String>(
+      context: context,
+      title: context.l10n.logFilterLevel,
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: SettingsGroup(
+          children: [
+            for (final level in _levels)
+              SettingsItem(
+                title: level,
+                selected: level == _selectedLevel,
+                trailing: level == _selectedLevel
+                    ? AppIcon(Icons.check, color: colorScheme.primary)
+                    : null,
+                showDivider: level != _levels.last,
+                onTap: () => Navigator.pop(sheetContext, level),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (level != null && mounted) setState(() => _selectedLevel = level);
+  }
+
   Color _getLevelColor(String level, ColorScheme colorScheme) {
     switch (level) {
       case 'ERROR':
       case 'FATAL':
         return colorScheme.error;
       case 'WARN':
-        return Colors.orange;
+        return colorScheme.tertiary;
       case 'INFO':
         return colorScheme.primary;
       case 'DEBUG':
@@ -261,18 +290,18 @@ class _LogScreenState extends State<LogScreen> {
                   ? context.l10n.selectionSelected(_selectedEntries.length)
                   : context.l10n.logTitle,
               leading: _selectionMode
-                  ? IconButton(
+                  ? AppIconButton(
                       tooltip: MaterialLocalizations.of(
                         context,
                       ).closeButtonTooltip,
-                      icon: const Icon(Icons.close),
+                      icon: const AppIcon(Icons.close),
                       onPressed: _exitSelectionMode,
                     )
                   : null,
               actions: _selectionMode
                   ? [
-                      IconButton(
-                        icon: Icon(
+                      AppIconButton(
+                        icon: AppIcon(
                           logs.isNotEmpty &&
                                   logs.every(_selectedEntries.contains)
                               ? Icons.deselect
@@ -285,15 +314,15 @@ class _LogScreenState extends State<LogScreen> {
                             : context.l10n.actionSelectAll,
                         onPressed: _toggleSelectAllVisible,
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.copy),
+                      AppIconButton(
+                        icon: const AppIcon(Icons.copy),
                         tooltip: context.l10n.logCopyLogs,
                         onPressed: _selectedEntries.isEmpty
                             ? null
                             : _copySelectedLogs,
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.share),
+                      AppIconButton(
+                        icon: const AppIcon(Icons.share),
                         tooltip: context.l10n.logShareLogs,
                         onPressed: _selectedEntries.isEmpty
                             ? null
@@ -301,8 +330,8 @@ class _LogScreenState extends State<LogScreen> {
                       ),
                     ]
                   : [
-                      IconButton(
-                        icon: Icon(
+                      AppIconButton(
+                        icon: AppIcon(
                           _autoScroll
                               ? Icons.vertical_align_bottom
                               : Icons.vertical_align_center,
@@ -313,13 +342,13 @@ class _LogScreenState extends State<LogScreen> {
                         onPressed: () =>
                             setState(() => _autoScroll = !_autoScroll),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.copy),
+                      AppIconButton(
+                        icon: const AppIcon(Icons.copy),
                         tooltip: context.l10n.logCopyLogs,
                         onPressed: _copyLogs,
                       ),
-                      PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert),
+                      AppMenuButton<String>(
+                        icon: const AppIcon(Icons.more_vert),
                         tooltip: MaterialLocalizations.of(
                           context,
                         ).showMenuTooltip,
@@ -333,28 +362,23 @@ class _LogScreenState extends State<LogScreen> {
                               break;
                           }
                         },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
+                        items: [
+                          AppMenuItem(
                             value: 'share',
-                            child: ListTile(
-                              leading: const Icon(Icons.share),
-                              title: Text(context.l10n.logShareLogs),
-                              contentPadding: EdgeInsets.zero,
-                            ),
+                            label: context.l10n.logShareLogs,
+                            leading: const AppIcon(Icons.share),
                           ),
-                          PopupMenuItem(
+                          AppMenuItem(
                             value: 'clear',
-                            child: ListTile(
-                              leading: const Icon(Icons.delete_outline),
-                              title: Text(context.l10n.logClearLogs),
-                              contentPadding: EdgeInsets.zero,
-                            ),
+                            label: context.l10n.logClearLogs,
+                            leading: const AppIcon(Icons.delete_outline),
                           ),
                         ],
                       ),
                     ],
             ),
 
+            const SliverToBoxAdapter(child: AppCrashBanner(diagnostic: true)),
             SliverToBoxAdapter(
               child: SettingsSectionHeader(
                 title: context.l10n.logFilterSection,
@@ -370,7 +394,7 @@ class _LogScreenState extends State<LogScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(
+                        AppIcon(
                           Icons.filter_list,
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -394,28 +418,23 @@ class _LogScreenState extends State<LogScreen> {
                             ],
                           ),
                         ),
-                        DropdownButton<String>(
-                          value: _selectedLevel,
-                          underline: const SizedBox(),
-                          items: _levels.map((level) {
-                            return DropdownMenuItem(
-                              value: level,
-                              child: Text(
-                                level,
-                                style: TextStyle(
-                                  color: level == 'ALL'
-                                      ? colorScheme.onSurface
-                                      : _getLevelColor(level, colorScheme),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() => _selectedLevel = value);
-                            }
-                          },
+                        ExpressiveButton(
+                          tonal: true,
+                          onPressed: () => _showLevelPicker(context),
+                          icon: const Icon(Icons.arrow_drop_down, size: 20),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(0, 40),
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                          ),
+                          child: Text(
+                            _selectedLevel,
+                            style: TextStyle(
+                              color: _selectedLevel == 'ALL'
+                                  ? null
+                                  : _getLevelColor(_selectedLevel, colorScheme),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -465,7 +484,7 @@ class _LogScreenState extends State<LogScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
+                              AppIcon(
                                 Icons.article_outlined,
                                 size: 48,
                                 color: colorScheme.onSurfaceVariant.withValues(
@@ -520,456 +539,6 @@ class _LogScreenState extends State<LogScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _LogEntryTile extends StatelessWidget {
-  final LogEntry entry;
-  final Color levelColor;
-  final bool showDivider;
-  final bool selectionMode;
-  final bool selected;
-  final VoidCallback onTap;
-  final VoidCallback onLongPress;
-
-  const _LogEntryTile({
-    required this.entry,
-    required this.levelColor,
-    this.showDivider = true,
-    required this.selectionMode,
-    required this.selected,
-    required this.onTap,
-    required this.onLongPress,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isError = entry.level == 'ERROR' || entry.level == 'FATAL';
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Semantics(
-          container: true,
-          selected: selected,
-          onTap: selectionMode ? onTap : null,
-          onLongPress: onLongPress,
-          child: InkWell(
-            excludeFromSemantics: true,
-            onTap: selectionMode ? onTap : null,
-            onLongPress: onLongPress,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: selected
-                    ? colorScheme.primaryContainer.withValues(alpha: 0.5)
-                    : isError
-                    ? colorScheme.errorContainer.withValues(alpha: 0.2)
-                    : null,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        entry.formattedTime,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontFamily: 'monospace',
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: levelColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          entry.level,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: levelColor,
-                          ),
-                        ),
-                      ),
-                      if (entry.isFromGo) ...[
-                        const SizedBox(width: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.teal.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'Native',
-                            style: const TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.teal,
-                            ),
-                          ),
-                        ),
-                      ],
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          entry.tag,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: colorScheme.primary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (selectionMode) ...[
-                        const SizedBox(width: 8),
-                        Icon(
-                          selected
-                              ? Icons.check_circle
-                              : Icons.radio_button_unchecked,
-                          size: 20,
-                          color: selected
-                              ? colorScheme.primary
-                              : colorScheme.onSurfaceVariant,
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    entry.previewMessage,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontFamily: 'monospace',
-                      color: colorScheme.onSurface,
-                      height: 1.4,
-                    ),
-                  ),
-                  if (entry.previewError != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      entry.previewError!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontFamily: 'monospace',
-                        color: colorScheme.error,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-        if (showDivider)
-          Divider(
-            height: 1,
-            indent: 20,
-            endIndent: 20,
-            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-          ),
-      ],
-    );
-  }
-}
-
-class _LogSummaryCard extends StatelessWidget {
-  final List<LogEntry> logs;
-
-  const _LogSummaryCard({required this.logs});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    final analysis = _analyzeLogs();
-
-    if (!analysis.hasIssues) {
-      return const SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Card(
-        elevation: 0,
-        color: analysis.hasISPBlocking
-            ? colorScheme.errorContainer.withValues(alpha: 0.5)
-            : colorScheme.tertiaryContainer.withValues(alpha: 0.5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    analysis.hasISPBlocking
-                        ? Icons.block
-                        : Icons.warning_amber_rounded,
-                    size: 20,
-                    color: analysis.hasISPBlocking
-                        ? colorScheme.error
-                        : colorScheme.tertiary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    context.l10n.logIssueSummary,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              if (analysis.hasISPBlocking) ...[
-                _IssueBadge(
-                  icon: Icons.block,
-                  label: context.l10n.logIssueIspBlockingLabel,
-                  description: context.l10n.logIssueIspBlockingDescription,
-                  suggestion: context.l10n.logIssueIspBlockingSuggestion,
-                  color: colorScheme.error,
-                  domains: analysis.blockedDomains,
-                ),
-                const SizedBox(height: 8),
-              ],
-
-              if (analysis.hasRateLimit) ...[
-                _IssueBadge(
-                  icon: Icons.speed,
-                  label: context.l10n.logIssueRateLimitedLabel,
-                  description: context.l10n.logIssueRateLimitedDescription,
-                  suggestion: context.l10n.logIssueRateLimitedSuggestion,
-                  color: Colors.orange,
-                ),
-                const SizedBox(height: 8),
-              ],
-
-              if (analysis.hasNetworkError && !analysis.hasISPBlocking) ...[
-                _IssueBadge(
-                  icon: Icons.wifi_off,
-                  label: context.l10n.logIssueNetworkErrorLabel,
-                  description: context.l10n.logIssueNetworkErrorDescription,
-                  suggestion: context.l10n.logIssueNetworkErrorSuggestion,
-                  color: colorScheme.tertiary,
-                ),
-                const SizedBox(height: 8),
-              ],
-
-              if (analysis.hasNotFound) ...[
-                _IssueBadge(
-                  icon: Icons.search_off,
-                  label: context.l10n.logIssueTrackNotFoundLabel,
-                  description: context.l10n.logIssueTrackNotFoundDescription,
-                  suggestion: context.l10n.logIssueTrackNotFoundSuggestion,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ],
-
-              const SizedBox(height: 12),
-              Text(
-                context.l10n.logTotalErrors(analysis.errorCount),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  _LogAnalysis _analyzeLogs() {
-    int errorCount = 0;
-    bool hasISPBlocking = false;
-    bool hasRateLimit = false;
-    bool hasNetworkError = false;
-    bool hasNotFound = false;
-    final Set<String> blockedDomains = {};
-
-    for (final log in logs) {
-      if (log.level == 'ERROR' || log.level == 'FATAL') {
-        errorCount++;
-      }
-
-      final msgLower = log.message.toLowerCase();
-      final errorLower = (log.error ?? '').toLowerCase();
-      final combined = '$msgLower $errorLower';
-
-      if (combined.contains('isp blocking') ||
-          combined.contains('isp may be') ||
-          combined.contains('blocked by isp') ||
-          combined.contains('connection reset') ||
-          combined.contains('connection refused')) {
-        hasISPBlocking = true;
-
-        final domainMatch = _domainPattern.firstMatch(combined);
-        if (domainMatch != null) {
-          blockedDomains.add(domainMatch.group(1)!);
-        }
-      }
-
-      if (combined.contains('rate limit') ||
-          combined.contains('429') ||
-          combined.contains('too many requests')) {
-        hasRateLimit = true;
-      }
-
-      if (combined.contains('connection') ||
-          combined.contains('timeout') ||
-          combined.contains('network') ||
-          combined.contains('dial')) {
-        hasNetworkError = true;
-      }
-
-      if (combined.contains('not found') ||
-          combined.contains('no results') ||
-          combined.contains('could not find')) {
-        hasNotFound = true;
-      }
-    }
-
-    return _LogAnalysis(
-      errorCount: errorCount,
-      hasISPBlocking: hasISPBlocking,
-      hasRateLimit: hasRateLimit,
-      hasNetworkError: hasNetworkError,
-      hasNotFound: hasNotFound,
-      blockedDomains: blockedDomains.toList(),
-    );
-  }
-}
-
-class _LogAnalysis {
-  final int errorCount;
-  final bool hasISPBlocking;
-  final bool hasRateLimit;
-  final bool hasNetworkError;
-  final bool hasNotFound;
-  final List<String> blockedDomains;
-
-  _LogAnalysis({
-    required this.errorCount,
-    required this.hasISPBlocking,
-    required this.hasRateLimit,
-    required this.hasNetworkError,
-    required this.hasNotFound,
-    required this.blockedDomains,
-  });
-
-  bool get hasIssues =>
-      errorCount > 0 ||
-      hasISPBlocking ||
-      hasRateLimit ||
-      hasNetworkError ||
-      hasNotFound;
-}
-
-class _IssueBadge extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String description;
-  final String suggestion;
-  final Color color;
-  final List<String>? domains;
-
-  const _IssueBadge({
-    required this.icon,
-    required this.label,
-    required this.description,
-    required this.suggestion,
-    required this.color,
-    this.domains,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            description,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurface),
-          ),
-          if (domains != null && domains!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              context.l10n.logAffectedDomains(domains!.join(', ')),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                fontFamily: 'monospace',
-                fontSize: 11,
-              ),
-            ),
-          ],
-          const SizedBox(height: 6),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                Icons.lightbulb_outline,
-                size: 14,
-                color: colorScheme.primary,
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  suggestion,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.primary,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }

@@ -2,19 +2,26 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/music_playback_deck.dart';
-import 'package:mosix/services/music_player_service.dart'
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/music_playback_deck.dart';
+import 'package:mornye/services/music_player_service.dart'
     show resetAutoplayLearning;
-import 'package:mosix/screens/listening_statistics_screen.dart';
-import 'package:mosix/widgets/animation_utils.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
-import 'package:mosix/widgets/mornye_volume_control.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/discord_presence_settings.dart';
-import 'package:mosix/widgets/automix_settings.dart';
+import 'package:mornye/screens/listening_statistics_screen.dart';
+import 'package:mornye/screens/equalizer_screen.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/widgets/animation_utils.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mornye/widgets/beta_badge.dart';
+import 'package:mornye/widgets/player_volume_control.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/discord_presence_settings.dart';
+import 'package:mornye/widgets/automix_settings.dart';
+import 'package:mornye/widgets/music_haptics_settings.dart';
+import 'package:mornye/widgets/playback_normalization_settings.dart';
 
 class PlaybackSettingsPage extends ConsumerStatefulWidget {
   const PlaybackSettingsPage({super.key});
@@ -46,6 +53,31 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
         false;
   }
 
+  /// Learning cannot be restored once cleared, so a stray tap must not wipe it.
+  Future<void> _confirmResetLearning() async {
+    final confirmed =
+        await showAppDialog<bool>(
+          context: context,
+          builder: (context) => AppAlertDialog(
+            title: Text(context.l10n.autoplayResetLearningConfirmTitle),
+            content: Text(context.l10n.autoplayResetLearningConfirmMessage),
+            actions: [
+              AppDialogAction(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(context.l10n.dialogCancel),
+              ),
+              AppDialogAction(
+                isDestructive: true,
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(context.l10n.autoplayResetLearningConfirm),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (confirmed) await resetAutoplayLearning();
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
@@ -64,8 +96,9 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
                   icon: Icons.open_in_new,
                   title: context.l10n.libraryExternalPlayer,
                   subtitle: context.l10n.libraryExternalPlayerSubtitle,
+                  selected: settings.playerMode == 'external',
                   trailing: settings.playerMode == 'external'
-                      ? Icon(Icons.check, color: colorScheme.primary)
+                      ? AppIcon(Icons.check, color: colorScheme.primary)
                       : null,
                   onTap: () => ref
                       .read(settingsProvider.notifier)
@@ -75,8 +108,9 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
                   icon: Icons.play_circle_outline,
                   title: context.l10n.libraryBuiltInPreviewPlayer,
                   subtitle: context.l10n.libraryBuiltInPreviewPlayerSubtitle,
+                  selected: settings.playerMode == 'internal',
                   trailing: settings.playerMode == 'internal'
-                      ? Icon(Icons.check, color: colorScheme.primary)
+                      ? AppIcon(Icons.check, color: colorScheme.primary)
                       : null,
                   onTap: () => ref
                       .read(settingsProvider.notifier)
@@ -94,6 +128,15 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
           SliverToBoxAdapter(
             child: SettingsGroup(
               children: [
+                SettingsItem(
+                  icon: Icons.equalizer,
+                  title: context.l10n.equalizerTitle,
+                  titleTrailing: const BetaBadge(),
+                  subtitle: context.l10n.equalizerDescription,
+                  onTap: () => Navigator.of(context).push<void>(
+                    MaterialPageRoute(builder: (_) => const EqualizerScreen()),
+                  ),
+                ),
                 SettingsSwitchItem(
                   icon: Icons.graphic_eq,
                   title: context.l10n.libraryPlaybackNormalization,
@@ -104,6 +147,26 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
                       .read(settingsProvider.notifier)
                       .setPlaybackNormalization(value),
                 ),
+                if (settings.playbackNormalization)
+                  PlaybackNormalizationSettings(
+                    enabled: !settings.usbBitPerfect,
+                  ),
+                if (!isDesktopPlatform) ...[
+                  SettingsSwitchItem(
+                    icon: Icons.vibration,
+                    title: context.l10n.musicHaptics,
+                    subtitle: context.l10n.musicHapticsDescription,
+                    value: settings.musicHaptics,
+                    enabled: settings.playerMode == 'internal',
+                    onChanged: (value) => ref
+                        .read(settingsProvider.notifier)
+                        .setMusicHaptics(value),
+                  ),
+                  if (settings.musicHaptics)
+                    MusicHapticsSettings(
+                      enabled: settings.playerMode == 'internal',
+                    ),
+                ],
                 SettingsSwitchItem(
                   icon: Icons.compare_arrows,
                   title: 'AutoMix',
@@ -157,43 +220,83 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
                   SettingsItem(
                     icon: Icons.restart_alt,
                     title: context.l10n.autoplayResetLearning,
-                    onTap: resetAutoplayLearning,
+                    onTap: _confirmResetLearning,
                     showDivider: false,
                   ),
               ],
             ),
           ),
-          SliverToBoxAdapter(
-            child: SettingsSectionHeader(
-              title: context.l10n.playbackAutomation,
+          // Mute and headphone routes come from mobile system audio.
+          if (!isDesktopPlatform) ...[
+            SliverToBoxAdapter(
+              child: SettingsSectionHeader(
+                title: context.l10n.playbackAutomation,
+              ),
             ),
+            SliverToBoxAdapter(
+              child: SettingsGroup(
+                children: [
+                  SettingsSwitchItem(
+                    icon: Icons.volume_off_outlined,
+                    title: context.l10n.playbackPauseOnMute,
+                    subtitle: context.l10n.playbackPauseOnMuteDescription,
+                    value: settings.pauseOnMute,
+                    enabled:
+                        settings.playerMode == 'internal' &&
+                        !settings.usbBitPerfect,
+                    onChanged: (value) => ref
+                        .read(settingsProvider.notifier)
+                        .setPauseOnMute(value),
+                  ),
+                  SettingsSwitchItem(
+                    icon: Icons.headphones_outlined,
+                    title: context.l10n.playbackOnHeadphonesConnected,
+                    subtitle:
+                        context.l10n.playbackOnHeadphonesConnectedDescription,
+                    value: settings.playOnHeadphonesConnected,
+                    enabled: settings.playerMode == 'internal',
+                    onChanged: (value) => ref
+                        .read(settingsProvider.notifier)
+                        .setPlayOnHeadphonesConnected(value),
+                    showDivider: false,
+                  ),
+                ],
+              ),
+            ),
+          ],
+          SliverToBoxAdapter(
+            child: SettingsSectionHeader(title: context.l10n.playerCoverStyle),
           ),
           SliverToBoxAdapter(
             child: SettingsGroup(
               children: [
-                SettingsSwitchItem(
-                  icon: Icons.volume_off_outlined,
-                  title: context.l10n.playbackPauseOnMute,
-                  subtitle: context.l10n.playbackPauseOnMuteDescription,
-                  value: settings.pauseOnMute,
-                  enabled:
-                      settings.playerMode == 'internal' &&
-                      !settings.usbBitPerfect,
-                  onChanged: (value) =>
-                      ref.read(settingsProvider.notifier).setPauseOnMute(value),
-                ),
-                SettingsSwitchItem(
-                  icon: Icons.headphones_outlined,
-                  title: context.l10n.playbackOnHeadphonesConnected,
-                  subtitle:
-                      context.l10n.playbackOnHeadphonesConnectedDescription,
-                  value: settings.playOnHeadphonesConnected,
-                  enabled: settings.playerMode == 'internal',
-                  onChanged: (value) => ref
-                      .read(settingsProvider.notifier)
-                      .setPlayOnHeadphonesConnected(value),
-                  showDivider: false,
-                ),
+                for (final (style, icon, title, subtitle) in [
+                  (
+                    'default',
+                    Icons.crop_square,
+                    context.l10n.playerCoverStyleDefault,
+                    context.l10n.playerCoverStyleDefaultDescription,
+                  ),
+                  (
+                    'fullscreen',
+                    Icons.fullscreen,
+                    context.l10n.playerCoverStyleFullScreen,
+                    context.l10n.playerCoverStyleFullScreenDescription,
+                  ),
+                ])
+                  SettingsItem(
+                    icon: icon,
+                    title: title,
+                    subtitle: subtitle,
+                    selected: settings.playerCoverStyle == style,
+                    trailing: settings.playerCoverStyle == style
+                        ? AppIcon(Icons.check, color: colorScheme.primary)
+                        : null,
+                    onTap: () => ref
+                        .read(settingsProvider.notifier)
+                        .setPlayerCoverStyle(style),
+                    showDivider: style != 'fullscreen',
+                  ),
               ],
             ),
           ),
@@ -216,7 +319,7 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
               ],
             ),
           ),
-          if (Platform.isAndroid || Platform.isIOS) ...[
+          if (Platform.isAndroid || Platform.isIOS || isDesktopPlatform) ...[
             const SliverToBoxAdapter(
               child: SettingsSectionHeader(title: 'Discord'),
             ),
@@ -231,13 +334,14 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
           if (Platform.isAndroid)
             SliverToBoxAdapter(
               child: SettingsGroup(
+                connected: true,
                 children: [
                   ValueListenableBuilder<UsbAudioStatus>(
                     valueListenable: usbAudioStatus,
                     builder: (context, status, _) => SettingsSwitchItem(
                       icon: Icons.usb,
                       title: context.l10n.usbBitPerfect,
-                      titleTrailing: const _PlaybackBetaBadge(),
+                      titleTrailing: const BetaBadge(),
                       subtitle: [
                         context.l10n.usbBitPerfectDescription,
                         if (settings.usbBitPerfect)
@@ -352,7 +456,7 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
                                     : context.l10n.usbVolumeUnavailable,
                               ),
                               if (volume?.available == true)
-                                MornyeVolumeControl(
+                                PlayerVolumeControl(
                                   foreground: colorScheme.onSurface,
                                 ),
                             ],
@@ -363,7 +467,7 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
                     SettingsSwitchItem(
                       icon: Icons.headphones,
                       title: context.l10n.dapExclusive,
-                      titleTrailing: const _PlaybackBetaBadge(),
+                      titleTrailing: const BetaBadge(),
                       subtitle: context.l10n.dapExclusiveDescription,
                       value: settings.dapExclusive,
                       onChanged: (value) => ref
@@ -397,30 +501,8 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          const NavBarSliverSpacer(),
         ],
-      ),
-    );
-  }
-}
-
-class _PlaybackBetaBadge extends StatelessWidget {
-  const _PlaybackBetaBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        'Beta',
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: colors.onSurfaceVariant,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }

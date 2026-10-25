@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/providers/runtime_profile_provider.dart';
-import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/settings_group.dart';
+import 'package:mornye/providers/runtime_profile_provider.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
 
 /// The standard search field used by top-level app surfaces.
 ///
@@ -60,14 +61,15 @@ class AppSearchField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hintText,
           prefixIcon:
-              prefixIcon ?? Icon(mornye ? CupertinoIcons.search : Icons.search),
+              prefixIcon ??
+              AppIcon(mornye ? CupertinoIcons.search : Icons.search),
           suffixIcon:
               suffixIcon ??
               (value.text.isEmpty
                   ? null
-                  : IconButton(
+                  : AppIconButton(
                       tooltip: clearTooltip,
-                      icon: Icon(
+                      icon: AppIcon(
                         mornye
                             ? CupertinoIcons.clear_circled_solid
                             : Icons.clear,
@@ -77,17 +79,15 @@ class AppSearchField extends StatelessWidget {
                         onClear();
                       },
                     )),
+          // Expressive search bar: an outline-free tonal pill. Focus keeps a
+          // visible 2dp ring.
           border: OutlineInputBorder(
             borderRadius: radius,
-            borderSide: mornye
-                ? BorderSide.none
-                : BorderSide(color: colorScheme.outlineVariant),
+            borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: radius,
-            borderSide: mornye
-                ? BorderSide.none
-                : BorderSide(color: colorScheme.outlineVariant),
+            borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: radius,
@@ -96,7 +96,9 @@ class AppSearchField extends StatelessWidget {
                 : BorderSide(color: colorScheme.primary, width: 2),
           ),
           filled: true,
-          fillColor: mornye ? Colors.transparent : settingsGroupColor(context),
+          fillColor: mornye
+              ? Colors.transparent
+              : colorScheme.surfaceContainerHigh,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
             vertical: 16,

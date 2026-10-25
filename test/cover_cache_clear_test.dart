@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/cover_cache_manager.dart';
+import 'package:mornye/services/cover_cache_manager.dart';
 
 class _CacheBinding extends AutomatedTestWidgetsFlutterBinding {
   @override

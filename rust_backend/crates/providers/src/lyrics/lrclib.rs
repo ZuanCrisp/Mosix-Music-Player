@@ -1,7 +1,7 @@
 use super::{Check, LyricsError, LyricsFetcher, SearchRequest};
+use mornye_core::lyrics::{LyricsResponse, decode_response, errors, lrclib, matching};
+use mornye_network::{HttpRequest, NetworkService, NetworkSession};
 use serde::de::DeserializeOwned;
-use spotiflac_core::lyrics::{LyricsResponse, decode_response, errors, lrclib, matching};
-use spotiflac_network::{HttpRequest, NetworkService, NetworkSession};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::Duration;

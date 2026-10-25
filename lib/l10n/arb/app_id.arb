@@ -1,4 +1,18 @@
 {
+  "trackBpm": "BPM",
+  "trackMood": "Suasana",
+  "subsonicAddToLibrary": "Tambahkan server ke Library",
+  "subsonicLibraryAdded": "Server ditambahkan ke Library",
+  "subsonicLibraryDescription": "Sinkronkan katalog dan sampul server ke Library. Musik tetap di server. Pindai ulang melalui pengaturan Local Library untuk memperbarui katalog.",
+  "subsonicAuthentication": "Autentikasi",
+  "subsonicToken": "Token bersalt",
+  "subsonicPasswordAuth": "Kata sandi",
+  "subsonicApiKey": "Kunci API",
+  "subsonicUsername": "Nama pengguna",
+  "subsonicPassword": "Kata sandi",
+  "subsonicSearch": "Cari musik di server...",
+  "subsonicMoreAlbums": "Album lainnya",
+  "subsonicErrorApi": "Server tidak mendukung versi API atau metode autentikasi ini. Periksa pengaturan server dan metode masuk yang dipilih.",
   "trackFileUnavailable": "File saat ini tidak dapat diakses. Periksa akses penyimpanan dan coba lagi.",
   "networkDownloadDestination": "Tujuan unduhan jaringan",
   "networkUseForDownloads": "Unduh ke folder ini",
@@ -15,6 +29,7 @@
   "networkErrorTimeout": "Server tidak merespons tepat waktu. Periksa koneksi lalu coba lagi.",
   "networkErrorAuthentication": "Server menolak login. Periksa nama pengguna, kata sandi, dan domain. Kosongkan domain kecuali server memerlukannya.",
   "networkErrorPermission": "Akun ini tidak diizinkan membuka share atau folder tersebut. Periksa izin bacanya di server.",
+  "networkErrorLocalPermission": "Akses jaringan lokal belum diizinkan. Izinkan Perangkat di sekitar untuk Mornye di pengaturan aplikasi Android, lalu coba lagi.",
   "networkErrorShare": "Share atau folder tidak ditemukan. Untuk SMB, gunakan nama folder yang dibagikan server setelah alamatnya, misalnya smb://server/Music/.",
   "networkErrorProtocol": "Server dan klien SMB ini tidak menemukan protokol yang cocok. Aktifkan SMB2 atau SMB3 di server. SMB1 tidak didukung.",
   "networkErrorAddress": "Periksa alamat server. Gunakan smb://server/share/ untuk SMB, atau alamat http:// maupun https:// untuk WebDAV dan HTTP.",
@@ -101,6 +116,67 @@
   "listeningStatsClear": "Hapus statistik mendengarkan",
   "listeningStatsClearError": "Statistik mendengarkan tidak dapat dihapus. Silakan coba lagi.",
   "listeningStatsClearDescription": "Hapus semua statistik mendengarkan di perangkat ini? Musik dan playlist tetap tersimpan.",
+  "libraryArtistsEmpty": "Artis muncul di sini setelah kamu mengunduh musik atau memindai library lokal.",
+  "listeningRewind": "Rewind",
+  "listeningRewindDescription": "Lihat lagi momen menarik dari minggu dan bulan terakhir",
+  "listeningRewindChoosePeriod": "Pilih periode",
+  "listeningRewindLastWeeks": "{weeks} minggu terakhir",
+  "listeningRewindLastMonths": "{months} bulan terakhir",
+  "listeningRewindThisYear": "Sepanjang {year}",
+  "listeningRewindIntroTitle": "Rewind kamu",
+  "listeningRewindIntroBody": "Kilas balik musik yang kamu putar dari {start} sampai {end}.",
+  "listeningRewindMinutesTitle": "Kamu mendengarkan selama",
+  "listeningRewindMinutesUnit": "menit",
+  "listeningRewindHours": "Sekitar {hours} jam musik",
+  "listeningRewindMore": "{percent}% lebih banyak dari periode sebelumnya",
+  "listeningRewindLess": "{percent}% lebih sedikit dari periode sebelumnya",
+  "listeningRewindSame": "Kurang lebih sama dengan periode sebelumnya",
+  "listeningRewindTopArtistTitle": "Artis teratasmu",
+  "listeningRewindArtistShare": "{percent}% dari waktu mendengarkanmu",
+  "listeningRewindArtistsTitle": "Artis yang sering diputar",
+  "listeningRewindTopTrackTitle": "Lagu teratasmu",
+  "listeningRewindPlays": "{plays}x diputar",
+  "listeningRewindTracksTitle": "Lagu yang terus diulang",
+  "listeningRewindTopAlbumTitle": "Album yang terus kamu putar",
+  "listeningRewindNewArtistsTitle": "Temuan baru",
+  "listeningRewindNewArtistsBody": "Kamu menemukan {count} artis baru",
+  "listeningRewindRhythmTitle": "Ritme mendengarkanmu",
+  "listeningRewindPeakDay": "Hari tersibuk",
+  "listeningRewindFavoriteDay": "Hari favorit",
+  "listeningRewindStreak": "Streak terpanjang",
+  "listeningRewindStreakDays": "{days, plural, =1{1 hari} other{{days} hari berturut-turut}}",
+  "listeningRewindReplayTitle": "Tak bisa berhenti memutar",
+  "listeningRewindReplayBody": "Kamu memutarnya {plays} kali pada {date}",
+  "listeningRewindOutroTitle": "Itulah Rewind kamu",
+  "listeningRewindOutroBody": "Terus dengarkan. Rewind berikutnya sudah mulai terbentuk.",
+  "listeningRewindEmpty": "Belum cukup aktivitas mendengarkan di periode ini. Putar musik lewat pemutar bawaan, lalu kembali lagi nanti.",
+  "listeningRewindLoadError": "Gagal memuat Rewind",
+  "listeningRewindSlide": "Slide {index} dari {count}",
+  "listeningRewindShare": "Bagikan",
+  "listeningRewindShareError": "Gagal membagikan Rewind",
+  "listeningRewindNext": "Berikutnya",
+  "listeningRewindPrevious": "Sebelumnya",
+  "listeningRewindMonthlyReady": "4 minggu terakhirmu siap diputar ulang",
+  "listeningRewindYearTitle": "Musikmu di {year}",
+  "listeningRewindYearEyebrow": "Rewind akhir tahun",
+  "listeningRewindYearBanner": "Artis, lagu, dan momen terbaikmu tahun ini",
+  "listeningRewindYearIntroBody": "Semua yang kamu putar tahun ini, dari lagu pertama sampai bulan tersibukmu.",
+  "listeningRewindNumbersTitle": "Tahunmu dalam angka",
+  "listeningRewindSongsLabel": "Lagu",
+  "listeningRewindArtistsLabel": "Artis",
+  "listeningRewindAlbumsLabel": "Album",
+  "listeningRewindDaysLabel": "Hari bermusik",
+  "listeningRewindDaysShare": "Ada musik di {percent}% harimu",
+  "listeningRewindMonthsTitle": "Bulan demi bulan",
+  "listeningRewindBiggestMonthLabel": "Bulan tersibuk",
+  "listeningRewindBiggestMonth": "Bulan tersibukmu adalah {month}",
+  "listeningRewindMonthlyArtistsTitle": "Artis tiap bulan",
+  "listeningRewindLoyalTitle": "Selalu menemanimu",
+  "listeningRewindLoyalBody": "{days, plural, =1{Menemanimu di 1 hari} other{Menemanimu di {days} hari berbeda}}",
+  "listeningRewindFirstSongTitle": "Awal tahunmu",
+  "listeningRewindFirstSongBody": "Lagu yang paling sering diputar pada hari pertama kamu mendengarkan, {date}",
+  "listeningRewindYearOutroTitle": "Itulah {year}-mu",
+  "listeningRewindYearOutroBody": "Sampai jumpa di tahun penuh musik berikutnya.",
   "weeklyReleases": "Rilis baru",
   "weeklyReleasesDescription": "Album dan single terbaru dari artis favorit, melalui extension metadata yang terpasang.",
   "weeklyReleasesEmpty": "Tidak ditemukan rilis dengan tanggal dalam periode ini. Tambahkan artis favorit atau coba periode lebih panjang.",
@@ -119,6 +195,7 @@
   "discordPresenceBuildUnavailable": "SDK Discord tidak tersedia di build ini.",
   "discordPresenceAndroidHelp": "Pasang Discord dan masuk di ponsel ini. Izinkan berbagi aktivitas di Discord. Pemutar eksternal tidak didukung.",
   "discordPresenceIosHelp": "Hubungkan akun melalui Discord dan izinkan berbagi aktivitas. Ketuk untuk menghubungkan ulang jika otorisasi gagal.",
+  "discordPresenceDesktopHelp": "Biarkan aplikasi desktop Discord berjalan dan masuk di komputer ini, lalu izinkan berbagi aktivitas di Discord.",
   "discordPresenceDisconnect": "Putuskan dan lupakan akun",
   "playbackAutomation": "Pemutaran otomatis",
   "playbackPauseOnMute": "Jeda saat volume nol",
@@ -134,7 +211,7 @@
   "usbBitPerfectDescription": "Pertahankan kualitas audio di perangkat output yang didukung. Pilih Direct USB atau AAudio Exclusive di bawah; juga, output USB Android butuh Android 14+. Berlaku di lagu selanjutnya, tanpa AutoMix & normalisasi. Mungkin Anda tidak dapat mengatur volume.",
   "usbHardwareVolume": "Volume hardware DAC",
   "usbVolumeWarningTitle": "Periksa volume Anda",
-  "usbVolumeWarning": "Memutar dengan Direct USB akan membuat suara lebih keras dari biasanya, dan tombol volume mungkin tidak akan berfungsi. Pelankan volume DAC atau amplifier Anda sebelum mendengar. Bila mendukung, Mosix mengatur volume DAC pada -40dB saat terhubung; tapi ini tidak menjamin suara akan berada di batas aman.",
+  "usbVolumeWarning": "Memutar dengan Direct USB akan membuat suara lebih keras dari biasanya, dan tombol volume mungkin tidak akan berfungsi. Pelankan volume DAC atau amplifier Anda sebelum mendengar. Bila mendukung, Mornye mengatur volume DAC pada -40dB saat terhubung; tapi ini tidak menjamin suara akan berada di batas aman.",
   "usbVolumeAccept": "Saya paham",
   "usbVolumeUnavailable": "Pemutaran dijeda karena kontrol volume pada hardware DAC tidak dapat diverifikasi. Turunkan volume DAC atau Amplifier, lalu hidupkan volume output tetap bila dibutuhkan lalu putar lagi.",
   "usbFixedVolume": "Izinkan volume tetap output USB",
@@ -153,36 +230,7 @@
   "usbBitPerfectNoDevice": "Tiada DAC USB terhubung. Menggunakan pemutaran normal.",
   "usbBitPerfectFallback": "Perangkat atau format audio tidak mendukung output Bit-Perfect. Menggunakan pemutaran normal.",
   "usbBitPerfectRouteChanged": "Rute audio USB berubah. Pemutaran dijeda; pilih lagu untuk menghubungkan ulang.",
-  "upgradeIntroWelcome": "Selamat datang di Mosix 1.0",
-  "upgradeIntroThemeTitle": "Pilih \ntampilan Anda.",
-  "upgradeIntroThemeBody": "Pilih tampilan yang Anda suka. Pilihan langsung diterapkan dan Anda dapat mengubahnya lewat Tampilan.",
-  "upgradeIntroThemeMaterialBody": "Tampilan yang familiar, estetika Material dengan warna aksen pilihan Anda.",
-  "upgradeIntroThemeMornyeBody": "Tampilan Liquid Glass, Koleksi yang didesain ulang dengan pemutar yang cantik.",
-  "upgradeIntroRustTitle": "Engine baru.\nDibuat dengan Rust.",
-  "upgradeIntroRustBody": "Di versi 5.0, backend aplikasi dialihkan dari Go ke Rust. Ini adalah engine yang bekerja di balik layar yang Anda gunakan tiap hari.",
-  "upgradeIntroRustEngineTitle": "Bekerja di balik layar",
-  "upgradeIntroRustEngineBody": "Rust menangani download, metadata audio, pemindaian koleksi, dan runtime ekstensi di Android dan iOS.",
-  "upgradeIntroRustMemoryTitle": "Lebih hemat penggunaan memori",
-  "upgradeIntroRustMemoryBody": "Pemakaian ulang buffer dan pengurangan penyalinan data dapat mengurangi penggunaan memori saat memroses artwork dan data ekstensi.",
-  "upgradeIntroRustKeepTitle": "Musik Anda tetap ada",
-  "upgradeIntroRustKeepBody": "Tidak perlu mendownload ulang koleksi Anda. Musik tersimpan dan setelan Anda masih sama, tidak perlu penyiapan ulang.",
-  "upgradeIntroWelcomeBody": "Sedikit pemahaman mengenai apa yang baru, dan di mana mencarinya.",
-  "upgradeIntroMornyeBody": "Tampilan pemutar, lirik, dan navigasi baru Anda.",
-  "upgradeIntroLibrarySummary": "Telusuri musik Anda lewat playlist, artis, atau album.",
-  "upgradeIntroRepoSummary": "Pilih sumber musik dan provider Anda melalui ekstensi.",
-  "upgradeIntroLibraryTitle": "Mengenal Koleksi Anda.",
-  "upgradeIntroLibraryBody": "Di tampilan Mornye, telusuri dengan kategori atau cari album Anda di Baru Ditambahkan.",
-  "upgradeIntroDownloadsBody": "Jeda dan coba lagi dari Download di kanan atas. Lagu yang didownload akan muncul di Baru Ditambahkan.",
-  "upgradeIntroSearchBody": "Telusuri lagu tersimpan di sini. Tab Penelusuran kini dipisah dan ada di kanan Repo.",
-  "upgradeIntroPlayerTitle": "Atur\npemutar Anda.",
-  "upgradeIntroPlayerBody": "Anda dapat mengatur setelan tema dan pemutaran kapan saja. Atur saja di sini.",
-  "upgradeIntroAppearanceBody": "Atur tema lewat Setelan → Tampilan. Di Mornye, gulir bawah akan mengecilkan bilah navigasi; dan sebaliknya akan mengembalikannya.",
-  "upgradeIntroAutoMixBody": "Cocokkan tempo dan beat pada setiap lagu. Hidupkan di Setelan → Koleksi Lokal → Pemutaran. Defaultnya dimatikan.",
-  "upgradeIntroSettingsBody": "Di Mornye, ketuk foto profil di kanan atas untuk membuka Setelan dan mengedit nama dan foto profil.",
-  "upgradeIntroSkip": "Lewati",
   "upgradeIntroContinue": "Lanjut",
-  "upgradeIntroDone": "Mulai mendengarkan",
-  "upgradeIntroReplay": "Yang baru di versi 5.0",
   "cacheMotionArtwork": "Cover bergerak offline",
   "cacheMotionArtworkDesc": "Video album yang didownload. Menghapusnya tidak akan menghapus file musik dan cover biasa.",
   "nowPlayingVolume": "Volume",
@@ -223,7 +271,7 @@
   },
   "@@locale": "id",
   "@@last_modified": "2026-04-28",
-  "appName": "Mosix",
+  "appName": "Mornye",
   "@appName": {
     "description": "App name - DO NOT TRANSLATE"
   },
@@ -246,10 +294,6 @@
   "homeTitle": "Beranda",
   "@homeTitle": {
     "description": "Home screen title"
-  },
-  "homeSubtitle": "Tempel URL yang didukung atau cari berdasarkan nama",
-  "@homeSubtitle": {
-    "description": "Subtitle shown below search box"
   },
   "homeEmptyTitle": "Belum ada provider penelusuran",
   "@homeEmptyTitle": {
@@ -284,10 +328,6 @@
   "libraryNoActiveDownloads": "Tidak sedang download",
   "librarySearchHint": "Telusuri koleksi Anda",
   "libraryEmptyCollection": "Musik Anda akan muncul di sini",
-  "historySearchHint": "Telusuri histori...",
-  "@historySearchHint": {
-    "description": "Search bar placeholder in history"
-  },
   "settingsTitle": "Setelan",
   "@settingsTitle": {
     "description": "Settings screen title"
@@ -332,6 +372,12 @@
   "@downloadFolderOrganization": {
     "description": "Title of the folder organization picker bottom sheet"
   },
+  "downloadFolderTemplate": "Struktur Folder Kustom",
+  "downloadFolderTemplateDescription": "Gunakan tag penamaan dan / untuk subfolder. Menyimpan akan mengganti susunan album dan single bawaan. Nama folder kosong memakai Unknown.",
+  "folderOrganizationCustom": "Template kustom",
+  "folderTemplateInvalid": "Masukkan path folder relatif dengan tag yang didukung. Folder kosong, . dan .. tidak diizinkan.",
+  "folderTemplatePreview": "Contoh path folder",
+  "folderTemplatePreviewFailed": "Pratinjau tidak tersedia",
   "appearanceTitle": "Tampilan",
   "@appearanceTitle": {
     "description": "Appearance settings page title"
@@ -509,6 +555,15 @@
     }
   },
   "optionsArtistTagMode": "Mode Tag Artis",
+  "metadataSeparators": "Pemisah metadata",
+  "metadataSeparatorsDescription": "Pilih pemisah untuk daftar yang memakai koma atau titik koma pada unduhan berikutnya. Pemisah artis custom menggunakan satu tag gabungan; mode Artis utama saja tetap berlaku. Karakter & dan / pada nama dipertahankan.",
+  "metadataSeparatorSource": "Ikuti format sumber",
+  "metadataSeparatorComma": "Koma (,)",
+  "metadataSeparatorSemicolon": "Titik koma (;)",
+  "metadataSeparatorSlash": "Garis miring (/)",
+  "metadataSeparatorCustom": "Pemisah custom",
+  "metadataSeparatorPreview": "Preview",
+  "metadataSeparatorInvalid": "Gunakan 1–16 karakter tanpa baris baru atau karakter kontrol.",
   "@optionsArtistTagMode": {
     "description": "Setting title for how artist metadata is written into files"
   },
@@ -645,10 +700,6 @@
   "@aboutMobileDeveloper": {
     "description": "Role description for mobile dev"
   },
-  "aboutOriginalCreator": "Pembuat Mosix asli",
-  "@aboutOriginalCreator": {
-    "description": "Role description for original creator"
-  },
   "aboutLogoArtist": "Artist berbakat yang membuat logo indah untuk aplikasi kami!",
   "@aboutLogoArtist": {
     "description": "Role description for logo artist"
@@ -669,14 +720,8 @@
   "@aboutMobileSource": {
     "description": "Link to mobile GitHub repo"
   },
-  "aboutPCSource": "Source code versi PC",
-  "@aboutPCSource": {
-    "description": "Link to PC GitHub repo"
-  },
-  "aboutKeepAndroidOpen": "Jaga Android tetap terbuka",
-  "@aboutKeepAndroidOpen": {
-    "description": "Link to Keep Android Open campaign website"
-  },
+  "aboutLyricsWebsite": "Situs lirik",
+  "aboutServiceStatus": "Status layanan",
   "aboutReportIssue": "Laporkan masalah",
   "@aboutReportIssue": {
     "description": "Link to report bugs"
@@ -886,7 +931,7 @@
   "@setupStorageRequired": {
     "description": "Title when storage permission needed"
   },
-  "setupStorageDescription": "Mosix butuh akses penyimpanan untuk menyimpan hasil download Anda.",
+  "setupStorageDescription": "Mornye butuh akses penyimpanan untuk menyimpan hasil download Anda.",
   "@setupStorageDescription": {
     "description": "Explanation for storage permission"
   },
@@ -1243,7 +1288,7 @@
   "@snackbarFileNotFound": {
     "description": "Snackbar - file doesn't exist"
   },
-  "snackbarSelectExtFile": "Harap pilih file .spotiflac-ext",
+  "snackbarSelectExtFile": "Harap pilih file .mornye-ext",
   "@snackbarSelectExtFile": {
     "description": "Snackbar - wrong file type selected"
   },
@@ -2182,7 +2227,7 @@
   "@extensionsNoExtensions": {
     "description": "Empty state - no extensions"
   },
-  "extensionsNoExtensionsSubtitle": "Pasang file .spotiflac-ext untuk menambahkan provider baru",
+  "extensionsNoExtensionsSubtitle": "Pasang file .mornye-ext untuk menambahkan provider baru",
   "@extensionsNoExtensionsSubtitle": {
     "description": "Empty state subtitle"
   },
@@ -2298,10 +2343,6 @@
   "@qualityHiResFlacMaxSubtitle": {
     "description": "Technical spec for hi-res max"
   },
-  "downloadLossy320": "Lossy 320kbps",
-  "@downloadLossy320": {
-    "description": "Quality option label for lossy 320kbps"
-  },
   "downloadLossyFormat": "Format Lossy",
   "@downloadLossyFormat": {
     "description": "Setting title to pick output format for lossy downloads"
@@ -2341,46 +2382,6 @@
   "downloadAutoConvertOpusSubtitle": "Bagus untuk pemutar terbaru",
   "@downloadAutoConvertOpusSubtitle": {
     "description": "Opus automatic conversion option description"
-  },
-  "downloadLossy320Format": "Format Lossy 320kbps",
-  "@downloadLossy320Format": {
-    "description": "Title of the lossy format picker bottom sheet"
-  },
-  "downloadLossy320FormatDesc": "Pilih format output untuk download lossy 320kbps. Data stream asli akan dikonversi ke format yang Anda pilih bila diperlukan.",
-  "@downloadLossy320FormatDesc": {
-    "description": "Description in the lossy format picker"
-  },
-  "downloadLossyMp3": "MP3 320kbps",
-  "@downloadLossyMp3": {
-    "description": "Lossy format option - MP3 320kbps"
-  },
-  "downloadLossyMp3Subtitle": "Putar di mana saja, ~10MB per lagu",
-  "@downloadLossyMp3Subtitle": {
-    "description": "Subtitle for MP3 320kbps lossy option"
-  },
-  "downloadLossyAac": "AAC/M4A 320kbps",
-  "@downloadLossyAac": {
-    "description": "Lossy format option - AAC in M4A container at 320kbps"
-  },
-  "downloadLossyAacSubtitle": "Putar di perangkat mobile, format M4A",
-  "@downloadLossyAacSubtitle": {
-    "description": "Subtitle for AAC/M4A 320kbps lossy option"
-  },
-  "downloadLossyOpus256": "Opus 256kbps",
-  "@downloadLossyOpus256": {
-    "description": "Lossy format option - Opus 256kbps"
-  },
-  "downloadLossyOpus256Subtitle": "Opus kualitas terbaik, ~8MB per lagu",
-  "@downloadLossyOpus256Subtitle": {
-    "description": "Subtitle for Opus 256kbps lossy option"
-  },
-  "downloadLossyOpus128": "Opus 128kbps",
-  "@downloadLossyOpus128": {
-    "description": "Lossy format option - Opus 128kbps"
-  },
-  "downloadLossyOpus128Subtitle": "Ukuran terkecil, ~4MB per lagu",
-  "@downloadLossyOpus128Subtitle": {
-    "description": "Subtitle for Opus 128kbps lossy option"
   },
   "downloadAskBeforeDownload": "Tanya Sebelum Download",
   "@downloadAskBeforeDownload": {
@@ -2714,15 +2715,6 @@
       }
     }
   },
-  "discographySelectedCount": "{count} dipilih",
-  "@discographySelectedCount": {
-    "description": "Selection count badge",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "discographyDownloadSelected": "Download Terpilih",
   "@discographyDownloadSelected": {
     "description": "Button - download selected albums"
@@ -2867,9 +2859,39 @@
   "@libraryRemoveFolder": {
     "description": "Action to remove one indexed library source"
   },
-  "libraryRemoveFolderMessage": "Hapus folder ini dan lagu di dalamnya dari Mosix? File audio di perangkat tidak akan dihapus.",
+  "libraryRemoveFolderMessage": "Hapus folder ini dan lagu di dalamnya dari Mornye? File audio di perangkat tidak akan dihapus.",
   "@libraryRemoveFolderMessage": {
     "description": "Confirmation shown before removing a library source"
+  },
+  "libraryUnreadableFiles": "{count, plural, =1{1 file tidak dapat dibaca} other{{count} file tidak dapat dibaca}}",
+  "@libraryUnreadableFiles": {
+    "description": "Count of files the last scan of a library folder skipped because it could not read them",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryUnreadableFilesTitle": "File yang tidak terbaca",
+  "@libraryUnreadableFilesTitle": {
+    "description": "Title of the list of files a library scan could not read, and the action that opens it"
+  },
+  "libraryUnreadableFilesSubtitle": "File ini tidak dimasukkan ke koleksi. Mungkin file rusak, masih diunduh, atau diblokir oleh aplikasi penyimpanan.",
+  "@libraryUnreadableFilesSubtitle": {
+    "description": "Explanation above the list of files a library scan could not read"
+  },
+  "libraryUnreadableFilesAction": "Lihat file mana dan penyebabnya",
+  "@libraryUnreadableFilesAction": {
+    "description": "Subtitle of the library folder action that lists unreadable files"
+  },
+  "libraryUnreadableFilesMore": "{count, plural, =1{1 file lagi tidak ditampilkan} other{{count} file lagi tidak ditampilkan}}",
+  "@libraryUnreadableFilesMore": {
+    "description": "Note below the unreadable files list when the scan skipped more files than it lists",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "libraryShowDuplicateIndicator": "Tampilkan Tanda File Ganda",
   "@libraryShowDuplicateIndicator": {
@@ -3027,17 +3049,13 @@
   "@libraryStorageAccessRequired": {
     "description": "Dialog title for storage permission"
   },
-  "libraryStorageAccessMessage": "Mosix butuh akses penyimpanan untuk memindai Koleksi musik Anda. Mohon berikan perizinan di Setelan.",
+  "libraryStorageAccessMessage": "Mornye butuh akses penyimpanan untuk memindai Koleksi musik Anda. Mohon berikan perizinan di Setelan.",
   "@libraryStorageAccessMessage": {
     "description": "Dialog message for storage permission"
   },
-  "libraryFolderNotExist": "Folder terpilih tidak ada",
-  "@libraryFolderNotExist": {
-    "description": "Error when folder doesn't exist"
-  },
   "librarySourceDownloaded": "Didownload",
   "@librarySourceDownloaded": {
-    "description": "Badge for tracks downloaded via Mosix"
+    "description": "Badge for tracks downloaded via Mornye"
   },
   "librarySourceLocal": "Lokal",
   "@librarySourceLocal": {
@@ -3127,6 +3145,14 @@
   "@libraryFilterSortOldest": {
     "description": "Sort option - oldest first"
   },
+  "libraryFilterSortSizeLargest": "Ukuran (Terbesar dahulu)",
+  "@libraryFilterSortSizeLargest": {
+    "description": "Library sort option - largest files first"
+  },
+  "libraryFilterSortSizeSmallest": "Ukuran (Terkecil dahulu)",
+  "@libraryFilterSortSizeSmallest": {
+    "description": "Library sort option - smallest files first"
+  },
   "libraryFilterSortAlbumAsc": "Album (A-Z)",
   "@libraryFilterSortAlbumAsc": {
     "description": "Sort option - album ascending"
@@ -3165,11 +3191,11 @@
       }
     }
   },
-  "tutorialWelcomeTitle": "Selamat datang di Mosix!",
+  "tutorialWelcomeTitle": "Selamat datang di Mornye!",
   "@tutorialWelcomeTitle": {
     "description": "Tutorial welcome page title"
   },
-  "tutorialWelcomeDesc": "Pelajari cara menemukan musik dengan ekstensi, pilih kualitas yang Anda inginkan, dan atur download-nya di Mosix.",
+  "tutorialWelcomeDesc": "Pelajari cara menemukan musik dengan ekstensi, pilih kualitas yang Anda inginkan, dan atur download-nya di Mornye.",
   "@tutorialWelcomeDesc": {
     "description": "Tutorial welcome page description"
   },
@@ -3363,6 +3389,40 @@
   "@libraryPlaybackNormalizationSubtitle": {
     "description": "Subtitle explaining playback volume normalization"
   },
+  "playbackNormalizationMode": "Mode gain",
+  "@playbackNormalizationMode": {
+    "description": "Label for choosing between track and album ReplayGain during playback"
+  },
+  "playbackNormalizationModeTrack": "Lagu",
+  "@playbackNormalizationModeTrack": {
+    "description": "Gain mode that levels every track on its own"
+  },
+  "playbackNormalizationModeAlbum": "Album",
+  "@playbackNormalizationModeAlbum": {
+    "description": "Gain mode that keeps the loudness differences inside an album"
+  },
+  "playbackNormalizationPreamp": "Pre-amp",
+  "@playbackNormalizationPreamp": {
+    "description": "Label for the dB offset applied on top of ReplayGain during playback"
+  },
+  "playbackNormalizationPreampValue": "{gain} dB (target {target} LUFS)",
+  "@playbackNormalizationPreampValue": {
+    "description": "Pre-amp value with the resulting target loudness",
+    "placeholders": {
+      "gain": {
+        "type": "String",
+        "example": "-7"
+      },
+      "target": {
+        "type": "String",
+        "example": "-25"
+      }
+    }
+  },
+  "playbackNormalizationPreampHint": "Nilai lebih rendah terdengar lebih pelan. Normalisasi hanya menurunkan volume, jadi tidak pernah clipping.",
+  "@playbackNormalizationPreampHint": {
+    "description": "Hint under the normalization pre-amp slider"
+  },
   "cacheAudioAnalysis": "Cache analisis audio",
   "@cacheAudioAnalysis": {
     "description": "Cache item title for saved audio analysis results"
@@ -3498,10 +3558,6 @@
   "trackReEnrich": "Update Metadata",
   "@trackReEnrich": {
     "description": "Menu action - re-embed metadata into audio file"
-  },
-  "trackReEnrichOnlineSubtitle": "Telusuri metadata di internet lalu sematkan ke file",
-  "@trackReEnrichOnlineSubtitle": {
-    "description": "Subtitle for re-enrich metadata action for local items"
   },
   "trackReEnrichBatchSubtitle": "Pilih update online atau offline, lalu tinjau setiap perubahan sebelum diubah",
   "@trackReEnrichBatchSubtitle": {
@@ -4094,10 +4150,6 @@
       }
     }
   },
-  "selectionShareNoFiles": "Tidak ditemukan file untuk dibagikan",
-  "@selectionShareNoFiles": {
-    "description": "Snackbar when no selected files exist on disk"
-  },
   "selectionConvertCount": "Ubah format {count} {count, plural, =1{lagu} other{lagu}}",
   "@selectionConvertCount": {
     "description": "Convert button text with count in selection mode",
@@ -4252,6 +4304,18 @@
   "@lyricsProviderLyricsPlusDesc": {
     "description": "Description for LyricsPlus provider"
   },
+  "lyricsProviderZarzLrcDesc": "Lirik Apple Music per kata dari Zarz-LRC",
+  "@lyricsProviderZarzLrcDesc": {
+    "description": "Description for the first-party Zarz-LRC provider"
+  },
+  "lyricsProviderLrcRedDesc": "Lirik Apple Music per kata, dicocokkan per rekaman",
+  "@lyricsProviderLrcRedDesc": {
+    "description": "Description for lrc.red provider"
+  },
+  "lyricsProviderBetterLyricsDesc": "Lirik Apple Music per kata untuk lagu populer",
+  "@lyricsProviderBetterLyricsDesc": {
+    "description": "Description for BetterLyrics provider, which only answers songs it has already cached"
+  },
   "lyricsProviderExtensionDesc": "Provider ekstensi",
   "@lyricsProviderExtensionDesc": {
     "description": "Generic description for extension-based lyrics providers"
@@ -4260,7 +4324,7 @@
   "@safMigrationTitle": {
     "description": "Title of SAF migration dialog"
   },
-  "safMigrationMessage1": "Mosix kini menggunakan Android Storage Access (SAF) untuk mendownload. Ini memperbaiki eror \"izin ditolak\" di Android 10+.",
+  "safMigrationMessage1": "Mornye kini menggunakan Android Storage Access (SAF) untuk mendownload. Ini memperbaiki eror \"izin ditolak\" di Android 10+.",
   "@safMigrationMessage1": {
     "description": "First paragraph of SAF migration dialog"
   },
@@ -4328,10 +4392,6 @@
   "@backupRestoreConfirmTitle": {
     "description": "Confirmation dialog title before restoring a backup"
   },
-  "backupRestoreConfirmMessage": "Ini akan mengubah setelan sekarang, histori download, lagu yang disukai, wishlist, dan playlist Anda dengan isi cadangan ini. Tindakan tidak dapat dipulihkan.",
-  "@backupRestoreConfirmMessage": {
-    "description": "Confirmation dialog message before restoring a backup"
-  },
   "backupRestoreConfirmButton": "Pulihkan",
   "@backupRestoreConfirmButton": {
     "description": "Confirm button to proceed with restore"
@@ -4344,7 +4404,7 @@
   "@backupRestoreFailed": {
     "description": "Snackbar when restore fails"
   },
-  "backupInvalidFile": "File ini bukan cadangan Mosix yang valid",
+  "backupInvalidFile": "File ini bukan cadangan Mornye yang valid",
   "@backupInvalidFile": {
     "description": "Snackbar when the chosen file is not a valid backup"
   },
@@ -4528,25 +4588,9 @@
     "description": "Subtitle shown in the download location picker sheet"
   },
   "storageAutomaticFolder": "Folder bawaan",
-  "storageAutomaticDownloadFolder": "Menyimpan di folder Download/Mosix, atau di data aplikasi",
+  "storageAutomaticDownloadFolder": "Menyimpan di folder Download/Mornye, atau di data aplikasi",
   "storageSafRecommended": "Pilih folder (Disarankan)",
-  "storageDownloadFolderHint": "Begitu pemilih folder Android terbuka, buka folder Download dan pilih Mosix. Jika belum ada, buat folder baru, lalu ketuk Gunakan folder ini untuk memberi akses.",
-  "storageModeAppFolder": "Folder Aplikasi (Disarankan)",
-  "@storageModeAppFolder": {
-    "description": "Storage mode option - app-managed folder"
-  },
-  "storageModeAppFolderSubtitle": "Disimpan ke Music/Mosix secara default",
-  "@storageModeAppFolderSubtitle": {
-    "description": "Subtitle for app folder storage mode"
-  },
-  "storageModeSaf": "Pilih Folder (SAF)",
-  "@storageModeSaf": {
-    "description": "Storage mode option - Storage Access Framework"
-  },
-  "storageModeSafSubtitle": "Pilih folder apapun, termasuk kartu SD",
-  "@storageModeSafSubtitle": {
-    "description": "Subtitle for SAF storage mode"
-  },
+  "storageDownloadFolderHint": "Begitu pemilih folder Android terbuka, buka folder Download dan pilih Mornye. Jika belum ada, buat folder baru, lalu ketuk Gunakan folder ini untuk memberi akses.",
   "downloadFolderAccessLostTitle": "Akses folder download hilang",
   "@downloadFolderAccessLostTitle": {
     "description": "Title of the warning banner shown in Files settings when the saved SAF folder grant is no longer valid"
@@ -4834,10 +4878,6 @@
       }
     }
   },
-  "editMetadataAutoFillFetch": "Gunakan metadata online",
-  "@editMetadataAutoFillFetch": {
-    "description": "Button label to fetch online metadata and fill selected fields"
-  },
   "editMetadataAutoFillSearching": "Menelusuri internet...",
   "@editMetadataAutoFillSearching": {
     "description": "Snackbar shown while searching for online metadata"
@@ -4845,15 +4885,6 @@
   "editMetadataAutoFillNoResults": "Tidak ada metadata yang cocok di internet",
   "@editMetadataAutoFillNoResults": {
     "description": "Snackbar when online metadata search returns no results"
-  },
-  "editMetadataAutoFillDone": "Berhasil mengisi {count} {count, plural, =1{kolom} other{kolom}} dari metadata online",
-  "@editMetadataAutoFillDone": {
-    "description": "Snackbar confirming how many fields were auto-filled",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "editMetadataAutoFillNoneSelected": "Pilih setidaknya satu tag untuk diisi otomatis",
   "@editMetadataAutoFillNoneSelected": {
@@ -5099,6 +5130,19 @@
   "@audioAnalysisRescan": {
     "description": "Tooltip/label for the button that re-runs the audio analysis, discarding cached results"
   },
+  "audioAnalysisSaveSpectrogram": "Simpan Spektrogram",
+  "@audioAnalysisSaveSpectrogram": {
+    "description": "Tooltip for the spectrogram button that saves the plot, with its axes and legend, as a PNG image the user places in storage"
+  },
+  "audioAnalysisSpectrogramSaved": "Spektrogram disimpan ke {fileName}",
+  "@audioAnalysisSpectrogramSaved": {
+    "description": "Snackbar after the spectrogram image was saved",
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
   "downloadRedownloadFakeHiRes": "Download ulang Hi-Res palsu",
   "@downloadRedownloadFakeHiRes": {
     "description": "Setting title: automatically replace downloads that measure as fake Hi-Res"
@@ -5111,10 +5155,6 @@
   "@hiResCheckVerdictFakeCertain": {
     "description": "Verdict: an exact fingerprint (padded bits or upsampling pattern) proves the file is not real Hi-Res"
   },
-  "hiResCheckVerdictFakeSuspect": "Kemungkinan low-passnya difilter",
-  "@hiResCheckVerdictFakeSuspect": {
-    "description": "Verdict: fails the cutoff test but may be a genuine master low-pass filtered in mastering"
-  },
   "hiResCheckReasonSampleHold": "Data suara terulang: diupsample dengan menggandakan data",
   "@hiResCheckReasonSampleHold": {
     "description": "Reason: sample-and-hold upsampling detected"
@@ -5122,26 +5162,6 @@
   "hiResCheckReasonInterpolation": "Data antar suara diinterpolasi secara linear",
   "@hiResCheckReasonInterpolation": {
     "description": "Reason: linear-interpolation upsampling detected"
-  },
-  "hiResCheckReasonImaging": "Data suara di atas 22 kHz menjiplak data yang ada",
-  "@hiResCheckReasonImaging": {
-    "description": "Reason: spectral imaging from upsampling detected"
-  },
-  "hiResCheckMusicContent": "Konten musikal",
-  "@hiResCheckMusicContent": {
-    "description": "Label for the highest frequency that still moves with the music"
-  },
-  "hiResCheckUltrasonicNoise": "Di atas {cutoff} hanya ada desis statis (mirip hasil rekam ulang kaset DSD/analog): file {rate} itu sudah cukup",
-  "@hiResCheckUltrasonicNoise": {
-    "description": "Shown when the ultrasonic content of a Hi-Res file is noise rather than music",
-    "placeholders": {
-      "cutoff": {
-        "type": "String"
-      },
-      "rate": {
-        "type": "String"
-      }
-    }
   },
   "hiResCheckTitle": "Keaslian Hi-Res",
   "@hiResCheckTitle": {
@@ -5202,10 +5222,6 @@
       }
     }
   },
-  "hiResCheckDescription": "Periksa file Hi-Res palsu yang diupsample atau dibit-pad",
-  "@hiResCheckDescription": {
-    "description": "Explains what the Hi-Res authenticity check does"
-  },
   "hiResCheckRun": "Periksa",
   "@hiResCheckRun": {
     "description": "Button that starts the Hi-Res authenticity check"
@@ -5217,10 +5233,6 @@
   "hiResCheckVerdictFake": "Sepertinya Hi-Res palsu",
   "@hiResCheckVerdictFake": {
     "description": "Verdict: the file claims Hi-Res but does not measure as it"
-  },
-  "hiResCheckVerdictGenuine": "Tergolong Hi-Res asli",
-  "@hiResCheckVerdictGenuine": {
-    "description": "Verdict: no upsampling or padded bit depth found"
   },
   "hiResCheckVerdictStandard": "Kualitas biasa, tidak ada yang aneh",
   "@hiResCheckVerdictStandard": {
@@ -5234,35 +5246,11 @@
   "@hiResCheckUnsupported": {
     "description": "Shown when the file format cannot be decoded by the Hi-Res check"
   },
-  "hiResCheckCutoff": "Cutoff konten",
-  "@hiResCheckCutoff": {
-    "description": "Label for the highest frequency with real content"
-  },
-  "hiResCheckBitsInUse": "Bit digunakan",
-  "@hiResCheckBitsInUse": {
-    "description": "Label for effective vs declared bit depth"
-  },
-  "hiResCheckDisclaimer": "Grafik spektrum berhenti di awal, tidak ada bukti itu diupsample: mungkin ini file master asli yang di filter low-pass saat mastering. File tidak diganti otomatis.",
-  "@hiResCheckDisclaimer": {
-    "description": "Caveat shown under a fake Hi-Res verdict"
-  },
   "hiResCheckFailed": "Pemeriksaan Hi-Res gagal: {error}",
   "@hiResCheckFailed": {
     "description": "Error shown when the Hi-Res check fails",
     "placeholders": {
       "error": {
-        "type": "String"
-      }
-    }
-  },
-  "hiResCheckReasonRate": "Tertulis {sampleRate} tapi data musik berhenti di ~{cutoff}",
-  "@hiResCheckReasonRate": {
-    "description": "Reason for a fake verdict caused by upsampling",
-    "placeholders": {
-      "sampleRate": {
-        "type": "String"
-      },
-      "cutoff": {
         "type": "String"
       }
     }
@@ -5287,6 +5275,8 @@
   "@extensionsHomeFeedProvider": {
     "description": "Extensions page - label for home feed provider selector"
   },
+  "extensionsHomeFeedCountry": "Negara beranda",
+  "extensionsHomeFeedCountryDescription": "Pilih rekomendasi beranda suatu negara tanpa VPN.",
   "extensionsHomeFeedDescription": "Pilih ekstensi provider feed beranda di layar utama",
   "@extensionsHomeFeedDescription": {
     "description": "Extensions page - description for home feed provider picker"
@@ -5537,6 +5527,10 @@
   "@notifLibraryScanFailed": {
     "description": "Notification title when library scan fails"
   },
+  "notifLibraryScanInterruptedBody": "Pemindaian koleksi sebelumnya terputus. Pindai ulang folder untuk melanjutkan. Lagu yang sudah terindeks tetap tersedia.",
+  "@notifLibraryScanInterruptedBody": {
+    "description": "Recovery notice after the app stops during a library scan"
+  },
   "notifLibraryScanCancelled": "Pindai koleksi dibatalkan",
   "@notifLibraryScanCancelled": {
     "description": "Notification title when library scan is cancelled by the user"
@@ -5558,7 +5552,7 @@
       }
     }
   },
-  "notifDownloadingUpdate": "Mendownload Mosix v{version}",
+  "notifDownloadingUpdate": "Mendownload Mornye v{version}",
   "@notifDownloadingUpdate": {
     "description": "Notification title while downloading an app update",
     "placeholders": {
@@ -5586,7 +5580,7 @@
   "@notifUpdateReady": {
     "description": "Notification title when app update download is complete"
   },
-  "notifUpdateReadyBody": "Mosix v{version} didownload. Ketuk untuk instal.",
+  "notifUpdateReadyBody": "Mornye v{version} didownload. Ketuk untuk instal.",
   "@notifUpdateReadyBody": {
     "description": "Notification body when app update is ready to install",
     "placeholders": {
@@ -5607,7 +5601,7 @@
   "@searchTracks": {
     "description": "Search filter label - tracks"
   },
-  "homeSearchHintDefault": "Tempel URL yang didukung atau telusuri...",
+  "homeSearchHintDefault": "Telusuri atau tempel URL yang didukung...",
   "@homeSearchHintDefault": {
     "description": "Default placeholder for the main search field on Home"
   },
@@ -6265,10 +6259,6 @@
       }
     }
   },
-  "actionGo": "Mulai",
-  "@actionGo": {
-    "description": "Generic action button label"
-  },
   "logIssueSummary": "Ringkasan Masalah",
   "@logIssueSummary": {
     "description": "Header for log issue analysis summary"
@@ -6358,7 +6348,7 @@
   "@extensionCustomUrlHandlingSubtitle": {
     "description": "Extension detail subtitle for custom URL handling"
   },
-  "extensionCustomUrlHandlingShareHint": "Bagikan link dari situs ini ke Mosix dan ekstensi ini akan menanganinya.",
+  "extensionCustomUrlHandlingShareHint": "Bagikan link dari situs ini ke Mornye dan ekstensi ini akan menanganinya.",
   "@extensionCustomUrlHandlingShareHint": {
     "description": "Extension detail hint explaining share-to-app URL handling"
   },
@@ -6560,21 +6550,17 @@
   "@libraryExternalPlayer": {
     "description": "Setting option to use an external music player"
   },
-  "libraryExternalPlayerSubtitle": "Bagus untuk mendengarkan harian, kualitas terbaik, pemutaran lancar, EQ, dan dukungan format luas",
+  "libraryExternalPlayerSubtitle": "Buka lagu di aplikasi musik lain di perangkatmu",
   "@libraryExternalPlayerSubtitle": {
     "description": "Subtitle for external player option"
   },
-  "libraryBuiltInPreviewPlayer": "Pemutar bawaan preview",
+  "libraryBuiltInPreviewPlayer": "Pemutar bawaan",
   "@libraryBuiltInPreviewPlayer": {
     "description": "Setting option to use the built-in preview player"
   },
-  "libraryBuiltInPreviewPlayerSubtitle": "Pemutar bawaan preview Mosix",
+  "libraryBuiltInPreviewPlayerSubtitle": "Putar musik langsung di Mornye",
   "@libraryBuiltInPreviewPlayerSubtitle": {
     "description": "Subtitle for built-in preview player option"
-  },
-  "libraryBuiltInPlayerInfo": "Pemutar built-in masih tahap beta untuk memeriksa lagu dengan cepat. Gunakan pemutar musik eksternal untuk mendengarkan.",
-  "@libraryBuiltInPlayerInfo": {
-    "description": "Info note explaining the built-in player is for previews only"
   },
   "nowPlayingTitle": "Sedang Memutar",
   "@nowPlayingTitle": {
@@ -6695,6 +6681,14 @@
   "nowPlayingShowTranslation": "Tampilkan Terjemahan",
   "@nowPlayingNoLyrics": {
     "description": "Empty state when the playing file has no embedded lyrics"
+  },
+  "nowPlayingSearchLyricsOnline": "Cari online",
+  "@nowPlayingSearchLyricsOnline": {
+    "description": "Button in the player's empty lyrics state that looks up lyrics from the enabled lyrics providers"
+  },
+  "nowPlayingNoLyricsOnline": "Lirik tidak ditemukan online",
+  "@nowPlayingNoLyricsOnline": {
+    "description": "Empty state after an online lyrics search for the playing track found nothing"
   },
   "nowPlayingLibraryEmpty": "Koleksi Anda kosong",
   "@nowPlayingLibraryEmpty": {
@@ -6954,6 +6948,8 @@
   "@regionCountryUS": {
     "description": "Country name for SongLink region picker"
   },
+  "regionCountryIT": "Italia",
+  "regionCountryES": "Spanyol",
   "regionCountryGB": "Inggris Raya",
   "@regionCountryGB": {
     "description": "Country name for SongLink region picker"
@@ -7039,11 +7035,11 @@
   "@extensionVerificationHelpTitleWaiting": {
     "description": "Dialog title when verification is taking longer than expected"
   },
-  "extensionVerificationHelpMessageManual": "Mosix mobile tidak dapat membuka browser secara otomatis. Buka link ini di browser Anda, atau salin manual.",
+  "extensionVerificationHelpMessageManual": "Mornye tidak dapat membuka browser secara otomatis. Buka link ini di browser Anda, atau salin manual.",
   "@extensionVerificationHelpMessageManual": {
     "description": "Dialog message when automatic browser launch for verification fails"
   },
-  "extensionVerificationHelpMessageWaiting": "Jika browser tidak terbuka, atau verifikasi berhasil tapi tidak langsung kembali ke Mosix, buka link ini lagu atau salin manual.",
+  "extensionVerificationHelpMessageWaiting": "Jika browser tidak terbuka, atau verifikasi berhasil tapi tidak langsung kembali ke Mornye, buka link ini lagu atau salin manual.",
   "@extensionVerificationHelpMessageWaiting": {
     "description": "Dialog message when verification may need manual browser help"
   },
@@ -7054,6 +7050,10 @@
   "extensionVerificationCopyLink": "Salin link",
   "@extensionVerificationCopyLink": {
     "description": "Button to copy the extension verification URL"
+  },
+  "extensionVerificationPasteCallback": "Tempel callback",
+  "@extensionVerificationPasteCallback": {
+    "description": "Button that completes extension verification from a callback URL in the clipboard"
   },
   "extensionVerificationLinkCopied": "Link verifikasi disalin",
   "@extensionVerificationLinkCopied": {
@@ -7075,26 +7075,6 @@
         "type": "String"
       }
     }
-  },
-  "settingsGroupInterface": "Ekstensi & tampilan",
-  "@settingsGroupInterface": {
-    "description": "Settings group covering look and feel"
-  },
-  "settingsGroupContent": "Konten & metadata",
-  "@settingsGroupContent": {
-    "description": "Settings group covering the library, metadata and lyrics"
-  },
-  "settingsGroupDownloads": "Download & file",
-  "@settingsGroupDownloads": {
-    "description": "Settings group covering download behaviour and storage"
-  },
-  "settingsGroupSystem": "Sistem",
-  "@settingsGroupSystem": {
-    "description": "Settings group covering app-level data, cache and logs"
-  },
-  "settingsGroupHelp": "Tentang & dukungan",
-  "@settingsGroupHelp": {
-    "description": "Settings group covering the about page and donations"
   },
   "libraryFilterMetadataMissingLyrics": "Lirik hilang",
   "@libraryFilterMetadataMissingLyrics": {
@@ -7128,7 +7108,6 @@
   "@metadataCopyField": {
     "description": "Metadata menu action that copies the selected key and value"
   },
-  "mornyeShowTabs": "Tampilkan tab",
   "mornyeSearch": "Telusuri",
   "mornyeContinuePlaying": "Lanjut Memutar",
   "metadataCopyAll": "Salin semua metadata",
@@ -7153,6 +7132,42 @@
     "description": "Selected state of the compact favorite action"
   },
   "autoMixDescription": "Padukan musik dengan pencocokan bit dan penyesuaian tempo. Menggunakan crossfade bila beat tidak dapat dicocokkan.",
+  "playerCoverStyle": "Cover art",
+  "@playerCoverStyle": {
+    "description": "Settings section choosing how the player shows cover art"
+  },
+  "playerCoverStyleDefault": "Default",
+  "@playerCoverStyleDefault": {
+    "description": "Cover art style: artwork card above the controls"
+  },
+  "playerCoverStyleDefaultDescription": "Artwork berupa kartu di atas kontrol",
+  "@playerCoverStyleDefaultDescription": {
+    "description": "Subtitle of the default cover art style"
+  },
+  "playerCoverStyleFullScreen": "Layar penuh",
+  "@playerCoverStyleFullScreen": {
+    "description": "Cover art style: artwork fills the top of the player"
+  },
+  "playerCoverStyleFullScreenDescription": "Artwork memenuhi bagian atas player lalu memudar menjadi blur. Artwork bergerak di Mornye selalu layar penuh",
+  "@playerCoverStyleFullScreenDescription": {
+    "description": "Subtitle of the full screen cover art style"
+  },
+  "musicHaptics": "Haptik musik",
+  "@musicHaptics": {
+    "description": "Setting that vibrates the phone along with the music"
+  },
+  "musicHapticsDescription": "Getar mengikuti ketukan lagu unduhan dan lokal",
+  "@musicHapticsDescription": {
+    "description": "Subtitle of the music haptics setting"
+  },
+  "musicHapticsSensitivity": "Sensitivitas",
+  "@musicHapticsSensitivity": {
+    "description": "Slider for how many beats trigger music haptics; higher values vibrate on softer hits"
+  },
+  "musicHapticsStrength": "Kekuatan",
+  "@musicHapticsStrength": {
+    "description": "Slider for how strongly the phone vibrates with music haptics"
+  },
   "autoMixOn": "AutoMix hidup",
   "autoMixOff": "AutoMix mati",
   "autoplayOn": "Autoplay hidup",
@@ -7162,6 +7177,9 @@
   "autoplayPersonalization": "Autoplay personal",
   "autoplayPersonalizationDescription": "Pelajari lagu yang kamu dengarkan dan lewati secara privat di perangkat ini. Mematikannya menghentikan pembelajaran dan mengembalikan autoplay biasa.",
   "autoplayResetLearning": "Reset pembelajaran rekomendasi",
+  "autoplayResetLearningConfirmTitle": "Reset pembelajaran rekomendasi?",
+  "autoplayResetLearningConfirmMessage": "Autoplay akan melupakan apa yang dipelajari dari lagu yang kamu dengar dan lewati. Tindakan ini tidak bisa dibatalkan.",
+  "autoplayResetLearningConfirm": "Reset",
   "profileTitle": "Profil",
   "profileSetUp": "Atur profil Anda",
   "profileEdit": "Edit nama dan foto",
@@ -7172,6 +7190,26 @@
   "profileRemovePhoto": "Hapus foto",
   "profilePhotoError": "Pilih foto yang di bawah 20MB.",
   "profileSaveError": "Tidak dapat menyimpan profil Anda. Coba lagi.",
+  "homeGreetingMorning1": "Selamat pagi",
+  "homeGreetingMorning2": "Pagi yang cerah",
+  "homeGreetingMorning3": "Awali harimu",
+  "homeGreetingAfternoon1": "Selamat siang",
+  "homeGreetingAfternoon2": "Siang yang santai",
+  "homeGreetingAfternoon3": "Tetap semangat",
+  "homeGreetingEvening1": "Selamat malam",
+  "homeGreetingEvening2": "Waktunya rileks",
+  "homeGreetingEvening3": "Senja yang syahdu",
+  "homeGreetingNight1": "Selamat malam",
+  "homeGreetingNight2": "Teman begadang",
+  "homeGreetingNight3": "Malam yang tenang",
+  "homeGreetingNamed": "{greeting}, {name}",
+  "homeTaglineListening": "Mau dengar apa hari ini?",
+  "homeTaglineLink": "Punya link? Tempel saja di pencarian",
+  "homeTaglineDiscover": "Temukan album favoritmu berikutnya",
+  "homeContinueListening": "Lanjutkan mendengarkan",
+  "homeRecentlyAdded": "Baru ditambahkan",
+  "homeOnRepeat": "Sering diputar",
+  "homeShortcuts": "Pintasan",
   "artistUpcomingConcerts": "Konser Mendatang",
   "artistAllUpcomingConcerts": "Semua Konser Mendatang",
   "artistNoUpcomingConcerts": "Tiada konser mendatang.",
@@ -7179,10 +7217,176 @@
   "appearanceCustomFontSubtitle": "Impor file TTF atau OTF (maksimal 10 MB). Menggantikan font tema dan sistem.",
   "appearanceCustomFontInvalid": "Font tidak dapat dimuat. Pilih file TTF atau OTF yang valid, maksimal 10 MB.",
   "appearanceCustomFontReset": "Gunakan font tema",
+  "equalizerTitle": "Equalizer",
+  "equalizerDescription": "5–31 band, kontrol nada, preamp, dan dinamika",
+  "equalizerEnable": "Aktifkan equalizer",
+  "equalizerBands": "Band",
+  "equalizerTone": "Nada & stereo",
+  "equalizerPreamp": "Preamp",
+  "equalizerBass": "Bass",
+  "equalizerTreble": "Treble",
+  "equalizerBalance": "Balance",
+  "equalizerDynamics": "Dinamika",
+  "equalizerHeadroom": "Headroom otomatis",
+  "equalizerHeadroomDescription": "Kurangi penguatan input untuk memberi ruang pada frekuensi yang dinaikkan.",
+  "equalizerLimiter": "Limiter puncak",
+  "equalizerLimiterDescription": "Jaga puncak di bawah −0,5 dBFS untuk mengurangi clipping.",
+  "equalizerCompressor": "Compressor",
+  "equalizerCompressorDescription": "Kurangi selisih antara bagian yang pelan dan keras.",
+  "equalizerThreshold": "Threshold",
+  "equalizerRatio": "Rasio",
+  "equalizerAttack": "Attack",
+  "equalizerRelease": "Release",
+  "equalizerPresets": "Preset",
+  "equalizerSavePreset": "Simpan preset",
+  "equalizerPresetName": "Nama preset",
+  "equalizerImport": "Impor preset",
+  "equalizerExport": "Bagikan preset",
+  "equalizerImportInvalid": "Pilih preset equalizer Mornye yang valid (JSON, maksimal 64 KB).",
+  "equalizerSaved": "Preset disimpan",
+  "equalizerResetTitle": "Reset equalizer?",
+  "equalizerResetDescription": "Kembalikan kurva datar serta pengaturan nada dan dinamika bawaan. Preset tersimpan tetap disimpan.",
+  "equalizerBypass": "Output bit-perfect, Direct USB, dan Hi-Res eksklusif melewati EQ. Nonaktifkan output bit-perfect untuk memakai EQ. Player eksternal mengatur efeknya sendiri.",
+  "equalizerCurve": "Kurva EQ (perkiraan)",
+  "equalizerCurveDescription": "Kurva menunjukkan gain tiap band; respons pastinya bergantung pada mesin output.",
+  "equalizerEffectivePreamp": "Gain input setelah headroom",
+  "equalizerDeletePreset": "Hapus preset",
+  "equalizerCustom": "Kustom",
+  "equalizerManagePresets": "Kelola preset",
+  "lyricsShareTitle": "Bagikan lirik",
+  "lyricsShareSelectHint": "Pilih hingga {count} baris",
+  "lyricsShareLimit": "Kamu bisa membagikan hingga {count} baris",
+  "lyricsShareAction": "Bagikan",
+  "lyricsShareError": "Gagal membuat gambar lirik",
+  "lyricsShareBackgroundArtwork": "Artwork",
+  "lyricsShareBackgroundColor": "Warna cover",
+  "lyricsShareBackgroundDark": "Gelap",
+  "lyricsShareBackgroundLight": "Terang",
+  "audioInfoTitle": "Info audio",
+  "audioInfoSource": "File sumber",
+  "audioInfoSignal": "Sinyal",
+  "audioInfoLoudness": "Kenyaringan",
+  "audioInfoProcessing": "Pemrosesan",
+  "audioInfoOutput": "Output",
+  "audioInfoAnalysis": "Analisis spektrum dan level",
+  "audioInfoQuality": "Kualitas",
+  "audioInfoHiResLossless": "Hi-Res Lossless",
+  "audioInfoLossless": "Lossless",
+  "audioInfoLossy": "Lossy",
+  "audioInfoFormat": "Format",
+  "audioInfoCodec": "Codec",
+  "audioInfoSampleRate": "Sample rate",
+  "audioInfoBitDepth": "Bit depth",
+  "audioInfoChannels": "Kanal",
+  "audioInfoChannelCount": "{count, plural, =1{Mono} =2{Stereo} other{{count} kanal}}",
+  "audioInfoBitrate": "Bitrate",
+  "audioInfoDuration": "Durasi",
+  "audioInfoFileSize": "Ukuran file",
+  "audioInfoCompression": "Kompresi",
+  "audioInfoCompressionValue": "{percent}% dari ukuran tanpa kompresi",
+  "audioInfoLocation": "Lokasi",
+  "audioInfoLocationLocal": "Penyimpanan perangkat",
+  "audioInfoLocationShared": "Folder bersama",
+  "audioInfoLocationNetwork": "Penyimpanan jaringan",
+  "audioInfoPcmRate": "Data rate tanpa kompresi",
+  "audioInfoFrequencyRange": "Rentang frekuensi",
+  "audioInfoFrequencyRangeValue": "Hingga {frequency} (Nyquist)",
+  "audioInfoDynamicRange": "Rentang dinamis teoretis",
+  "audioInfoTrackGain": "Gain lagu",
+  "audioInfoTrackPeak": "Puncak lagu",
+  "audioInfoAlbumGain": "Gain album",
+  "audioInfoAlbumPeak": "Puncak album",
+  "audioInfoNoGainTags": "Tidak ada tag ReplayGain",
+  "audioInfoApplied": "Diterapkan {gain}",
+  "audioInfoOn": "Aktif",
+  "audioInfoOff": "Nonaktif",
+  "audioInfoBypassed": "Dilewati oleh output langsung",
+  "audioInfoPlayer": "Pemutar",
+  "audioInfoPlayerValue": "Pemutar bawaan Mornye",
+  "audioInfoSignalPath": "Jalur sinyal",
+  "audioInfoPathSystem": "Mixer sistem",
+  "audioInfoPathDirect": "USB langsung, melewati mixer sistem",
+  "audioInfoPathExclusive": "Output eksklusif, melewati mixer sistem",
+  "audioInfoDecoder": "Decoder",
+  "audioInfoHardware": "Perangkat keras",
+  "audioInfoSoftware": "Perangkat lunak",
+  "audioInfoBands": "{count} band",
+  "audioInfoTempo": "Tempo",
+  "audioInfoResampling": "Resampling",
+  "audioInfoResamplingNone": "Tidak ada, rate sama",
+  "audioInfoBitPerfect": "Bit-perfect",
+  "audioInfoBitPerfectActive": "Ya, sampel tidak diubah",
+  "audioInfoBitPerfectNo": "Tidak, dicampur oleh sistem",
+  "audioInfoDevice": "Perangkat",
+  "audioInfoDeviceType": "{type, select, speaker{Speaker ponsel} earpiece{Speaker telepon} wired_headphones{Headphone kabel} wired_headset{Headset kabel} line{Line out} bluetooth{Bluetooth} bluetooth_le{Bluetooth LE Audio} usb{Audio USB} usb_headset{Headset USB} hdmi{HDMI} dock{Dock} cast{Cast} hearing_aid{Alat bantu dengar} airplay{AirPlay} car{Audio mobil} other{Lainnya}}",
+  "audioInfoOutputRate": "Sample rate output",
+  "audioInfoOutputFormat": "Format output",
+  "audioInfoDeviceRates": "Sample rate perangkat",
+  "audioInfoDeviceFormats": "Format perangkat",
+  "audioInfoAnyRate": "Apa saja",
+  "audioInfoBuffer": "Buffer mixer",
+  "audioInfoLatency": "Latensi output",
+  "audioInfoLowLatency": "Audio latensi rendah",
+  "audioInfoProAudio": "Pro audio",
+  "audioInfoSupported": "Didukung",
+  "audioInfoNotSupported": "Tidak didukung",
+  "audioInfoSpatial": "Spatial audio",
+  "audioInfoHeadTracking": "Head tracking",
+  "audioInfoUnavailable": "Tidak tersedia",
+  "audioInfoFixedVolume": "Diatur oleh perangkat",
+  "audioInfoCopy": "Salin laporan",
+  "audioInfoCopied": "Info audio disalin",
   "lyricsTextSize": "Ukuran teks lirik",
   "lyricsTextPreview": "Ikuti setiap baris lagu favoritmu",
+  "appCrashTitle": "Aplikasi sebelumnya mengalami crash",
+  "appAnrTitle": "Aplikasi sebelumnya berhenti merespons",
+  "appAnrMessage": "Laporan diagnostik telah disimpan. Anda dapat menyalin dan mengirimkannya ke developer untuk membantu pemeriksaan.",
+  "appCrashMessage": "Laporan crash telah disimpan. Salin dan kirimkan ke developer untuk membantu pemeriksaan.",
+  "appCrashDetails": "Lihat error dan log",
+  "appCrashCopy": "Salin laporan untuk developer",
+  "appCrashDismiss": "Tutup",
+  "appCrashCopyFailed": "Laporan crash belum bisa disalin. Silakan coba lagi.",
+  "appCrashDismissFailed": "Laporan crash belum bisa ditutup. Silakan coba lagi.",
   "optionsEmbeddedCoverSizeOriginal": "Resolusi asli",
   "@optionsEmbeddedCoverSizeOriginal": {
     "description": "Option that preserves the provider artwork at its original resolution"
-  }
+  },
+  "desktopShortcutTooltip": "{action} ({shortcut})",
+  "desktopPlayerIdle": "Tidak ada yang diputar",
+  "desktopVolumeUp": "Naikkan volume",
+  "desktopVolumeDown": "Turunkan volume",
+  "desktopTableSortedAscending": "{column}, urut naik",
+  "desktopTableSortedDescending": "{column}, urut turun",
+  "desktopMenuOpen": "Buka",
+  "desktopMenuShowDetails": "Lihat detail",
+  "desktopDropToImport": "Lepaskan untuk menambahkan ke perpustakaan",
+  "desktopDropImported": "Menambahkan {count} folder ke perpustakaan",
+  "desktopDropNothingToImport": "Lepaskan berkas atau folder musik untuk menambahkannya ke perpustakaan",
+  "desktopMenuSettings": "Pengaturan…",
+  "desktopMenuFile": "Berkas",
+  "desktopMenuEdit": "Edit",
+  "desktopMenuView": "Tampilan",
+  "desktopWindowMode": "Mode jendela",
+  "desktopWindowed": "Berjendela",
+  "desktopWindowFullscreen": "Layar penuh",
+  "desktopWindowBorderless": "Tanpa bingkai",
+  "desktopExitFullscreen": "Keluar layar penuh",
+  "desktopMinimizeWindow": "Minimalkan jendela",
+  "desktopZoomWindow": "Maksimalkan atau pulihkan jendela",
+  "desktopWindowModeUnavailable": "Mode jendela tidak dapat diubah. Coba lagi setelah perpindahan jendela selesai.",
+  "desktopMenuControls": "Kontrol",
+  "desktopMenuWindow": "Jendela",
+  "desktopMenuHelp": "Bantuan",
+  "desktopMenuPlayPause": "Putar/Jeda",
+  "desktopMenuProjectPage": "Halaman proyek",
+  "desktopDownloadsShowAll": "Tampilkan semua",
+  "desktopDownloadsQueued": "Menunggu",
+  "desktopDownloadsCancel": "Batalkan download",
+  "desktopScrollBack": "Gulir ke belakang",
+  "desktopScrollForward": "Gulir ke depan",
+  "settingsKeyboardShortcuts": "Pintasan Keyboard",
+  "settingsKeyboardShortcutsSubtitle": "Tombol untuk pemutaran, navigasi dan panel",
+  "desktopShortcutsNavigation": "Navigasi",
+  "desktopShortcutDismiss": "Tutup dialog atau halaman",
+  "desktopShortcutToggleSidebar": "Tampilkan atau sembunyikan sidebar"
 }

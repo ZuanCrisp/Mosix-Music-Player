@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/utils/nav_bar_inset.dart';
-import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/widgets/selection_bottom_bar.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/widgets/desktop/detail_header.dart';
+import 'package:mornye/widgets/album_detail_header.dart';
+import 'package:mornye/widgets/selection_bottom_bar.dart';
 
 /// Shared shell for every track-collection screen: album, playlist, local
 /// album, downloaded album and library folders.
@@ -111,7 +113,12 @@ class _CollectionScaffoldState extends State<CollectionScaffold> {
             SliverToBoxAdapter(
               child: SizedBox(
                 key: const ValueKey('collection-selection-spacer'),
-                height: widget.isSelectionMode ? _selectionBarHeight : 32,
+                height: widget.isSelectionMode
+                    ? _selectionBarHeight
+                    // Desktop pages scroll under the floating player.
+                    : isDesktopPlatform
+                    ? desktopDetailBottomInset
+                    : 32,
               ),
             ),
             NavBarSliverSpacer(bottomInset: widget.bottomInset),

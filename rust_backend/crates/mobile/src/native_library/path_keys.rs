@@ -15,8 +15,13 @@ const EXTENSIONS: &[&str] = &[
     ".flac", ".m4a", ".mp3", ".opus", ".ogg", ".wav", ".aiff", ".aif", ".aac",
 ];
 
+/// Dart's `String.trim` set: Unicode White_Space plus the U+FEFF BOM.
+pub(crate) fn dart_whitespace(ch: char) -> bool {
+    ch.is_whitespace() || ch == '\u{feff}'
+}
+
 pub(crate) fn dart_trim(value: &str) -> &str {
-    value.trim_matches(|ch: char| ch.is_whitespace() || ch == '\u{feff}')
+    value.trim_matches(dart_whitespace)
 }
 
 /// Dart applies Unicode simple casing, without multi-character expansions or
@@ -327,5 +332,51 @@ mod tests {
                 .intersection(&saf)
                 .any(|key| key == "/storage/emulated/0/Music/Café.flac")
         );
+    }
+
+    fn previous_lyrics_whitespace(c: char) -> bool {
+        matches!(
+            c,
+            '\t' | '\n'
+                | '\u{000b}'
+                | '\u{000c}'
+                | '\r'
+                | ' '
+                | '\u{0085}'
+                | '\u{00a0}'
+                | '\u{1680}'
+                | '\u{2028}'
+                | '\u{2029}'
+                | '\u{202f}'
+                | '\u{205f}'
+                | '\u{3000}'
+                | '\u{feff}'
+        ) || ('\u{2000}'..='\u{200a}').contains(&c)
+    }
+
+    #[test]
+    fn dart_whitespace_equals_previous_lyrics_set_for_every_scalar() {
+        for c in (0..=char::MAX as u32).filter_map(char::from_u32) {
+            assert_eq!(dart_whitespace(c), previous_lyrics_whitespace(c), "{c:?}");
+        }
+        for (input, expected) in [
+            ("", ""),
+            ("\u{feff}", ""),
+            ("\u{feff} a b \u{3000}", "a b"),
+            ("\u{0085}x\u{200a}", "x"),
+            ("\u{200b}x\u{200b}", "\u{200b}x\u{200b}"),
+            ("\u{180e}x", "\u{180e}x"),
+            (
+                "\t\n\u{000b}\u{000c}\r Caf\u{00e9} \u{1f3b5}\u{00a0}",
+                "Caf\u{00e9} \u{1f3b5}",
+            ),
+        ] {
+            assert_eq!(dart_trim(input), expected, "{input:?}");
+            assert_eq!(
+                dart_trim(input),
+                input.trim_matches(previous_lyrics_whitespace),
+                "{input:?}"
+            );
+        }
     }
 }

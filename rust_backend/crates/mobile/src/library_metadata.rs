@@ -3,7 +3,7 @@
 
 use crate::cancellation::RequestLease;
 use crate::tags::{AudioTagsError, check_lease, open_audio_file};
-use spotiflac_core::{cover, tags};
+use mornye_core::{cover, tags};
 use std::sync::Arc;
 
 #[derive(uniffi::Record)]
@@ -39,11 +39,8 @@ pub fn extract_cover_from_descriptor(
     let path = descriptor_path(descriptor)?;
     let mut file = open_audio_file(&path)?;
     let format = tags::library_extension(&path, &hint);
-    let format = if matches!(format.as_str(), "mp4" | "aac") {
-        "m4a"
-    } else {
-        &format
-    };
+    // .aac stays as it is: the reader tells MP4 from raw ADTS by content.
+    let format = if format == "mp4" { "m4a" } else { &format };
     Ok(tags::extract_cover(&mut file, format, &check)?.data)
 }
 
@@ -68,11 +65,7 @@ pub fn read_library_metadata_from_descriptor(
     } else {
         let metadata = tags::read_library_metadata(&mut file, &path, &hint, &scan_time, 0, &check)?;
         let artwork = if include_cover {
-            let format = if matches!(format.as_str(), "mp4" | "aac") {
-                "m4a"
-            } else {
-                &format
-            };
+            let format = if format == "mp4" { "m4a" } else { &format };
             tags::extract_cover(&mut file, format, &check).ok()
         } else {
             None

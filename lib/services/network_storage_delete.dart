@@ -18,7 +18,7 @@ extension NetworkStorageDelete on NetworkStorageService {
     final path = networkPath(segments.join('/'));
     final c = await connection(uri.host);
     c.validate();
-    if (c.protocol == NetworkProtocol.http) return null;
+    if (!c.writable) return null;
     // A server-level SMB connection may list shares. Never unlink a share.
     if (c.protocol == NetworkProtocol.smb &&
         networkTarget(c, path).pathSegments.length < 2) {

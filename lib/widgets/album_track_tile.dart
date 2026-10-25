@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/widgets/track_card.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/track_card.dart';
 
 /// Album-style track row: track number, title/subtitle, and a trailing play
 /// button that's hidden once selection mode is active.
@@ -23,6 +24,7 @@ class AlbumTrackTile extends StatelessWidget {
     required this.onOpen,
     required this.onEnterSelectionMode,
     required this.onPlay,
+    this.isCurrent = false,
     this.isPlaying = false,
   });
 
@@ -36,6 +38,11 @@ class AlbumTrackTile extends StatelessWidget {
   final VoidCallback onOpen;
   final VoidCallback onEnterSelectionMode;
   final VoidCallback onPlay;
+
+  /// The row is the player's current track. See [TrackCard.isCurrent].
+  final bool isCurrent;
+
+  /// The current track is playing: the button offers pause.
   final bool isPlaying;
 
   @override
@@ -44,6 +51,8 @@ class AlbumTrackTile extends StatelessWidget {
       style: TrackCardStyle.flat,
       isSelectionMode: isSelectionMode,
       isSelected: isSelected,
+      isCurrent: isCurrent,
+      isPlaying: isPlaying,
       onTap: isSelectionMode ? onToggleSelection : onOpen,
       onLongPress: isSelectionMode ? null : onEnterSelectionMode,
       leading: SizedBox(
@@ -59,25 +68,50 @@ class AlbumTrackTile extends StatelessWidget {
       ),
       title: trackName,
       subtitle: subtitle,
-      trailing: IconButton(
-        tooltip: isPlaying
-            ? context.l10n.actionPause
-            : context.l10n.tooltipPlay,
-        onPressed: onPlay,
-        icon: Icon(
-          context.isMornye
-              ? (isPlaying
-                    ? CupertinoIcons.pause_fill
-                    : CupertinoIcons.play_fill)
-              : (isPlaying ? Icons.pause : Icons.play_arrow),
-          color: colorScheme.primary,
-        ),
-        style: IconButton.styleFrom(
-          minimumSize: Size.square(context.tokens.minTouchTarget),
-          backgroundColor: context.isMornye
-              ? Colors.transparent
-              : colorScheme.primaryContainer.withValues(alpha: 0.3),
-        ),
+      trailing: AlbumTrackPlayButton(isPlaying: isPlaying, onPlay: onPlay),
+    );
+  }
+}
+
+/// The play or pause button at the end of an album track row.
+class AlbumTrackPlayButton extends StatelessWidget {
+  const AlbumTrackPlayButton({
+    super.key,
+    required this.isPlaying,
+    required this.onPlay,
+    this.dense = false,
+  });
+
+  final bool isPlaying;
+  final VoidCallback? onPlay;
+
+  /// A 32dp pointer target for desktop table rows.
+  final bool dense;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    // Material draws a filled tonal icon button: a solid role pair rather
+    // than a faded primary container.
+    return AppIconButton(
+      tooltip: isPlaying ? context.l10n.actionPause : context.l10n.tooltipPlay,
+      onPressed: onPlay,
+      icon: Icon(
+        context.isMornye
+            ? (isPlaying ? CupertinoIcons.pause_fill : CupertinoIcons.play_fill)
+            : (isPlaying ? Icons.pause : Icons.play_arrow),
+        color: context.isMornye
+            ? colorScheme.primary
+            : colorScheme.onSecondaryContainer,
+        size: dense ? 18 : null,
+      ),
+      style: IconButton.styleFrom(
+        minimumSize: Size.square(dense ? 32 : context.tokens.minTouchTarget),
+        padding: dense ? EdgeInsets.zero : null,
+        tapTargetSize: dense ? MaterialTapTargetSize.shrinkWrap : null,
+        backgroundColor: context.isMornye
+            ? Colors.transparent
+            : colorScheme.secondaryContainer,
       ),
     );
   }

@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:ffmpeg_kit_flutter_new_audio/ffmpeg_kit_config.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/ffmpeg_decryption.dart';
-import 'package:mosix/services/ffmpeg_models.dart';
+import 'package:mornye/services/ffmpeg_decryption.dart';
+import 'package:mornye/services/ffmpeg_models.dart';
 
 void main() {
   late Directory directory;

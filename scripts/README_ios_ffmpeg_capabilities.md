@@ -13,7 +13,7 @@ the downloaded vendor artifacts remain unchanged.
 
 ```bash
 probe_plugin="$HOME/.pub-cache/hosted/pub.dev/ffmpeg_kit_flutter_new_audio-2.5.7"
-probe_work=$(mktemp -d /tmp/spotiflac-ios-ffmpeg.XXXXXX)
+probe_work=$(mktemp -d /tmp/mornye-ios-ffmpeg.XXXXXX)
 mkdir -p "$probe_work/Frameworks"
 for framework in "$probe_plugin"/ios/Frameworks/*.xcframework; do
     name=$(basename "$framework" .xcframework)

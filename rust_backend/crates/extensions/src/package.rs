@@ -2,13 +2,11 @@
 
 use crate::host::decode_go_utf8;
 use crate::manifest::ExtensionManifest;
-use spotiflac_core::matching::lowercase;
+use mornye_core::fs::OpenOptionsPortableExt;
+use mornye_core::matching::lowercase;
 use std::collections::HashSet;
-use std::ffi::OsString;
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};
-use std::os::unix::ffi::OsStringExt;
-use std::os::unix::fs::OpenOptionsExt;
 use std::path::{Path, PathBuf};
 use zip::ZipArchive;
 
@@ -34,7 +32,7 @@ fn io_error(message: &str, cause: impl std::fmt::Display) -> PackageError {
 
 pub fn is_package_path(path: &Path) -> bool {
     let name = lowercase(&path.to_string_lossy());
-    name.ends_with(".spotiflac-ext") || name.ends_with(".sflx")
+    name.ends_with(".mornye-ext") || name.ends_with(".spotiflac-ext") || name.ends_with(".sflx")
 }
 
 struct Entry {
@@ -54,12 +52,12 @@ impl ExtensionPackage {
     pub fn open(path: &Path) -> Result<Self, PackageError> {
         if !is_package_path(path) {
             return Err(error(
-                "invalid file format: please select a .spotiflac-ext or .sflx file",
+                "invalid file format: please select a .mornye-ext or .sflx file",
             ));
         }
         let mut input = OpenOptions::new()
             .read(true)
-            .custom_flags(rustix::fs::OFlags::NONBLOCK.bits() as i32)
+            .nonblock()
             .open(path)
             .map_err(corrupt)?;
         if !input.metadata().map_err(corrupt)?.is_file() {
@@ -165,7 +163,7 @@ impl ExtensionPackage {
             let mut output = OpenOptions::new()
                 .write(true)
                 .create_new(true)
-                .mode(0o600)
+                .unix_mode(0o600)
                 .open(&path)
                 .map_err(|e| io_error("failed to create extension file", e))?;
             let mut input = self
@@ -230,7 +228,21 @@ fn clean_path(name: &[u8]) -> Result<PathBuf, PackageError> {
     if parts.is_empty() {
         return Err(unsafe_path());
     }
-    Ok(PathBuf::from(OsString::from_vec(parts.join(&b'/'))))
+    #[cfg(unix)]
+    {
+        use std::os::unix::ffi::OsStringExt;
+        Ok(PathBuf::from(std::ffi::OsString::from_vec(
+            parts.join(&b'/'),
+        )))
+    }
+    // Extraction joins this onto the staging directory with `std::fs`, so a
+    // drive prefix, stream name or device name would escape it on Windows.
+    #[cfg(not(unix))]
+    {
+        let joined = String::from_utf8(parts.join(&b'/')).map_err(|_| unsafe_path())?;
+        crate::windows_path::check_relative(&joined).map_err(|_| unsafe_path())?;
+        Ok(PathBuf::from(joined))
+    }
 }
 
 fn number16(bytes: &[u8], offset: usize) -> u64 {
@@ -309,8 +321,8 @@ fn central_names(input: &mut File) -> Result<Vec<Vec<u8>>, PackageError> {
         let mut name = vec![0; name_length as usize];
         input.read_exact(&mut name).map_err(corrupt)?;
         let normalized = clean_path(&name)?;
-        use std::os::unix::ffi::OsStrExt;
-        let key = lowercase(&decode_go_utf8(normalized.as_os_str().as_bytes()));
+        // Unix encoded bytes are the raw name bytes; Windows paths are UTF-8.
+        let key = lowercase(&decode_go_utf8(normalized.as_os_str().as_encoded_bytes()));
         if !seen.insert(key) {
             return Err(error(format!(
                 "duplicate path in extension archive: {}",
@@ -332,4 +344,22 @@ fn central_names(input: &mut File) -> Result<Vec<Vec<u8>>, PackageError> {
     }
     input.rewind().map_err(corrupt)?;
     Ok(names)
+}
+
+#[cfg(test)]
+mod branding_tests {
+    use super::*;
+
+    #[test]
+    fn current_and_legacy_package_extensions_remain_supported() {
+        for name in [
+            "example.mornye-ext",
+            "example.spotiflac-ext",
+            "example.sflx",
+        ] {
+            assert!(is_package_path(Path::new(name)), "{name}");
+            assert!(is_package_path(Path::new(&name.to_uppercase())), "{name}");
+        }
+        assert!(!is_package_path(Path::new("example.zip")));
+    }
 }

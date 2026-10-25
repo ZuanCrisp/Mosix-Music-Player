@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/download_history_provider.dart';
-import 'package:mosix/screens/track_metadata_screen.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/download_history_provider.dart';
+import 'package:mornye/screens/track_metadata_screen.dart';
+import 'package:mornye/theme/mornye_theme.dart';
 
 void main() {
-  const channel = MethodChannel('com.zuancrisp.mosix/backend');
+  const channel = MethodChannel('com.zarz.mornye/backend');
 
   for (final mornye in [false, true]) {
     for (final unavailable in [false, true]) {

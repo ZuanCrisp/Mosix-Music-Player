@@ -21,9 +21,22 @@ AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => AppSettings(
   embeddedCoverMaxDimension:
       (json['embeddedCoverMaxDimension'] as num?)?.toInt() ?? 0,
   artistTagMode: json['artistTagMode'] as String? ?? artistTagModeJoined,
+  metadataSeparators: json['metadataSeparators'] == null
+      ? const MetadataSeparators()
+      : MetadataSeparators.fromJson(
+          json['metadataSeparators'] as Map<String, dynamic>,
+        ),
   embedLyrics: json['embedLyrics'] as bool? ?? true,
   embedReplayGain: json['embedReplayGain'] as bool? ?? false,
   playbackNormalization: json['playbackNormalization'] as bool? ?? false,
+  playbackNormalizationPreamp: json['playbackNormalizationPreamp'] == null
+      ? 0
+      : playbackNormalizationPreampFromJson(
+          json['playbackNormalizationPreamp'],
+        ),
+  playbackNormalizationMode: json['playbackNormalizationMode'] == null
+      ? 'track'
+      : playbackNormalizationModeFromJson(json['playbackNormalizationMode']),
   pauseOnMute: json['pauseOnMute'] as bool? ?? true,
   playOnHeadphonesConnected:
       json['playOnHeadphonesConnected'] as bool? ?? false,
@@ -54,12 +67,24 @@ AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => AppSettings(
   usbAllowFixedVolume: json['usbAllowFixedVolume'] as bool? ?? false,
   dapExclusive: json['dapExclusive'] as bool? ?? false,
   autoplay: json['autoplay'] as bool? ?? false,
-  autoplayPersonalization: json['autoplayPersonalization'] as bool? ?? false,
+  autoplayPersonalization: json['autoplayPersonalization'] as bool? ?? true,
+  musicHaptics: json['musicHaptics'] as bool? ?? false,
+  musicHapticsSensitivity: json['musicHapticsSensitivity'] == null
+      ? 0.5
+      : musicHapticsLevelFromJson(json['musicHapticsSensitivity']),
+  musicHapticsStrength: json['musicHapticsStrength'] == null
+      ? 0.5
+      : musicHapticsLevelFromJson(json['musicHapticsStrength']),
+  playerCoverStyle: json['playerCoverStyle'] == null
+      ? 'default'
+      : playerCoverStyleFromJson(json['playerCoverStyle']),
   isFirstLaunch: json['isFirstLaunch'] as bool? ?? true,
   checkForUpdates: json['checkForUpdates'] as bool? ?? true,
   updateChannel: json['updateChannel'] as String? ?? 'stable',
   hasSearchedBefore: json['hasSearchedBefore'] as bool? ?? false,
   folderOrganization: json['folderOrganization'] as String? ?? 'none',
+  folderPathTemplate:
+      json['folderPathTemplate'] as String? ?? '{artist}/{album}',
   createPlaylistFolder: json['createPlaylistFolder'] as bool? ?? false,
   useAlbumArtistForFolders: json['useAlbumArtistForFolders'] as bool? ?? true,
   usePrimaryArtistOnly: json['usePrimaryArtistOnly'] as bool? ?? false,
@@ -70,7 +95,7 @@ AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => AppSettings(
   defaultLibraryView: json['defaultLibraryView'] as String? ?? 'last',
   libraryQualityLabelMode:
       json['libraryQualityLabelMode'] as String? ??
-      AppSettings.libraryQualityLabelBitrate,
+      AppSettings.libraryQualityLabelBitDepthOnly,
   askQualityBeforeDownload: json['askQualityBeforeDownload'] as bool? ?? true,
   enableLogging: json['enableLogging'] as bool? ?? false,
   useExtensionProviders: json['useExtensionProviders'] as bool? ?? true,
@@ -122,7 +147,7 @@ AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => AppSettings(
       (json['lyricsProviders'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList() ??
-      const ['apple_music', 'lrclib'],
+      const ['apple_music', 'lrcred', 'mornye_lyrics', 'lyricsplus', 'lrclib'],
   lyricsIncludeTranslationNetease:
       json['lyricsIncludeTranslationNetease'] as bool? ?? false,
   lyricsIncludeRomanizationNetease:
@@ -156,9 +181,12 @@ Map<String, dynamic> _$AppSettingsToJson(
   'embedMetadata': instance.embedMetadata,
   'embeddedCoverMaxDimension': instance.embeddedCoverMaxDimension,
   'artistTagMode': instance.artistTagMode,
+  'metadataSeparators': instance.metadataSeparators.toJson(),
   'embedLyrics': instance.embedLyrics,
   'embedReplayGain': instance.embedReplayGain,
   'playbackNormalization': instance.playbackNormalization,
+  'playbackNormalizationPreamp': instance.playbackNormalizationPreamp,
+  'playbackNormalizationMode': instance.playbackNormalizationMode,
   'pauseOnMute': instance.pauseOnMute,
   'playOnHeadphonesConnected': instance.playOnHeadphonesConnected,
   'autoMix': instance.autoMix,
@@ -176,11 +204,16 @@ Map<String, dynamic> _$AppSettingsToJson(
   'dapExclusive': instance.dapExclusive,
   'autoplay': instance.autoplay,
   'autoplayPersonalization': instance.autoplayPersonalization,
+  'musicHaptics': instance.musicHaptics,
+  'musicHapticsSensitivity': instance.musicHapticsSensitivity,
+  'musicHapticsStrength': instance.musicHapticsStrength,
+  'playerCoverStyle': instance.playerCoverStyle,
   'isFirstLaunch': instance.isFirstLaunch,
   'checkForUpdates': instance.checkForUpdates,
   'updateChannel': instance.updateChannel,
   'hasSearchedBefore': instance.hasSearchedBefore,
   'folderOrganization': instance.folderOrganization,
+  'folderPathTemplate': instance.folderPathTemplate,
   'createPlaylistFolder': instance.createPlaylistFolder,
   'useAlbumArtistForFolders': instance.useAlbumArtistForFolders,
   'usePrimaryArtistOnly': instance.usePrimaryArtistOnly,

@@ -78,12 +78,12 @@ fn media_info(
     files: &ExtensionFiles,
     path: &str,
     check: &dyn Fn() -> Result<(), String>,
-) -> Result<spotiflac_core::media::AudioQuality, String> {
+) -> Result<mornye_core::media::AudioQuality, String> {
     let path = files.resolve(path)?;
     let mut file = path
         .open(OpenOptions::new().read(true))
         .map_err(|e| format!("failed to open file: {e}"))?;
-    spotiflac_core::media::probe_quality(&mut file, check)
+    mornye_core::media::probe_quality(&mut file, check)
 }
 
 fn conversion_arguments(

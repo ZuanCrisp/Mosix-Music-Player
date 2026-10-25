@@ -6,18 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/platform_bridge.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/platform_bridge.dart';
 
-class _Settings extends SettingsNotifier {
-  @override
-  AppSettings build() =>
-      const AppSettings(downloadDirectory: '/fixture/output');
-}
+import 'support/fixed_settings.dart';
 
 class _Queue extends DownloadQueueNotifier {
   _Queue(this._items);
@@ -66,7 +62,7 @@ DownloadItem _item(String id, DownloadStatus status, DownloadErrorType? type) =>
 void main() {
   final messenger =
       TestWidgetsFlutterBinding.ensureInitialized().defaultBinaryMessenger;
-  const backend = MethodChannel('com.zuancrisp.mosix/backend');
+  const backend = MethodChannel('com.zarz.mornye/backend');
   const sqlite = MethodChannel('com.tekartik.sqflite');
   const paths = MethodChannel('plugins.flutter.io/path_provider');
   const notifications = MethodChannel(
@@ -165,7 +161,11 @@ void main() {
           ];
           final container = ProviderContainer(
             overrides: [
-              settingsProvider.overrideWith(_Settings.new),
+              settingsProvider.overrideWith(
+                () => FixedSettingsNotifier(
+                  const AppSettings(downloadDirectory: '/fixture/output'),
+                ),
+              ),
               downloadQueueProvider.overrideWith(() => _Queue(initial)),
             ],
           );
@@ -249,7 +249,11 @@ void main() {
       ];
       final container = ProviderContainer(
         overrides: [
-          settingsProvider.overrideWith(_Settings.new),
+          settingsProvider.overrideWith(
+            () => FixedSettingsNotifier(
+              const AppSettings(downloadDirectory: '/fixture/output'),
+            ),
+          ),
           downloadQueueProvider.overrideWith(() => _Queue(initial)),
         ],
       );
@@ -353,7 +357,11 @@ void main() {
         ];
         final container = ProviderContainer(
           overrides: [
-            settingsProvider.overrideWith(_Settings.new),
+            settingsProvider.overrideWith(
+              () => FixedSettingsNotifier(
+                const AppSettings(downloadDirectory: '/fixture/output'),
+              ),
+            ),
             downloadQueueProvider.overrideWith(() => _Queue(initial)),
           ],
         );

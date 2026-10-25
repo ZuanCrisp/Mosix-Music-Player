@@ -1,10 +1,27 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:mosix/models/automix_options.dart';
-import 'package:mosix/utils/artist_utils.dart';
+import 'package:mornye/models/automix_options.dart';
+import 'package:mornye/models/metadata_separators.dart';
+import 'package:mornye/utils/artist_utils.dart';
 
 part 'settings.g.dart';
 
-@JsonSerializable()
+String playerCoverStyleFromJson(Object? value) =>
+    value == 'fullscreen' ? 'fullscreen' : 'default';
+
+/// Pre-amp applied on top of ReplayGain during playback, in whole dB.
+/// -7 dB targets -25 LUFS from the -18 LUFS tag reference.
+double playbackNormalizationPreampFromJson(Object? value) =>
+    value is num && value.isFinite
+    ? value.toDouble().roundToDouble().clamp(-15, 6)
+    : 0;
+
+String playbackNormalizationModeFromJson(Object? value) =>
+    value == 'album' ? 'album' : 'track';
+
+double musicHapticsLevelFromJson(Object? value) =>
+    value is num && value.isFinite ? value.toDouble().clamp(0, 1) : 0.5;
+
+@JsonSerializable(explicitToJson: true)
 class AppSettings {
   static const String homeFeedProviderOff = '__off__';
   static const String libraryQualityLabelBitrate = 'bitrate';
@@ -30,10 +47,15 @@ class AppSettings {
   final int embeddedCoverMaxDimension;
   final String
   artistTagMode; // 'joined', 'split_vorbis' (Vorbis formats), or 'primary'
+  final MetadataSeparators metadataSeparators;
   final bool embedLyrics;
   final bool embedReplayGain;
   // Apply ReplayGain/R128 tags as volume normalization in the built-in player.
   final bool playbackNormalization;
+  @JsonKey(fromJson: playbackNormalizationPreampFromJson)
+  final double playbackNormalizationPreamp;
+  @JsonKey(fromJson: playbackNormalizationModeFromJson)
+  final String playbackNormalizationMode; // 'track' or 'album'
   final bool pauseOnMute;
   final bool playOnHeadphonesConnected;
   final bool autoMix;
@@ -63,11 +85,19 @@ class AppSettings {
   final bool dapExclusive;
   final bool autoplay;
   final bool autoplayPersonalization;
+  final bool musicHaptics;
+  @JsonKey(fromJson: musicHapticsLevelFromJson)
+  final double musicHapticsSensitivity;
+  @JsonKey(fromJson: musicHapticsLevelFromJson)
+  final double musicHapticsStrength;
+  @JsonKey(fromJson: playerCoverStyleFromJson)
+  final String playerCoverStyle; // 'default' or 'fullscreen'
   final bool isFirstLaunch;
   final bool checkForUpdates;
   final String updateChannel;
   final bool hasSearchedBefore;
   final String folderOrganization;
+  final String folderPathTemplate;
   final bool createPlaylistFolder;
   final bool useAlbumArtistForFolders;
   final bool usePrimaryArtistOnly; // Strip featured artists from folder name
@@ -176,9 +206,12 @@ class AppSettings {
     this.embedMetadata = true,
     this.embeddedCoverMaxDimension = 0,
     this.artistTagMode = artistTagModeJoined,
+    this.metadataSeparators = const MetadataSeparators(),
     this.embedLyrics = true,
     this.embedReplayGain = false,
     this.playbackNormalization = false,
+    this.playbackNormalizationPreamp = 0,
+    this.playbackNormalizationMode = 'track',
     this.pauseOnMute = true,
     this.playOnHeadphonesConnected = false,
     this.autoMix = false,
@@ -195,12 +228,17 @@ class AppSettings {
     this.usbAllowFixedVolume = false,
     this.dapExclusive = false,
     this.autoplay = false,
-    this.autoplayPersonalization = false,
+    this.autoplayPersonalization = true,
+    this.musicHaptics = false,
+    this.musicHapticsSensitivity = 0.5,
+    this.musicHapticsStrength = 0.5,
+    this.playerCoverStyle = 'default',
     this.isFirstLaunch = true,
     this.checkForUpdates = true,
     this.updateChannel = 'stable',
     this.hasSearchedBefore = false,
     this.folderOrganization = 'none',
+    this.folderPathTemplate = '{artist}/{album}',
     this.createPlaylistFolder = false,
     this.useAlbumArtistForFolders = true,
     this.usePrimaryArtistOnly = false,
@@ -208,7 +246,7 @@ class AppSettings {
     this.historyViewMode = 'grid',
     this.historyFilterMode = 'all',
     this.defaultLibraryView = 'last',
-    this.libraryQualityLabelMode = AppSettings.libraryQualityLabelBitrate,
+    this.libraryQualityLabelMode = AppSettings.libraryQualityLabelBitDepthOnly,
     this.askQualityBeforeDownload = true,
     this.enableLogging = false,
     this.useExtensionProviders = true,
@@ -246,7 +284,13 @@ class AppSettings {
     this.localLibraryShowDuplicates = true,
     this.localLibraryAutoScan = 'off',
     this.hasCompletedTutorial = false,
-    this.lyricsProviders = const ['apple_music', 'lrclib'],
+    this.lyricsProviders = const [
+      'apple_music',
+      'lrcred',
+      'mornye_lyrics',
+      'lyricsplus',
+      'lrclib',
+    ],
     this.lyricsIncludeTranslationNetease = false,
     this.lyricsIncludeRomanizationNetease = false,
     this.lyricsMultiPersonWordByWord = true,
@@ -284,9 +328,12 @@ class AppSettings {
     bool? embedMetadata,
     int? embeddedCoverMaxDimension,
     String? artistTagMode,
+    MetadataSeparators? metadataSeparators,
     bool? embedLyrics,
     bool? embedReplayGain,
     bool? playbackNormalization,
+    double? playbackNormalizationPreamp,
+    String? playbackNormalizationMode,
     bool? pauseOnMute,
     bool? playOnHeadphonesConnected,
     bool? autoMix,
@@ -304,11 +351,16 @@ class AppSettings {
     bool? dapExclusive,
     bool? autoplay,
     bool? autoplayPersonalization,
+    bool? musicHaptics,
+    double? musicHapticsSensitivity,
+    double? musicHapticsStrength,
+    String? playerCoverStyle,
     bool? isFirstLaunch,
     bool? checkForUpdates,
     String? updateChannel,
     bool? hasSearchedBefore,
     String? folderOrganization,
+    String? folderPathTemplate,
     bool? createPlaylistFolder,
     bool? useAlbumArtistForFolders,
     bool? usePrimaryArtistOnly,
@@ -388,10 +440,15 @@ class AppSettings {
       embeddedCoverMaxDimension:
           embeddedCoverMaxDimension ?? this.embeddedCoverMaxDimension,
       artistTagMode: artistTagMode ?? this.artistTagMode,
+      metadataSeparators: metadataSeparators ?? this.metadataSeparators,
       embedLyrics: embedLyrics ?? this.embedLyrics,
       embedReplayGain: embedReplayGain ?? this.embedReplayGain,
       playbackNormalization:
           playbackNormalization ?? this.playbackNormalization,
+      playbackNormalizationPreamp:
+          playbackNormalizationPreamp ?? this.playbackNormalizationPreamp,
+      playbackNormalizationMode:
+          playbackNormalizationMode ?? this.playbackNormalizationMode,
       pauseOnMute: pauseOnMute ?? this.pauseOnMute,
       playOnHeadphonesConnected:
           playOnHeadphonesConnected ?? this.playOnHeadphonesConnected,
@@ -412,11 +469,17 @@ class AppSettings {
       autoplay: autoplay ?? this.autoplay,
       autoplayPersonalization:
           autoplayPersonalization ?? this.autoplayPersonalization,
+      musicHaptics: musicHaptics ?? this.musicHaptics,
+      musicHapticsSensitivity:
+          musicHapticsSensitivity ?? this.musicHapticsSensitivity,
+      musicHapticsStrength: musicHapticsStrength ?? this.musicHapticsStrength,
+      playerCoverStyle: playerCoverStyle ?? this.playerCoverStyle,
       isFirstLaunch: isFirstLaunch ?? this.isFirstLaunch,
       checkForUpdates: checkForUpdates ?? this.checkForUpdates,
       updateChannel: updateChannel ?? this.updateChannel,
       hasSearchedBefore: hasSearchedBefore ?? this.hasSearchedBefore,
       folderOrganization: folderOrganization ?? this.folderOrganization,
+      folderPathTemplate: folderPathTemplate ?? this.folderPathTemplate,
       createPlaylistFolder: createPlaylistFolder ?? this.createPlaylistFolder,
       useAlbumArtistForFolders:
           useAlbumArtistForFolders ?? this.useAlbumArtistForFolders,
@@ -506,7 +569,17 @@ class AppSettings {
     );
   }
 
-  factory AppSettings.fromJson(Map<String, dynamic> json) =>
-      _$AppSettingsFromJson(json);
+  factory AppSettings.fromJson(Map<String, dynamic> json) {
+    final settings = _$AppSettingsFromJson(json);
+    if (!settings.lyricsProviders.contains('spotiflac_lyrics')) {
+      return settings;
+    }
+    return settings.copyWith(
+      lyricsProviders: {
+        for (final provider in settings.lyricsProviders)
+          provider == 'spotiflac_lyrics' ? 'mornye_lyrics' : provider,
+      }.toList(),
+    );
+  }
   Map<String, dynamic> toJson() => _$AppSettingsToJson(this);
 }

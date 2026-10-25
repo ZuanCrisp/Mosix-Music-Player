@@ -1,7 +1,10 @@
+//! Built-in lyrics providers backed by proxy endpoints (Spotify, Deezer, YouTube, Netease,
+//! Musixmatch) and the Lyrics Plus (KPOE) servers.
+
 use super::*;
 use crate::lyrics::http;
-use spotiflac_core::lyrics::{decode_document, payloads};
-use spotiflac_core::matching::lowercase;
+use mornye_core::lyrics::{decode_document, payloads};
+use mornye_core::matching::lowercase;
 
 pub(super) fn spotify_id(raw: &str) -> String {
     let mut raw = raw.trim();
@@ -314,7 +317,7 @@ impl BuiltinLyricsClient {
         }
         let mut last = LyricsError::NotFound("lyricsplus: no lyrics found".into());
         for endpoint in [
-            "https://lyricsplus.prjktla.workers.dev/v2/lyrics/get",
+            "https://lyricsplus.prjktla.my.id/v2/lyrics/get",
             "https://lyricsplus.binimum.org/v2/lyrics/get",
         ] {
             match self.lyrics_plus_server(endpoint, request, isrc, check) {

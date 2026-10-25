@@ -4,14 +4,15 @@
 
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
 
-    <!-- Permissions -->
     <!-- Playback never records audio. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" tools:node="remove" />
     <uses-permission android:name="android.permission.BLUETOOTH" tools:node="remove" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" tools:node="remove" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
         android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
@@ -29,7 +30,7 @@
 
     <application
         android:label="Mosix"
-        android:name="${applicationName}"
+        android:name=".MosixApplication"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
         android:fullBackupContent="@xml/backup_rules_legacy"
@@ -60,7 +61,6 @@
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme" />
 
-            <!-- Main launcher -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -73,7 +73,6 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
 
-            <!-- Handle Spotify deep links -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -81,7 +80,6 @@
                 <data android:scheme="https" android:host="open.spotify.com" />
             </intent-filter>
 
-            <!-- Handle Deezer deep links -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -91,7 +89,6 @@
                 <data android:scheme="https" android:host="deezer.page.link" />
             </intent-filter>
 
-            <!-- Handle Tidal deep links -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -100,7 +97,6 @@
                 <data android:scheme="https" android:host="listen.tidal.com" />
             </intent-filter>
 
-            <!-- Handle YouTube Music deep links -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -113,23 +109,22 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="spotiflac" android:host="callback" />
+                <data android:scheme="mornye" android:host="callback" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="spotiflac" android:host="spotify-callback" />
+                <data android:scheme="mornye" android:host="spotify-callback" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="spotiflac" android:host="session-grant" />
+                <data android:scheme="mornye" android:host="session-grant" />
             </intent-filter>
         </activity>
 
-        <!-- Home screen player -->
         <receiver
             android:name=".PlayerWidgetProvider"
             android:label="@string/player_widget_name"
@@ -144,13 +139,12 @@
         <activity
             android:name=".PlayerWidgetConfigurationActivity"
             android:exported="true"
-            android:theme="@android:style/Theme.DeviceDefault.Dialog">
+            android:theme="@style/WidgetConfigTheme">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
 
-        <!-- Download Service -->
         <service
             android:name=".DownloadService"
             android:exported="false"
@@ -164,6 +158,7 @@
 
         <receiver
             android:name=".DownloadQueueWidgetProvider"
+            android:label="@string/download_widget_name"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -190,7 +185,6 @@
             </intent-filter>
         </receiver>
 
-        <!-- flutter_local_notifications receivers -->
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
             <intent-filter>

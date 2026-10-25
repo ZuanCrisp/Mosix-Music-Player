@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mosix/services/network_storage_service.dart';
+import 'package:mornye/services/network_storage_service.dart';
 
 import '../test/support/library_collections_benchmark.dart';
 import '../test/support/smb_listing_benchmark.dart';

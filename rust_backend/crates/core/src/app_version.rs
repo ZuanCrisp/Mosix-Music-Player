@@ -88,9 +88,7 @@ mod tests {
                         version.set(value).unwrap();
                         assert!(matches!(
                             version.user_agent().as_str(),
-                            "Mosix"
-                                | "Mosix/first version"
-                                | "Mosix/second version"
+                            "Mosix" | "Mosix/first version" | "Mosix/second version"
                         ));
                     }
                 });

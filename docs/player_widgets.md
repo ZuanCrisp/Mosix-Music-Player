@@ -1,16 +1,16 @@
 # Home screen player widgets
 
-SpotiFLAC 5.0.1 includes a native home screen player for Android and iOS,
+Mornye includes a native home screen player for Android and iOS,
 inspired by Apple Music. Widgets share the existing playback queue and audio
 handler. They display the current artwork, track, artist, and playback state.
 
 ## Adding and customizing
 
-- **Android:** open the launcher's widget picker and add **SpotiFLAC Player**.
+- **Android:** open the launcher's widget picker and add **Mornye Player**.
   Resize it for a compact, horizontal, or large artwork layout. Open the widget's
   configuration to choose artwork colors, light, or dark, and toggle the artist
   name. Reconfiguration availability depends on the launcher.
-- **iOS 17 or later:** add **SpotiFLAC Player** from the home screen widget
+- **iOS 17 or later:** add **Mornye Player** from the home screen widget
   gallery. Small includes play/pause; medium and large also include previous
   and next. Long-press and choose **Edit Widget** for appearance and artist name.
 - Choose a track in the app first. Tap the widget's artwork or text to open
@@ -23,7 +23,7 @@ The operating system controls when widget updates appear.
 ## Native integration
 
 `PlayerWidgetService` publishes presentation data through
-`com.zarz.spotiflac/player_widget`. Artwork loading discards stale results when
+`com.zarz.mornye/player_widget`. Artwork loading discards stale results when
 tracks change. Commands are serialized and publish the latest state before
 acknowledging completion. A restored session starts paused and uses the same
 audio handler as the app.
@@ -37,11 +37,11 @@ widget extension. Runner starts one headless-capable Flutter engine at process
 launch; UIScene attaches the player interface to that same engine. This keeps
 widget commands available before a foreground scene exists.
 `player.json` and thumbnail images live in the App Group
-`group.com.zarz.spotiflac`; the widget does not receive audio files.
+`group.com.zarz.mornye`; the widget does not receive audio files.
 The extension target is embedded by Runner and inherits the app's build version.
 
 For physical iOS builds, both Runner and PlayerWidget signing profiles must
-include `group.com.zarz.spotiflac`. If using another bundle identifier, update
+include `group.com.zarz.mornye`. If using another bundle identifier, update
 `PLAYER_WIDGET_APP_GROUP` in all Runner configurations and
 `ios/PlayerWidget/PlayerWidget.xcconfig`, together with the extension bundle ID.
 

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/services/m3u_playlist_service.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/services/m3u_playlist_service.dart';
 
 void main() {
   group('parseM3u', () {

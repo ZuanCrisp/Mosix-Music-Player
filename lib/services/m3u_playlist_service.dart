@@ -4,9 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/logger.dart';
 
 final _log = AppLogger('M3uPlaylist');
 
@@ -122,7 +123,7 @@ class M3uPlaylistService {
   static String? exportPathFor(String rawPath) {
     final trimmed = rawPath.trim();
     if (trimmed.isEmpty) return null;
-    if (!trimmed.startsWith('content://')) return trimmed;
+    if (!isContentUri(trimmed)) return trimmed;
 
     try {
       // Uri.pathSegments already percent-decodes each segment once.
@@ -151,16 +152,6 @@ class M3uPlaylistService {
     } catch (_) {
       return null;
     }
-  }
-
-  /// Writes the playlist to a shareable temp file named after the playlist.
-  static Future<File> writeExportFile(
-    String playlistName,
-    String content,
-  ) async {
-    final file = await _exportFile(playlistName);
-    await file.writeAsString(content);
-    return file;
   }
 
   /// Serialize directly to a native worker file; Flutter only sends the fields

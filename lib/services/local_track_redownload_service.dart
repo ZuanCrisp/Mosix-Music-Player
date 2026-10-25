@@ -1,8 +1,8 @@
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/models/extension.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/services/platform_bridge.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/models/extension.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/services/platform_bridge.dart';
 
 class LocalTrackRedownloadResolution {
   final LocalLibraryItem localItem;

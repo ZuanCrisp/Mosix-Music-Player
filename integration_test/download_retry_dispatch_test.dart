@@ -5,8 +5,8 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mosix/services/download_request_payload.dart';
-import 'package:mosix/services/platform_bridge.dart';
+import 'package:mornye/services/download_request_payload.dart';
+import 'package:mornye/services/platform_bridge.dart';
 
 import '../test/support/library_collections_benchmark.dart';
 
@@ -140,7 +140,7 @@ registerExtension({
   testWidgets('malformed native batch does not reset any flags', (
     tester,
   ) async {
-    const channel = MethodChannel('com.zuancrisp.mosix/backend');
+    const channel = MethodChannel('com.zarz.mornye/backend');
     await PlatformBridge.cancelDownload('invalid-batch');
     await expectLater(
       channel.invokeMethod<void>('resetDownloadCancels', {

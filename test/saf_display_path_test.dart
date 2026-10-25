@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/utils/saf_display_path.dart';
+import 'package:mornye/utils/saf_display_path.dart';
 
 void main() {
   group('SAF document locations', () {
@@ -68,11 +68,11 @@ void main() {
     test('normalizes an external-storage document URI', () {
       const uri =
           'content://com.android.externalstorage.documents/'
-          'document/primary%3AMusic%2FSpotiFLAC%2FSong.flac';
+          'document/primary%3AMusic%2FMornye%2FSong.flac';
 
       expect(
         formatSafUriForDisplay(uri),
-        '/storage/emulated/0/Music/SpotiFLAC/Song.flac',
+        '/storage/emulated/0/Music/Mornye/Song.flac',
       );
     });
 
@@ -84,12 +84,12 @@ void main() {
               'document/audio%3A1000192991',
           treeUri:
               'content://com.android.externalstorage.documents/'
-              'tree/primary%3AMusic%2FSpotiFLAC',
-          treeDisplayPath: '/storage/emulated/0/Music/SpotiFLAC',
+              'tree/primary%3AMusic%2FMornye',
+          treeDisplayPath: '/storage/emulated/0/Music/Mornye',
           relativeDir: 'Falling In Reverse/Popular Monster',
           fileName: '01 - Popular Monster.flac',
         ),
-        '/storage/emulated/0/Music/SpotiFLAC/'
+        '/storage/emulated/0/Music/Mornye/'
         'Falling In Reverse/Popular Monster/01 - Popular Monster.flac',
       );
     });

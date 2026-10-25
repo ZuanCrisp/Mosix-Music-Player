@@ -1,5 +1,5 @@
 use super::{RepositoryError, error};
-use spotiflac_network::url::UrlParts;
+use mornye_network::url::UrlParts;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum RegistryLocation {

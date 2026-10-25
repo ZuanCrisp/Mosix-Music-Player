@@ -32,6 +32,7 @@ class _GroupedLocalAlbum {
   final String albumName;
   final String artistName;
   final String? coverPath;
+  final String sampleFilePath;
   final List<LocalLibraryItem> tracks;
   final int? trackCount;
   final AlbumCompleteness? completeness;
@@ -43,6 +44,7 @@ class _GroupedLocalAlbum {
     required this.albumName,
     required this.artistName,
     this.coverPath,
+    required this.sampleFilePath,
     required this.tracks,
     this.trackCount,
     this.completeness,
@@ -82,9 +84,12 @@ class _FilterContentData {
       filteredGroupedAlbums.length + filteredGroupedLocalAlbums.length;
 }
 
-class _QueueLibraryPageRequest {
+class _QueueLibraryPageRequest
+    implements QueueLibraryPageKey<_QueueLibraryPageRequest> {
   final String filterMode;
+  @override
   final int limit;
+  @override
   final int offset;
   final String searchQuery;
   final String? filterSource;
@@ -134,6 +139,18 @@ class _QueueLibraryPageRequest {
       (filterMode == 'all' ||
           filterMode == 'albums' ||
           filterMode == 'singles');
+
+  @override
+  bool hasSamePageScope(_QueueLibraryPageRequest other) =>
+      filterMode == other.filterMode &&
+      limit == other.limit &&
+      searchQuery == other.searchQuery &&
+      filterSource == other.filterSource &&
+      filterQuality == other.filterQuality &&
+      filterFormat == other.filterFormat &&
+      filterMetadata == other.filterMetadata &&
+      sortMode == other.sortMode &&
+      localLibraryEnabled == other.localLibraryEnabled;
 
   @override
   bool operator ==(Object other) =>
@@ -222,7 +239,7 @@ class _QueueLibraryCountsRequest {
   );
 }
 
-class _QueueLibraryPageData {
+class _QueueLibraryPageData implements QueueLibraryPageContent {
   final List<UnifiedLibraryItem> items;
   final List<DownloadHistoryItem> historyItems;
   final List<LocalLibraryItem> localItems;
@@ -239,6 +256,7 @@ class _QueueLibraryPageData {
     this.nextCursor,
   });
 
+  @override
   bool get isEmpty =>
       items.isEmpty &&
       historyItems.isEmpty &&
@@ -434,6 +452,7 @@ final _queueLibraryPageProvider = FutureProvider.autoDispose
                 albumName: row['album_name'] as String? ?? '',
                 artistName: row['artist_name'] as String? ?? '',
                 coverPath: row['cover_path'] as String?,
+                sampleFilePath: row['sample_file_path'] as String? ?? '',
                 tracks: const [],
                 trackCount: (row['track_count'] as num?)?.toInt() ?? 0,
                 completeness: AlbumCompleteness.fromRow(row),

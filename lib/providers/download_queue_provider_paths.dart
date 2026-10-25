@@ -32,6 +32,17 @@ extension _DownloadQueuePaths on DownloadQueueNotifier {
     return downloadDir;
   }
 
+  /// `<Music>/Mornye` on desktop; null when the OS gives no Music folder.
+  Future<Directory?> _ensureDefaultDesktopOutputDir() async {
+    final path = await resolveDesktopDefaultOutputDirectory();
+    if (path == null) return null;
+    final musicDir = Directory(path);
+    if (!await musicDir.exists()) {
+      await musicDir.create(recursive: true);
+    }
+    return musicDir;
+  }
+
   Future<Directory?> _ensureAndroidAppSpecificOutputDir() async {
     final externalDir = await getExternalStorageDirectory();
     if (externalDir == null) return null;
@@ -61,7 +72,7 @@ extension _DownloadQueuePaths on DownloadQueueNotifier {
       }
       probe = File(
         '${directory.path}${Platform.pathSeparator}'
-        '.spotiflac-write-${DateTime.now().microsecondsSinceEpoch}',
+        '.mornye-write-${DateTime.now().microsecondsSinceEpoch}',
       );
       await probe.writeAsBytes(const [0], flush: true);
       return await probe.exists();
@@ -69,9 +80,7 @@ extension _DownloadQueuePaths on DownloadQueueNotifier {
       return false;
     } finally {
       if (probe != null) {
-        try {
-          if (await probe.exists()) await probe.delete();
-        } catch (_) {}
+        await deleteFileQuietly(probe);
       }
     }
   }
@@ -80,6 +89,7 @@ extension _DownloadQueuePaths on DownloadQueueNotifier {
     final candidates = <Future<Directory?> Function()>[
       if (Platform.isAndroid) _ensureDefaultAndroidDownloadOutputDir,
       if (Platform.isAndroid) _ensureAndroidAppSpecificOutputDir,
+      if (isDesktopPlatform) _ensureDefaultDesktopOutputDir,
       () async => _ensureDefaultDocumentsOutputDir(),
     ];
 
@@ -154,6 +164,11 @@ extension _DownloadQueuePaths on DownloadQueueNotifier {
         if (Platform.isIOS) {
           final musicDir = await _ensureDefaultDocumentsOutputDir();
           state = state.copyWith(outputDir: musicDir.path);
+        } else if (isDesktopPlatform) {
+          final musicDir =
+              await _ensureDefaultDesktopOutputDir() ??
+              await _ensureDefaultDocumentsOutputDir();
+          state = state.copyWith(outputDir: musicDir.path);
         } else {
           final musicDir =
               await _ensureDefaultAndroidDownloadOutputDir() ??
@@ -213,6 +228,7 @@ extension _DownloadQueuePaths on DownloadQueueNotifier {
     String folderOrganization, {
     bool separateSingles = false,
     String albumFolderStructure = 'artist_album',
+    String? customFolderPath,
     bool createPlaylistFolder = false,
     bool useAlbumArtistForFolders = true,
     bool usePrimaryArtistOnly = false,
@@ -238,6 +254,7 @@ extension _DownloadQueuePaths on DownloadQueueNotifier {
       folderOrganization,
       separateSingles: separateSingles,
       albumFolderStructure: albumFolderStructure,
+      customFolderPath: customFolderPath,
       createPlaylistFolder: createPlaylistFolder,
       useAlbumArtistForFolders: useAlbumArtistForFolders,
       usePrimaryArtistOnly: usePrimaryArtistOnly,
@@ -395,6 +412,7 @@ extension _DownloadQueuePaths on DownloadQueueNotifier {
     String folderOrganization, {
     bool separateSingles = false,
     String albumFolderStructure = 'artist_album',
+    String? customFolderPath,
     bool createPlaylistFolder = false,
     bool useAlbumArtistForFolders = true,
     bool usePrimaryArtistOnly = false,
@@ -408,18 +426,20 @@ extension _DownloadQueuePaths on DownloadQueueNotifier {
             playlistName.isNotEmpty
         ? _sanitizeFolderName(playlistName)
         : '';
-    final normalizedAlbumArtist = normalizeOptionalString(track.albumArtist);
-    var folderArtist = useAlbumArtistForFolders
-        ? normalizedAlbumArtist ?? track.artistName
-        : track.artistName;
-    if (useAlbumArtistForFolders &&
-        filterContributingArtistsInAlbumArtist &&
-        normalizedAlbumArtist != null) {
-      folderArtist = _extractPrimaryArtist(folderArtist);
+    if (!separateSingles && folderOrganization == 'custom') {
+      return _joinRelativePath(
+        playlistPrefix,
+        customFolderPath ??
+            (throw StateError('Folder template was not resolved')),
+      );
     }
-    if (usePrimaryArtistOnly) {
-      folderArtist = _extractPrimaryArtist(folderArtist);
-    }
+    final folderArtist = _folderArtistForTrack(
+      track,
+      useAlbumArtistForFolders: useAlbumArtistForFolders,
+      usePrimaryArtistOnly: usePrimaryArtistOnly,
+      filterContributingArtistsInAlbumArtist:
+          filterContributingArtistsInAlbumArtist,
+    );
 
     if (separateSingles) {
       final isSingle = _shouldTreatAsSingleRelease(track);
@@ -502,11 +522,65 @@ extension _DownloadQueuePaths on DownloadQueueNotifier {
     return '$prefix/$suffix';
   }
 
+  String _folderArtistForTrack(
+    Track track, {
+    required bool useAlbumArtistForFolders,
+    required bool usePrimaryArtistOnly,
+    required bool filterContributingArtistsInAlbumArtist,
+  }) {
+    final albumArtist = normalizeOptionalString(track.albumArtist);
+    var artist = useAlbumArtistForFolders
+        ? albumArtist ?? track.artistName
+        : track.artistName;
+    if (usePrimaryArtistOnly ||
+        (useAlbumArtistForFolders &&
+            filterContributingArtistsInAlbumArtist &&
+            albumArtist != null)) {
+      artist = _extractPrimaryArtist(artist);
+    }
+    return artist;
+  }
+
+  Future<String?> _resolveCustomFolderPath(
+    Track track,
+    DownloadItem item,
+    AppSettings settings,
+    String quality,
+  ) async {
+    if (settings.separateSingles || settings.folderOrganization != 'custom') {
+      return null;
+    }
+    return FolderPathTemplate.expand(settings.folderPathTemplate, {
+      ..._filenameMetadataForTrack(
+        track,
+        provider: item.service,
+        providerTrackId: _knownProviderTrackId(track, item.service),
+        quality: quality,
+        playlistPosition: _validPlaylistPosition(item),
+      ),
+      'artist': _folderArtistForTrack(
+        track,
+        useAlbumArtistForFolders: settings.useAlbumArtistForFolders,
+        usePrimaryArtistOnly: settings.usePrimaryArtistOnly,
+        filterContributingArtistsInAlbumArtist:
+            settings.filterContributingArtistsInAlbumArtist,
+      ),
+      'album_artist':
+          normalizeOptionalString(track.albumArtist) ?? track.artistName,
+      'playlist': item.playlistName ?? '',
+    });
+  }
+
   String _unresolvedAlbumFolderTemplate(
     Track track,
     DownloadItem item,
     AppSettings settings,
   ) {
+    // Custom paths are already expanded component by component. The native
+    // fallback can only replace one preset leaf, not an arbitrary path.
+    if (!settings.separateSingles && settings.folderOrganization == 'custom') {
+      return '';
+    }
     if (track.albumName.trim().isNotEmpty) return '';
     String folderFor(Track value) => _buildRelativeOutputDir(
       value,

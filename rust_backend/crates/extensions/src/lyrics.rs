@@ -1,13 +1,13 @@
 //! Lyrics service adapter for installed providers and the shared built-in clients.
 
 use crate::manager::ExtensionManager;
-use serde_json::json;
-use spotiflac_core::cancellation::{CancellationDomain, CancellationRegistry};
-use spotiflac_core::lyrics::LyricsResponse;
-use spotiflac_core::matching::lowercase;
-use spotiflac_providers::lyrics::{
+use mornye_core::cancellation::{CancellationDomain, CancellationRegistry};
+use mornye_core::lyrics::LyricsResponse;
+use mornye_core::matching::lowercase;
+use mornye_providers::lyrics::{
     CallGraph, Check, LyricsError, LyricsFetcher, SearchRequest, builtin::BuiltinLyricsClient,
 };
+use serde_json::json;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak, mpsc};
 use std::time::Duration;

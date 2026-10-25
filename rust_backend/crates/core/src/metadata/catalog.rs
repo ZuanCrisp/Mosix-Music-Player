@@ -1,4 +1,4 @@
-use super::{TrackMetadata, zero};
+use super::zero;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -119,39 +119,6 @@ pub struct ArtistAlbumMetadata {
 pub struct ArtistResponsePayload {
     pub artist_info: ArtistInfoMetadata,
     pub albums: Vec<ArtistAlbumMetadata>,
-}
-
-pub type SearchArtistResult = ArtistInfoMetadata;
-
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(default)]
-pub struct SearchAlbumResult {
-    pub id: String,
-    pub name: String,
-    pub artists: String,
-    pub images: String,
-    pub release_date: String,
-    pub total_tracks: isize,
-    pub album_type: String,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(default)]
-pub struct SearchPlaylistResult {
-    pub id: String,
-    pub name: String,
-    pub owner: String,
-    pub images: String,
-    pub total_tracks: isize,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(default)]
-pub struct SearchAllResult {
-    pub tracks: Vec<TrackMetadata>,
-    pub artists: Vec<SearchArtistResult>,
-    pub albums: Vec<SearchAlbumResult>,
-    pub playlists: Vec<SearchPlaylistResult>,
 }
 
 // Go's internal extended-metadata response has exported, untagged fields.

@@ -10,8 +10,8 @@ import 'dart:typed_data';
 import 'package:dart_smb2/src/ffi/native_lib.dart';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/services/network_storage_error.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/services/network_storage_error.dart';
 
 NetworkConnection connection(
   String url, {
@@ -105,6 +105,34 @@ void main() {
     );
     expect(result.single.path, 'Album/A B.flac');
     expect(result.single.size, 123);
+  });
+
+  test('WebDAV retains only successful modification dates and ETags', () {
+    for (final date in ['Mon, 19 Oct 2026 12:00:00 GMT', 'invalid', '']) {
+      final result = NetworkStorageService.parseListing(
+        connection(
+          'https://example.test/dav/',
+          protocol: NetworkProtocol.webdav,
+        ),
+        '',
+        '<d:multistatus xmlns:d="DAV:"><d:response>'
+            '<d:href>/dav/song.flac</d:href><d:propstat><d:prop>'
+            '<d:getcontentlength>123</d:getcontentlength>'
+            '<d:getlastmodified>$date</d:getlastmodified>'
+            '<d:getetag>&quot;revision-1&quot;</d:getetag>'
+            '</d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat>'
+            '<d:propstat><d:prop><d:getetag>invalid-etag</d:getetag>'
+            '</d:prop><d:status>HTTP/1.1 404 Not Found</d:status></d:propstat>'
+            '</d:response></d:multistatus>',
+      );
+      expect(result.single.etag, '"revision-1"');
+      expect(
+        result.single.modifiedTime,
+        date.startsWith('Mon')
+            ? DateTime.utc(2026, 10, 19, 12).millisecondsSinceEpoch
+            : null,
+      );
+    }
   });
 
   test('WebDAV accepts equivalent encoding of parent folder names', () {

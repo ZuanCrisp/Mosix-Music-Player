@@ -70,6 +70,70 @@ extension _QueueTabSelectionActions on _QueueTabState {
     });
   }
 
+  /// A desktop click of [kind] on a library song; [orderedIds] lists the
+  /// songs in the order shown.
+  void _applyDesktopClick(
+    String itemId,
+    DesktopClick kind,
+    List<String> orderedIds,
+  ) {
+    var shouldHideOverlay = false;
+    _setState(() {
+      _isPlaylistSelectionMode = false;
+      _selectedPlaylistIds.clear();
+      _selectionAnchorId = applyDesktopClickTo(
+        _selectedIds,
+        target: itemId,
+        kind: kind,
+        orderedIds: orderedIds,
+        anchor: _selectionAnchorId,
+      );
+      _isSelectionMode = _selectedIds.isNotEmpty;
+      shouldHideOverlay = !_isSelectionMode;
+    });
+    _hidePlaylistSelectionOverlay();
+    if (shouldHideOverlay) _hideSelectionOverlay();
+  }
+
+  /// Opens the desktop menu of a library song. A song outside the selection
+  /// becomes the selection for this menu only, so the menu acts on the song
+  /// clicked: the selection toolbar does not open under the menu, and the
+  /// selection ends if the menu closes without a choice.
+  Future<void> _showLibraryItemMenu(
+    BuildContext context,
+    UnifiedLibraryItem item,
+    List<UnifiedLibraryItem> libraryItems,
+    Offset position, {
+    VoidCallback? onOpenDetails,
+  }) async {
+    final forMenu = !_selectedIds.contains(item.id);
+    if (forMenu) {
+      _contextMenuSelection = true;
+      _applyDesktopClick(item.id, DesktopClick.replace, const []);
+      _hideSelectionOverlay();
+    }
+    final chosen = await showContextMenu(
+      context,
+      position: position,
+      groups: libraryTrackMenuGroups(
+        context,
+        ref,
+        items: _selectedItemsFromAll(libraryItems),
+        onPlay: () => _playLibraryItem(item, libraryItems),
+        onOpenDetails: onOpenDetails,
+        onDone: _exitSelectionMode,
+        onReEnrich: () => _reEnrichSelectedFromQueue(libraryItems),
+        onConvert: () => _showBatchConvertSheet(this.context, libraryItems),
+        onDelete: () => _deleteSelected(libraryItems),
+      ),
+    );
+    if (!forMenu || !mounted) return;
+    // A bulk action (re-enrich, convert, delete) kept the selection and
+    // shows the toolbar again.
+    _setState(() => _contextMenuSelection = false);
+    if (!chosen) _exitSelectionMode();
+  }
+
   void _selectRangeTo(String itemId, List<UnifiedLibraryItem> visibleItems) {
     HapticFeedback.selectionClick();
     _setState(() {
@@ -95,6 +159,7 @@ extension _QueueTabSelectionActions on _QueueTabState {
   }) {
     if (!mounted) return;
     if (_suppressSelectionOverlay ||
+        _contextMenuSelection ||
         _isDraggingLibraryTrack ||
         !_isSelectionMode ||
         _isPlaylistSelectionMode) {
@@ -366,16 +431,11 @@ extension _QueueTabSelectionActions on _QueueTabState {
       children: [
         SizedBox(
           width: double.infinity,
-          child: FilledButton.icon(
+          child: ExpressiveButton(
             onPressed: selectedCount > 0
                 ? () => _downloadAllSelectedPlaylists(context)
                 : null,
             icon: const Icon(Icons.download_rounded),
-            label: Text(
-              selectedCount > 0
-                  ? context.l10n.bulkDownloadPlaylistsButton(selectedCount)
-                  : context.l10n.bulkDownloadSelectPlaylists,
-            ),
             style: FilledButton.styleFrom(
               backgroundColor: selectedCount > 0
                   ? colorScheme.primary
@@ -383,10 +443,17 @@ extension _QueueTabSelectionActions on _QueueTabState {
               foregroundColor: selectedCount > 0
                   ? colorScheme.onPrimary
                   : colorScheme.onSurfaceVariant,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: EdgeInsets.symmetric(
+                vertical: isDesktopPlatform ? 8 : 16,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
+            ),
+            child: Text(
+              selectedCount > 0
+                  ? context.l10n.bulkDownloadPlaylistsButton(selectedCount)
+                  : context.l10n.bulkDownloadSelectPlaylists,
             ),
           ),
         ),
@@ -395,16 +462,11 @@ extension _QueueTabSelectionActions on _QueueTabState {
 
         SizedBox(
           width: double.infinity,
-          child: FilledButton.icon(
+          child: ExpressiveButton(
             onPressed: selectedCount > 0
                 ? () => _deleteSelectedPlaylists(context)
                 : null,
             icon: const Icon(Icons.delete_outline),
-            label: Text(
-              selectedCount > 0
-                  ? context.l10n.selectionDeletePlaylistsCount(selectedCount)
-                  : context.l10n.selectionSelectPlaylistsToDelete,
-            ),
             style: FilledButton.styleFrom(
               backgroundColor: selectedCount > 0
                   ? colorScheme.error
@@ -412,10 +474,17 @@ extension _QueueTabSelectionActions on _QueueTabState {
               foregroundColor: selectedCount > 0
                   ? colorScheme.onError
                   : colorScheme.onSurfaceVariant,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: EdgeInsets.symmetric(
+                vertical: isDesktopPlatform ? 8 : 16,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
+            ),
+            child: Text(
+              selectedCount > 0
+                  ? context.l10n.selectionDeletePlaylistsCount(selectedCount)
+                  : context.l10n.selectionSelectPlaylistsToDelete,
             ),
           ),
         ),

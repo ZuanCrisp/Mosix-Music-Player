@@ -8,9 +8,9 @@ mod service;
 pub mod urls;
 
 pub use client::{PlatformResolverChain, ResolverOptions};
+pub use mornye_core::resolver::Metadata;
 use serde::Serialize;
 pub use service::PlatformResolverService;
-pub use spotiflac_core::resolver::Metadata;
 use std::collections::BTreeMap;
 
 pub type Check<'a> = dyn Fn() -> Result<(), String> + Sync + 'a;

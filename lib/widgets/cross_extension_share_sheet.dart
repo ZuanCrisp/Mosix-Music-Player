@@ -1,13 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/services/cross_extension_share_service.dart';
-import 'package:mosix/services/share_intent_service.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/services/cross_extension_share_service.dart';
+import 'package:mornye/services/share_intent_service.dart';
 
 class CrossExtensionShareSheet extends ConsumerStatefulWidget {
   final String name;
@@ -99,7 +101,7 @@ class _CrossExtensionShareSheetState
         if (snapshot.connectionState != ConnectionState.done) {
           return const SizedBox(
             height: 180,
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(child: AppLoadingIndicator()),
           );
         }
 
@@ -177,7 +179,7 @@ class _CrossExtensionShareTile extends StatelessWidget {
         ),
       ),
       trailing: hasUrl
-          ? IconButton(
+          ? AppIconButton(
               tooltip: context.l10n.shareSheetCopyLink,
               icon: const Icon(Icons.copy_rounded, size: 20),
               color: colorScheme.onSurfaceVariant,

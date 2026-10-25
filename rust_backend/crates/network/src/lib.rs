@@ -1,4 +1,8 @@
 //! Shared, cancellable HTTP transport for the embedded backend.
+//!
+//! Comments that mention "Go" describe the retired Go backend, whose observable
+//! behavior (wire formats, parsing quirks, file layouts) remains a compatibility
+//! contract.
 
 mod client;
 mod cookies;

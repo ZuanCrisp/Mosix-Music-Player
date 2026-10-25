@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mornye/utils/lyrics_parser.dart';
 
 String _tag(String kind, int time, String text) =>
     '[x-$kind:$time:${base64.encode(utf8.encode(text))}]';

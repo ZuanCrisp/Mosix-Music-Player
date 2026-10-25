@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/audio_analysis_cache.dart';
+import 'package:mornye/services/audio_analysis_cache.dart';
 
 void main() {
   test('eviction removes whole bundles and retains active analyses', () async {

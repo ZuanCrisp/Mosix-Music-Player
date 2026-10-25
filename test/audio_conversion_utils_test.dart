@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/utils/audio_conversion_utils.dart';
-import 'package:mosix/utils/audio_format_utils.dart';
+import 'package:mornye/utils/audio_conversion_utils.dart';
+import 'package:mornye/utils/audio_format_utils.dart';
 
 void main() {
   group('same-format lossless conversion', () {

@@ -1,3 +1,5 @@
+//! File host functions exposed to extensions, with chunked read and write helpers.
+
 use crate::binary;
 use crate::files::{ExtensionFiles, MAX_READ, READ_LIMIT_ERROR};
 use crate::runtime::{Control, ExtensionServices};

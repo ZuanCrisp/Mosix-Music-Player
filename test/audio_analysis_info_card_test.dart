@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/widgets/audio_analysis_widget.dart';
+import 'package:mornye/widgets/audio_analysis_widget.dart';
 
 void main() {
   group('spectral cutoff formatting', () {

@@ -1,26 +1,32 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/widgets/app_action_button.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_action_button.dart';
+import 'package:mornye/theme/mornye_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/local_library_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/cover_cache_manager.dart';
-import 'package:mosix/providers/player_motion_artwork_provider.dart';
-import 'package:mosix/services/motion_artwork_store.dart';
-import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/string_utils.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/audio_analysis_cache.dart';
+import 'package:mornye/services/cache_maintenance_service.dart';
+import 'package:mornye/services/cover_cache_manager.dart';
+import 'package:mornye/providers/player_motion_artwork_provider.dart';
+import 'package:mornye/services/motion_artwork_store.dart';
+import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mornye/services/explore_cache_store.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/string_utils.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
 
 class CacheManagementPage extends ConsumerStatefulWidget {
   const CacheManagementPage({super.key});
@@ -31,10 +37,6 @@ class CacheManagementPage extends ConsumerStatefulWidget {
 }
 
 class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
-  // Keep in sync with ExploreNotifier keys.
-  static const String _exploreCacheKey = 'explore_home_feed_cache';
-  static const String _exploreCacheTsKey = 'explore_home_feed_ts';
-
   _CacheOverview? _overview;
   bool _isLoading = true;
   String? _busyAction;
@@ -75,7 +77,7 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
     final appSupportDirFuture = getApplicationSupportDirectory();
     final coverStatsFuture = CoverCacheManager.getStats();
     final motionStatsFuture = MotionArtworkStore.defaultDirectory().then(
-      _scanDirectory,
+      CacheMaintenanceService.scanDirectory,
     );
     final prefsFuture = SharedPreferences.getInstance();
     final trackCacheEntriesFuture = _getTrackCacheSizeSafe();
@@ -86,29 +88,23 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
     final tempPath = p.normalize(tempDir.path);
     final tempIsSameAsAppCache = appCachePath == tempPath;
 
-    final appCacheStatsFuture = _scanDirectory(Directory(appCachePath));
+    final appCacheStatsFuture = CacheMaintenanceService.scanDirectory(
+      Directory(appCachePath),
+    );
     final tempStatsFuture = tempIsSameAsAppCache
-        ? Future<_DirectoryStats?>.value(null)
-        : _scanDirectory(Directory(tempPath));
+        ? Future<DirectoryStats?>.value(null)
+        : CacheMaintenanceService.scanDirectory(Directory(tempPath));
 
     final appSupportDir = await appSupportDirFuture;
-    final libraryCoverStatsFuture = _scanDirectory(
+    final libraryCoverStatsFuture = CacheMaintenanceService.scanDirectory(
       Directory('${appSupportDir.path}/library_covers'),
     );
-    final audioAnalysisStatsFuture = _scanDirectory(
-      Directory('${appSupportDir.path}/audio_analysis_cache'),
+    final audioAnalysisStatsFuture = CacheMaintenanceService.scanDirectory(
+      AudioAnalysisDiskCache.directoryIn(appSupportDir.path),
     );
 
     final prefs = await prefsFuture;
-    final explorePayload = prefs.getString(_exploreCacheKey);
-    final exploreTs = prefs.getInt(_exploreCacheTsKey);
-    var exploreBytes = 0;
-    if (explorePayload != null && explorePayload.isNotEmpty) {
-      exploreBytes += utf8.encode(explorePayload).length;
-    }
-    if (exploreTs != null) {
-      exploreBytes += 8;
-    }
+    final exploreBytes = ExploreCacheStore(prefs).read().sizeBytes;
     final hasExploreCache = exploreBytes > 0;
 
     final appCacheStats = await appCacheStatsFuture;
@@ -134,29 +130,6 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
     );
   }
 
-  Future<_DirectoryStats> _scanDirectory(Directory directory) async {
-    if (!await directory.exists()) {
-      return const _DirectoryStats(fileCount: 0, totalSizeBytes: 0);
-    }
-
-    var fileCount = 0;
-    var totalSize = 0;
-
-    try {
-      await for (final entity in directory.list(
-        recursive: true,
-        followLinks: false,
-      )) {
-        if (entity is File) {
-          fileCount++;
-          totalSize += await entity.length();
-        }
-      }
-    } catch (_) {}
-
-    return _DirectoryStats(fileCount: fileCount, totalSizeBytes: totalSize);
-  }
-
   Future<int> _getTrackCacheSizeSafe() async {
     try {
       return await PlatformBridge.getTrackCacheSize();
@@ -165,46 +138,15 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
     }
   }
 
-  Future<void> _clearDirectoryContents(String path) async {
-    final directory = Directory(path);
-    if (!await directory.exists()) return;
-
-    try {
-      final entities = <FileSystemEntity>[];
-      await for (final entity in directory.list(followLinks: false)) {
-        entities.add(entity);
-      }
-
-      const deleteChunkSize = 24;
-      for (var i = 0; i < entities.length; i += deleteChunkSize) {
-        final end = (i + deleteChunkSize < entities.length)
-            ? i + deleteChunkSize
-            : entities.length;
-        final chunk = entities.sublist(i, end);
-        await Future.wait(
-          chunk.map((entity) async {
-            try {
-              await entity.delete(recursive: true);
-            } catch (_) {}
-          }),
-        );
-      }
-    } catch (_) {}
-
-    try {
-      await directory.create(recursive: true);
-    } catch (_) {}
-  }
-
   Future<void> _clearAppCache() async {
     await DownloadedEmbeddedCoverResolver.clearPersistentCache();
     final cacheDir = await getApplicationCacheDirectory();
-    await _clearDirectoryContents(cacheDir.path);
+    await CacheMaintenanceService.clearDirectoryContents(cacheDir.path);
   }
 
   Future<void> _clearTempCache() async {
     final tempDir = await getTemporaryDirectory();
-    await _clearDirectoryContents(tempDir.path);
+    await CacheMaintenanceService.clearDirectoryContents(tempDir.path);
   }
 
   Future<void> _clearCoverCache() async {
@@ -219,19 +161,18 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
   Future<void> _clearLibraryCoverCache() async {
     final appSupportDir = await getApplicationSupportDirectory();
     final libraryCoverDir = Directory('${appSupportDir.path}/library_covers');
-    await _clearDirectoryContents(libraryCoverDir.path);
+    await CacheMaintenanceService.clearDirectoryContents(libraryCoverDir.path);
   }
 
   Future<void> _clearAudioAnalysisCache() async {
     final appSupportDir = await getApplicationSupportDirectory();
-    final analysisDir = Directory('${appSupportDir.path}/audio_analysis_cache');
-    await _clearDirectoryContents(analysisDir.path);
+    final analysisDir = AudioAnalysisDiskCache.directoryIn(appSupportDir.path);
+    await CacheMaintenanceService.clearDirectoryContents(analysisDir.path);
   }
 
   Future<void> _clearExploreCache() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_exploreCacheKey);
-    await prefs.remove(_exploreCacheTsKey);
+    await ExploreCacheStore(prefs).clear();
   }
 
   Future<void> _clearTrackCache() async {
@@ -372,7 +313,7 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
     });
   }
 
-  String _formatDirectorySize(_DirectoryStats stats) {
+  String _formatDirectorySize(DirectoryStats stats) {
     if (stats.fileCount == 0 || stats.totalSizeBytes == 0) {
       return context.l10n.cacheNoData;
     }
@@ -388,14 +329,11 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
 
   Widget _buildClearTrailing(String actionKey, VoidCallback onPressed) {
     if (_busyAction == actionKey) {
-      return const SizedBox(
-        width: 18,
-        height: 18,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      );
+      return const AppLoadingIndicator(size: 18, strokeWidth: 2);
     }
 
-    return TextButton(
+    return ExpressiveButton(
+      text: true,
       onPressed: _isBusy ? null : onPressed,
       child: Text(context.l10n.dialogClear),
     );
@@ -431,17 +369,17 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
           AppSliverHeader.page(
             title: context.l10n.cacheTitle,
             actions: [
-              IconButton(
+              AppIconButton(
                 tooltip: context.l10n.cacheRefresh,
                 onPressed: _isBusy ? null : _refreshOverview,
-                icon: const Icon(Icons.refresh),
+                icon: const AppIcon(Icons.refresh),
               ),
             ],
           ),
 
           if (_isLoading || overview == null)
             const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(child: AppLoadingIndicator()),
             )
           else ...[
             SliverToBoxAdapter(
@@ -506,14 +444,14 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
                                     ),
                                   );
                                 },
-                          icon: const Icon(Icons.delete_sweep_outlined),
+                          icon: const AppIcon(Icons.delete_sweep_outlined),
                           label: Text(context.l10n.cacheClearAll),
                         ),
                         AppActionButton(
                           outlined: true,
                           glass: false,
                           onPressed: _isBusy ? null : _refreshOverview,
-                          icon: const Icon(Icons.refresh),
+                          icon: const AppIcon(Icons.refresh),
                           label: Text(context.l10n.cacheRefreshStats),
                         ),
                       ],
@@ -731,14 +669,14 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
 
 class _CacheOverview {
   final String appCachePath;
-  final _DirectoryStats appCacheStats;
+  final DirectoryStats appCacheStats;
   final String? tempPath;
-  final _DirectoryStats? tempStats;
+  final DirectoryStats? tempStats;
   final bool tempIsSameAsAppCache;
   final CacheStats coverStats;
-  final _DirectoryStats motionStats;
-  final _DirectoryStats libraryCoverStats;
-  final _DirectoryStats audioAnalysisStats;
+  final DirectoryStats motionStats;
+  final DirectoryStats libraryCoverStats;
+  final DirectoryStats audioAnalysisStats;
   final int exploreCacheBytes;
   final bool hasExploreCache;
   final int trackCacheEntries;
@@ -765,14 +703,4 @@ class _CacheOverview {
         libraryCoverStats.totalSizeBytes +
         exploreCacheBytes;
   }
-}
-
-class _DirectoryStats {
-  final int fileCount;
-  final int totalSizeBytes;
-
-  const _DirectoryStats({
-    required this.fileCount,
-    required this.totalSizeBytes,
-  });
 }

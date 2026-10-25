@@ -1,6 +1,7 @@
 use super::{FileStamp, IndexFiles};
+use crate::fs::clean;
 use std::fs::{self, OpenOptions};
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
 /// Ambient filesystem access for the trusted native application. JavaScript
@@ -89,22 +90,4 @@ fn stamp(path: &Path, metadata: &fs::Metadata) -> FileStamp {
         modified_ns,
         directory: metadata.is_dir(),
     }
-}
-
-fn clean(path: &Path) -> PathBuf {
-    let mut output = PathBuf::new();
-    for component in path.components() {
-        match component {
-            Component::CurDir => {}
-            Component::ParentDir if output.file_name().is_some_and(|name| name != "..") => {
-                output.pop();
-            }
-            Component::ParentDir if output.has_root() => {}
-            other => output.push(other.as_os_str()),
-        }
-    }
-    if output.as_os_str().is_empty() {
-        output.push(".");
-    }
-    output
 }

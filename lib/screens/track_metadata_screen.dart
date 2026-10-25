@@ -1,73 +1,82 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
 import 'package:flutter/cupertino.dart' show CupertinoButton, CupertinoIcons;
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/app_snack_bar.dart';
-import 'package:mosix/widgets/re_enrich_review_sheet.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/app_snack_bar.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/re_enrich_review_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/services/conversion_library_service.dart';
-import 'package:mosix/services/deleted_library_files.dart';
-import 'package:mosix/services/file_access_check.dart';
-import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/utils/re_enrich_result.dart';
+import 'package:mornye/services/deleted_library_files.dart';
+import 'package:mornye/services/file_access_check.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/re_enrich_result.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/local_library_provider.dart';
-import 'package:mosix/providers/playback_provider.dart';
-import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/music_player_service.dart'
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mornye/providers/playback_provider.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/music_player_service.dart'
     show readPlaybackFileMetadataWithRetry;
-import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mosix/services/ffmpeg_service.dart';
-import 'package:mosix/services/replaygain_service.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/utils/audio_conversion_utils.dart';
-import 'package:mosix/utils/audio_format_utils.dart';
-import 'package:mosix/utils/artist_utils.dart';
-import 'package:mosix/utils/cover_art_utils.dart';
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/utils/lyrics_metadata_helper.dart';
-import 'package:mosix/utils/mime_utils.dart';
-import 'package:mosix/utils/image_cache_utils.dart';
+import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mornye/services/ffmpeg_service.dart';
+import 'package:mornye/services/replaygain_service.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/audio_conversion_utils.dart';
+import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mornye/utils/artist_utils.dart';
+import 'package:mornye/utils/cover_art_utils.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/utils/lyrics_metadata_helper.dart';
+import 'package:mornye/utils/mime_utils.dart';
+import 'package:mornye/utils/image_cache_utils.dart';
 
-import 'package:mosix/utils/string_utils.dart';
-import 'package:mosix/utils/user_facing_error.dart';
-import 'package:mosix/utils/int_utils.dart';
-import 'package:mosix/utils/isrc_utils.dart';
-import 'package:mosix/utils/nav_bar_inset.dart';
-import 'package:mosix/utils/re_enrich_release_policy.dart';
-import 'package:mosix/utils/saf_display_path.dart';
-import 'package:mosix/theme/cover_palette.dart' show HeaderPalette;
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/widgets/album_detail_header.dart'
+import 'package:mornye/utils/string_utils.dart';
+import 'package:mornye/utils/user_facing_error.dart';
+import 'package:mornye/utils/int_utils.dart';
+import 'package:mornye/utils/isrc_utils.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/utils/re_enrich_release_policy.dart';
+import 'package:mornye/utils/saf_display_path.dart';
+import 'package:mornye/theme/cover_palette.dart' show HeaderPalette;
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mornye/widgets/album_detail_header.dart'
     show HeaderMetaRow, HeaderMetaItem, HeaderCircleButton, HeaderFilledButton;
-import 'package:mosix/widgets/mornye_context_menu.dart';
-import 'package:mosix/widgets/mornye_metadata_row.dart';
-import 'package:mosix/widgets/player_artwork.dart';
-import 'package:mosix/widgets/audio_analysis_widget.dart';
-import 'package:mosix/widgets/hires_check_card.dart';
-import 'package:mosix/widgets/audio_quality_badges.dart';
-import 'package:mosix/widgets/batch_convert_sheet.dart';
-import 'package:mosix/widgets/cached_cover_image.dart';
-import 'package:mosix/widgets/open_on_platform_sheet.dart';
-import 'package:mosix/widgets/metadata_barcode.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/constants/music_services.dart';
-import 'package:mosix/screens/collapsing_header_scroll_mixin.dart';
-import 'package:mosix/screens/track_metadata_edit_sheet.dart';
-import 'package:mosix/utils/clickable_metadata.dart';
+import 'package:mornye/widgets/desktop/context_menu.dart';
+import 'package:mornye/widgets/mornye_context_menu.dart';
+import 'package:mornye/widgets/mornye_metadata_row.dart';
+import 'package:mornye/widgets/player_artwork.dart';
+import 'package:mornye/widgets/audio_analysis_widget.dart';
+import 'package:mornye/widgets/hires_check_card.dart';
+import 'package:mornye/widgets/audio_quality_badges.dart';
+import 'package:mornye/widgets/batch_convert_sheet.dart';
+import 'package:mornye/widgets/cached_cover_image.dart';
+import 'package:mornye/widgets/open_on_platform_sheet.dart';
+import 'package:mornye/widgets/metadata_barcode.dart';
+import 'package:mornye/widgets/scroll_edge_fade.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/constants/music_services.dart';
+import 'package:mornye/controllers/batch_track_actions.dart'
+    show convertLibraryTrack;
+import 'package:mornye/screens/collapsing_header_scroll_mixin.dart';
+import 'package:mornye/screens/track_metadata_edit_sheet.dart';
+import 'package:mornye/utils/clickable_metadata.dart';
 
 part 'track_metadata_screen_cover.dart';
 part 'track_metadata_screen_display.dart';
@@ -197,6 +206,9 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen>
   static final RegExp _leadingOrTrailingDots = RegExp(r'^\.+|\.+$');
   String get _coverCacheKey => _itemId;
 
+  /// Shared by the lyrics box and its scrollbar.
+  final _lyricsScrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -209,6 +221,7 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen>
   @override
   void dispose() {
     unawaited(_cleanupTempFileAndParentIfNotCached(_embeddedCoverPreviewPath));
+    _lyricsScrollController.dispose();
     super.dispose();
   }
 
@@ -219,6 +232,11 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen>
   @override
   double calculateExpandedHeight(BuildContext context) {
     final mediaSize = MediaQuery.sizeOf(context);
+    // Desktop windows are wide and short, so the header takes more of the
+    // height to leave the cover room (see _buildHeaderBackground).
+    if (isDesktopPlatform) {
+      return (mediaSize.height * 0.62).clamp(440.0, 640.0);
+    }
     return (mediaSize.height * 0.55).clamp(360.0, 520.0);
   }
 
@@ -335,6 +353,10 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen>
       final resolvedAlbumArtist = metadata['album_artist']?.toString();
       final resolvedDate = metadata['date']?.toString();
       final resolvedGenre = metadata['genre']?.toString();
+      final resolvedBpm = readPositiveInt(metadata['bpm']);
+      final resolvedMood = normalizeOptionalString(
+        metadata['mood']?.toString(),
+      );
       final resolvedQuality = _displayQualityForValues(
         format: resolvedFormat ?? _storedAudioFormat,
         bitDepth: resolvedBitDepth ?? bitDepth,
@@ -463,6 +485,8 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen>
               formatChanged);
 
       if ((replayGainChanged ||
+              resolvedBpm != null ||
+              resolvedMood != null ||
               resolvedBitDepth != null ||
               resolvedSampleRate != null ||
               resolvedFormat != null ||
@@ -492,6 +516,8 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen>
           _editedMetadata = {
             ...?_editedMetadata,
             ...replayGainMetadata,
+            'bpm': ?resolvedBpm,
+            'mood': ?resolvedMood,
             // ignore: use_null_aware_elements
             if (resolvedBitDepth != null) 'bit_depth': resolvedBitDepth,
             // ignore: use_null_aware_elements
@@ -740,33 +766,31 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen>
               ),
               leadingWidth: kToolbarHeight + edgeInset,
               leading: Padding(
-                padding: EdgeInsets.only(left: edgeInset),
-                child: IconButton(
-                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.4),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.arrow_back, color: Colors.white),
+                padding: EdgeInsetsDirectional.only(start: edgeInset),
+                // Centered so the tight leading slot cannot stretch it.
+                child: Center(
+                  child: HeaderCircleButton(
+                    icon: Icons.arrow_back,
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).backButtonTooltip,
+                    onPressed: _popWithMetadataResult,
                   ),
-                  onPressed: _popWithMetadataResult,
                 ),
               ),
-              actionsPadding: EdgeInsets.only(right: edgeInset),
+              actionsPadding: EdgeInsetsDirectional.only(end: edgeInset),
               actions: [
-                IconButton(
-                  tooltip: MaterialLocalizations.of(context).showMenuTooltip,
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.4),
-                      shape: BoxShape.circle,
+                Builder(
+                  builder: (buttonContext) => HeaderCircleButton(
+                    icon: Icons.more_vert,
+                    tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+                    onPressed: () => _showOptionsMenu(
+                      context,
+                      ref,
+                      colorScheme,
+                      anchor: mornyeMenuAnchor(buttonContext),
                     ),
-                    child: const Icon(Icons.more_vert, color: Colors.white),
                   ),
-                  onPressed: () => _showOptionsMenu(context, ref, colorScheme),
                 ),
               ],
             ),
@@ -775,7 +799,7 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen>
               child: Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth: adaptiveContentMaxWidth(
+                    maxWidth: _trackMetadataContentMaxWidth(
                       MediaQuery.sizeOf(context).width,
                     ),
                   ),
@@ -854,30 +878,27 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen>
       children: [
         Expanded(
           flex: 2,
-          child: FilledButton.icon(
+          child: ExpressiveButton(
             onPressed: fileExists
                 ? () => _openFile(context, rawFilePath)
                 : null,
             icon: const Icon(Icons.play_arrow),
-            label: Text(context.l10n.trackMetadataPlay),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
+            child: Text(context.l10n.trackMetadataPlay),
           ),
         ),
         if (_canDeleteFile) ...[
           const SizedBox(width: 12),
           Expanded(
-            child: OutlinedButton.icon(
+            child: ExpressiveButton(
+              outlined: true,
               onPressed: () => _confirmDelete(context, ref, colorScheme),
               icon: Icon(Icons.delete_outline, color: colorScheme.error),
-              label: Text(
-                context.l10n.trackMetadataDelete,
-                style: TextStyle(color: colorScheme.error),
-              ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -886,6 +907,10 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen>
                 side: BorderSide(
                   color: colorScheme.error.withValues(alpha: 0.5),
                 ),
+              ),
+              child: Text(
+                context.l10n.trackMetadataDelete,
+                style: TextStyle(color: colorScheme.error),
               ),
             ),
           ),

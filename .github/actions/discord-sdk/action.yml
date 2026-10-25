@@ -28,4 +28,4 @@ runs:
         umask 077
         sdk_dir="$(python3 scripts/prepare_discord_sdk.py)"
         bash scripts/setup_discord_sdk.sh "$sdk_dir"
-        printf 'MOSIX_DISCORD_SDK=1\n' >> "$GITHUB_ENV"
+        printf 'MORNYE_DISCORD_SDK=1\n' >> "$GITHUB_ENV"

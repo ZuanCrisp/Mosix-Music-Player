@@ -114,7 +114,7 @@ impl LogBuffer {
             tag = decode_go_utf8(&message[1..end]);
             message = trim_bytes(&message[end + 1..]);
         }
-        let lowercase = spotiflac_core::matching::lowercase(&decode_go_utf8(message));
+        let lowercase = mornye_core::matching::lowercase(&decode_go_utf8(message));
         let level = if lowercase.contains("error") || lowercase.contains("failed") {
             "ERROR"
         } else if lowercase.contains("warning") || lowercase.contains("warn") {

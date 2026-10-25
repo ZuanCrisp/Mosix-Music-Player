@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/services/download_track_metadata.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/services/download_track_metadata.dart';
 
 void main() {
   const original = Track(

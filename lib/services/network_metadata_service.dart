@@ -6,8 +6,8 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/services/platform_bridge.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/services/platform_bridge.dart';
 
 typedef NetworkTagReader =
     Future<Map<String, dynamic>> Function(String url, String name);
@@ -41,6 +41,7 @@ class NetworkMetadataService {
   final _pending = <String, Future<Map<String, dynamic>>>{};
   final List<({Future<void> tail, int pending})> _lanes;
   final _requestIds = <String>{};
+  final _subsonicClients = <SubsonicClient>{};
   bool _stopped = false;
 
   Future<Map<String, dynamic>> read(
@@ -87,6 +88,9 @@ class NetworkMetadataService {
   /// Scan-owned readers can stop their work without cancelling playback reads.
   Future<void> cancelPending() async {
     _stopped = true;
+    for (final client in _subsonicClients.toList()) {
+      client.close();
+    }
     await Future.wait([
       for (final id in _requestIds.toList())
         PlatformBridge.cancelNativeDataJob(id).catchError((Object _) {}),
@@ -105,6 +109,32 @@ class NetworkMetadataService {
     }
     final connection = await _storage.connection(uri.host);
     final path = uri.pathSegments.join('/');
+    if (connection.protocol == NetworkProtocol.subsonic) {
+      final client = _storage.openSubsonic(connection);
+      _subsonicClients.add(client);
+      try {
+        _checkStopped();
+        final song = await client.song(path);
+        final metadata = Map<String, dynamic>.from(song.metadata);
+        try {
+          final cover = await client.cachedCover(
+            song,
+            Directory('${(await _directory()).path}/network_metadata'),
+          );
+          if (cover != null) {
+            metadata['cover_path'] = cover;
+            await _trimNetworkMetadataCovers(File(cover).parent);
+          }
+        } catch (_) {
+          _checkStopped();
+        }
+        _checkStopped();
+        return _remember(source, metadata);
+      } finally {
+        client.close();
+        _subsonicClients.remove(client);
+      }
+    }
     var name =
         (path.isEmpty
             ? connection.root.pathSegments.lastOrNull
@@ -155,6 +185,12 @@ class NetworkMetadataService {
     }
     final value = Map<String, dynamic>.unmodifiable(metadata);
     if (result['cacheable'] != true) return value;
+    return _remember(source, value);
+  }
+
+  Map<String, dynamic> _remember(String source, Map<String, dynamic> tags) {
+    final value = Map<String, dynamic>.unmodifiable(tags);
+    if (utf8.encode(jsonEncode(value)).length > 128 * 1024) return value;
     _cache.remove(source);
     while (_cache.length >= 32) {
       _cache.remove(_cache.keys.first);
@@ -184,23 +220,27 @@ Future<Map<String, dynamic>> _cacheNetworkMetadata(
       );
       await file.writeAsBytes(base64Decode(cover), flush: true);
       metadata['cover_path'] = file.path;
-      final files = await directory
-          .list()
-          .where((entry) => entry is File)
-          .cast<File>()
-          .toList();
-      final dated = <({File file, DateTime time})>[];
-      for (final entry in files) {
-        dated.add((file: entry, time: (await entry.stat()).modified));
-      }
-      dated.sort((a, b) => b.time.compareTo(a.time));
-      for (final old in dated.skip(32)) {
-        await old.file.delete();
-      }
+      await _trimNetworkMetadataCovers(directory);
     } catch (_) {}
   }
   return {
     'metadata': metadata,
     'cacheable': utf8.encode(jsonEncode(metadata)).length <= 128 * 1024,
   };
+}
+
+Future<void> _trimNetworkMetadataCovers(Directory directory) async {
+  final files = await directory
+      .list()
+      .where((entry) => entry is File)
+      .cast<File>()
+      .toList();
+  final dated = <({File file, DateTime time})>[];
+  for (final entry in files) {
+    dated.add((file: entry, time: (await entry.stat()).modified));
+  }
+  dated.sort((a, b) => b.time.compareTo(a.time));
+  for (final old in dated.skip(32)) {
+    await old.file.delete();
+  }
 }

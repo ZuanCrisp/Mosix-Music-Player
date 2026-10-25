@@ -6,7 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/services/secure_storage_options.dart';
+import 'package:mornye/services/secure_storage_options.dart';
+import 'package:mornye/utils/desktop_platform.dart';
 
 const _extensionMasterKeyName = 'extension_storage_master_key_v2';
 
@@ -27,6 +28,7 @@ class ExtensionStorageService {
 
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
     aOptions: secureStorageAndroidOptions,
+    mOptions: secureStorageMacOsOptions,
   );
   static Future<ExtensionStoragePaths>? _preparing;
 
@@ -47,18 +49,23 @@ class ExtensionStorageService {
 
   static Future<ExtensionStoragePaths> _prepare() async {
     final supportDir = await getApplicationSupportDirectory();
-    final documentsDir = await getApplicationDocumentsDirectory();
     final extensionsDir = Directory(p.join(supportDir.path, 'extensions'));
     final dataDir = Directory(p.join(supportDir.path, 'extension_data'));
 
-    await _migrateDirectory(
-      Directory(p.join(documentsDir.path, 'extensions')),
-      extensionsDir,
-    );
-    await _migrateDirectory(
-      Directory(p.join(documentsDir.path, 'extension_data')),
-      dataDir,
-    );
+    // Mobile builds once kept extensions in the app's private Documents
+    // folder. On desktop that folder is the user's own Documents, which never
+    // held app storage, so nothing there may be moved.
+    if (!isDesktopPlatform) {
+      final documentsDir = await getApplicationDocumentsDirectory();
+      await _migrateDirectory(
+        Directory(p.join(documentsDir.path, 'extensions')),
+        extensionsDir,
+      );
+      await _migrateDirectory(
+        Directory(p.join(documentsDir.path, 'extension_data')),
+        dataDir,
+      );
+    }
     await extensionsDir.create(recursive: true);
     await dataDir.create(recursive: true);
 

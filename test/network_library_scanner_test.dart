@@ -2,12 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/network_library_scanner.dart';
-import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/services/library_cleanup.dart';
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/services/network_library_scanner.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/services/library_cleanup.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/logger.dart';
 
 import 'support/network_scan_output.dart';
 
@@ -71,6 +72,107 @@ void main() {
       isEmpty,
     );
   }
+
+  test(
+    'cancel interrupts active native metadata reads and drains their work',
+    () async {
+      const channel = MethodChannel('com.zarz.mornye/backend');
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      final jobs = <String, Completer<String>>{};
+      final cancelled = <String>{};
+      final started = Completer<void>();
+      var blockReads = true;
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        final arguments = call.arguments as Map;
+        final id = arguments['request_id'] as String;
+        if (call.method == 'cancelNativeDataJob') {
+          final job = jobs[id];
+          if (job != null && !job.isCompleted) {
+            cancelled.add(id);
+            job.completeError(PlatformException(code: 'CANCELLED'));
+          }
+          return null;
+        }
+        expect(call.method, 'runNativeDataJob');
+        if (!blockReads) {
+          return jsonEncode({
+            'metadata': {'title': 'Track'},
+            'cacheable': true,
+          });
+        }
+        final job = Completer<String>();
+        jobs[id] = job;
+        if (jobs.length == 2) started.complete();
+        return job.future;
+      });
+      addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+      final storage = tracks(20);
+      addTearDown(storage.dispose);
+      final scanner = NetworkLibraryScanner(
+        storage: storage,
+        supportDirectory: () async => directory,
+        temporaryDirectory: () async => directory,
+        metadataConcurrency: 2,
+      );
+      final scan = scanner.scan(
+        NetworkStorageService.source('nas', ''),
+        checkpoint: () async {},
+        onProgress: (_, _, _) {},
+      );
+      final stopped = expectLater(scan, throwsStateError);
+      await started.future;
+      await scanner.cancelPending();
+      await stopped;
+      expect(jobs, hasLength(2));
+      expect(cancelled, jobs.keys.toSet());
+      expect(jobs.values.every((job) => job.isCompleted), isTrue);
+      await expectNoOutput();
+
+      // A completed cancellation does not poison a later scan or retain its reader.
+      blockReads = false;
+      final retry = await scanner.scan(
+        NetworkStorageService.source('nas', ''),
+        checkpoint: () async {},
+        onProgress: (_, _, _) {},
+      );
+      expect(retry.expectedCount, 20);
+      expect(retry.errorCount, 0);
+    },
+  );
+
+  test(
+    'directory-scoped deduplication rejects cross-folder listing entries',
+    () async {
+      final storage = _Storage({
+        '': [
+          const NetworkEntry('root.flac', 'root.flac'),
+          const NetworkEntry('root.flac', 'root.flac'),
+          const NetworkEntry('nested/song.flac', 'song.flac'),
+          const NetworkEntry('nested/', 'nested', directory: true),
+          const NetworkEntry('nested/', 'nested', directory: true),
+        ],
+        'nested/': [
+          const NetworkEntry('nested/song.flac', 'song.flac'),
+          const NetworkEntry('nested/song.flac', 'song.flac'),
+          const NetworkEntry('root.flac', 'root.flac'),
+        ],
+      });
+      final reads = <String>[];
+      final result =
+          await scanner(storage, (source) async {
+            reads.add(Uri.parse(source).pathSegments.join('/'));
+            return {'title': 'Track'};
+          }).scan(
+            NetworkStorageService.source('nas', ''),
+            checkpoint: () async {},
+            onProgress: (_, _, _) {},
+          );
+      expect(reads, ['root.flac', 'nested/song.flac']);
+      expect(result.expectedCount, 2);
+      expect(result.errorCount, 0);
+    },
+  );
 
   test(
     'bounded prefetch retains listing order after out-of-order failures',

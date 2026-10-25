@@ -1,0 +1,32 @@
+[package]
+name = "mornye-desktop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+name = "mornye_desktop"
+# cdylib for dart:ffi; rlib so integration tests can call the C ABI in-process.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+mornye-mobile = { path = "../mobile" }
+chrono.workspace = true
+getrandom.workspace = true
+notify.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+url.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { workspace = true, features = ["Win32_System_Power"] }
+
+[dev-dependencies]
+tempfile.workspace = true
+
+# The workspace denies unsafe code; only the `ffi` module allows it, for the
+# raw pointers of the C ABI boundary.
+[lints]
+workspace = true

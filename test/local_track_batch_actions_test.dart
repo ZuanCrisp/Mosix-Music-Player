@@ -1,18 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/providers/local_library_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/app_localizations.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/services/batch_metadata_re_enrich.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/services/local_track_batch_actions.dart';
-import 'package:mosix/services/local_track_redownload_service.dart';
+import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/services/batch_metadata_re_enrich.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/services/local_track_batch_actions.dart';
+import 'package:mornye/services/local_track_redownload_service.dart';
 
 LocalLibraryItem item(String id) => LocalLibraryItem(
   id: id,
@@ -288,7 +288,7 @@ void main() {
     testWidgets(
       'batch completion respects owner lifecycle during refresh: $leaveDuringRefresh',
       (tester) async {
-        const channel = MethodChannel('com.zuancrisp.mosix/backend');
+        const channel = MethodChannel('com.zarz.mornye/backend');
         final settings = _BatchSettings();
         final library = _BatchLibrary();
         var active = true;

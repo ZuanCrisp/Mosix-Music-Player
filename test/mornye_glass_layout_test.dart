@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/widgets/app_switch.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/widgets/app_switch.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
 
 void main() {
   testWidgets('glass and controls share tablet layout coordinates', (

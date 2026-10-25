@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/lyric_supplement_transition.dart';
-import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mornye/widgets/lyric_supplement_transition.dart';
+import 'package:mornye/utils/lyrics_parser.dart';
 
 /// Keeps each pronunciation phrase under the lyric with the same start time.
 /// Only shared word boundaries are used; line-only timing cannot identify
@@ -15,6 +15,9 @@ class LyricPronunciationLayout {
   static const _phraseGap = 4.0;
   static const _pronunciationGap = 2.0;
   static const _rowGap = 6.0;
+  static final _whitespaceRun = RegExp(r'\s+');
+  static final _endsWithWhitespace = RegExp(r'\s$');
+  static final _startsWithWhitespace = RegExp(r'^\s');
 
   double get primaryHeight =>
       _rows.fold(0.0, (height, row) => height + row.primaryHeight) +
@@ -42,7 +45,7 @@ class LyricPronunciationLayout {
         maxWidth <= 0) {
       return null;
     }
-    String normalize(String text) => text.replaceAll(RegExp(r'\s+'), '');
+    String normalize(String text) => text.replaceAll(_whitespaceRun, '');
     if (normalize(original.map((word) => word.text).join()) !=
             normalize(line.text) ||
         normalize(pronunciation.map((word) => word.text).join()) !=
@@ -57,8 +60,8 @@ class LyricPronunciationLayout {
     for (var i = 1; i < pronunciation.length; i++) {
       // Preserve syllables inside a word. Providers may split a romanized
       // word into several timed spans without adding whitespace.
-      if (!RegExp(r'\s$').hasMatch(pronunciation[i - 1].text) &&
-          !RegExp(r'^\s').hasMatch(pronunciation[i].text)) {
+      if (!_endsWithWhitespace.hasMatch(pronunciation[i - 1].text) &&
+          !_startsWithWhitespace.hasMatch(pronunciation[i].text)) {
         continue;
       }
       final start = pronunciation[i].time.inMilliseconds;

@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/services/library_database_models.dart';
-import 'package:mosix/services/library_row_mapper.dart';
-import 'package:mosix/services/library_schema.dart';
+import 'package:mornye/services/library_database_models.dart';
+import 'package:mornye/services/library_row_mapper.dart';
+import 'package:mornye/services/library_schema.dart';
 
 import 'support/sqlite_process_database.dart';
 
@@ -164,8 +164,31 @@ void main() {
     },
   );
 
+  test(
+    'v17 upgrade retains existing rows and adds network file versions',
+    () async {
+      await LibrarySchema.create(db, 17);
+      await db.execute('ALTER TABLE library DROP COLUMN network_file_version');
+      await db.insert('library', {
+        'id': 'old',
+        'track_name': 'Song',
+        'artist_name': 'Artist',
+        'album_name': 'Album',
+        'file_path': 'network://nas/song.flac',
+        'scanned_at': '2026-10-19',
+      });
+      await LibrarySchema.upgrade(db, 17, LibrarySchema.version);
+      expect(
+        (await db.query('library')).single['network_file_version'],
+        isNull,
+      );
+      expect((await db.query('library')).single['id'], 'old');
+    },
+  );
+
   test('row mapping round-trips metadata and preserves unknown scan flags', () {
     final track = _track('full');
+    track['networkFileVersion'] = 'network-fingerprint';
     expect(LibraryRowMapper.decode(LibraryRowMapper.encode(track)), track);
     final filename = LibraryRowMapper.encode({
       ...track,

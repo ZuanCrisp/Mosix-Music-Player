@@ -1,0 +1,19 @@
+name: media_kit_libs_windows_audio
+description: Native Windows playback libraries for Mornye, including ARM64.
+version: 1.0.9
+publish_to: none
+homepage: https://github.com/media-kit/media-kit
+
+environment:
+  sdk: ">=2.17.0 <4.0.0"
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      windows:
+        pluginClass: MediaKitLibsWindowsAudioPluginCApi

@@ -5,14 +5,15 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/models/extension.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/extension_storage_service.dart';
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/providers/settings_provider.dart';
+import 'package:mornye/models/extension.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/extension_storage_service.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/providers/settings_provider.dart';
 
-export 'package:mosix/models/extension.dart';
+export 'package:mornye/models/extension.dart';
 
 part 'extension_provider_priority.dart';
 
@@ -21,6 +22,11 @@ final _log = AppLogger('ExtensionProvider');
 const _metadataProviderPriorityKey = 'metadata_provider_priority';
 const _providerPriorityKey = 'provider_priority';
 const _storeRegistryUrlPrefKey = 'store_registry_url';
+
+final extensionSettingsProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>, String>((ref, extensionId) {
+      return PlatformBridge.getExtensionSettings(extensionId);
+    });
 
 /// Result of restoring extensions from a backup.
 class ExtensionNotifier extends Notifier<ExtensionState> {
@@ -205,9 +211,10 @@ class ExtensionNotifier extends Notifier<ExtensionState> {
       }
       await loadProviderPriority();
       await loadMetadataProviderPriority();
-      if (Platform.isAndroid) {
+      if (Platform.isAndroid || isDesktopPlatform) {
         // Exchange a cold-start browser callback before restored downloads can
         // bootstrap a replacement challenge and invalidate its original state.
+        // Desktop queues a launch URL in the backend before this point.
         await PlatformBridge.processPendingExtensionCallbacks();
       }
       state = state.copyWith(
@@ -639,9 +646,13 @@ class ExtensionNotifier extends Notifier<ExtensionState> {
       return {'registry_url': '', 'items': const <Map<String, dynamic>>[]};
     }
 
-    String registryUrl = '';
+    final prefs = await SharedPreferences.getInstance();
+    // The native repository is initialized lazily when Repo is opened. Keep
+    // its persisted URL in backups made before that first visit.
+    var registryUrl = (prefs.getString(_storeRegistryUrlPrefKey) ?? '').trim();
     try {
-      registryUrl = await PlatformBridge.getRepoRegistryUrl();
+      final activeUrl = (await PlatformBridge.getRepoRegistryUrl()).trim();
+      if (activeUrl.isNotEmpty) registryUrl = activeUrl;
     } catch (_) {}
 
     List<Map<String, dynamic>> installed;
@@ -705,7 +716,12 @@ class ExtensionNotifier extends Notifier<ExtensionState> {
 
     await ensureInitialized();
 
-    final registryUrl = (data['registry_url'] as String?)?.trim() ?? '';
+    final prefs = await SharedPreferences.getInstance();
+    final backupUrl = (data['registry_url'] as String?)?.trim() ?? '';
+    // Older backups may have omitted the URL when Repo had not been opened.
+    final registryUrl = backupUrl.isNotEmpty
+        ? backupUrl
+        : (prefs.getString(_storeRegistryUrlPrefKey) ?? '').trim();
     final itemsRaw = data['items'];
     final items = itemsRaw is List
         ? itemsRaw
@@ -718,12 +734,11 @@ class ExtensionNotifier extends Notifier<ExtensionState> {
     try {
       final tmp = await getTemporaryDirectory();
       destDir = await Directory(
-        '${tmp.path}/spotiflac_restore_ext',
+        '${tmp.path}/mornye_restore_ext',
       ).create(recursive: true);
       await PlatformBridge.initExtensionRepo(destDir.path);
       if (registryUrl.isNotEmpty) {
         await PlatformBridge.setRepoRegistryUrl(registryUrl);
-        final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_storeRegistryUrlPrefKey, registryUrl);
       }
     } catch (e) {
@@ -784,7 +799,7 @@ class ExtensionNotifier extends Notifier<ExtensionState> {
             ...current,
             ...Map<String, dynamic>.from(settings),
           };
-          await PlatformBridge.setExtensionSettings(id, merged);
+          await setExtensionSettings(id, merged);
         } catch (e) {
           _log.w('Restore: failed to apply settings for $id: $e');
         }

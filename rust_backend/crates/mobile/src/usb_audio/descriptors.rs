@@ -1,3 +1,5 @@
+//! USB audio descriptor parsing: devices, endpoints, alternate settings, output formats, and packet clocking.
+
 use super::UsbOutputFormat;
 use std::collections::HashMap;
 

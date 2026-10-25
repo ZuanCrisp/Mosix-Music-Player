@@ -1,40 +1,68 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/theme/mornye_theme.dart';
 import 'package:flutter/services.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/library_collections_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/cover_cache_manager.dart';
-import 'package:mosix/utils/local_playback.dart';
-import 'package:mosix/widgets/playlist_picker_sheet.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/library_collections_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/cover_cache_manager.dart';
+import 'package:mornye/controllers/local_playback.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/widgets/desktop/context_menu.dart';
+import 'package:mornye/widgets/playlist_picker_sheet.dart';
+import 'package:mornye/widgets/mornye_context_menu.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:mosix/widgets/track_collection_action_policy.dart';
-import 'package:mosix/widgets/track_detail_actions.dart';
-import 'package:mosix/utils/clickable_metadata.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/track_collection_action_policy.dart';
+import 'package:mornye/widgets/track_detail_actions.dart';
+import 'package:mornye/utils/clickable_metadata.dart';
 
 class TrackCollectionQuickActions extends ConsumerWidget {
   final Track track;
   final bool hasLocalPlaybackCandidate;
 
+  /// A 32dp pointer target for desktop table rows.
+  final bool dense;
+
   const TrackCollectionQuickActions({
     super.key,
     required this.track,
     this.hasLocalPlaybackCandidate = false,
+    this.dense = false,
   });
 
+  /// Track options: a bottom sheet (Material) or popover (Mornye) on phones
+  /// and tablets, a context menu at [position] or under [context] on
+  /// desktop.
   static void showTrackOptionsSheet(
     BuildContext context,
     WidgetRef ref,
     Track track, {
     bool hasLocalPlaybackCandidate = false,
+    Offset? position,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
+    if (isDesktopPlatform) {
+      final origin =
+          position ??
+          contextMenuOriginOf(context) ??
+          MediaQuery.sizeOf(context).center(Offset.zero);
+      showContextMenu(
+        context,
+        position: origin,
+        groups: trackOptionMenuGroups(
+          context,
+          ref,
+          track,
+          hasLocalPlaybackCandidate: hasLocalPlaybackCandidate,
+        ),
+      );
+      return;
+    }
     if (context.isMornye) {
       showMornyeContextMenu<void>(
         context: context,
@@ -45,11 +73,10 @@ class TrackCollectionQuickActions extends ConsumerWidget {
       );
       return;
     }
-    showModalBottomSheet<void>(
+    showAppModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
       builder: (_) => _TrackOptionsSheet(
         track: track,
         hasLocalPlaybackCandidate: hasLocalPlaybackCandidate,
@@ -61,9 +88,9 @@ class TrackCollectionQuickActions extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return IconButton(
+    return AppIconButton(
       tooltip: MaterialLocalizations.of(context).showMenuTooltip,
-      icon: Icon(
+      icon: AppIcon(
         context.isMornye ? CupertinoIcons.ellipsis : Icons.more_vert,
         color: colorScheme.onSurfaceVariant,
         size: 20,
@@ -73,11 +100,142 @@ class TrackCollectionQuickActions extends ConsumerWidget {
         ref,
         track,
         hasLocalPlaybackCandidate: hasLocalPlaybackCandidate,
+        position: contextMenuPositionBelow(context),
       ),
       padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+      constraints: dense
+          ? const BoxConstraints(minWidth: 32, minHeight: 32)
+          : const BoxConstraints(minWidth: 48, minHeight: 48),
+      style: dense
+          ? IconButton.styleFrom(
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            )
+          : null,
     );
   }
+}
+
+/// The track options as desktop context menu groups: playback and download,
+/// collections, navigation, then copying.
+List<List<ContextMenuAction>> trackOptionMenuGroups(
+  BuildContext context,
+  WidgetRef ref,
+  Track track, {
+  bool hasLocalPlaybackCandidate = false,
+}) {
+  final l10n = context.l10n;
+  final root = Navigator.of(context, rootNavigator: true).context;
+  final collections = ref.read(libraryCollectionsProvider);
+  final isLoved = collections.isLoved(track);
+  final isInWishlist = collections.isInWishlist(track);
+  final qualityVariantAction = resolveQualityVariantMenuAction(
+    allowQualityVariants: ref.read(settingsProvider).allowQualityVariants,
+    hasLocalPlaybackCandidate: hasLocalPlaybackCandidate,
+  );
+
+  void notify(String message) {
+    if (!root.mounted) return;
+    ScaffoldMessenger.of(root).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> toggle({required bool wishlist}) async {
+    final notifier = ref.read(libraryCollectionsProvider.notifier);
+    final added = wishlist
+        ? await notifier.toggleWishlist(track)
+        : await notifier.toggleLoved(track);
+    if (!root.mounted) return;
+    final l10n = root.l10n;
+    notify(
+      wishlist
+          ? (added
+                ? l10n.collectionAddedToWishlist(track.name)
+                : l10n.collectionRemovedFromWishlist(track.name))
+          : (added
+                ? l10n.collectionAddedToLoved(track.name)
+                : l10n.collectionRemovedFromLoved(track.name)),
+    );
+  }
+
+  void copy(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    if (root.mounted) notify(root.l10n.trackCopiedToClipboard);
+  }
+
+  return [
+    [
+      if (qualityVariantAction == QualityVariantMenuAction.playLocal)
+        ContextMenuAction(
+          icon: Icons.play_arrow_rounded,
+          label: l10n.trackMetadataPlay,
+          onSelected: () async {
+            final played = await playLocalIfAvailable(root, ref, track);
+            if (!played && root.mounted) {
+              notify(root.l10n.snackbarFileNotFound);
+            }
+          },
+        ),
+      ContextMenuAction(
+        icon: Icons.download_outlined,
+        label: l10n.dialogDownload,
+        onSelected: () => downloadSingleTrack(root, ref, track),
+      ),
+      if (qualityVariantAction ==
+          QualityVariantMenuAction.downloadAnotherQuality)
+        ContextMenuAction(
+          icon: Icons.high_quality_outlined,
+          label: l10n.trackOptionDownloadQualityVariant,
+          onSelected: () =>
+              downloadSingleTrack(root, ref, track, forceQualityPicker: true),
+        ),
+    ],
+    [
+      ContextMenuAction(
+        icon: isLoved ? Icons.favorite : Icons.favorite_border,
+        label: isLoved
+            ? l10n.trackOptionRemoveFromLoved
+            : l10n.trackOptionAddToLoved,
+        onSelected: () => toggle(wishlist: false),
+      ),
+      ContextMenuAction(
+        icon: isInWishlist
+            ? Icons.playlist_add_check_circle
+            : Icons.add_circle_outline,
+        label: isInWishlist
+            ? l10n.trackOptionRemoveFromWishlist
+            : l10n.trackOptionAddToWishlist,
+        onSelected: () => toggle(wishlist: true),
+      ),
+      ContextMenuAction(
+        icon: Icons.playlist_add,
+        label: l10n.collectionAddToPlaylist,
+        onSelected: () => showAddTrackToPlaylistSheet(root, ref, track),
+      ),
+    ],
+    [
+      ContextMenuAction(
+        icon: Icons.album_outlined,
+        label: l10n.homeGoToAlbum,
+        onSelected: () => navigateToTrackAlbum(root, track),
+      ),
+    ],
+    [
+      ContextMenuAction(
+        icon: Icons.content_copy_rounded,
+        label: l10n.trackOptionCopyTrackName,
+        onSelected: () => copy(track.name),
+      ),
+      ContextMenuAction(
+        icon: Icons.person_outline_rounded,
+        label: l10n.trackOptionCopyArtist,
+        onSelected: () => copy(track.artistName),
+      ),
+      ContextMenuAction(
+        icon: Icons.copy_all_rounded,
+        label: l10n.trackOptionCopyTrackAndArtist,
+        onSelected: () => copy('${track.name} - ${track.artistName}'),
+      ),
+    ],
+  ];
 }
 
 class _TrackOptionsSheet extends ConsumerWidget {
@@ -245,7 +403,7 @@ class _TrackOptionsSheet extends ConsumerWidget {
                                         height: 56,
                                         color:
                                             colorScheme.surfaceContainerHighest,
-                                        child: Icon(
+                                        child: AppIcon(
                                           Icons.music_note,
                                           color: colorScheme.onSurfaceVariant,
                                         ),
@@ -255,7 +413,7 @@ class _TrackOptionsSheet extends ConsumerWidget {
                                   width: 56,
                                   height: 56,
                                   color: colorScheme.surfaceContainerHighest,
-                                  child: Icon(
+                                  child: AppIcon(
                                     Icons.music_note,
                                     color: colorScheme.onSurfaceVariant,
                                   ),
@@ -294,10 +452,11 @@ class _TrackOptionsSheet extends ConsumerWidget {
                   ),
                 ],
               ),
-              Divider(
-                height: 1,
-                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-              ),
+              if (context.isMornye)
+                Divider(
+                  height: 1,
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
 
               if (qualityVariantAction == QualityVariantMenuAction.playLocal)
                 _OptionTile(
@@ -492,7 +651,7 @@ class _OptionTile extends StatelessWidget {
           color: colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(
+        child: AppIcon(
           icon,
           color: iconColor ?? colorScheme.onPrimaryContainer,
           size: 20,

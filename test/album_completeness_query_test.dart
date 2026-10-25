@@ -8,17 +8,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/library_collections_provider.dart';
-import 'package:mosix/providers/local_library_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/screens/queue_tab.dart';
-import 'package:mosix/services/album_completeness.dart';
-import 'package:mosix/services/history_database.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/theme/app_theme.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/library_collections_provider.dart';
+import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/screens/queue_tab.dart';
+import 'package:mornye/services/album_completeness.dart';
+import 'package:mornye/services/history_database.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_choice_chip.dart';
 
 String _definition(String file, String table) => RegExp(
   'CREATE TABLE $table\\s*\\([\\s\\S]*?\\n\\s*\\)',
@@ -76,7 +78,7 @@ add(True, 'local3', 'local-only', 3, 3)
 print(json.dumps([dict(row) for row in db.execute(data['sql'], data['args'])]))
 ''',
       jsonEncode({
-        'history': _definition('lib/services/history_database.dart', 'history'),
+        'history': _definition('lib/services/history_schema.dart', 'history'),
         'library': _definition('lib/services/library_schema.dart', 'library'),
         'sql': sql,
         'args': arguments ?? [],
@@ -138,6 +140,11 @@ Future<void> _waitFor(WidgetTester tester, Finder finder) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    final font = FontLoader('Google Sans Flex')
+      ..addFont(rootBundle.load('assets/fonts/GoogleSansFlex.ttf'));
+    await font.load();
+  });
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     final previousFactory = databaseFactoryOrNull;
@@ -284,9 +291,9 @@ void main() {
   );
 
   testWidgets(
-    'Material filter switches to albums, supports search and can be reset',
+    'Material sort and filter sheets stay usable above shell navigation',
     (tester) async {
-      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.physicalSize = const Size(412, 915);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       final tabActive = ValueNotifier(true);
@@ -306,12 +313,22 @@ void main() {
             theme: AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: ValueListenableBuilder<bool>(
-              valueListenable: tabActive,
-              builder: (_, active, _) => Scaffold(
-                body: TickerMode(
-                  enabled: active,
-                  child: QueueTab(isTabActive: active),
+            home: Scaffold(
+              bottomNavigationBar: const SizedBox(
+                height: 140,
+                child: Center(child: Text('Shell navigation')),
+              ),
+              body: Navigator(
+                onGenerateRoute: (_) => MaterialPageRoute<void>(
+                  builder: (_) => ValueListenableBuilder<bool>(
+                    valueListenable: tabActive,
+                    builder: (_, active, _) => Scaffold(
+                      body: TickerMode(
+                        enabled: active,
+                        child: QueueTab(isTabActive: active),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -320,8 +337,83 @@ void main() {
       );
       await _waitFor(tester, find.text('Filters').hitTestable());
       await _waitFor(tester, find.text('Song 1').hitTestable());
-      await tester.tap(find.text('Filters').hitTestable());
+      await tester.tap(find.text('Latest').hitTestable());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Shell navigation').hitTestable(), findsNothing);
+      final sortSheet = find.byType(AppBottomSheet);
+      // Every sort no longer fits a phone: the sheet stops at its cap and
+      // scrolls, leaving the screen above it visible.
+      expect(tester.getSize(sortSheet).height, closeTo(915 * 0.85, 1));
+      expect(find.text('Latest').hitTestable(), findsWidgets);
+      final sheetScroll = find.descendant(
+        of: sortSheet,
+        matching: find.byType(SingleChildScrollView),
+      );
+      // A downward swipe inside the list closes the sheet at its top edge.
+      await tester.drag(sheetScroll, const Offset(0, 450));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(sortSheet, findsNothing);
+      await tester.tap(find.text('Latest').hitTestable());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.drag(sheetScroll, const Offset(0, -450));
       await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(find.text('Genre (Z-A)').hitTestable());
+      await tester.pump(const Duration(milliseconds: 400));
+      await _waitFor(tester, find.text('Shell navigation').hitTestable());
+      expect(find.text('Genre (Z-A)').hitTestable(), findsOneWidget);
+      await tester.tap(find.text('Filters').hitTestable());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(tester.getSize(sortSheet).height, closeTo(915 * 0.85, 1));
+      await tester.drag(sheetScroll, const Offset(0, -200));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(tester.getSize(sortSheet).height, closeTo(915 * 0.95, 1));
+      // At full height, return the body to its top before swiping to dismiss.
+      await tester.drag(sheetScroll, const Offset(0, 200));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.drag(sheetScroll, const Offset(0, 450));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(sortSheet, findsNothing);
+      await tester.tap(find.text('Filters').hitTestable());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      // The handle and reset action stay available after scrolling the body.
+      await tester.drag(sheetScroll, const Offset(0, -600));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(AppSheetHandle).hitTestable(), findsOneWidget);
+      expect(find.text('Reset').hitTestable(), findsOneWidget);
+      await tester.fling(
+        find.byType(AppSheetHandle),
+        const Offset(0, 300),
+        1000,
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(sortSheet, findsNothing);
+      await tester.tap(find.text('Filters').hitTestable());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      final sortChoices = find
+          .ancestor(of: find.text('Title (A-Z)'), matching: find.byType(Wrap))
+          .first;
+      final chips = find.descendant(
+        of: sortChoices,
+        matching: find.byType(AppChoiceChip),
+      );
+      Rect? previous;
+      for (final chip in chips.evaluate()) {
+        final bounds = tester.getRect(find.byWidget(chip.widget));
+        if (previous != null && bounds.top > previous.top + 1) {
+          expect(bounds.top - previous.bottom, greaterThanOrEqualTo(8));
+        }
+        previous = bounds;
+      }
       // Every fixture file is FLAC. Other formats must still be selectable,
       // rather than disappearing when they are absent from the loaded page.
       for (final label in [

@@ -1,72 +1,101 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_snack_bar.dart';
-import 'package:mosix/screens/track_history_snapshot.dart';
-import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/app_switch.dart';
-import 'package:mosix/widgets/app_choice_chip.dart';
-import 'package:mosix/widgets/app_loading_indicator.dart';
-import 'package:mosix/widgets/expressive_button.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
-import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mornye/widgets/app_snack_bar.dart';
+import 'package:mornye/screens/track_history_snapshot.dart';
+import 'package:mornye/theme/app_tokens.dart';
+import 'package:mornye/theme/cover_palette.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_switch.dart';
+import 'package:mornye/widgets/app_checkbox.dart';
+import 'package:mornye/widgets/app_content_card.dart';
+import 'package:mornye/widgets/app_choice_chip.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/app_progress_indicator.dart';
+import 'package:mornye/theme/app_motion.dart';
+import 'package:mornye/widgets/app_refresh_indicator.dart';
+import 'package:mornye/widgets/app_shape.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_menu_button.dart';
+import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/widgets/mornye_context_menu.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/library_search_results.dart';
+import 'package:mornye/screens/mornye_library_screen.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/models/artist_concert.dart';
-import 'package:mosix/providers/track_provider.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/recent_access_provider.dart';
-import 'package:mosix/providers/explore_provider.dart';
-import 'package:mosix/widgets/explore_featured_section.dart';
-import 'package:mosix/providers/local_library_provider.dart';
-import 'package:mosix/screens/track_metadata_screen.dart';
-import 'package:mosix/screens/album_screen.dart';
-import 'package:mosix/screens/artist_screen.dart';
-import 'package:mosix/screens/home_search_logic.dart';
-import 'package:mosix/services/csv_import_service.dart';
-import 'package:mosix/services/cover_download_service.dart';
-import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/shell_navigation_service.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/utils/extension_auth_launcher.dart';
-import 'package:mosix/utils/nav_bar_inset.dart';
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/utils/string_utils.dart';
-import 'package:mosix/utils/editorial_notes.dart';
-import 'package:mosix/screens/playlist_screen.dart';
-import 'package:mosix/screens/downloaded_album_screen.dart';
-import 'package:mosix/widgets/download_service_picker.dart';
-import 'package:mosix/widgets/track_collection_quick_actions.dart';
-import 'package:mosix/widgets/animation_utils.dart';
-import 'package:mosix/utils/clickable_metadata.dart';
-import 'package:mosix/widgets/audio_quality_badges.dart';
-import 'package:mosix/widgets/cached_cover_image.dart';
-import 'package:mosix/widgets/error_card.dart';
-import 'package:mosix/widgets/in_library_badge.dart';
-import 'package:mosix/widgets/preview_button.dart';
-import 'package:mosix/widgets/app_search_field.dart';
-import 'package:mosix/widgets/view_queue_snackbar_action.dart';
-import 'package:mosix/widgets/profile_avatar.dart';
-import 'package:mosix/widgets/downloadable_cover.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/track_provider.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/providers/recent_access_provider.dart';
+import 'package:mornye/providers/explore_provider.dart';
+import 'package:mornye/providers/user_profile_provider.dart';
+import 'package:mornye/widgets/desktop/desktop_scroll_arrows.dart';
+import 'package:mornye/widgets/explore_featured_section.dart';
+import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mornye/providers/music_player_provider.dart';
+import 'package:mornye/models/unified_library_item.dart';
+import 'package:mornye/screens/equalizer_screen.dart';
+import 'package:mornye/screens/listening_statistics_screen.dart';
+import 'package:mornye/screens/network_storage_screen.dart';
+import 'package:mornye/screens/now_playing_screen.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/services/listening_statistics.dart';
+import 'package:mornye/services/music_player_service.dart' show PlayableMedia;
+import 'package:mornye/screens/track_metadata_screen.dart';
+import 'package:mornye/screens/album_screen.dart';
+import 'package:mornye/screens/artist_screen.dart';
+import 'package:mornye/screens/extension_collection_screens.dart';
+import 'package:mornye/controllers/home_search_logic.dart';
+import 'package:mornye/services/csv_import_service.dart';
+import 'package:mornye/services/cover_download_service.dart';
+import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mornye/services/shell_navigation_service.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/widgets/desktop/desktop_commands.dart'
+    show openDesktopNowPlaying;
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/home_greeting.dart';
+import 'package:mornye/screens/playlist_screen.dart';
+import 'package:mornye/screens/downloaded_album_screen.dart';
+import 'package:mornye/widgets/download_service_picker.dart';
+import 'package:mornye/widgets/track_collection_quick_actions.dart';
+import 'package:mornye/widgets/desktop/context_menu.dart';
+import 'package:mornye/widgets/animation_utils.dart';
+import 'package:mornye/utils/clickable_metadata.dart';
+import 'package:mornye/widgets/audio_quality_badges.dart';
+import 'package:mornye/widgets/cached_cover_image.dart';
+import 'package:mornye/widgets/player_artwork.dart';
+import 'package:mornye/widgets/error_card.dart';
+import 'package:mornye/widgets/in_library_badge.dart';
+import 'package:mornye/widgets/preview_button.dart';
+import 'package:mornye/widgets/app_search_field.dart';
+import 'package:mornye/widgets/track_detail_actions.dart';
+import 'package:mornye/widgets/view_queue_snackbar_action.dart';
+import 'package:mornye/widgets/profile_avatar.dart';
+import 'package:mornye/widgets/downloadable_cover.dart';
+import 'package:mornye/widgets/app_crash_banner.dart';
+
+export 'package:mornye/screens/extension_collection_screens.dart';
 
 part 'home_tab_helpers.dart';
 part 'home_tab_explore.dart';
 part 'home_tab_recent.dart';
 part 'home_tab_import.dart';
+part 'home_tab_intro.dart';
 part 'home_tab_search_results.dart';
 part 'home_tab_widgets.dart';
 
@@ -102,6 +131,17 @@ class _HomeTabState extends ConsumerState<HomeTab>
   static const int _minLiveSearchChars = 3;
   static const Duration _liveSearchDelay = Duration(milliseconds: 800);
 
+  /// The Mornye desktop Search page can search the library instead of the
+  /// online provider, as the scope control in Music does.
+  bool get _offersLibraryScope =>
+      widget.mode == HomeTabMode.search &&
+      context.isMornye &&
+      isDesktopPlatform;
+  bool _searchesLibrary = false;
+  String _libraryQuery = '';
+  Timer? _libraryQueryDebounce;
+  bool get _searchingLibrary => _searchesLibrary && _offersLibraryScope;
+
   bool _embeddedCoverRefreshScheduled = false;
   List<Extension>? _thumbnailSizesExtensionsCache;
   bool _isCsvImporting = false;
@@ -128,51 +168,28 @@ class _HomeTabState extends ConsumerState<HomeTab>
   List<Track>? _sortedTracksCache;
   List<int>? _sortedTrackIndexesCache;
 
-  double _responsiveScale({
-    required BuildContext context,
-    double min = 0.82,
-    double max = 1.08,
-    double baseShortestSide = 390,
-  }) {
-    final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-    final scale = shortestSide / baseShortestSide;
-    if (scale < min) return min;
-    if (scale > max) return max;
-    return scale;
-  }
-
-  double _effectiveTextScale(BuildContext context) {
-    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
-    if (textScale < 1.0) return 1.0;
-    if (textScale > 1.4) return 1.4;
-    return textScale;
-  }
-
-  double _recentDownloadCoverSize(BuildContext context) {
-    final scale = _responsiveScale(context: context, min: 0.82, max: 1.25);
-    final textScale = _effectiveTextScale(context);
-    return 100 * scale * (1 + (textScale - 1) * 0.15);
-  }
-
-  double _recentDownloadsRowHeight(BuildContext context) {
-    final coverSize = _recentDownloadCoverSize(context);
-    final textScale = _effectiveTextScale(context);
-    return coverSize + 28 + ((textScale - 1) * 8);
-  }
-
   double _exploreCardSize(BuildContext context) {
     // Six phone-sized cards across an iPad made the feed look like a desktop
     // page zoomed out. A higher tablet cap gives roughly five generous cards
     // in portrait while leaving all phone sizes unchanged.
-    final scale = _responsiveScale(context: context, min: 0.82, max: 1.32);
-    final textScale = _effectiveTextScale(context);
-    return 145 * scale * (1 + (textScale - 1) * 0.12);
+    final scale = responsiveScale(context: context, min: 0.82, max: 1.32);
+    final textScale = effectiveTextScale(context);
+    final size = 145 * scale * (1 + (textScale - 1) * 0.12);
+    // Landscape tablets are short: one carousel row should not take over a
+    // third of the screen. Portrait and phone heights never reach this cap.
+    final heightCap = MediaQuery.sizeOf(context).height * 0.24;
+    return size < heightCap ? size : heightCap;
   }
 
+  /// The square artwork of an explore card. Each card pads 6 on both sides,
+  /// so the artwork takes the width that is left rather than the full card.
+  double _exploreCoverSize(BuildContext context) =>
+      _exploreCardSize(context) - 12;
+
   double _exploreSectionHeight(BuildContext context) {
-    final cardSize = _exploreCardSize(context);
-    final textScale = _effectiveTextScale(context);
-    return cardSize + 58 + ((textScale - 1) * 12);
+    final coverSize = _exploreCoverSize(context);
+    final textScale = effectiveTextScale(context);
+    return coverSize + 58 + ((textScale - 1) * 12);
   }
 
   @override
@@ -235,7 +252,8 @@ class _HomeTabState extends ConsumerState<HomeTab>
   }
 
   void _fetchExploreIfNeeded() {
-    if (!_showsHome) return;
+    // The desktop Mornye Search page browses the feed too.
+    if (!_showsHome && !_offersLibraryScope) return;
     if (ref.read(settingsProvider).homeFeedProvider ==
         AppSettings.homeFeedProviderOff) {
       ref.read(exploreProvider.notifier).clear();
@@ -259,6 +277,7 @@ class _HomeTabState extends ConsumerState<HomeTab>
     ShellNavigationService.searchRequests.removeListener(_focusSearchFromShell);
     _homeScrollController.dispose();
     _liveSearchDebounce?.cancel();
+    _libraryQueryDebounce?.cancel();
     _trackStateSub.close();
     _extensionInitSub.close();
     _homeFeedExtSub.close();
@@ -436,11 +455,23 @@ class _HomeTabState extends ConsumerState<HomeTab>
 
     if (text.isEmpty) {
       _liveSearchDebounce?.cancel();
+      _libraryQueryDebounce?.cancel();
+      _libraryQuery = '';
       _activeSearchInput = null;
       _lastSearchQuery = null;
       if (!_isResettingSearchSurface) {
         _resetSearchSurface(clearText: false);
       }
+      return;
+    }
+
+    if (_searchingLibrary) {
+      _libraryQueryDebounce?.cancel();
+      _libraryQueryDebounce = Timer(const Duration(milliseconds: 300), () {
+        if (mounted && _urlController.text.trim() == text) {
+          setState(() => _libraryQuery = text);
+        }
+      });
       return;
     }
 
@@ -713,38 +744,14 @@ class _HomeTabState extends ConsumerState<HomeTab>
     final trackState = ref.read(trackProvider);
     if (index >= 0 && index < trackState.tracks.length) {
       final track = trackState.tracks[index];
-      final settings = ref.read(settingsProvider);
-
-      if (settings.askQualityBeforeDownload || forceQualityPicker) {
-        DownloadServicePicker.show(
-          context,
-          trackName: track.name,
-          artistName: track.artistName,
-          coverUrl: track.coverUrl,
-          recommendedService:
-              trackState.searchExtensionId ?? trackState.searchSource,
-          onSelect: (quality, service) {
-            ref
-                .read(downloadQueueProvider.notifier)
-                .addToQueue(track, service, qualityOverride: quality);
-            showAddedToQueueSnackBar(context, track.name);
-          },
-        );
-      } else {
-        final extensionState = ref.read(extensionProvider);
-        final service = resolveEffectiveDownloadService(
-          settings.defaultService,
-          extensionState,
-        );
-        if (service.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.extensionsNoDownloadProvider)),
-          );
-          return;
-        }
-        ref.read(downloadQueueProvider.notifier).addToQueue(track, service);
-        showAddedToQueueSnackBar(context, track.name);
-      }
+      downloadSingleTrack(
+        context,
+        ref,
+        track,
+        recommendedService:
+            trackState.searchExtensionId ?? trackState.searchSource,
+        forceQualityPicker: forceQualityPicker,
+      );
     }
   }
 
@@ -760,9 +767,6 @@ class _HomeTabState extends ConsumerState<HomeTab>
     final searchError = _showsSearch
         ? ref.watch(trackProvider.select((s) => s.error))
         : null;
-    final hasSearchedBefore = ref.watch(
-      settingsProvider.select((s) => s.hasSearchedBefore),
-    );
     final explicitSearchProvider = ref.watch(
       settingsProvider.select((s) => s.searchProvider),
     );
@@ -779,15 +783,15 @@ class _HomeTabState extends ConsumerState<HomeTab>
     final hasExploreContent =
         _showsHome &&
         ref.watch(exploreProvider.select((s) => s.sections.isNotEmpty));
-    final exploreLoading =
-        _showsHome && ref.watch(exploreProvider.select((s) => s.isLoading));
-    final hasHomeFeedExtension =
+    final explorePending =
         _showsHome &&
         ref.watch(
-          extensionProvider.select(
-            (s) => s.extensions.any((e) => e.enabled && e.hasHomeFeed),
+          exploreProvider.select(
+            (s) => s.isLoading || (s.lastFetched == null && s.error == null),
           ),
         );
+    final hasHomeFeedExtension =
+        _showsHome && ref.watch(homeFeedExtensionProvider) != null;
     final homeFeedDisabled =
         _showsHome &&
         ref.watch(
@@ -818,11 +822,6 @@ class _HomeTabState extends ConsumerState<HomeTab>
         _showsSearch &&
         ref.watch(trackProvider.select((s) => s.isShowingRecentAccess));
     final screenHeight = MediaQuery.sizeOf(context).height;
-    final hasHistoryItems =
-        _showsHome &&
-        ref.watch(
-          _homeHistoryPreviewProvider.select((items) => items.isNotEmpty),
-        );
 
     final recentModeRequested =
         widget.mode == HomeTabMode.search ||
@@ -863,18 +862,56 @@ class _HomeTabState extends ConsumerState<HomeTab>
         !homeFeedDisabled &&
         (hasHomeFeedExtension || hasExploreContent) &&
         hasExploreContent;
+    // Unknown extensions and an unresolved first feed are loading states,
+    // not evidence that Home should mount its local-only fallback.
+    final showExploreLoading =
+        _showsHome &&
+        !hasActualResults &&
+        !isLoading &&
+        !hasActiveSearchSurface &&
+        !showRecentAccess &&
+        !homeFeedDisabled &&
+        !hasExploreContent &&
+        (isSearchProviderLoading || (hasHomeFeedExtension && explorePending));
+    final showFeedSurface = showExplore || showExploreLoading;
+    // Only a surface with a search field asks for a search provider. The
+    // Mornye Home browses without one, so it never stops at this prompt.
     final showEmptyHomeState =
+        _showsSearch &&
         !isSearchProviderLoading &&
         !hasSearchProvider &&
         !hasHomeFeedExtension &&
         !hasExploreContent &&
         !hasResults;
+    final searchToolbar = _offersLibraryScope;
+    final showLibraryResults = _searchingLibrary && hasSearchInput;
+    // As in Music, the library scope waits for words without recents or
+    // Browse.
+    final showLibraryPrompt = _searchingLibrary && !hasSearchInput;
+    final sectionMotion = AppMotion.spatial(
+      context,
+      const AppMotionSpec(Duration(milliseconds: 250), Curves.easeOut),
+    );
+    // Without a feed, Home gathers the player, shortcuts and Library shelves.
+    final showHomeSections =
+        _showsHome && !showFeedSurface && !showEmptyHomeState;
+    // The Material Home also greets in its header. A feed brings its own
+    // greeting, and the Mornye style keeps its navigation title.
+    final greetsInHeader = showHomeSections && !context.isMornye;
+    final greeting = greetsInHeader
+        ? homeGreeting(
+            context.l10n,
+            name: ref.watch(
+              userProfileProvider.select((p) => p.value?.name ?? ''),
+            ),
+          )
+        : null;
 
     ref.listen<String>(settingsProvider.select((s) => s.defaultSearchTab), (
       previous,
       next,
     ) {
-      if (!_showsSearch || previous == next) return;
+      if (!_showsSearch || _searchingLibrary || previous == next) return;
       final selectedSearchFilter = ref.read(
         trackProvider.select((s) => s.selectedSearchFilter),
       );
@@ -912,241 +949,425 @@ class _HomeTabState extends ConsumerState<HomeTab>
       },
       behavior: HitTestBehavior.translucent,
       child: Scaffold(
-        body: RefreshIndicator(
+        body: AppRefreshIndicator(
           onRefresh: () => ref.read(exploreProvider.notifier).refresh(),
           notificationPredicate: (notification) => showExplore,
           child: CustomScrollView(
             controller: _homeScrollController,
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             slivers: [
-              AppSliverHeader.tabRoot(
-                title: widget.mode == HomeTabMode.search
-                    ? context.l10n.mornyeSearch
-                    : context.l10n.homeTitle,
-                actions: context.isMornye && _showsHome
-                    ? const [HomeProfileButton()]
-                    : null,
+              if (searchToolbar)
+                _buildDesktopSearchToolbarSliver()
+              else
+                _buildHeaderSliver(greeting: greeting),
+              if (_showsHome) const SliverToBoxAdapter(child: AppCrashBanner()),
+              _buildHomeIntroSliver(
+                sectionMotion: sectionMotion,
+                hasResults: hasResults,
+                showExplore: showFeedSurface,
+                colorScheme: colorScheme,
+                screenHeight: screenHeight,
+                showEmptyHomeState: showEmptyHomeState,
               ),
-
-              SliverToBoxAdapter(
-                child: AnimatedSize(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOut,
-                  child: (hasResults || showExplore || !_showsHome)
-                      ? const SizedBox.shrink()
-                      : _buildHomeIntro(
-                          colorScheme: colorScheme,
-                          screenHeight: screenHeight,
-                          showEmptyHomeState: showEmptyHomeState,
-                        ),
+              if (showSearchBar && !searchToolbar)
+                _buildSearchBarSliver(
+                  hasResults: hasResults,
+                  showExplore: showFeedSurface,
+                  greetsInHeader: greetsInHeader,
                 ),
-              ),
-
-              if (showSearchBar)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      16,
-                      (hasResults || showExplore) ? 8 : 32,
-                      16,
-                      (hasResults || showExplore) ? 8 : 16,
-                    ),
-                    child: _buildSearchBar(),
-                  ),
-                ),
-
               if (hasActiveSearchSurface &&
                   !showRecentAccess &&
-                  !showEmptySearchResult)
-                Consumer(
-                  builder: (context, ref, _) {
-                    final currentSearchProvider = ref.watch(
-                      settingsProvider.select((s) => s.searchProvider),
-                    );
-                    final extensions = ref.watch(
-                      extensionProvider.select((s) => s.extensions),
-                    );
-                    final selectedSearchFilter = ref.watch(
-                      trackProvider.select((s) => s.selectedSearchFilter),
-                    );
-                    final searchFilters = _resolveSearchFilters(
-                      context,
-                      currentSearchProvider,
-                      extensions,
-                    );
-                    if (searchFilters.isEmpty) {
-                      return const SliverToBoxAdapter(child: SizedBox.shrink());
-                    }
-                    return SliverToBoxAdapter(
-                      child: _buildSearchFilterBar(
-                        searchFilters,
-                        HomeSearchProviderPolicy.displayFilterSelection(
-                          selectedSearchFilter,
-                          defaultSearchTab,
-                          currentSearchProvider,
-                          extensions,
-                        ),
-                        colorScheme,
-                      ),
-                    );
-                  },
+                  !showEmptySearchResult &&
+                  !showLibraryResults)
+                _buildSearchFilterSliver(
+                  colorScheme: colorScheme,
+                  defaultSearchTab: defaultSearchTab,
                 ),
-
-              if (showRecentAccess)
-                Consumer(
-                  builder: (context, ref, _) {
-                    final recentAccessView = ref.watch(
-                      recentAccessViewProvider,
-                    );
-                    return _buildRecentAccess(recentAccessView, colorScheme);
-                  },
-                ),
-
-              SliverToBoxAdapter(
-                child: AnimatedSize(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOut,
-                  child:
-                      (!_showsHome ||
-                          hasResults ||
-                          showRecentAccess ||
-                          showExplore ||
-                          showEmptyHomeState)
-                      ? const SizedBox.shrink()
-                      : Column(
-                          children: [
-                            if (_showsSearch && !hasSearchedBefore)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Text(
-                                  context.l10n.homeSupports,
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
-                                ),
-                              ),
-                            if (hasHistoryItems)
-                              Consumer(
-                                builder: (context, ref, _) {
-                                  final historyItems = ref.watch(
-                                    _homeHistoryPreviewProvider,
-                                  );
-                                  return Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      24,
-                                      32,
-                                      24,
-                                      24,
-                                    ),
-                                    child: _buildRecentDownloads(
-                                      historyItems,
-                                      colorScheme,
-                                    ),
-                                  );
-                                },
-                              ),
-                          ],
-                        ),
-                ),
+              if (showRecentAccess && !showLibraryResults && !showLibraryPrompt)
+                _buildRecentAccessSliver(colorScheme: colorScheme),
+              if (showLibraryResults) _buildLibrarySearchSliver(),
+              if (showLibraryPrompt) _buildLibraryPromptSliver(),
+              if (searchToolbar &&
+                  !hasSearchInput &&
+                  !_searchingLibrary &&
+                  !homeFeedDisabled)
+                _buildBrowseSliver(),
+              _buildHomeSectionsSliver(
+                sectionMotion: sectionMotion,
+                hasResults: hasResults,
+                showRecentAccess: showRecentAccess,
+                showExplore: showFeedSurface,
+                showEmptyHomeState: showEmptyHomeState,
               ),
-
-              if (showExplore)
-                Consumer(
-                  builder: (context, ref, _) {
-                    final exploreSections = ref.watch(
-                      exploreProvider.select((s) => s.sections),
-                    );
-                    final exploreGreeting = ref.watch(
-                      exploreProvider.select((s) => s.greeting),
-                    );
-                    return SliverMainAxisGroup(
-                      slivers: _buildExploreSections(
-                        exploreSections,
-                        exploreGreeting,
-                        colorScheme,
-                      ),
-                    );
-                  },
-                ),
-
-              if (_showsHome &&
-                  hasHomeFeedExtension &&
-                  !homeFeedDisabled &&
-                  !hasActualResults &&
-                  !isLoading &&
-                  exploreLoading)
-                SliverToBoxAdapter(
-                  child: ShimmerLoading(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildExploreSectionSkeleton(isArtist: false),
-                        _buildExploreSectionSkeleton(isArtist: true),
-                      ],
-                    ),
-                  ),
-                ),
-
-              if (_showsSearch)
-                Consumer(
-                  builder: (context, ref, _) {
-                    final tracks = ref.watch(
-                      trackProvider.select((s) => s.tracks),
-                    );
-                    final isLoading = ref.watch(
-                      trackProvider.select((s) => s.isLoading),
-                    );
-                    final error = ref.watch(
-                      trackProvider.select((s) => s.error),
-                    );
-                    final searchExtensionId = ref.watch(
-                      trackProvider.select((s) => s.searchExtensionId),
-                    );
-                    final localLibrarySettings = ref.watch(
-                      settingsProvider.select(
-                        (s) => (
-                          s.localLibraryEnabled,
-                          s.localLibraryShowDuplicates,
-                        ),
-                      ),
-                    );
-                    final extensions = ref.watch(
-                      extensionProvider.select((s) => s.extensions),
-                    );
-                    final showLocalLibraryIndicator =
-                        localLibrarySettings.$1 && localLibrarySettings.$2;
-                    final thumbnailSizesByExtensionId =
-                        _getThumbnailSizesByExtensionId(extensions);
-                    final hasResults =
-                        tracks.isNotEmpty ||
-                        isLoading ||
-                        error != null ||
-                        hasActiveSearchSurface;
-
-                    return SliverMainAxisGroup(
-                      slivers: _buildSearchResults(
-                        resultsRef: ref,
-                        tracks: tracks,
-                        isLoading: isLoading,
-                        error: error,
-                        colorScheme: colorScheme,
-                        hasResults: hasResults,
-                        showEmptySearchResult: showEmptySearchResult,
-                        searchExtensionId: searchExtensionId,
-                        showLocalLibraryIndicator: showLocalLibraryIndicator,
-                        thumbnailSizesByExtensionId:
-                            thumbnailSizesByExtensionId,
-                      ),
-                    );
-                  },
+              if (showExplore) _buildExploreSliver(colorScheme: colorScheme),
+              if (showExploreLoading) _buildExploreLoadingSliver(),
+              if (_showsSearch && !showLibraryResults)
+                _buildSearchResultsSliver(
+                  colorScheme: colorScheme,
+                  hasActiveSearchSurface: hasActiveSearchSurface,
+                  showEmptySearchResult: showEmptySearchResult,
                 ),
               const NavBarSliverSpacer(),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _setSearchScope({required bool library}) {
+    if (_searchesLibrary == library) return;
+    final text = _urlController.text.trim();
+    _liveSearchDebounce?.cancel();
+    _libraryQueryDebounce?.cancel();
+    setState(() {
+      _searchesLibrary = library;
+      _libraryQuery = library ? text : '';
+    });
+    if (library) {
+      // Online results for the same words would only flash back later.
+      _searchGeneration++;
+      _lastSearchQuery = null;
+      _activeSearchInput = null;
+      ref.read(trackProvider.notifier).clear();
+      ref.read(trackProvider.notifier).setSearchText(text.isNotEmpty);
+    } else if (text.length >= _minLiveSearchChars &&
+        !looksLikeUrlOrSpotifyUri(text)) {
+      _performSearch(text);
+    }
+  }
+
+  /// Music on the Mac keeps its search field centered in the toolbar, with
+  /// the scope control at the trailing edge.
+  Widget _buildDesktopSearchToolbarSliver() {
+    final extensions = ref.watch(extensionProvider.select((s) => s.extensions));
+    final providerId = HomeSearchProviderPolicy.resolveProvider(
+      ref.watch(settingsProvider.select((s) => s.searchProvider)),
+      extensions,
+    );
+    final online =
+        extensions
+            .where((e) => e.id == providerId && e.enabled)
+            .firstOrNull
+            ?.displayName ??
+        context.l10n.librarySourceOnline;
+    const scopeWidth = 260.0;
+    const gap = 16.0;
+    final scope = SizedBox(
+      width: scopeWidth,
+      child: MornyeSegmentedControl(
+        key: const ValueKey('search-scope'),
+        labels: [online, context.l10n.navLibrary],
+        selectedIndex: _searchesLibrary ? 1 : 0,
+        onChanged: (index) => _setSearchScope(library: index == 1),
+      ),
+    );
+    return SliverAppBar(
+      pinned: true,
+      automaticallyImplyLeading: false,
+      toolbarHeight: 88,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      surfaceTintColor: Colors.transparent,
+      titleSpacing: 0,
+      title: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth - 2 * 24;
+          final centeredField = math.min(480.0, width - 2 * (scopeWidth + gap));
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: centeredField >= 280
+                ? Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(width: centeredField, child: _buildSearchBar()),
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: scope,
+                      ),
+                    ],
+                  )
+                // A narrow window has no room to center the field.
+                : Row(
+                    children: [
+                      Expanded(child: _buildSearchBar()),
+                      const SizedBox(width: gap),
+                      scope,
+                    ],
+                  ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLibraryPromptSliver() {
+    final colorScheme = Theme.of(context).colorScheme;
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppIcon(
+                Icons.search,
+                size: 64,
+                color: colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                context.l10n.searchLibraryPrompt,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLibrarySearchSliver() {
+    return LibrarySearchResults(
+      query: _libraryQuery,
+      shelves: true,
+      onOpenArtist: (artist) => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => Scaffold(
+            body: MornyeLibraryScreen(
+              page: MornyeLibraryPage.albums,
+              artist: artist,
+              onOpenSection: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderSliver({required String? greeting}) {
+    return AppSliverHeader.tabRoot(
+      alignToContent: true,
+      title: widget.mode == HomeTabMode.search
+          ? context.l10n.mornyeSearch
+          : greeting ?? context.l10n.homeTitle,
+      // The desktop sidebar's account row already opens the profile.
+      actions: context.isMornye && _showsHome && !isDesktopPlatform
+          ? const [HomeProfileButton()]
+          : null,
+    );
+  }
+
+  Widget _buildHomeIntroSliver({
+    required AppMotionSpec sectionMotion,
+    required bool hasResults,
+    required bool showExplore,
+    required ColorScheme colorScheme,
+    required double screenHeight,
+    required bool showEmptyHomeState,
+  }) {
+    return SliverToBoxAdapter(
+      child: AnimatedSize(
+        // A provider installed offscreen replaces the empty panel without
+        // carrying its height into the compact intro on the first frame.
+        key: ValueKey(showEmptyHomeState),
+        alignment: AlignmentDirectional.topStart,
+        duration: sectionMotion.duration,
+        curve: sectionMotion.curve,
+        child: (hasResults || showExplore || !_showsHome)
+            ? const SizedBox.shrink()
+            : _buildHomeIntro(
+                colorScheme: colorScheme,
+                screenHeight: screenHeight,
+                showEmptyHomeState: showEmptyHomeState,
+              ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBarSliver({
+    required bool hasResults,
+    required bool showExplore,
+    required bool greetsInHeader,
+  }) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        // Centered with the search results on tablets.
+        padding: EdgeInsets.fromLTRB(
+          16 + wideListInset(context),
+          (hasResults || showExplore)
+              ? 8
+              : greetsInHeader
+              ? 20
+              : 32,
+          16 + wideListInset(context),
+          (hasResults || showExplore) ? 8 : 16,
+        ),
+        child: _buildSearchBar(),
+      ),
+    );
+  }
+
+  Widget _buildSearchFilterSliver({
+    required ColorScheme colorScheme,
+    required String defaultSearchTab,
+  }) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final currentSearchProvider = ref.watch(
+          settingsProvider.select((s) => s.searchProvider),
+        );
+        final extensions = ref.watch(
+          extensionProvider.select((s) => s.extensions),
+        );
+        final selectedSearchFilter = ref.watch(
+          trackProvider.select((s) => s.selectedSearchFilter),
+        );
+        final searchFilters = _resolveSearchFilters(
+          context,
+          currentSearchProvider,
+          extensions,
+        );
+        if (searchFilters.isEmpty) {
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
+        return SliverToBoxAdapter(
+          child: _buildSearchFilterBar(
+            searchFilters,
+            HomeSearchProviderPolicy.displayFilterSelection(
+              selectedSearchFilter,
+              defaultSearchTab,
+              currentSearchProvider,
+              extensions,
+            ),
+            colorScheme,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRecentAccessSliver({required ColorScheme colorScheme}) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final recentAccessView = ref.watch(recentAccessViewProvider);
+        return _buildRecentAccess(recentAccessView, colorScheme);
+      },
+    );
+  }
+
+  Widget _buildHomeSectionsSliver({
+    required AppMotionSpec sectionMotion,
+    required bool hasResults,
+    required bool showRecentAccess,
+    required bool showExplore,
+    required bool showEmptyHomeState,
+  }) {
+    return SliverToBoxAdapter(
+      child: AnimatedSize(
+        duration: sectionMotion.duration,
+        curve: sectionMotion.curve,
+        child:
+            (!_showsHome ||
+                hasResults ||
+                showRecentAccess ||
+                showExplore ||
+                showEmptyHomeState)
+            ? const SizedBox.shrink()
+            : _HomeSections(inset: 16 + wideListInset(context)),
+      ),
+    );
+  }
+
+  Widget _buildExploreSliver({required ColorScheme colorScheme}) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final exploreSections = ref.watch(
+          exploreProvider.select((s) => s.sections),
+        );
+        // The feed decides whether a greeting shows; its words
+        // are localized here and address the profile name.
+        final showGreeting =
+            ref.watch(exploreProvider.select((s) => s.greeting)) != null;
+        final profileName = ref.watch(
+          userProfileProvider.select((p) => p.value?.name ?? ''),
+        );
+        return SliverMainAxisGroup(
+          slivers: _buildExploreSections(
+            exploreSections,
+            showGreeting ? homeGreeting(context.l10n, name: profileName) : null,
+            colorScheme,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildExploreLoadingSliver() {
+    return SliverToBoxAdapter(
+      child: ShimmerLoading(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildExploreSectionSkeleton(isArtist: false),
+            _buildExploreSectionSkeleton(isArtist: true),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchResultsSliver({
+    required ColorScheme colorScheme,
+    required bool hasActiveSearchSurface,
+    required bool showEmptySearchResult,
+  }) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final tracks = ref.watch(trackProvider.select((s) => s.tracks));
+        final isLoading = ref.watch(trackProvider.select((s) => s.isLoading));
+        final error = ref.watch(trackProvider.select((s) => s.error));
+        final searchExtensionId = ref.watch(
+          trackProvider.select((s) => s.searchExtensionId),
+        );
+        final localLibrarySettings = ref.watch(
+          settingsProvider.select(
+            (s) => (s.localLibraryEnabled, s.localLibraryShowDuplicates),
+          ),
+        );
+        final extensions = ref.watch(
+          extensionProvider.select((s) => s.extensions),
+        );
+        final showLocalLibraryIndicator =
+            localLibrarySettings.$1 && localLibrarySettings.$2;
+        final thumbnailSizesByExtensionId = _getThumbnailSizesByExtensionId(
+          extensions,
+        );
+        final hasResults =
+            tracks.isNotEmpty ||
+            isLoading ||
+            error != null ||
+            hasActiveSearchSurface;
+
+        return SliverMainAxisGroup(
+          slivers: _buildSearchResults(
+            resultsRef: ref,
+            tracks: tracks,
+            isLoading: isLoading,
+            error: error,
+            colorScheme: colorScheme,
+            hasResults: hasResults,
+            showEmptySearchResult: showEmptySearchResult,
+            searchExtensionId: searchExtensionId,
+            showLocalLibraryIndicator: showLocalLibraryIndicator,
+            thumbnailSizesByExtensionId: thumbnailSizesByExtensionId,
+          ),
+        );
+      },
     );
   }
 
@@ -1199,50 +1420,12 @@ class _HomeTabState extends ConsumerState<HomeTab>
     // in the content area.
     if (context.isMornye) return const SizedBox.shrink();
 
+    // The header carries the greeting; prompts take turns beneath it.
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          SizedBox(height: screenHeight * 0.06),
-          Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              color: colorScheme.primary,
-              shape: BoxShape.circle,
-            ),
-            child: Image.asset(
-              'assets/images/logo-transparent.png',
-              color: colorScheme.onPrimary,
-              fit: BoxFit.contain,
-              errorBuilder: (_, _, _) => ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  width: 96,
-                  height: 96,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Mosix',
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            context.l10n.homeSubtitle,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+      padding: EdgeInsets.symmetric(horizontal: 24 + wideListInset(context)),
+      child: const Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: _HomeTagline(),
       ),
     );
   }
@@ -1256,89 +1439,5 @@ class _HomeTabState extends ConsumerState<HomeTab>
         setState(() {});
       }
     });
-  }
-
-  Widget _buildRecentDownloads(
-    List<DownloadHistoryItem> items,
-    ColorScheme colorScheme,
-  ) {
-    final itemCount = items.length < 10 ? items.length : 10;
-    final coverSize = _recentDownloadCoverSize(context);
-    final rowHeight = _recentDownloadsRowHeight(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Text(
-            context.l10n.homeRecent,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        SizedBox(
-          height: rowHeight,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: itemCount,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return KeyedSubtree(
-                key: ValueKey(item.id),
-                child: Semantics(
-                  button: true,
-                  label: context.l10n.a11yOpenTrackByArtist(
-                    item.trackName,
-                    item.artistName,
-                  ),
-                  child: GestureDetector(
-                    onTap: () => _navigateToMetadataScreen(
-                      item,
-                      navigationItems: items
-                          .take(itemCount)
-                          .toList(growable: false),
-                      navigationIndex: index,
-                    ),
-                    child: Container(
-                      width: coverSize,
-                      margin: const EdgeInsets.only(right: 12),
-                      child: Column(
-                        children: [
-                          DownloadableCover(
-                            coverUrl: item.coverUrl,
-                            baseName: '${item.artistName} - ${item.trackName}',
-                            child: _DownloadedOrRemoteCover(
-                              downloadedFilePath: item.filePath,
-                              imageUrl: item.coverUrl,
-                              width: coverSize,
-                              height: coverSize,
-                              borderRadius: BorderRadius.circular(12),
-                              fallbackIcon: Icons.music_note,
-                              fallbackIconSize: 32,
-                              colorScheme: colorScheme,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            item.trackName,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: colorScheme.onSurfaceVariant),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
   }
 }

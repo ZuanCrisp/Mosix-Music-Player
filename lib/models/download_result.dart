@@ -1,10 +1,10 @@
 import 'dart:collection';
 
-import 'package:mosix/models/download_item.dart';
-import 'package:mosix/services/ffmpeg_models.dart';
-import 'package:mosix/utils/audio_format_utils.dart';
-import 'package:mosix/utils/download_error_type.dart';
-import 'package:mosix/utils/int_utils.dart';
+import 'package:mornye/models/download_item.dart';
+import 'package:mornye/models/ffmpeg_models.dart';
+import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mornye/utils/download_error_type.dart';
+import 'package:mornye/utils/int_utils.dart';
 
 /// Typed access to the download protocol, retaining extension-specific fields.
 /// Wraps the original map so metadata helpers and native reconciliation observe
@@ -59,11 +59,17 @@ class DownloadResult extends MapBase<String, dynamic> {
     _values.remove('actual_sample_rate');
   }
 
-  void markFlacContainer() {
+  void markFlacContainer({String? path, String? name}) {
+    if (path != null) filePath = path;
+    if (name != null) fileName = name;
     _values['audio_codec'] = 'flac';
     _values['format'] = 'flac';
+    _values['actual_container'] = 'flac';
+    if (_values.containsKey('container')) _values['container'] = 'flac';
     _values['actual_extension'] = '.flac';
     _values['output_extension'] = '.flac';
+    _values['requires_container_conversion'] = false;
+    _values.remove('requiresContainerConversion');
   }
 
   String? outputExtension({String? path}) {

@@ -127,8 +127,8 @@ impl RecordStore {
         &self.path
     }
 
-    /// Call while holding this scope's coordinator lock. Go stores this record
-    /// as private JSON; preserve that format for the eventual ownership cutover.
+    /// Call while holding this scope's coordinator lock. Preserve the legacy
+    /// private JSON record format.
     pub fn load(&self, hints: &RuntimeHints) -> Result<Record, String> {
         let mut record = match fs::symlink_metadata(&self.path) {
             Ok(metadata) => {

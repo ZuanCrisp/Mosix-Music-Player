@@ -5,10 +5,10 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/app_switch.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/mornye_selection_pill.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_switch.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/widgets/mornye_selection_pill.dart';
 
 void _maskCullingTests() {
   for (final direction in TextDirection.values) {
@@ -141,6 +141,75 @@ void _maskCullingTests() {
 }
 
 void main() {
+  for (final direction in TextDirection.values) {
+    testWidgets('masked tab items survive press and drag ticks ($direction)', (
+      tester,
+    ) async {
+      var builds = 0;
+      var selected = 0;
+      late StateSetter update;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Directionality(
+            textDirection: direction,
+            child: Center(
+              child: SizedBox(
+                width: 300,
+                height: 64,
+                child: StatefulBuilder(
+                  builder: (_, setState) {
+                    update = setState;
+                    return MornyeSelectionPill(
+                      labels: const ['A', 'B', 'C'],
+                      selectedIndex: selected,
+                      selectionColor: Colors.red,
+                      liquidInteraction: true,
+                      onChanged: (value) => update(() => selected = value),
+                      itemBuilder: (_, index, selected) {
+                        builds++;
+                        expect(selected, isFalse);
+                        return Center(child: Text(['A', 'B', 'C'][index]));
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.runAsync(
+        () => ui.FragmentProgram.fromAsset(
+          'assets/shaders/mornye_selection_mask.frag',
+        ),
+      );
+      await tester.pumpAndSettle();
+      final before = builds;
+      final start = tester.getCenter(find.text('A'));
+      final end = tester.getCenter(find.text('C'));
+      final gesture = await tester.startGesture(start);
+      for (var tick = 0; tick < 20; tick++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      for (var tick = 1; tick <= 20; tick++) {
+        await gesture.moveTo(Offset.lerp(start, end, tick / 20)!);
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      expect(builds, before);
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(selected, 2);
+      expect(builds, before + 3);
+      final item = tester.widget<Semantics>(
+        find.byWidgetPredicate(
+          (widget) => widget is Semantics && widget.properties.label == 'C',
+        ),
+      );
+      expect(item.properties.selected, isTrue);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('selection color follows rounded pill corners', (tester) async {
     final capture = GlobalKey();
     await tester.pumpWidget(

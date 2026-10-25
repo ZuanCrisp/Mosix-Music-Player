@@ -1,12 +1,14 @@
+//! Backend operations for local library files: audio metadata reads and CUE sheet parsing and scanning.
+
 use super::Backend;
 use cap_std::fs::OpenOptions;
 use chrono::{SecondsFormat, Utc};
-use serde_json::{Value, json};
-use spotiflac_core::cue::{self, CueSheet};
-use spotiflac_core::tags::{
+use mornye_core::cue::{self, CueSheet};
+use mornye_core::tags::{
     extract_cover, library_extension, library_id, library_metadata, read_library_metadata,
     read_library_metadata_with_cover,
 };
+use serde_json::{Value, json};
 use std::cell::RefCell;
 use std::path::Path;
 use std::time::UNIX_EPOCH;
@@ -98,7 +100,10 @@ impl Backend {
                         metadata = Some(tags);
                         cover.ok_or_else(|| "no cover art found in file".into())
                     } else {
-                        extract_cover(file, format, check)
+                        // The cover cache files .aac under its MP4 reader; the
+                        // container check also recognizes raw ADTS.
+                        let aac = library_extension(path, hint) == "aac";
+                        extract_cover(file, if aac { "aac" } else { format }, check)
                     }
                 },
                 check,
@@ -122,9 +127,8 @@ impl Backend {
                 let input = files.resolve_legacy(path)?;
                 input.open_native_read().map_err(|error| error.to_string())
             };
-            if let Ok(lyrics) = spotiflac_core::lyrics::file::sidecar(path, &open, check) {
-                result["hasLyrics"] =
-                    spotiflac_core::lyrics::lrc::has_usable_content(&lyrics).into();
+            if let Ok(lyrics) = mornye_core::lyrics::file::sidecar(path, &open, check) {
+                result["hasLyrics"] = mornye_core::lyrics::lrc::has_usable_content(&lyrics).into();
             }
         }
         check()?;
@@ -354,7 +358,7 @@ impl Backend {
         let mut duration = 0.0;
         if let Ok(mut file) = input.open(OpenOptions::new().read(true)) {
             if format == "flac" {
-                if let Ok(quality) = spotiflac_core::media::probe_quality(&mut file, check) {
+                if let Ok(quality) = mornye_core::media::probe_quality(&mut file, check) {
                     depth = quality.bit_depth;
                     rate = quality.sample_rate;
                     if rate > 0 && quality.total_samples > 0 {
@@ -363,7 +367,7 @@ impl Backend {
                 }
             } else if format == "mp3"
                 && let Ok(metadata) =
-                    spotiflac_core::tags::read_file_metadata(&mut file, audio, "", check)
+                    mornye_core::tags::read_file_metadata(&mut file, audio, "", check)
             {
                 rate = metadata["sample_rate"].as_i64().unwrap_or_default();
                 duration = metadata["duration"].as_f64().unwrap_or_default();

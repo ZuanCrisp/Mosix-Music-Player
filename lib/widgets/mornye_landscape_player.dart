@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/widgets/audio_output_button.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/widgets/audio_output_button.dart';
 
 /// Landscape opens on the player. Lyrics can hide their bottom actions until
 /// the user touches the player, while the cover and header stay in place.
@@ -176,8 +176,8 @@ class _MornyeLandscapePlayerState extends State<MornyeLandscapePlayer> {
                                               child: widget.lyrics,
                                             ),
                                             if (widget.lyricsOptions != null)
-                                              Positioned(
-                                                left: 20,
+                                              PositionedDirectional(
+                                                start: 20,
                                                 bottom: 52,
                                                 child: IgnorePointer(
                                                   ignoring: !_actionsVisible,

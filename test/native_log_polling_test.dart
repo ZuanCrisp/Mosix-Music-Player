@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/utils/logger.dart';
 
 Map<String, dynamic> _batch(String? message, int nextIndex) => {
   'logs': [
@@ -14,14 +14,14 @@ Map<String, dynamic> _batch(String? message, int nextIndex) => {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zuancrisp.mosix/backend');
+  const channel = MethodChannel('com.zarz.mornye/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   final buffer = LogBuffer();
   const interval = Duration(milliseconds: 800);
 
   tearDown(() {
-    buffer.stopGoLogPolling();
+    buffer.stopNativeLogPolling();
     messenger.setMockMethodCallHandler(channel, null);
   });
 
@@ -39,12 +39,12 @@ void main() {
     buffer.clear();
     await tester.pump();
 
-    buffer.startGoLogPolling();
+    buffer.startNativeLogPolling();
     await tester.pump(interval);
     expect(indexes, [0]);
 
-    buffer.stopGoLogPolling();
-    buffer.startGoLogPolling();
+    buffer.stopNativeLogPolling();
+    buffer.startNativeLogPolling();
     await tester.pump(interval);
     expect(indexes, [0]);
 
@@ -58,7 +58,7 @@ void main() {
 
     await tester.pump(interval);
     expect(indexes, [0, 0, 4]);
-    buffer.stopGoLogPolling();
+    buffer.stopNativeLogPolling();
   });
 
   testWidgets('clear rejects old logs and waits for native cursor reset', (
@@ -81,7 +81,7 @@ void main() {
     buffer.clear();
     await tester.pump();
 
-    buffer.startGoLogPolling();
+    buffer.startNativeLogPolling();
     await tester.pump(interval);
     expect(indexes, [0]);
 
@@ -102,6 +102,6 @@ void main() {
 
     await tester.pump(interval);
     expect(indexes, [0, 0, 1]);
-    buffer.stopGoLogPolling();
+    buffer.stopNativeLogPolling();
   });
 }

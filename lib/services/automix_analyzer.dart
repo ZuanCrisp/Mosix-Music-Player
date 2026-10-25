@@ -1,15 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:ffmpeg_kit_flutter_new_audio/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new_audio/return_code.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/services/audio_analysis_jobs.dart';
-import 'package:mosix/services/automix_analysis.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/logger.dart';
+import 'package:mornye/services/audio_analysis_jobs.dart';
+import 'package:mornye/services/automix_analysis.dart';
+import 'package:mornye/services/ffmpeg_support.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/logger.dart';
 
 /// Only short head/tail windows are decoded. Summaries are bounded in memory;
 /// raw PCM is deleted immediately and is never added to the user's library.
@@ -19,21 +18,19 @@ class AutoMixAnalyzer {
   final _cache = <String, AutoMixBeatGrid>{};
   final _jobs = AudioAnalysisJobs<bool>(
     start: (arguments) async {
-      final done = Completer<bool>();
-      final session = await FFmpegKit.executeWithArgumentsAsync(arguments, (
-        session,
-      ) async {
-        final success = ReturnCode.isSuccess(await session.getReturnCode());
-        if (!done.isCompleted) done.complete(success);
-      });
-      final id = session.getSessionId();
-      if (id == null) throw StateError('AutoMix analysis session has no ID');
+      final session = await FFmpegExecution.start(arguments);
+      final id = session.id;
       final timeout = Timer(const Duration(seconds: 20), () {
-        unawaited(FFmpegKit.cancel(id));
+        unawaited(FFmpegExecution.cancel(id));
       });
-      return (id: id, completed: done.future.whenComplete(timeout.cancel));
+      return (
+        id: id,
+        completed: session.completed
+            .then((result) => result.success)
+            .whenComplete(timeout.cancel),
+      );
     },
-    cancel: FFmpegKit.cancel,
+    cancel: FFmpegExecution.cancel,
   );
   int _generation = 0;
   final _nativeRequests = <String>{};
@@ -63,6 +60,60 @@ class AutoMixAnalyzer {
     _jobs.dispose();
     _cancelNativeRequests();
     _cache.clear();
+  }
+
+  /// Retry nearby windows only when the first grid is uncertain. Agreement
+  /// with its tempo and phase is required before extrapolating back into the
+  /// actual transition window, so a later tempo change cannot move its cue.
+  Future<AutoMixBeatGrid?> analyzeTransition(
+    String path, {
+    double offset = 0,
+  }) async {
+    final generation = _generation;
+    final first = await analyze(path, offset: offset);
+    if (generation != _generation) return null;
+    if (first == null || first.reliable) return first;
+    if (first.bpm < 60 || first.bpm > 180 || first.confidence < 0.25) {
+      return first;
+    }
+    final attempted = <double>{offset};
+    for (final distance in [6.0, 12.0]) {
+      final nearby = offset > 0
+          ? (offset - distance).clamp(0.0, offset)
+          : distance;
+      if (!attempted.add(nearby)) continue;
+      final candidate = await analyze(path, offset: nearby);
+      if (generation != _generation) return null;
+      if (candidate == null || !candidate.reliable) continue;
+      if ((candidate.bpm / first.bpm - 1).abs() > 0.02) continue;
+      final phase = candidate.phase + nearby - offset;
+      // Check both edges. A coincident first beat with a drifting tempo must
+      // not be promoted to a reliable grid across the rest of the window.
+      double errorAt(double time) {
+        final predicted =
+            phase +
+            ((time - phase) / candidate.period).round() * candidate.period;
+        final measured =
+            first.phase +
+            ((time - first.phase) / first.period).round() * first.period;
+        final difference = predicted - measured;
+        return (difference - (difference / first.period).round() * first.period)
+            .abs();
+      }
+
+      if (errorAt(first.phase) > 0.04 ||
+          errorAt(first.beatAtOrAfter(windowSeconds - 1)) > 0.04) {
+        continue;
+      }
+      _log.d('AutoMix recovered a consistent beat grid from a nearby window');
+      return AutoMixBeatGrid(
+        bpm: candidate.bpm,
+        phase: phase,
+        confidence: candidate.confidence,
+        firstSound: first.firstSound,
+      );
+    }
+    return first;
   }
 
   Future<AutoMixBeatGrid?> analyze(String path, {double offset = 0}) async {

@@ -57,6 +57,19 @@ extension _ArtistScreenSections on _ArtistScreenState {
       ),
     );
 
+    // Mornye keeps its Apple Music hero on desktop, filling the pane.
+    if (isDesktopPlatform && !context.isMornye) {
+      return _buildDesktopHeader(
+        context,
+        colorScheme,
+        albums: albums,
+        hasDiscography: hasDiscography,
+        imageUrl: hasValidImage ? imageUrl : null,
+        listenersText: listenersText,
+        isFavoriteArtist: isFavoriteArtist,
+      );
+    }
+
     if (context.isMornye) {
       final artwork = hasValidImage
           ? DownloadableCover(
@@ -66,7 +79,8 @@ extension _ArtistScreenSections on _ArtistScreenState {
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
                 alignment: Alignment.topCenter,
-                memCacheWidth: 800,
+                // The desktop hero spans the content pane.
+                memCacheWidth: isDesktopPlatform ? 1600 : 800,
                 errorWidget: (_, _, _) =>
                     const Center(child: Icon(CupertinoIcons.person, size: 80)),
               ),
@@ -154,6 +168,116 @@ extension _ArtistScreenSections on _ArtistScreenState {
     ];
   }
 
+  /// Desktop: the round photo beside the name and actions, under a pinned
+  /// toolbar, in the same column as the discography.
+  List<Widget> _buildDesktopHeader(
+    BuildContext context,
+    ColorScheme colorScheme, {
+    required List<ArtistAlbum> albums,
+    required bool hasDiscography,
+    required String? imageUrl,
+    required String? listenersText,
+    required bool isFavoriteArtist,
+  }) {
+    final mornye = context.isMornye;
+    final placeholder = ColoredBox(
+      color: colorScheme.surfaceContainerHighest,
+      child: Center(
+        child: Icon(
+          mornye ? CupertinoIcons.person : Icons.person,
+          size: 64,
+          color: colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+    return desktopDetailHeaderSlivers(
+      context,
+      title: widget.artistName,
+      circularArtwork: true,
+      paletteSource: imageUrl,
+      artwork: (context, size) => imageUrl == null
+          ? placeholder
+          : DownloadableCover(
+              coverUrl: imageUrl,
+              baseName: widget.artistName,
+              child: CachedCoverImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+                memCacheWidth: (size * MediaQuery.devicePixelRatioOf(context))
+                    .round(),
+                errorWidget: (_, _, _) => placeholder,
+              ),
+            ),
+      // Subtitle and actions are built inside the header, so they read the
+      // artist image's scheme.
+      subtitle: listenersText == null
+          ? null
+          : Builder(
+              builder: (header) => Text(
+                listenersText,
+                style: Theme.of(header).textTheme.bodyMedium?.copyWith(
+                  color: HeaderPalette.of(header).onSurfaceVariant,
+                ),
+              ),
+            ),
+      meta: _concerts.isEmpty || isSelectionMode ? null : _concertsButton(),
+      actions: isSelectionMode
+          ? null
+          : Builder(
+              builder: (header) {
+                final headerScheme = HeaderPalette.of(header);
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 10,
+                  children: [
+                    HeaderCircleButton(
+                      tonal: true,
+                      icon: isFavoriteArtist
+                          ? (mornye ? CupertinoIcons.star_fill : Icons.favorite)
+                          : (mornye
+                                ? CupertinoIcons.star
+                                : Icons.favorite_border),
+                      iconColor: isFavoriteArtist && !mornye
+                          ? headerScheme.error
+                          : headerScheme.primary,
+                      tooltip: isFavoriteArtist
+                          ? context.l10n.artistOptionRemoveFromFavorites
+                          : context.l10n.artistOptionAddToFavorites,
+                      onPressed: () => _toggleFavoriteArtist(context),
+                    ),
+                    if (hasDiscography && !_isLoadingDiscography)
+                      HeaderCircleButton(
+                        tonal: true,
+                        icon: mornye
+                            ? CupertinoIcons.arrow_down
+                            : Icons.download_rounded,
+                        iconColor: headerScheme.primary,
+                        tooltip: context.l10n.discographyDownload,
+                        onPressed: () => _showDiscographyOptions(
+                          context,
+                          colorScheme,
+                          albums,
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+      appBarActions: isSelectionMode
+          ? const []
+          : [
+              HeaderCircleButton(
+                icon: mornye
+                    ? CupertinoIcons.square_arrow_up
+                    : Icons.open_in_new_rounded,
+                tooltip: context.l10n.openInOtherServices,
+                onPressed: () => _showShareSheet(context),
+              ),
+            ],
+    );
+  }
+
   Widget _buildArtistAppBar(
     BuildContext context,
     ColorScheme colorScheme,
@@ -168,26 +292,42 @@ extension _ArtistScreenSections on _ArtistScreenState {
     required bool isFavoriteArtist,
   }) {
     final edgeInset = detailHeaderEdgeInset(context);
+    const fallbackMotion = AppMotionSpec(
+      Duration(milliseconds: 200),
+      Curves.linear,
+    );
+    final titleFade = AppMotion.effects(context, fallbackMotion);
+    Widget toolbarTitle = AnimatedOpacity(
+      duration: titleFade.duration,
+      curve: titleFade.curve,
+      opacity: _showTitleInAppBar ? 1.0 : 0.0,
+      child: Text(
+        widget.artistName,
+        style: TextStyle(
+          color: colorScheme.onSurface,
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+    if (materialExpressiveEnabled(context)) {
+      final titleSlide = AppMotion.spatial(context, fallbackMotion);
+      toolbarTitle = AnimatedSlide(
+        duration: titleSlide.duration,
+        curve: titleSlide.curve,
+        offset: _showTitleInAppBar ? Offset.zero : const Offset(0, 0.6),
+        child: toolbarTitle,
+      );
+    }
     return SliverAppBar(
       expandedHeight: hasDiscography ? 420 : 380,
       pinned: true,
       stretch: true,
       backgroundColor: colorScheme.surface,
       surfaceTintColor: Colors.transparent,
-      title: AnimatedOpacity(
-        duration: const Duration(milliseconds: 200),
-        opacity: _showTitleInAppBar ? 1.0 : 0.0,
-        child: Text(
-          widget.artistName,
-          style: TextStyle(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
+      title: toolbarTitle,
       flexibleSpace: FlexibleSpaceBar(
         collapseMode: CollapseMode.none,
         background: Stack(
@@ -313,50 +453,92 @@ extension _ArtistScreenSections on _ArtistScreenState {
                   ),
                   if (!isSelectionMode) ...[
                     const SizedBox(width: 12),
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: headerScheme.primaryContainer,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        onPressed: () => _toggleFavoriteArtist(context),
-                        icon: Icon(
-                          isFavoriteArtist
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          size: 26,
+                    if (materialExpressiveEnabled(context))
+                      // Favourite morphs to a square while selected, and the
+                      // pair squishes like a button group when pressed.
+                      ExpressiveButtonGroup(
+                        slotWidth: 52,
+                        children: [
+                          ExpressiveIconButton(
+                            onPressed: () => _toggleFavoriteArtist(context),
+                            icon: Icon(
+                              isFavoriteArtist
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                            ),
+                            selected: isFavoriteArtist,
+                            size: 52,
+                            iconSize: 26,
+                            backgroundColor: headerScheme.primaryContainer,
+                            foregroundColor: isFavoriteArtist
+                                ? headerScheme.error
+                                : headerScheme.onPrimaryContainer,
+                            tooltip: isFavoriteArtist
+                                ? context.l10n.artistOptionRemoveFromFavorites
+                                : context.l10n.artistOptionAddToFavorites,
+                          ),
+                          if (hasDiscography)
+                            ExpressiveIconButton(
+                              onPressed: () => _showDiscographyOptions(
+                                context,
+                                colorScheme,
+                                albums,
+                              ),
+                              icon: const Icon(Icons.download_rounded),
+                              size: 52,
+                              iconSize: 26,
+                              backgroundColor: headerScheme.primaryContainer,
+                              foregroundColor: headerScheme.onPrimaryContainer,
+                              tooltip: context.l10n.discographyDownload,
+                            ),
+                        ],
+                      )
+                    else ...[
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: headerScheme.primaryContainer,
+                          shape: BoxShape.circle,
                         ),
-                        color: isFavoriteArtist
-                            ? headerScheme.error
-                            : headerScheme.onPrimaryContainer,
-                        tooltip: isFavoriteArtist
-                            ? context.l10n.artistOptionRemoveFromFavorites
-                            : context.l10n.artistOptionAddToFavorites,
-                      ),
-                    ),
-                  ],
-                  if (hasDiscography && !isSelectionMode) ...[
-                    const SizedBox(width: 12),
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: headerScheme.primaryContainer,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        onPressed: () => _showDiscographyOptions(
-                          context,
-                          colorScheme,
-                          albums,
+                        child: AppIconButton(
+                          onPressed: () => _toggleFavoriteArtist(context),
+                          icon: Icon(
+                            isFavoriteArtist
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            size: 26,
+                          ),
+                          color: isFavoriteArtist
+                              ? headerScheme.error
+                              : headerScheme.onPrimaryContainer,
+                          tooltip: isFavoriteArtist
+                              ? context.l10n.artistOptionRemoveFromFavorites
+                              : context.l10n.artistOptionAddToFavorites,
                         ),
-                        icon: const Icon(Icons.download_rounded, size: 26),
-                        color: headerScheme.onPrimaryContainer,
-                        tooltip: context.l10n.discographyDownload,
                       ),
-                    ),
+                      if (hasDiscography) ...[
+                        const SizedBox(width: 12),
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: headerScheme.primaryContainer,
+                            shape: BoxShape.circle,
+                          ),
+                          child: AppIconButton(
+                            onPressed: () => _showDiscographyOptions(
+                              context,
+                              colorScheme,
+                              albums,
+                            ),
+                            icon: const Icon(Icons.download_rounded, size: 26),
+                            color: headerScheme.onPrimaryContainer,
+                            tooltip: context.l10n.discographyDownload,
+                          ),
+                        ),
+                      ],
+                    ],
                   ],
                 ],
               ),
@@ -367,14 +549,14 @@ extension _ArtistScreenSections on _ArtistScreenState {
       ),
       leadingWidth: kToolbarHeight + edgeInset,
       leading: Padding(
-        padding: EdgeInsets.only(left: edgeInset),
+        padding: EdgeInsetsDirectional.only(start: edgeInset),
         child: HeaderCircleButton(
           icon: Icons.arrow_back,
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      actionsPadding: EdgeInsets.only(right: edgeInset),
+      actionsPadding: EdgeInsetsDirectional.only(end: edgeInset),
       actions: [
         HeaderCircleButton(
           icon: Icons.open_in_new_rounded,
@@ -458,7 +640,7 @@ extension _ArtistScreenSections on _ArtistScreenState {
                 ),
                 const SizedBox(width: 8),
                 Icon(
-                  CupertinoIcons.chevron_forward,
+                  CupertinoIcons.forward,
                   size: 14,
                   color: Colors.white.withValues(alpha: 0.7),
                 ),
@@ -590,127 +772,146 @@ extension _ArtistScreenSections on _ArtistScreenState {
 
         final isQueued = queueItem != null;
 
-        final row = InkWell(
-          onTap: () => _handlePopularTrackTap(
-            track,
-            isQueued: isQueued,
-            isInHistory: isInHistory,
-            isInLocalLibrary: isInLocalLibrary,
-          ),
-          onLongPress: () => TrackCollectionQuickActions.showTrackOptionsSheet(
-            context,
-            ref,
-            track,
-            hasLocalPlaybackCandidate: isInHistory || isInLocalLibrary,
-          ),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(context.isMornye ? 20 : 16, 8, 10, 8),
-            child: Row(
-              children: [
-                if (!context.isMornye) ...[
-                  SizedBox(
-                    width: 24,
-                    child: Text(
-                      '$rank',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
+        final row = DesktopContextMenuRegion(
+          onContextMenu: (position) =>
+              TrackCollectionQuickActions.showTrackOptionsSheet(
+                context,
+                ref,
+                track,
+                position: position,
+                hasLocalPlaybackCandidate: isInHistory || isInLocalLibrary,
+              ),
+          child: InkWell(
+            onTap: () => _handlePopularTrackTap(
+              track,
+              isQueued: isQueued,
+              isInHistory: isInHistory,
+              isInLocalLibrary: isInLocalLibrary,
+            ),
+            onLongPress: () =>
+                TrackCollectionQuickActions.showTrackOptionsSheet(
+                  context,
+                  ref,
+                  track,
+                  hasLocalPlaybackCandidate: isInHistory || isInLocalLibrary,
+                ),
+            child: Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(
+                context.isMornye ? 20 : 16,
+                8,
+                10,
+                8,
+              ),
+              child: Row(
+                children: [
+                  if (!context.isMornye) ...[
+                    SizedBox(
+                      width: 24,
+                      child: Text(
+                        '$rank',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                ],
-                track.coverUrl != null
-                    ? DownloadableCover(
-                        coverUrl: track.coverUrl,
-                        baseName: '${track.artistName} - ${track.name}',
-                        child: CachedCoverImage(
-                          imageUrl: track.coverUrl!,
-                          width: 48,
-                          height: 48,
-                          borderRadius: BorderRadius.circular(4),
-                          placeholder: (context, url) => ShimmerLoading(
-                            child: Container(
+                    const SizedBox(width: 12),
+                  ],
+                  track.coverUrl != null
+                      ? DownloadableCover(
+                          coverUrl: track.coverUrl,
+                          baseName: '${track.artistName} - ${track.name}',
+                          child: CachedCoverImage(
+                            imageUrl: track.coverUrl!,
+                            width: 48,
+                            height: 48,
+                            borderRadius: BorderRadius.circular(4),
+                            placeholder: (context, url) => ShimmerLoading(
+                              child: Container(
+                                width: 48,
+                                height: 48,
+                                color: colorScheme.surfaceContainerHighest,
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Container(
                               width: 48,
                               height: 48,
                               color: colorScheme.surfaceContainerHighest,
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            width: 48,
-                            height: 48,
-                            color: colorScheme.surfaceContainerHighest,
-                            child: Icon(
-                              Icons.music_note,
-                              color: colorScheme.onSurfaceVariant,
-                              size: 24,
-                            ),
-                          ),
-                        ),
-                      )
-                    : Container(
-                        width: 48,
-                        height: 48,
-                        color: colorScheme.surfaceContainerHighest,
-                        child: Icon(
-                          Icons.music_note,
-                          color: colorScheme.onSurfaceVariant,
-                          size: 24,
-                        ),
-                      ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        track.name,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontSize: context.isMornye ? 17 : null,
-                          fontWeight: context.isMornye
-                              ? FontWeight.w400
-                              : FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (track.albumName.isNotEmpty ||
-                          isInLocalLibrary ||
-                          isInHistory)
-                        Row(
-                          children: [
-                            if (track.albumName.isNotEmpty)
-                              Expanded(
-                                child: ClickableAlbumName(
-                                  albumName: track.albumName,
-                                  albumId: track.albumId,
-                                  artistName: track.artistName,
-                                  coverUrl: track.coverUrl,
-                                  extensionId: widget.extensionId,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                        fontSize: context.isMornye ? 15 : null,
-                                      ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                              child: Icon(
+                                Icons.music_note,
+                                color: colorScheme.onSurfaceVariant,
+                                size: 24,
                               ),
-                            if (isInLocalLibrary || isInHistory) ...[
-                              if (track.albumName.isNotEmpty)
-                                const SizedBox(width: 6),
-                              const InLibraryBadge(),
-                            ],
-                          ],
+                            ),
+                          ),
+                        )
+                      : Container(
+                          width: 48,
+                          height: 48,
+                          color: colorScheme.surfaceContainerHighest,
+                          child: Icon(
+                            Icons.music_note,
+                            color: colorScheme.onSurfaceVariant,
+                            size: 24,
+                          ),
                         ),
-                    ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          track.name,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontSize: context.isMornye ? 17 : null,
+                                fontWeight: context.isMornye
+                                    ? FontWeight.w400
+                                    : FontWeight.w500,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (track.albumName.isNotEmpty ||
+                            isInLocalLibrary ||
+                            isInHistory)
+                          Row(
+                            children: [
+                              if (track.albumName.isNotEmpty)
+                                Expanded(
+                                  child: ClickableAlbumName(
+                                    albumName: track.albumName,
+                                    albumId: track.albumId,
+                                    artistName: track.artistName,
+                                    coverUrl: track.coverUrl,
+                                    extensionId: widget.extensionId,
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                          fontSize: context.isMornye
+                                              ? 15
+                                              : null,
+                                        ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              if (isInLocalLibrary || isInHistory) ...[
+                                if (track.albumName.isNotEmpty)
+                                  const SizedBox(width: 6),
+                                const InLibraryBadge(),
+                              ],
+                            ],
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                TrackCollectionQuickActions(
-                  track: track,
-                  hasLocalPlaybackCandidate: isInHistory || isInLocalLibrary,
-                ),
-              ],
+                  TrackCollectionQuickActions(
+                    track: track,
+                    hasLocalPlaybackCandidate: isInHistory || isInLocalLibrary,
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -718,9 +919,9 @@ extension _ArtistScreenSections on _ArtistScreenState {
         return Stack(
           children: [
             row,
-            Positioned(
-              left: 80,
-              right: 20,
+            PositionedDirectional(
+              start: 80,
+              end: 20,
               bottom: 0,
               child: Divider(
                 height: 1,
@@ -800,8 +1001,8 @@ extension _ArtistScreenSections on _ArtistScreenState {
     ColorScheme colorScheme, {
     bool showTypeBadge = false,
   }) {
-    final sectionHeight = _artistAlbumSectionHeight();
-    final tileSize = _artistAlbumTileSize();
+    final sectionHeight = artistAlbumSectionHeight(context);
+    final tileSize = artistAlbumTileSize(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -819,24 +1020,34 @@ extension _ArtistScreenSections on _ArtistScreenState {
           onNotification: _onAlbumsScroll,
           child: SizedBox(
             height: sectionHeight,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: albums.length,
-              itemBuilder: (context, index) {
-                final album = albums[index];
-                return KeyedSubtree(
-                  key: ValueKey(album.id),
-                  child: _buildAlbumCard(
-                    context,
-                    album,
-                    colorScheme,
-                    tileSize: tileSize,
-                    sectionHeight: sectionHeight,
-                    showTypeBadge: showTypeBadge,
-                  ),
-                );
-              },
+            child: DesktopListScope(
+              onSelectAll: () => selectAll(
+                (_albums ?? const <ArtistAlbum>[]).map((album) => album.id),
+              ),
+              onClearSelection: showsSelectionBar ? exitSelectionMode : null,
+              child: DesktopScrollArrows(
+                builder: (context, controller) => ListView.builder(
+                  controller: controller,
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  itemCount: albums.length,
+                  itemBuilder: (context, index) {
+                    final album = albums[index];
+                    return KeyedSubtree(
+                      key: ValueKey(album.id),
+                      child: _buildAlbumCard(
+                        context,
+                        album,
+                        colorScheme,
+                        sectionAlbums: albums,
+                        tileSize: tileSize,
+                        sectionHeight: sectionHeight,
+                        showTypeBadge: showTypeBadge,
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
           ),
         ),
@@ -848,21 +1059,120 @@ extension _ArtistScreenSections on _ArtistScreenState {
     BuildContext context,
     ArtistAlbum album,
     ColorScheme colorScheme, {
+    required List<ArtistAlbum> sectionAlbums,
     required double tileSize,
     required double sectionHeight,
     bool showTypeBadge = false,
   }) {
     final isSelected = selectedIds.contains(album.id);
 
+    return DesktopContextMenuRegion(
+      onContextMenu: (position) => showSelectionMenu(
+        album.id,
+        () => _showAlbumMenu(context, album, position),
+      ),
+      child: _buildAlbumCardBody(
+        context,
+        album,
+        colorScheme,
+        sectionAlbums: sectionAlbums,
+        isSelected: isSelected,
+        tileSize: tileSize,
+        sectionHeight: sectionHeight,
+        showTypeBadge: showTypeBadge,
+      ),
+    );
+  }
+
+  /// The desktop menu of an album card: open it, or act on the selection
+  /// the album joins, as the selection bar does.
+  Future<bool> _showAlbumMenu(
+    BuildContext context,
+    ArtistAlbum album,
+    Offset position,
+  ) {
+    final l10n = context.l10n;
+    final selected = [
+      for (final candidate in _albums ?? const <ArtistAlbum>[])
+        if (selectedIds.contains(candidate.id)) candidate,
+    ];
+    if (selected.isEmpty) selected.add(album);
+    return showContextMenu(
+      context,
+      position: position,
+      groups: [
+        [
+          if (selected.length == 1)
+            ContextMenuAction(
+              icon: Icons.open_in_new,
+              label: l10n.desktopMenuOpen,
+              onSelected: () {
+                exitSelectionMode();
+                _navigateToAlbum(album);
+              },
+            ),
+          if (!showsSelectionBar)
+            ContextMenuAction(
+              icon: Icons.checklist,
+              label: l10n.discographySelectAlbums,
+              onSelected: () => enterSelectionMode(album.id),
+            ),
+          ContextMenuAction(
+            icon: Icons.playlist_add,
+            label: l10n.collectionAddToPlaylist,
+            onSelected: _isFetchingDiscography
+                ? null
+                : () {
+                    exitSelectionMode();
+                    _fetchAndQueueAlbums(
+                      selected,
+                      ref.read(settingsProvider).defaultService,
+                      null,
+                      addToPlaylist: true,
+                    );
+                  },
+          ),
+          ContextMenuAction(
+            icon: Icons.download,
+            label: l10n.discographyDownloadSelected,
+            onSelected: () => _downloadSelectedAlbums(this.context, selected),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildAlbumCardBody(
+    BuildContext context,
+    ArtistAlbum album,
+    ColorScheme colorScheme, {
+    required List<ArtistAlbum> sectionAlbums,
+    required bool isSelected,
+    required double tileSize,
+    required double sectionHeight,
+    required bool showTypeBadge,
+  }) {
     return Semantics(
       button: true,
       selected: isSelectionMode && isSelected,
-      label: isSelectionMode
+      label: showsSelectionBar
           ? context.l10n.a11ySelectAlbum(album.name)
           : context.l10n.a11yOpenAlbum(album.name),
       child: GestureDetector(
         onTap: () {
-          if (isSelectionMode) {
+          final kind = isDesktopPlatform
+              ? desktopClickKind()
+              : DesktopClick.replace;
+          if (isDesktopPlatform &&
+              (isSelectionMode || kind != DesktopClick.replace)) {
+            applyDesktopClick(
+              album.id,
+              kind == DesktopClick.replace ? DesktopClick.toggle : kind,
+              kind == DesktopClick.extend
+                  ? sectionAlbums.map((album) => album.id).toList()
+                  : const [],
+            );
+          } else if (isSelectionMode) {
             toggleSelection(album.id);
           } else {
             _navigateToAlbum(album);
@@ -923,7 +1233,7 @@ extension _ArtistScreenSections on _ArtistScreenState {
                               ),
                       ),
                     ),
-                    if (isSelectionMode)
+                    if (isSelected || showsSelectionBar)
                       Positioned.fill(
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
@@ -941,10 +1251,10 @@ extension _ArtistScreenSections on _ArtistScreenState {
                           ),
                         ),
                       ),
-                    if (isSelectionMode)
-                      Positioned(
+                    if (showsSelectionBar)
+                      PositionedDirectional(
                         top: 8,
-                        right: 8,
+                        end: 8,
                         child: AnimatedSelectionCheckbox(
                           visible: true,
                           selected: isSelected,
@@ -956,8 +1266,8 @@ extension _ArtistScreenSections on _ArtistScreenState {
                         ),
                       ),
                     if (showTypeBadge)
-                      Positioned(
-                        left: 6,
+                      PositionedDirectional(
+                        start: 6,
                         bottom: 6,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -1051,183 +1361,5 @@ extension _ArtistScreenSections on _ArtistScreenState {
         ),
       );
     }
-  }
-}
-
-class _DiscographyOptionTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-  final bool showDivider;
-
-  const _DiscographyOptionTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    this.showDivider = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    if (context.isMornye) {
-      final textTheme = Theme.of(context).textTheme;
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CupertinoButton(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              onPressed: onTap,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(title, style: textTheme.bodyLarge),
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle,
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurface.withValues(
-                              alpha: 0.72,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(
-                    mornyeIconFor(icon),
-                    size: 22,
-                    color: colorScheme.onSurface,
-                  ),
-                ],
-              ),
-            ),
-            if (showDivider) const Divider(height: 0.5, thickness: 0.5),
-          ],
-        ),
-      );
-    }
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-      leading: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, color: colorScheme.onPrimaryContainer, size: 24),
-      ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
-      ),
-      trailing: Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
-      onTap: onTap,
-    );
-  }
-}
-
-class _FetchingProgressDialog extends StatefulWidget {
-  final int totalAlbums;
-  final VoidCallback onCancel;
-
-  const _FetchingProgressDialog({
-    super.key,
-    required this.totalAlbums,
-    required this.onCancel,
-  });
-
-  @override
-  State<_FetchingProgressDialog> createState() =>
-      _FetchingProgressDialogState();
-}
-
-class _FetchingProgressDialogState extends State<_FetchingProgressDialog> {
-  int _current = 0;
-  int _total = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _total = widget.totalAlbums;
-  }
-
-  void updateProgress(int current, int total) {
-    if (mounted) {
-      setState(() {
-        _current = current;
-        _total = total;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final progress = _total > 0 ? _current / _total : 0.0;
-
-    return AppAlertDialog(
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 8),
-          SizedBox(
-            width: 64,
-            height: 64,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CircularProgressIndicator(
-                  value: progress > 0 ? progress : null,
-                  strokeWidth: 4,
-                  backgroundColor: colorScheme.surfaceContainerHighest,
-                ),
-                Icon(Icons.library_music, color: colorScheme.primary, size: 24),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            context.l10n.discographyFetchingTracks,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            context.l10n.discographyFetchingAlbum(_current, _total),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress > 0 ? progress : null,
-              backgroundColor: colorScheme.surfaceContainerHighest,
-              minHeight: 6,
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        AppDialogAction(
-          onPressed: widget.onCancel,
-          child: Text(context.l10n.dialogCancel),
-        ),
-      ],
-    );
   }
 }

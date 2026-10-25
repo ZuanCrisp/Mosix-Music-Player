@@ -5,12 +5,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/screens/network_storage_screen.dart';
-import 'package:mosix/services/network_certificate.dart';
-import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/screens/network_storage_screen.dart';
+import 'package:mornye/services/local_network_access.dart';
+import 'package:mornye/services/network_certificate.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_action_button.dart';
 
 void main() {
   for (final olderFails in [false, true]) {
@@ -101,6 +102,44 @@ void main() {
     expect(await service.connections(), isEmpty);
   });
   for (final mornye in [false, true]) {
+    testWidgets('local permission denial can be retried (Mornye: $mornye)', (
+      tester,
+    ) async {
+      final service = _NetworkFixture()
+        ..error = const LocalNetworkPermissionException();
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: mornye
+                ? MornyeTheme.build(Brightness.dark)
+                : ThemeData(useMaterial3: true),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: NetworkStorageScreen(
+              service: service,
+              connection: const NetworkConnection(
+                id: 'nas',
+                name: 'NAS',
+                protocol: NetworkProtocol.smb,
+                address: 'smb://nas.local/music/',
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Allow Nearby devices'), findsOneWidget);
+      expect(
+        find.textContaining('The server rejected the sign-in'),
+        findsNothing,
+      );
+      service.error = null;
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Allow Nearby devices'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets(
       'certificate trust requires a tap and stays on its server (Mornye: $mornye)',
       (tester) async {
@@ -124,7 +163,9 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.byTooltip('Add connection'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('WebDAV'));
+        // The connected button group also lays out an offstage copy of each
+        // label to measure it; tap the visible one.
+        await tester.tap(find.text('WebDAV').hitTestable());
         await tester.pumpAndSettle();
         await tester.enterText(find.byKey(const ValueKey('Name')), 'NAS');
         final address = find.byKey(const ValueKey('Server or audio URL'));

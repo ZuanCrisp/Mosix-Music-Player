@@ -11,8 +11,10 @@ on:
         required: true
         default: "v1.0.0"
 
+permissions:
+  contents: read
+
 jobs:
-  # Get version first (quick job)
   get-version:
     runs-on: ubuntu-latest
     outputs:
@@ -46,12 +48,11 @@ jobs:
             echo "Detected stable version: $VERSION"
           fi
 
-  # Android and iOS build in PARALLEL
   build-android:
     runs-on: ubuntu-latest
     needs: get-version
     env:
-      MOSIX_DISCORD_SDK: "1"
+      MORNYE_DISCORD_SDK: "1"
 
     steps:
       - name: Free disk space
@@ -64,7 +65,6 @@ jobs:
           sudo rm -rf /usr/local/share/boost
           sudo rm -rf /usr/share/swift
           sudo rm -rf /usr/local/.ghcup
-          # Show available space
           df -h
 
       - name: Checkout repository
@@ -90,7 +90,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libclang-dev
 
-      # Cache Gradle for faster builds
       - name: Cache Gradle
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -109,11 +108,9 @@ jobs:
 
       - name: Install Android SDK & NDK
         run: |
-          # Use pre-installed Android SDK on GitHub runners
           echo "ANDROID_HOME=$ANDROID_HOME"
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
 
-          # Accept licenses
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
 
           # Install NDK r30 (supports 16KB page size for Android 15+)
@@ -124,7 +121,6 @@ jobs:
             "build-tools;37.0.0" \
             "cmake;4.1.2"
 
-          # Set NDK path
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/30.0.16248370" >> "$GITHUB_ENV"
 
       - name: Setup Flutter
@@ -143,6 +139,9 @@ jobs:
 
       - name: Get Flutter dependencies
         run: flutter pub get
+
+      - name: Prepare Flutter framework patch
+        run: dart scripts/prepare_flutter_sdk.dart
 
       - name: Generate app icons
         run: dart run flutter_launcher_icons
@@ -167,7 +166,7 @@ jobs:
           export KEY_PASSWORD="${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
 
           umask 077
-          signing_dir="$(mktemp -d "$RUNNER_TEMP/spotiflac-signing.XXXXXX")"
+          signing_dir="$(mktemp -d "$RUNNER_TEMP/mornye-signing.XXXXXX")"
           trap 'rm -rf "$signing_dir"' EXIT
           printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$signing_dir/release.jks"
           apksigner="$ANDROID_HOME/build-tools/37.0.0/apksigner"
@@ -176,7 +175,7 @@ jobs:
           for target in arm64-v8a:arm64 armeabi-v7a:arm32; do
             abi="${target%%:*}"
             label="${target##*:}"
-            apk="$apk_dir/Mosix-${VERSION}-${label}.apk"
+            apk="$apk_dir/Mornye-${VERSION}-${label}.apk"
             "$apksigner" sign \
               --ks "$signing_dir/release.jks" \
               --ks-key-alias "$KEY_ALIAS" \
@@ -219,15 +218,15 @@ jobs:
         run: |
           python3 -m unittest discover -s scripts -p 'test_check_backend_apk.py'
           apk_dir=build/app/outputs/flutter-apk
-          python3 scripts/check_backend_apk.py "$apk_dir/Mosix-${VERSION}-arm64.apk" \
+          python3 scripts/check_backend_apk.py "$apk_dir/Mornye-${VERSION}-arm64.apk" \
             --backend rust --abis arm64-v8a --discord-sdk
-          python3 scripts/check_backend_apk.py "$apk_dir/Mosix-${VERSION}-arm32.apk" \
+          python3 scripts/check_backend_apk.py "$apk_dir/Mornye-${VERSION}-arm32.apk" \
             --backend rust --abis armeabi-v7a --discord-sdk
           for abi in arm64 arm32; do
             "$ANDROID_HOME/build-tools/37.0.0/zipalign" -c -P 16 4 \
-              "$apk_dir/Mosix-${VERSION}-${abi}.apk"
+              "$apk_dir/Mornye-${VERSION}-${abi}.apk"
           done
-          (cd "$apk_dir" && sha256sum Mosix-*.apk > SHA256SUMS.txt)
+          (cd "$apk_dir" && sha256sum Mornye-*.apk > SHA256SUMS.txt)
 
       - name: Record Android symbol provenance
         run: |
@@ -235,7 +234,7 @@ jobs:
           test -s build/symbols/android/app.android-arm.symbols
           test -s build/app/outputs/mapping/release/mapping.txt
           git rev-parse HEAD > build/symbols/android/commit.txt
-          sha256sum build/app/outputs/flutter-apk/Mosix-*.apk > build/symbols/android/apk-sha256.txt
+          sha256sum build/app/outputs/flutter-apk/Mornye-*.apk > build/symbols/android/apk-sha256.txt
 
       - name: Retain Android debug symbols
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -253,15 +252,15 @@ jobs:
           name: android-apk
           if-no-files-found: error
           path: |
-            build/app/outputs/flutter-apk/Mosix-*.apk
-            build/app/outputs/flutter-apk/Mosix-*.apk.idsig
+            build/app/outputs/flutter-apk/Mornye-*.apk
+            build/app/outputs/flutter-apk/Mornye-*.apk.idsig
             build/app/outputs/flutter-apk/SHA256SUMS.txt
 
   build-ios:
     runs-on: macos-15
     needs: get-version # Only depends on version, NOT android build!
     env:
-      MOSIX_DISCORD_SDK: "1"
+      MORNYE_DISCORD_SDK: "1"
 
     steps:
       - name: Checkout repository
@@ -280,12 +279,11 @@ jobs:
       - name: Build Rust backend for iOS
         run: bash scripts/build_ios.sh
 
-      # Cache CocoaPods
       - name: Cache CocoaPods
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ios/Pods
-          key: pods-rust-${{ runner.os }}-${{ hashFiles('ios/Podfile', 'ios/Podfile.lock', 'rust_backend/MosixBackend.podspec', 'rust_backend/Cargo.lock') }}
+          key: pods-rust-${{ runner.os }}-${{ hashFiles('ios/Podfile', 'ios/Podfile.lock', 'rust_backend/MornyeBackend.podspec', 'rust_backend/Cargo.lock') }}
           restore-keys: pods-rust-${{ runner.os }}-
 
       - name: Setup Flutter
@@ -305,6 +303,9 @@ jobs:
       - name: Get Flutter dependencies
         run: flutter pub get
 
+      - name: Prepare Flutter framework patch
+        run: dart scripts/prepare_flutter_sdk.dart
+
       - name: Normalize ffmpeg plugin shell scripts (strip CRLF)
         run: |
           find "$HOME/.pub-cache/hosted" -path "*ffmpeg_kit_flutter_new_audio*/scripts/*.sh" -type f -print0 |
@@ -320,20 +321,18 @@ jobs:
       - name: Configure Rust application pods
         working-directory: ios
         run: |
-          test -f ../third_party/spotiflac_discord/ios/Frameworks/discord_partner_sdk.xcframework/Info.plist || {
+          test -f ../third_party/mornye_discord/ios/Frameworks/discord_partner_sdk.xcframework/Info.plist || {
             echo "Production requires the official Discord SDK. Run scripts/setup_discord_sdk.sh in the build environment first." >&2
             exit 1
           }
-          test -f ../third_party/spotiflac_discord/ios/Frameworks/Discord-License-Notices.txt
+          test -f ../third_party/mornye_discord/ios/Frameworks/Discord-License-Notices.txt
           pod install
 
       - name: Build iOS (unsigned)
         run: |
-          # Build Flutter iOS without codesigning
           flutter build ios --release --no-codesign --config-only --target lib/main.dart \
             --dart-define="GIT_COMMIT=$(git rev-parse --short=8 HEAD)"
 
-          # Use xcodebuild with code signing disabled
           cd ios
           xcodebuild -workspace Runner.xcworkspace \
             -scheme Runner \
@@ -352,7 +351,7 @@ jobs:
           app="ios/build/Runner.xcarchive/Products/Applications/Runner.app"
           for required in \
             Frameworks/discord_partner_sdk.framework/discord_partner_sdk \
-            Frameworks/spotiflac_discord.framework/Discord-License-Notices.txt; do
+            Frameworks/mornye_discord.framework/Discord-License-Notices.txt; do
             test -s "$app/$required" || {
               echo "Required Discord file missing or empty: $app/$required" >&2
               exit 1
@@ -373,7 +372,7 @@ jobs:
           mkdir Payload
           cp -r Runner.app Payload/
           # Use absolute path to avoid relative path issues
-          zip -r "$GITHUB_WORKSPACE/build/ios/ipa/Mosix-${VERSION}-ios-unsigned.ipa" Payload
+          zip -r "$GITHUB_WORKSPACE/build/ios/ipa/Mornye-${VERSION}-ios-unsigned.ipa" Payload
           rm -rf Payload
 
       - name: Verify IPA created
@@ -381,7 +380,7 @@ jobs:
           VERSION: ${{ needs.get-version.outputs.version }}
         run: |
           ls -la build/ios/ipa/
-          if [ ! -f "build/ios/ipa/Mosix-${VERSION}-ios-unsigned.ipa" ]; then
+          if [ ! -f "build/ios/ipa/Mornye-${VERSION}-ios-unsigned.ipa" ]; then
             echo "ERROR: IPA not created!"
             exit 1
           fi
@@ -390,11 +389,407 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ios-ipa
-          path: build/ios/ipa/Mosix-*.ipa
+          path: build/ios/ipa/Mornye-*.ipa
 
+  # Desktop builds mirror .github/workflows/desktop.yml without its Cargo
+  # cache, then package: a universal dmg (ad hoc signed, not notarized),
+  # AppImage and deb per Linux architecture, and a Windows installer and
+  # portable zip. Each job uploads SHA256SUMS-<target>.txt for create-release.
+  build-macos:
+    name: Build macOS (universal)
+    runs-on: macos-15
+    needs: get-version
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Select Xcode 26.1.1
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.1.1.app
+          xcodebuild -version
+
+      - name: Activate pinned Rust toolchain
+        working-directory: rust_backend
+        run: rustup show
+
+      - name: Build Rust desktop library
+        run: bash scripts/build_rust_backend.sh desktop
+
+      # The from-source LGPL build only changes with the script, which pins
+      # every source archive.
+      - name: Cache LGPL FFmpeg build
+        id: ffmpeg-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: build/ffmpeg/macos-universal
+          key: ffmpeg-macos-universal-${{ hashFiles('scripts/fetch_desktop_ffmpeg.sh') }}
+
+      - name: Build LGPL FFmpeg
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        run: bash scripts/fetch_desktop_ffmpeg.sh macos-universal
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: "stable"
+          flutter-version-file: .fvmrc
+          cache: true
+
+      - name: Cache pub dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Prepare Flutter framework patch
+        run: dart scripts/prepare_flutter_sdk.dart
+
+      # A stable self-signed identity keeps keychain access across updates.
+      # Without the secrets the build stays ad hoc signed.
+      - name: Set up the signing identity
+        env:
+          MACOS_SIGNING_P12_BASE64: ${{ secrets.MACOS_SIGNING_P12_BASE64 }}
+          MACOS_SIGNING_P12_PASSWORD: ${{ secrets.MACOS_SIGNING_P12_PASSWORD }}
+        run: |
+          identity="$(bash scripts/setup_macos_signing.sh)"
+          echo "MORNYE_CODE_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+
+      # The Xcode "Embed Rust Backend" and "Embed FFmpeg" phases embed the
+      # library and the FFmpeg tools built above.
+      - name: Build macOS app
+        env:
+          MORNYE_SKIP_RUST_BUILD: "1"
+          MORNYE_REQUIRE_FFMPEG: "1"
+        run: |
+          flutter build macos --release --target lib/main.dart \
+            --dart-define="GIT_COMMIT=$(git rev-parse --short=8 HEAD)"
+
+      - name: Package disk image
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
+        run: |
+          app="build/macos/Build/Products/Release/Mornye.app"
+          test -s "$app/Contents/Frameworks/libmornye_desktop.dylib"
+          for tool in ffmpeg ffprobe; do
+            test -x "$app/Contents/Resources/ffmpeg/$tool"
+            for arch in arm64 x86_64; do
+              lipo "$app/Contents/Resources/ffmpeg/$tool" -verify_arch "$arch"
+            done
+          done
+          bash scripts/package_macos_dmg.sh "$app" "build/desktop/Mornye-${VERSION}-macos-universal.dmg"
+          (cd build/desktop && shasum -a 256 Mornye-*.dmg > SHA256SUMS-macos.txt)
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-release-macos
+          if-no-files-found: error
+          path: |
+            build/desktop/Mornye-*.dmg
+            build/desktop/SHA256SUMS-macos.txt
+
+  build-linux:
+    name: Build Linux (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    needs: get-version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            deb_arch: amd64
+            flutter_arch: x64
+            runner: ubuntu-22.04
+          - arch: aarch64
+            deb_arch: arm64
+            flutter_arch: arm64
+            runner: ubuntu-22.04-arm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Same build dependencies as desktop.yml, plus the desktop entry and
+      # AppStream validators and dpkg-shlibdeps for the deb.
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          # The image's libunwind-14-dev blocks GStreamer's libunwind-dev
+          # dependency; asking for it first lets apt replace the LLVM one.
+          sudo apt-get install -y libunwind-dev
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config zip file \
+            libgtk-3-dev liblzma-dev libsecret-1-dev libstdc++-12-dev \
+            libjson-glib-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            libasound2-dev libclang-dev \
+            desktop-file-utils appstream dpkg-dev
+
+      - name: Install rustup
+        run: |
+          if ! command -v rustup >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
+              sh -s -- -y --profile minimal --default-toolchain none
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          fi
+
+      - name: Activate pinned Rust toolchain
+        working-directory: rust_backend
+        run: rustup show
+
+      - name: Build Rust desktop library
+        run: bash scripts/build_rust_backend.sh desktop
+
+      - name: Fetch LGPL FFmpeg
+        run: bash scripts/fetch_desktop_ffmpeg.sh "linux-${{ matrix.flutter_arch }}"
+
+      - name: Setup Flutter
+        if: matrix.flutter_arch == 'x64'
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: "stable"
+          flutter-version-file: .fvmrc
+          cache: true
+
+      # Flutter publishes no Linux arm64 SDK archive; a clone of the release
+      # tag downloads the arm64 Dart SDK and engine on first run.
+      - name: Setup Flutter (arm64)
+        if: matrix.flutter_arch == 'arm64'
+        run: |
+          flutter_version="$(jq -r .flutter .fvmrc)"
+          git clone --depth 1 --branch "$flutter_version" \
+            https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
+
+      - name: Cache pub dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Prepare Flutter framework patch
+        run: dart scripts/prepare_flutter_sdk.dart
+
+      # linux/CMakeLists.txt installs the Rust library into lib/ and the
+      # FFmpeg tools staged above into lib/ffmpeg/.
+      - name: Build Linux bundle
+        run: |
+          flutter build linux --release --target lib/main.dart \
+            --dart-define="GIT_COMMIT=$(git rev-parse --short=8 HEAD)"
+
+      - name: Validate desktop entry and AppStream metadata
+        run: |
+          desktop-file-validate linux/packaging/com.zarz.mornye.desktop
+          appstreamcli validate --no-net --explain linux/packaging/com.zarz.mornye.metainfo.xml ||
+            echo "::warning::AppStream metadata has validation issues"
+
+      - name: Package AppImage and deb
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+          DEB_ARCH: ${{ matrix.deb_arch }}
+          FLUTTER_ARCH: ${{ matrix.flutter_arch }}
+        run: |
+          bundle="build/linux/${FLUTTER_ARCH}/release/bundle"
+          test -x "$bundle/mornye"
+          test -s "$bundle/lib/libmornye_desktop.so"
+          test -x "$bundle/lib/ffmpeg/ffmpeg"
+          test -x "$bundle/lib/ffmpeg/ffprobe"
+          test -s "$bundle/lib/ffmpeg/LICENSE.txt"
+          export MORNYE_PACKAGE_ARCH="$ARCH"
+          bash scripts/package_linux.sh appimage "$bundle" "$VERSION" \
+            "build/desktop/Mornye-${VERSION}-linux-${ARCH}.AppImage"
+          bash scripts/package_linux.sh deb "$bundle" "$VERSION" \
+            "build/desktop/Mornye-${VERSION}-linux-${DEB_ARCH}.deb"
+          dpkg-deb --contents "build/desktop/Mornye-${VERSION}-linux-${DEB_ARCH}.deb" |
+            grep -E 'usr/share/applications/com.zarz.mornye.desktop|usr/lib/mornye/mornye$'
+          file "build/desktop/Mornye-${VERSION}-linux-${ARCH}.AppImage"
+          (cd build/desktop && sha256sum Mornye-* > "SHA256SUMS-linux-${ARCH}.txt")
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-release-linux-${{ matrix.arch }}
+          if-no-files-found: error
+          path: |
+            build/desktop/Mornye-*.AppImage
+            build/desktop/Mornye-*.deb
+            build/desktop/SHA256SUMS-linux-*.txt
+
+  build-windows:
+    name: Build Windows (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: windows-2022
+            rust_target: x86_64-pc-windows-msvc
+          - arch: arm64
+            runner: windows-11-arm
+            rust_target: aarch64-pc-windows-msvc
+    needs: get-version
+    # The release goes out without Windows assets if this job fails. Remove
+    # once a release run of this job is green.
+    continue-on-error: true
+    permissions:
+      contents: read
+      actions: read
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      # Signing runs only once SignPath approves the project and the token is
+      # configured; until then the installer ships unsigned.
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Activate pinned Rust toolchain
+        working-directory: rust_backend
+        run: rustup show
+
+      - name: Build Rust desktop library
+        run: ./scripts/build_rust_backend_windows.ps1 -Target ${{ matrix.rust_target }}
+
+      # Git Bash provides curl, unzip and sha256sum for the fetch script.
+      - name: Fetch LGPL FFmpeg
+        shell: bash
+        run: bash scripts/fetch_desktop_ffmpeg.sh windows-${{ matrix.arch }}
+
+      - name: Setup Flutter
+        if: matrix.arch == 'x64'
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: "stable"
+          flutter-version-file: .fvmrc
+          cache: true
+
+      - name: Setup native ARM64 Flutter
+        if: matrix.arch == 'arm64'
+        run: ./scripts/setup_flutter_windows_arm64.ps1
+
+      - name: Cache pub dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~\AppData\Local\Pub\Cache
+          key: pub-${{ runner.os }}-${{ matrix.arch }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-${{ matrix.arch }}-
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Prepare Flutter framework patch
+        run: dart scripts/prepare_flutter_sdk.dart
+
+      # windows/CMakeLists.txt installs the Rust library next to mornye.exe
+      # and the FFmpeg tools staged above into ffmpeg\.
+      - name: Build Windows app
+        run: |
+          $commit = git rev-parse --short=8 HEAD
+          flutter build windows --release --target lib/main.dart --dart-define="GIT_COMMIT=$commit"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $bundle = 'build\windows\${{ matrix.arch }}\runner\Release'
+          ./scripts/check_windows_bundle.ps1 -BundleDir $bundle -Arch ${{ matrix.arch }}
+          "MORNYE_WINDOWS_BUNDLE=$bundle" >> $env:GITHUB_ENV
+
+      - name: Upload unsigned app for signing
+        id: unsigned-app
+        if: env.SIGNPATH_API_TOKEN != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-unsigned-app-${{ matrix.arch }}
+          if-no-files-found: error
+          retention-days: 1
+          path: build/windows/${{ matrix.arch }}/runner/Release/
+
+      - name: Sign app executables
+        if: env.SIGNPATH_API_TOKEN != ''
+        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3.0
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_APP_ARTIFACT_CONFIGURATION }}
+          github-artifact-id: ${{ steps.unsigned-app.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: build/windows-signed
+
+      - name: Use signed app
+        if: env.SIGNPATH_API_TOKEN != ''
+        run: |
+          if (-not (Test-Path 'build\windows-signed\mornye.exe')) { throw 'Signed app is missing' }
+          "MORNYE_WINDOWS_BUNDLE=build\windows-signed" >> $env:GITHUB_ENV
+
+      - name: Package installer and portable zip
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
+        run: ./scripts/package_windows.ps1 -Version $env:VERSION -Arch ${{ matrix.arch }} -BundleDir $env:MORNYE_WINDOWS_BUNDLE
+
+      - name: Upload unsigned installer for signing
+        id: unsigned-installer
+        if: env.SIGNPATH_API_TOKEN != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-unsigned-installer-${{ matrix.arch }}
+          if-no-files-found: error
+          retention-days: 1
+          path: build/desktop/Mornye-*-setup.exe
+
+      - name: Sign installer
+        if: env.SIGNPATH_API_TOKEN != ''
+        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3.0
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_INSTALLER_ARTIFACT_CONFIGURATION }}
+          github-artifact-id: ${{ steps.unsigned-installer.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: build/desktop
+
+      - name: Record checksums
+        run: |
+          $lines = Get-ChildItem build\desktop -File -Filter 'Mornye-*' | Sort-Object Name | ForEach-Object {
+            '{0}  {1}' -f (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLowerInvariant(), $_.Name
+          }
+          if (-not $lines) { throw 'No Windows packages were created' }
+          [IO.File]::WriteAllText("$PWD\build\desktop\SHA256SUMS-windows-${{ matrix.arch }}.txt", (($lines -join "`n") + "`n"))
+          Get-Content build\desktop\SHA256SUMS-windows-${{ matrix.arch }}.txt
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-release-windows-${{ matrix.arch }}
+          if-no-files-found: error
+          path: |
+            build/desktop/Mornye-*-setup.exe
+            build/desktop/Mornye-*-portable.zip
+            build/desktop/SHA256SUMS-windows-${{ matrix.arch }}.txt
+
+  # The phone release. Desktop packages are released separately in
+  # mornyeapp/Mornye-Desktop by create-desktop-release.
   create-release:
     runs-on: ubuntu-latest
     needs: [get-version, build-android, build-ios]
+    if: >-
+      ${{ !cancelled()
+      && needs.build-android.result == 'success'
+      && needs.build-ios.result == 'success' }}
     permissions:
       contents: write
 
@@ -431,10 +826,15 @@ jobs:
           name: ios-ipa
           path: ./release
 
-      - name: Verify downloaded Android artifacts
+      # The Android job's checksums are verified, then one SHA256SUMS.txt
+      # covering every asset replaces them.
+      - name: Verify downloaded artifacts and write SHA256SUMS.txt
         run: |
           cd release
           sha256sum --check SHA256SUMS.txt
+          rm -f SHA256SUMS.txt
+          sha256sum Mornye-* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
 
       - name: Prepare release body
         env:
@@ -455,7 +855,6 @@ jobs:
               >> /tmp/release_body.txt
           fi
 
-          # Append download section
           cat >> /tmp/release_body.txt << FOOTER
 
           ---
@@ -463,12 +862,14 @@ jobs:
           ### Downloads
 
           #### Android
-          - **arm64**: \`Mosix-${VERSION}-arm64.apk\` (recommended for modern devices)
-          - **arm32**: \`Mosix-${VERSION}-arm32.apk\` (older devices)
+          - **arm64**: \`Mornye-${VERSION}-arm64.apk\` (recommended for modern devices)
+          - **arm32**: \`Mornye-${VERSION}-arm32.apk\` (older devices)
           - \`*.apk.idsig\`: V4 signatures for \`adb install --incremental\` only; normal installs do not need them
 
           #### iOS
-          - **iOS**: \`Mosix-${VERSION}-ios-unsigned.ipa\` (sideload required)
+          - **iOS**: \`Mornye-${VERSION}-ios-unsigned.ipa\` (sideload required)
+
+          \`SHA256SUMS.txt\` lists the SHA-256 of every file above.
 
           ### Installation
           **Android**: Enable "Install from unknown sources" and install the APK
@@ -482,7 +883,7 @@ jobs:
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           tag_name: ${{ needs.get-version.outputs.version }}
-          name: Mosix ${{ needs.get-version.outputs.version }}
+          name: Mornye ${{ needs.get-version.outputs.version }}
           body_path: /tmp/release_body.txt
           files: ./release/*
           draft: false
@@ -490,10 +891,126 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Desktop packages are released in mornyeapp/Mornye-Desktop, where the
+  # desktop updater looks. Releases stay drafts until the repository variable
+  # DESKTOP_RELEASES_PUBLIC is 'true', so nothing ships before testing ends.
+  create-desktop-release:
+    runs-on: ubuntu-latest
+    needs: [get-version, build-macos, build-linux, build-windows]
+    # build-windows may fail without blocking the release (continue-on-error).
+    if: >-
+      ${{ !cancelled()
+      && needs.build-macos.result == 'success'
+      && needs.build-linux.result == 'success' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0  # Full history needed for git-cliff
+
+      - name: Generate changelog with git-cliff
+        uses: orhun/git-cliff-action@a9a95522b26fe6403f7bb24031f21fb573d0f5ff # v4.9.1
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OUTPUT: /tmp/changelog.txt
+
+      - name: Download desktop packages
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: desktop-release-*
+          merge-multiple: true
+          path: ./release
+
+      # Each build job's checksums are verified, then one SHA256SUMS.txt
+      # covering every asset replaces them. The desktop updater reads it.
+      - name: Verify downloaded artifacts and write SHA256SUMS.txt
+        run: |
+          cd release
+          for sums in SHA256SUMS-*.txt; do
+            sha256sum --check "$sums"
+          done
+          rm -f SHA256SUMS-*.txt
+          sha256sum Mornye-* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Prepare release body
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          CURRENT_REF=$(git rev-list -n 1 "$VERSION" 2>/dev/null || git rev-parse HEAD)
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${CURRENT_REF}^" 2>/dev/null || true)
+
+          sed '/^## [0-9][0-9.[:alpha:]-]*$/d; /^\*\*Full Changelog\*\*/d' /tmp/changelog.txt > /tmp/release_body.txt
+
+          # The source and its history live in the main repository.
+          if [ -n "$PREVIOUS_TAG" ]; then
+            printf '\n**Full Changelog**: [%s...%s](https://github.com/%s/compare/%s...%s)\n' \
+              "$PREVIOUS_TAG" "$VERSION" "$REPOSITORY" "$PREVIOUS_TAG" "$VERSION" \
+              >> /tmp/release_body.txt
+          fi
+
+          cat >> /tmp/release_body.txt << FOOTER
+
+          Built from [${REPOSITORY}@${VERSION}](https://github.com/${REPOSITORY}/tree/${VERSION}).
+
+          ---
+
+          ### Downloads
+          | OS | Download | Notes |
+          |---|---|---|
+          FOOTER
+
+          # Rows list only the packages this run produced (Windows is
+          # optional until its job is proven).
+          desktop_row() {
+            if [ -f "release/$2" ]; then
+              printf "| %s | \`%s\` | %s |\n" "$1" "$2" "$3" >> /tmp/release_body.txt
+            fi
+          }
+          desktop_row "macOS" "Mornye-${VERSION}-macos-universal.dmg" "Apple silicon and Intel, macOS 12 or later"
+          desktop_row "Windows" "Mornye-${VERSION}-windows-x64-setup.exe" "Installer (x64), no administrator rights needed"
+          desktop_row "Windows" "Mornye-${VERSION}-windows-x64-portable.zip" "Portable (x64): extract and run mornye.exe"
+          desktop_row "Linux" "Mornye-${VERSION}-linux-x86_64.AppImage" "AppImage (x86_64), updates itself"
+          desktop_row "Linux" "Mornye-${VERSION}-linux-aarch64.AppImage" "AppImage (aarch64), updates itself"
+          desktop_row "Linux" "Mornye-${VERSION}-linux-amd64.deb" "Debian/Ubuntu (amd64)"
+          desktop_row "Linux" "Mornye-${VERSION}-linux-arm64.deb" "Debian/Ubuntu (arm64)"
+
+          cat >> /tmp/release_body.txt << FOOTER
+
+          \`SHA256SUMS.txt\` lists the SHA-256 of every file above.
+
+          ### Installation
+          **macOS**: Open the dmg and drag Mornye to Applications. Mornye is not notarized yet, so macOS blocks the first launch: open System Settings > Privacy & Security, scroll to Security and click "Open Anyway" next to the Mornye message, then confirm with "Open". Later updates open the new dmg for you.
+          **Windows**: Run the setup. The installer is not code signed yet, so SmartScreen may warn: click "More info", then "Run anyway".
+          **Linux**: AppImage: \`chmod +x\` the file and run it. deb: \`sudo apt install ./Mornye-${VERSION}-linux-amd64.deb\` (or the arm64 file); deb installs update through new releases.
+          FOOTER
+
+          echo "Release body:"
+          cat /tmp/release_body.txt
+
+      - name: Create desktop release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          repository: mornyeapp/Mornye-Desktop
+          token: ${{ secrets.MORNYE_DESKTOP_RELEASE_TOKEN }}
+          tag_name: ${{ needs.get-version.outputs.version }}
+          name: Mornye ${{ needs.get-version.outputs.version }}
+          body_path: /tmp/release_body.txt
+          files: ./release/*
+          draft: ${{ vars.DESKTOP_RELEASES_PUBLIC != 'true' }}
+          prerelease: ${{ needs.get-version.outputs.is_prerelease == 'true' }}
+
   update-altstore:
     runs-on: ubuntu-latest
     needs: [get-version, build-ios, create-release]
-    if: ${{ needs.get-version.outputs.is_prerelease != 'true' }}
+    # !cancelled() keeps an optional build-windows failure upstream of
+    # create-release from skipping this job.
+    if: ${{ !cancelled() && needs.create-release.result == 'success' && needs.get-version.outputs.is_prerelease != 'true' }}
     permissions:
       contents: write
 
@@ -546,7 +1063,7 @@ jobs:
           jq --arg ver "$VERSION_NUM" \
              --arg bundle "$BUNDLE_ID" \
              --arg date "$DATE" \
-             --arg url "https://github.com/${REPOSITORY}/releases/download/${VERSION}/Mosix-${VERSION}-ios-unsigned.ipa" \
+             --arg url "https://github.com/${REPOSITORY}/releases/download/${VERSION}/Mornye-${VERSION}-ios-unsigned.ipa" \
              --argjson size "$IPA_SIZE" \
              '.apps[0].bundleIdentifier = $bundle | .apps[0].version = $ver | .apps[0].versionDate = $date | .apps[0].downloadURL = $url | .apps[0].size = $size' \
              apps.json > apps.json.tmp && mv apps.json.tmp apps.json
@@ -571,7 +1088,7 @@ jobs:
   notify-telegram:
     runs-on: ubuntu-latest
     needs: [get-version, create-release]
-    if: ${{ needs.get-version.outputs.is_prerelease != 'true' }}
+    if: ${{ !cancelled() && needs.create-release.result == 'success' && needs.get-version.outputs.is_prerelease != 'true' }}
 
     steps:
       - name: Checkout repository
@@ -633,19 +1150,18 @@ jobs:
       - name: Send to Telegram Channel
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          TELEGRAM_CHANNEL_ID: '@mornyeupdates'
           VERSION: ${{ needs.get-version.outputs.version }}
           REPOSITORY: ${{ github.repository }}
         run: |
           CHANGELOG=$(cat /tmp/changelog.txt)
 
-          # Find APK files
           ARM64_APK=$(find ./release -name "*arm64*.apk" | head -1)
           ARM32_APK=$(find ./release -name "*arm32*.apk" | head -1)
 
           # Prepare message with changelog (HTML format)
           printf '%s\n' \
-            "<b>Mosix ${VERSION} Released!</b>" \
+            "<b>Mornye ${VERSION} Released!</b>" \
             "" \
             "<b>What's New:</b>" \
             "${CHANGELOG}" \
@@ -664,32 +1180,29 @@ jobs:
             --data-urlencode "parse_mode=HTML" \
             --data-urlencode "disable_web_page_preview=true" || true
 
-          # Upload arm64 APK to channel
           if [ -f "$ARM64_APK" ]; then
             echo "Uploading arm64 APK to Telegram..."
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
               -F chat_id="${TELEGRAM_CHANNEL_ID}" \
               -F document=@"${ARM64_APK}" \
-              -F caption="Mosix ${VERSION} - arm64 (recommended)"
+              -F caption="Mornye ${VERSION} - arm64 (recommended)"
           fi
 
-          # Upload arm32 APK to channel
           if [ -f "$ARM32_APK" ]; then
             echo "Uploading arm32 APK to Telegram..."
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
               -F chat_id="${TELEGRAM_CHANNEL_ID}" \
               -F document=@"${ARM32_APK}" \
-              -F caption="Mosix ${VERSION} - arm32"
+              -F caption="Mornye ${VERSION} - arm32"
           fi
 
-          # Upload iOS IPA to channel
           IOS_IPA=$(find ./release -name "*ios*.ipa" | head -1)
           if [ -f "$IOS_IPA" ]; then
             echo "Uploading iOS IPA to Telegram..."
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
               -F chat_id="${TELEGRAM_CHANNEL_ID}" \
               -F document=@"${IOS_IPA}" \
-              -F caption="Mosix ${VERSION} - iOS (unsigned, sideload required)"
+              -F caption="Mornye ${VERSION} - iOS (unsigned, sideload required)"
           fi
 
           echo "Telegram notification sent!"

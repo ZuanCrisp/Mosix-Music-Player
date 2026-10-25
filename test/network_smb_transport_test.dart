@@ -8,7 +8,7 @@ import 'dart:typed_data';
 // ignore: implementation_imports
 import 'package:dart_smb2/src/ffi/native_lib.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/network_smb_client.dart';
+import 'package:mornye/services/network_smb_client.dart';
 
 void main() {
   test(

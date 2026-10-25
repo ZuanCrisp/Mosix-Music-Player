@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
 
 void main() {
   group('adaptive navigation', () {
@@ -16,15 +16,27 @@ void main() {
     });
   });
 
+  group('adaptive navigation (Material)', () {
+    test('switches to the rail at the expanded window class', () {
+      expect(useMaterialNavigationRailForWidth(390), isFalse);
+      expect(useMaterialNavigationRailForWidth(683), isFalse);
+      expect(
+        useMaterialNavigationRailForWidth(expandedLayoutBreakpoint),
+        isTrue,
+      );
+    });
+  });
+
   group('wide content', () {
-    test('uses the full tablet width before applying a small gutter', () {
-      expect(wideInsetForWidth(853), 0);
-      expect(wideInsetForWidth(1024), 32);
-      expect(wideInsetForWidth(1366), maxWideContentInset);
+    test('fills compact widths and centers at the reading width', () {
+      expect(wideInsetForWidth(640), 0);
+      expect(wideInsetForWidth(defaultWideContentMaxWidth), 0);
+      expect(wideInsetForWidth(1040), 100);
     });
 
-    test('never removes more than the shared gutter from each side', () {
-      expect(adaptiveContentMaxWidth(1366), 1302);
+    test('caps content at the reading width', () {
+      expect(adaptiveContentMaxWidth(600), 600);
+      expect(adaptiveContentMaxWidth(1366), defaultWideContentMaxWidth);
     });
   });
 

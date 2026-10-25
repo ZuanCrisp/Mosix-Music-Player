@@ -1,6 +1,6 @@
 //! Typed platform-resolver payloads and metadata matching shared with Go.
 
-use crate::lyrics::json::{Update, go_deserialize};
+use crate::json::{Update, lenient_deserialize};
 use crate::lyrics::matching::normalize_loose_artist;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::BTreeMap;
@@ -36,14 +36,14 @@ impl<'de, T: Deserialize<'de>> Update<'de> for Map<T> {
 pub struct Link {
     pub url: String,
 }
-go_deserialize!(Link { "url" => url, });
+lenient_deserialize!(Link { "url" => url, });
 
 #[derive(Clone, Debug, Default)]
 pub struct Entity {
     pub title: String,
     pub artist: String,
 }
-go_deserialize!(Entity { "title" => title, "artistname" => artist, });
+lenient_deserialize!(Entity { "title" => title, "artistname" => artist, });
 
 #[derive(Clone, Debug, Default)]
 pub struct UniTune {
@@ -51,7 +51,7 @@ pub struct UniTune {
     pub links: Map<Link>,
     pub entities: Map<Entity>,
 }
-go_deserialize!(UniTune {
+lenient_deserialize!(UniTune {
     "entityuniqueid" => entity_id,
     "linksbyplatform" => links,
     "entitiesbyuniqueid" => entities,
@@ -61,7 +61,7 @@ go_deserialize!(UniTune {
 pub struct Artist {
     pub name: String,
 }
-go_deserialize!(Artist { "name" => name, });
+lenient_deserialize!(Artist { "name" => name, });
 
 #[derive(Clone, Debug, Default)]
 pub struct Recording {
@@ -70,7 +70,7 @@ pub struct Recording {
     pub title: String,
     pub artists: Option<Vec<Artist>>,
 }
-go_deserialize!(Recording {
+lenient_deserialize!(Recording {
     "id" => id, "score" => score, "title" => title, "artist-credit" => artists,
 });
 
@@ -78,25 +78,25 @@ go_deserialize!(Recording {
 pub struct Recordings {
     pub recordings: Option<Vec<Recording>>,
 }
-go_deserialize!(Recordings { "recordings" => recordings, });
+lenient_deserialize!(Recordings { "recordings" => recordings, });
 
 #[derive(Clone, Debug, Default)]
 pub struct Resource {
     pub resource: String,
 }
-go_deserialize!(Resource { "resource" => resource, });
+lenient_deserialize!(Resource { "resource" => resource, });
 
 #[derive(Clone, Debug, Default)]
 pub struct Relation {
     pub url: Resource,
 }
-go_deserialize!(Relation { "url" => url, });
+lenient_deserialize!(Relation { "url" => url, });
 
 #[derive(Clone, Debug, Default)]
 pub struct Relations {
     pub relations: Option<Vec<Relation>>,
 }
-go_deserialize!(Relations { "relations" => relations, });
+lenient_deserialize!(Relations { "relations" => relations, });
 
 #[derive(Clone, Debug, Default)]
 pub struct Created {
@@ -104,7 +104,7 @@ pub struct Created {
     pub title: String,
     pub artist: String,
 }
-go_deserialize!(Created { "full_url" => full_url, "title" => title, "artist" => artist, });
+lenient_deserialize!(Created { "full_url" => full_url, "title" => title, "artist" => artist, });
 
 #[derive(Clone, Debug, Default)]
 pub struct PageData {
@@ -112,13 +112,13 @@ pub struct PageData {
     pub artist: String,
     pub services: Map<Option<Link>>,
 }
-go_deserialize!(PageData { "title" => title, "artist" => artist, "services" => services, });
+lenient_deserialize!(PageData { "title" => title, "artist" => artist, "services" => services, });
 
 #[derive(Clone, Debug, Default)]
 pub struct Page {
     pub data: PageData,
 }
-go_deserialize!(Page { "data" => data, });
+lenient_deserialize!(Page { "data" => data, });
 
 /// The platform resolver uses Go's broader metadata artist matcher, rather
 /// than the stricter primary-artist equality required for lyrics searches.

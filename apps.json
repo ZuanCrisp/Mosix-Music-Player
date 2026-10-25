@@ -1,18 +1,18 @@
 {
-  "name": "Mosix Source",
-  "identifier": "com.zuancrisp.mosix.source",
-  "subtitle": "Music player and library manager",
+  "name": "Mornye Source",
+  "identifier": "com.zarz.mornye.source",
+  "subtitle": "FLAC Downloader for iOS",
   "apps": [
     {
-      "name": "Mosix",
-      "bundleIdentifier": "com.zuancrisp.mosix",
-      "developerName": "ZuanCrisp",
-      "version": "1.0.0",
-      "versionDate": "2026-10-25",
-      "downloadURL": "https://github.com/ZuanCrisp/Mosix-Music-Player/releases/download/v1.0.0/Mosix-v1.0.0.ipa",
-      "localizedDescription": "Mosix is written in Flutter and uses installable extensions for music search, metadata, playback, and downloads.",
-      "iconURL": "https://raw.githubusercontent.com/ZuanCrisp/Mosix-Music-Player/main/icon.png",
-      "size": 33596866
+      "name": "Mornye",
+      "bundleIdentifier": "com.zarz.mornye",
+      "developerName": "zarzet",
+      "version": "5.2.5",
+      "versionDate": "2026-10-22",
+      "downloadURL": "https://github.com/mornyeapp/Mornye/releases/download/v5.2.5/Mornye-v5.2.5-ios-unsigned.ipa",
+      "localizedDescription": "Mornye is written in Flutter and uses installable extensions for metadata and audio downloads.",
+      "iconURL": "https://raw.githubusercontent.com/mornyeapp/Mornye/main/assets/images/logo.png",
+      "size": 35538708
     }
   ]
 }

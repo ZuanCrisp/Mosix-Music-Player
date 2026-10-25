@@ -1,9 +1,9 @@
-import 'package:mosix/models/track.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/int_utils.dart';
-import 'package:mosix/utils/isrc_utils.dart';
-import 'package:mosix/utils/logger.dart';
-import 'package:mosix/utils/string_utils.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/int_utils.dart';
+import 'package:mornye/utils/isrc_utils.dart';
+import 'package:mornye/utils/logger.dart';
+import 'package:mornye/utils/string_utils.dart';
 
 /// Shared preparation before either queue chooses folders, filenames or tags.
 Future<Track> enrichIncompleteDownloadTrack(

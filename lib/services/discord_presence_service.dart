@@ -5,8 +5,10 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:mosix/services/discord_artwork_resolver.dart';
-import 'package:mosix/services/secure_storage_options.dart';
+import 'package:mornye/services/discord_artwork_resolver.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/secure_storage_options.dart';
+import 'package:mornye/utils/desktop_platform.dart';
 
 enum DiscordPresenceStatus {
   disabled,
@@ -56,17 +58,73 @@ Map<String, Object>? discordPresencePayload(
   };
 }
 
+/// The plugin channel contract on desktop, where the Rust backend talks to
+/// the Discord client over its local RPC IPC: `initialize`, `update`,
+/// `clear` and `shutdown` map to the `discordPresence*` backend methods, and
+/// the backend's `discordPresenceStatus` calls arrive as `status`.
+class DesktopDiscordChannel extends MethodChannel {
+  DesktopDiscordChannel({
+    Future<Object?> Function(String method, Object? arguments)? invoke,
+    Stream<String>? statuses,
+  }) : _invoke = invoke ?? PlatformBridge.invokeDiscordPresence<Object?>,
+       _statuses = statuses,
+       super('com.zarz.mornye/discord');
+
+  static const _methods = {
+    'initialize': 'discordPresenceInitialize',
+    'update': 'discordPresenceUpdate',
+    'clear': 'discordPresenceClear',
+    'shutdown': 'discordPresenceShutdown',
+  };
+
+  final Future<Object?> Function(String method, Object? arguments) _invoke;
+  final Stream<String>? _statuses;
+  StreamSubscription<String>? _statusSubscription;
+
+  @override
+  Future<T?> invokeMethod<T>(String method, [dynamic arguments]) async {
+    final backendMethod = _methods[method];
+    if (backendMethod == null) {
+      // `authorize`, `refresh` and `connect` are the iOS account link.
+      throw MissingPluginException('$method is not used on desktop');
+    }
+    return await _invoke(backendMethod, arguments) as T?;
+  }
+
+  @override
+  void setMethodCallHandler(
+    Future<dynamic> Function(MethodCall call)? handler,
+  ) {
+    unawaited(_statusSubscription?.cancel());
+    _statusSubscription = null;
+    if (handler == null) return;
+    _statusSubscription =
+        (_statuses ?? PlatformBridge.discordPresenceStatusEvents()).listen(
+          (status) => unawaited(
+            Future<dynamic>.sync(
+              () => handler(MethodCall('status', status)),
+            ).catchError((_) {}),
+          ),
+        );
+  }
+}
+
 /// Owns one SDK connection, independent of the player screen's lifetime.
 /// All failures stay in this optional integration and cannot stop playback.
 class DiscordPresenceService {
   DiscordPresenceService({
-    MethodChannel channel = const MethodChannel('com.zuancrisp.mosix/discord'),
+    MethodChannel? channel,
     bool? requiresLink,
     Future<String?> Function()? readRefreshToken,
     Future<void> Function(String?)? writeRefreshToken,
     DateTime Function()? now,
     Future<String?> Function(MediaItem)? resolveArtwork,
-  }) : _channel = channel,
+  }) : _channel =
+           channel ??
+           (isDesktopPlatform
+               ? DesktopDiscordChannel()
+               : const MethodChannel('com.zarz.mornye/discord')),
+       // Desktop IPC needs no OAuth: like Android, no account link.
        requiresLink = requiresLink ?? Platform.isIOS,
        _readRefreshToken = readRefreshToken ?? _readToken,
        _writeRefreshToken = writeRefreshToken ?? _writeToken,
@@ -79,6 +137,7 @@ class DiscordPresenceService {
   static const _tokenKey = 'discord_presence_refresh_token';
   static const _storage = FlutterSecureStorage(
     aOptions: secureStorageAndroidOptions,
+    mOptions: secureStorageMacOsOptions,
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),

@@ -5,15 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/download_history_provider.dart';
-import 'package:mosix/screens/track_metadata_screen.dart';
-import 'package:mosix/services/library_database.dart';
-import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/widgets/audio_quality_badges.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/mornye_metadata_row.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/download_history_provider.dart';
+import 'package:mornye/screens/track_metadata_screen.dart';
+import 'package:mornye/services/library_database.dart';
+import 'package:mornye/widgets/album_detail_header.dart';
+import 'package:mornye/widgets/audio_quality_badges.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/widgets/mornye_metadata_row.dart';
 
 void main() {
   for (final useFileUri in [false, true]) {
@@ -44,6 +44,7 @@ void main() {
         coverPath: useFileUri ? cover!.uri.toString() : cover!.path,
         scannedAt: DateTime(2026),
       );
+      late ImageProvider<Object> artworkProvider;
       await tester.runAsync(() async {
         await tester.pumpWidget(
           ProviderScope(
@@ -55,10 +56,13 @@ void main() {
             ),
           ),
         );
-        await precacheImage(
-          FileImage(cover),
-          tester.element(find.byType(TrackMetadataScreen)),
+        final artwork = find.descendant(
+          of: find.byType(Hero),
+          matching: find.byType(Image),
         );
+        // Warm the actual resized decode; FileImage alone has a different key.
+        artworkProvider = tester.widget<Image>(artwork).image;
+        await precacheImage(artworkProvider, tester.element(artwork));
       });
       await tester.pumpAndSettle();
 
@@ -71,7 +75,7 @@ void main() {
       expect(find.byIcon(Icons.music_note), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
-      await FileImage(cover).evict();
+      await artworkProvider.evict();
     });
   }
 
@@ -108,7 +112,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.byIcon(CupertinoIcons.chevron_back), findsOneWidget);
+        expect(find.byIcon(CupertinoIcons.back), findsOneWidget);
         expect(find.byIcon(CupertinoIcons.ellipsis), findsOneWidget);
         expect(find.byType(Card), findsNothing);
         final row = find.widgetWithText(MornyeMetadataRow, 'Track name');

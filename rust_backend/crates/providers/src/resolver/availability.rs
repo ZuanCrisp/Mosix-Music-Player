@@ -3,9 +3,9 @@
 mod cache;
 use super::{Check, Metadata, PlatformResolverService, ResolverError};
 pub use cache::AvailabilityService;
+use mornye_core::metadata::TrackMetadata;
+use mornye_network::{query, url::UrlParts};
 use serde::{Deserialize, Serialize};
-use spotiflac_core::metadata::TrackMetadata;
-use spotiflac_network::{query, url::UrlParts};
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -137,9 +137,9 @@ pub fn youtube_id_from_url(value: &str) -> String {
         .and_then(|values| values.first())
         && !id.is_empty()
     {
-        return spotiflac_core::lyrics::text_from_bytes(id);
+        return mornye_core::lyrics::text_from_bytes(id);
     }
-    let path = spotiflac_core::lyrics::text_from_bytes(&url.path);
+    let path = mornye_core::lyrics::text_from_bytes(&url.path);
     path.split("/embed/")
         .nth(1)
         .unwrap_or_default()

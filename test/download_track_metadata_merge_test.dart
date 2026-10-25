@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
 
 void main() {
   const track = Track(
@@ -106,5 +106,27 @@ void main() {
       ),
       isTrue,
     );
+  });
+
+  test('embedding uses the enriched cover instead of the search thumbnail', () {
+    final original = track.copyWith(
+      coverUrl: 'https://example.test/art/300.jpg',
+    );
+    final merged = buildTrackForMetadataEmbedding(original, {
+      'cover_url': 'https://example.test/art/3000.jpg',
+    }, original.albumArtist);
+    expect(merged.toJson(), {
+      ...original.toJson(),
+      'coverUrl': 'https://example.test/art/3000.jpg',
+    });
+  });
+
+  test('missing or invalid backend artwork preserves the selected cover', () {
+    for (final cover in [null, '', 'null', 'javascript:invalid']) {
+      final merged = buildTrackForMetadataEmbedding(track, {
+        'cover_url': cover,
+      }, track.albumArtist);
+      expect(merged.coverUrl, track.coverUrl);
+    }
   });
 }

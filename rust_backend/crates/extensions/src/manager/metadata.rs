@@ -1,7 +1,9 @@
+//! Extension manager metadata operations: availability checks, track enrichment, and provider search.
+
 use super::*;
+use mornye_core::cancellation::RequestLease;
+use mornye_core::matching::{lowercase, uppercase};
 use serde::Deserialize;
-use spotiflac_core::cancellation::RequestLease;
-use spotiflac_core::matching::{lowercase, uppercase};
 use std::collections::BTreeSet;
 
 #[derive(Default, Deserialize)]

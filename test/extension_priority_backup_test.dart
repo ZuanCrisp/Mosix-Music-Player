@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/providers/extension_provider.dart';
+import 'package:mornye/providers/extension_provider.dart';
 
 Extension _extension(String id) => Extension.fromJson({
   'id': id,
@@ -31,7 +31,7 @@ class _InstalledExtensions extends ExtensionNotifier {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const backend = MethodChannel('com.zuancrisp.mosix/backend');
+  const backend = MethodChannel('com.zarz.mornye/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late Map<String, List<String>> pushed;

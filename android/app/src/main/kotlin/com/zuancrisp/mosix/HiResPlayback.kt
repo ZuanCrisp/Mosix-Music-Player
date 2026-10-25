@@ -93,7 +93,8 @@ internal class HiResPlayback(context: Context, private val emit: (Map<String, An
             }
             if (expected != revision) { close(); return mapOf("reason" to "cancelled") }
             return mapOf("ready" to true, "driver" to "aaudio_exclusive", "transport" to "pcm",
-                "sampleRate" to pcm.rate, "bitDepth" to pcm.bits, "duration" to pcm.durationUs / 1000,
+                "sampleRate" to pcm.rate, "bitDepth" to bits, "sourceBitDepth" to pcm.bits,
+                "duration" to pcm.durationUs / 1000,
                 "device" to (devices.firstOrNull { it.id == device }?.productName?.toString() ?: "AAudio"))
         } catch (error: Exception) {
             close()

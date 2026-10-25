@@ -8,19 +8,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_ui/material_ui.dart' as material_ui;
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/material_expressive.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/app_action_button.dart';
-import 'package:mosix/widgets/app_choice_chip.dart';
-import 'package:mosix/widgets/app_content_card.dart';
-import 'package:mosix/widgets/app_switch.dart';
-import 'package:mosix/widgets/expressive_button.dart';
-import 'package:mosix/widgets/expressive_icon_button.dart';
-import 'package:mosix/widgets/expressive_navigation_bar.dart';
-import 'package:mosix/widgets/selection_action_button.dart';
-import 'package:mosix/widgets/settings_group.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/theme/app_theme.dart';
+import 'package:mornye/theme/material_expressive.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_action_button.dart';
+import 'package:mornye/widgets/app_choice_chip.dart';
+import 'package:mornye/widgets/app_content_card.dart';
+import 'package:mornye/widgets/app_switch.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/expressive_button_group.dart';
+import 'package:mornye/widgets/expressive_icon_button.dart';
+import 'package:mornye/widgets/expressive_navigation_bar.dart';
+import 'package:mornye/widgets/selection_action_button.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/track_card.dart';
+
+import 'support/app_icon_finder.dart';
 
 Widget _host(
   Widget child, {
@@ -123,10 +127,12 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    expect(findAppIcon(Icons.check), findsNothing);
     await tester.tap(find.text('Autoplay'));
     await tester.pumpAndSettle();
     expect(value, isTrue);
     expect(calls, 1);
+    expect(findAppIcon(Icons.check), findsOneWidget);
     await tester.tap(find.byType(M3ESwitch));
     await tester.pumpAndSettle();
     expect(value, isFalse);
@@ -156,7 +162,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('12'), findsOneWidget);
-    expect(find.byIcon(Icons.album_outlined), findsOneWidget);
+    expect(findAppIcon(Icons.album_outlined), findsOneWidget);
     await tester.tap(find.text('Albums'));
     await tester.pumpAndSettle();
     expect(selected, isTrue);
@@ -449,5 +455,138 @@ void main() {
     expect(find.byType(MaterialExpressiveScope), findsNothing);
     expect(find.byType(CupertinoButton), findsAtLeast(2));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('standard settings rows connect; custom content keeps a card', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _host(
+        SettingsGroup(
+          children: [
+            SettingsItem(title: 'First', onTap: () {}),
+            SettingsSwitchItem(title: 'Second', value: true, onChanged: (_) {}),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final group = find.byType(SettingsGroup);
+    expect(
+      find.descendant(of: group, matching: find.byType(M3ECard)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: group, matching: find.byType(Divider)),
+      findsNothing,
+    );
+    final first = tester.getRect(find.text('First'));
+    final second = tester.getRect(find.text('Second'));
+    expect(second.top, greaterThan(first.bottom));
+
+    await tester.pumpWidget(
+      _host(
+        SettingsGroup(
+          children: [
+            SettingsItem(title: 'Field', onTap: () {}),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(M3ECard), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('button group squishes neighbours and keeps a plain fallback', (
+    tester,
+  ) async {
+    var calls = 0;
+    Widget group() => SizedBox(
+      width: 360,
+      child: ExpressiveButtonGroup(
+        flexible: const {1},
+        children: [
+          ExpressiveIconButton(
+            icon: const Icon(Icons.favorite_border),
+            tooltip: 'Love',
+            backgroundColor: Colors.grey,
+            onPressed: () => calls++,
+          ),
+          ExpressiveButton(
+            onPressed: () => calls++,
+            child: const Text('Download'),
+          ),
+          ExpressiveIconButton(
+            icon: const Icon(Icons.playlist_add),
+            tooltip: 'Add',
+            backgroundColor: Colors.grey,
+            onPressed: () => calls++,
+          ),
+        ],
+      ),
+    );
+    await tester.pumpWidget(_host(group()));
+    await tester.pumpAndSettle();
+    final slot = find.byType(ExpressiveButtonGroupSlot).first;
+    final download = find.byType(M3EButton);
+    final restingSlot = tester.getSize(slot).width;
+    final restingDownload = tester.getSize(download).width;
+    expect(restingSlot, 48);
+    expect(restingDownload, closeTo(360 - 2 * 48 - 2 * 12, 1));
+
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byTooltip('Love')),
+    );
+    // Stay under the long-press delay so the release still taps.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(tester.getSize(slot).width, greaterThan(restingSlot));
+    expect(tester.getSize(download).width, lessThan(restingDownload));
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(tester.getSize(slot).width, restingSlot);
+    expect(calls, 1);
+
+    await tester.pumpWidget(_host(group(), reduceMotion: true));
+    await tester.pumpAndSettle();
+    expect(find.byType(ExpressiveButtonGroupSlot), findsNothing);
+    expect(
+      tester.getSize(find.byType(FilledButton)).width,
+      lessThan(restingDownload),
+    );
+    await tester.tap(find.text('Download'));
+    expect(calls, 2);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('track rows connect only on the Material theme', (tester) async {
+    BorderRadius? radius;
+    Widget segment({required bool first, required bool last}) =>
+        TrackCardSegment(
+          first: first,
+          last: last,
+          child: Builder(
+            builder: (context) {
+              radius = TrackCardSegment.radiusOf(context);
+              return const SizedBox();
+            },
+          ),
+        );
+    await tester.pumpWidget(_host(segment(first: true, last: false)));
+    expect(radius?.topLeft, const Radius.circular(20));
+    expect(radius?.bottomLeft, const Radius.circular(4));
+    await tester.pumpWidget(_host(segment(first: false, last: true)));
+    expect(radius?.topLeft, const Radius.circular(4));
+    expect(radius?.bottomLeft, const Radius.circular(20));
+    await tester.pumpWidget(
+      _host(
+        segment(first: true, last: true),
+        theme: MornyeTheme.build(Brightness.dark),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(radius, isNull);
   });
 }

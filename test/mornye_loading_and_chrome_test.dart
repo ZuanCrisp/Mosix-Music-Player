@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/shell_navigation_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/animation_utils.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
+import 'package:mornye/services/shell_navigation_service.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/animation_utils.dart';
+import 'package:mornye/widgets/mornye_artist_header.dart';
 
 void main() {
   for (final brightness in Brightness.values) {

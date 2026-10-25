@@ -248,7 +248,7 @@ extension _HistoryStartupMaintenance on DownloadHistoryNotifier {
   bool _supportsAudioMetadataProbe(String filePath) {
     final trimmed = filePath.trim().toLowerCase();
     if (trimmed.isEmpty) return false;
-    if (trimmed.startsWith('content://')) return true;
+    if (isContentUri(trimmed)) return true;
     return trimmed.endsWith('.flac') ||
         trimmed.endsWith('.m4a') ||
         trimmed.endsWith('.mp4') ||
@@ -297,7 +297,7 @@ extension _HistoryStartupMaintenance on DownloadHistoryNotifier {
             trimmedPath.endsWith('.m4a') ||
             trimmedPath.endsWith('.mp4') ||
             trimmedPath.endsWith('.aac') ||
-            trimmedPath.startsWith('content://'));
+            isContentUri(trimmedPath));
 
     if (hasResolvedSpecs && !isPlaceholderQualityLabel(item.quality)) {
       final needsComposerBackfill =
@@ -382,7 +382,7 @@ extension _HistoryStartupMaintenance on DownloadHistoryNotifier {
 
     String? tempPath;
     try {
-      if (filePath.startsWith('content://')) {
+      if (isContentUri(filePath)) {
         final treeUri = normalizeOptionalString(item.downloadTreeUri);
         final fileName = normalizeOptionalString(item.safFileName);
         if (treeUri == null || fileName == null) return null;

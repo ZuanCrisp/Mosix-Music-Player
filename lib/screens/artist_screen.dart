@@ -2,56 +2,70 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/screens/track_history_snapshot.dart';
-import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/theme/cover_palette.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/app_progress_indicator.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mornye/widgets/mornye_artist_header.dart';
+import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mornye/screens/track_history_snapshot.dart';
+import 'package:mornye/widgets/album_detail_header.dart';
+import 'package:mornye/theme/cover_palette.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/models/artist_concert.dart';
-import 'package:mosix/widgets/artist_concerts_button.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/providers/track_provider.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/providers/download_queue_provider.dart';
-import 'package:mosix/providers/library_collections_provider.dart';
-import 'package:mosix/providers/recent_access_provider.dart';
-import 'package:mosix/providers/local_library_provider.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/string_utils.dart';
-import 'package:mosix/utils/adaptive_layout.dart';
-import 'package:mosix/utils/nav_bar_inset.dart';
-import 'package:mosix/utils/provider_resource_ids.dart';
-import 'package:mosix/utils/ttl_cache.dart';
-import 'package:mosix/screens/album_screen.dart';
-import 'package:mosix/screens/home_tab.dart'
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/models/artist_concert.dart';
+import 'package:mornye/widgets/artist_concerts_button.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/providers/track_provider.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mornye/providers/library_collections_provider.dart';
+import 'package:mornye/providers/recent_access_provider.dart';
+import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/utils/string_utils.dart';
+import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/utils/provider_resource_ids.dart';
+import 'package:mornye/utils/ttl_cache.dart';
+import 'package:mornye/screens/album_screen.dart';
+import 'package:mornye/screens/extension_collection_screens.dart'
     show ExtensionAlbumScreen;
-import 'package:mosix/utils/local_playback.dart';
-import 'package:mosix/widgets/download_service_picker.dart';
-import 'package:mosix/widgets/error_card.dart';
-import 'package:mosix/widgets/selection_bottom_bar.dart';
-import 'package:mosix/widgets/in_library_badge.dart';
-import 'package:mosix/widgets/track_collection_quick_actions.dart';
-import 'package:mosix/widgets/animation_utils.dart';
-import 'package:mosix/screens/selection_mode_mixin.dart';
-import 'package:mosix/utils/clickable_metadata.dart';
-import 'package:mosix/widgets/cached_cover_image.dart';
-import 'package:mosix/widgets/playlist_picker_sheet.dart';
-import 'package:mosix/widgets/motion_header_banner.dart';
-import 'package:mosix/widgets/cross_extension_share_sheet.dart';
-import 'package:mosix/widgets/view_queue_snackbar_action.dart';
-import 'package:mosix/widgets/app_snack_bar.dart';
-import 'package:mosix/widgets/downloadable_cover.dart';
+import 'package:mornye/controllers/local_playback.dart';
+import 'package:mornye/widgets/download_service_picker.dart';
+import 'package:mornye/widgets/error_card.dart';
+import 'package:mornye/widgets/selection_bottom_bar.dart';
+import 'package:mornye/widgets/in_library_badge.dart';
+import 'package:mornye/widgets/track_collection_quick_actions.dart';
+import 'package:mornye/widgets/animation_utils.dart';
+import 'package:mornye/screens/selection_mode_mixin.dart';
+import 'package:mornye/utils/clickable_metadata.dart';
+import 'package:mornye/widgets/cached_cover_image.dart';
+import 'package:mornye/widgets/playlist_picker_sheet.dart';
+import 'package:mornye/widgets/motion_header_banner.dart';
+import 'package:mornye/widgets/cross_extension_share_sheet.dart';
+import 'package:mornye/widgets/view_queue_snackbar_action.dart';
+import 'package:mornye/widgets/app_snack_bar.dart';
+import 'package:mornye/widgets/downloadable_cover.dart';
+import 'package:mornye/widgets/expressive_button_group.dart';
+import 'package:mornye/widgets/expressive_icon_button.dart';
+import 'package:mornye/widgets/desktop/context_menu.dart';
+import 'package:mornye/widgets/desktop/desktop_scroll_arrows.dart';
+import 'package:mornye/widgets/desktop/desktop_selection.dart';
+import 'package:mornye/widgets/desktop/detail_header.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/theme/app_motion.dart';
+import 'package:mornye/theme/material_expressive.dart';
 
 part 'artist_screen_widgets.dart';
+part 'artist_screen_discography.dart';
 
 class _ArtistCache {
   static final _cache = TtlCache<_CacheEntry>(
@@ -179,37 +193,6 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen>
   List<ArtistAlbum> _albumsOnlyBucket = const [];
   List<ArtistAlbum> _singlesBucket = const [];
   List<ArtistAlbum> _compilationsBucket = const [];
-
-  double _responsiveScale({
-    double min = 0.82,
-    double max = 1.08,
-    double baseShortestSide = 390,
-  }) {
-    final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-    final scale = shortestSide / baseShortestSide;
-    if (scale < min) return min;
-    if (scale > max) return max;
-    return scale;
-  }
-
-  double _effectiveTextScale() {
-    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
-    if (textScale < 1.0) return 1.0;
-    if (textScale > 1.4) return 1.4;
-    return textScale;
-  }
-
-  double _artistAlbumTileSize() {
-    final scale = _responsiveScale(min: 0.82, max: 1.05);
-    final textScale = _effectiveTextScale();
-    return 140 * scale * (1 + (textScale - 1) * 0.12);
-  }
-
-  double _artistAlbumSectionHeight() {
-    final tileSize = _artistAlbumTileSize();
-    final textScale = _effectiveTextScale();
-    return tileSize + 64 + ((textScale - 1) * 14);
-  }
 
   String? _recommendedDownloadService() {
     return _directMetadataProviderId();
@@ -682,100 +665,126 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen>
                     albums: albums,
                     hasDiscography: hasDiscography,
                   ),
-                  if (_isLoadingDiscography)
-                    SliverToBoxAdapter(
-                      child: ArtistScreenSkeleton(
-                        showCoverHeader:
-                            !context.isMornye &&
-                            (_headerImageUrl ??
-                                    widget.headerImageUrl ??
-                                    widget.coverUrl) ==
-                                null,
-                        showPopularSection:
-                            !widget.artistId.startsWith('deezer:') &&
-                            !widget.artistId.startsWith('qobuz:') &&
-                            !widget.artistId.startsWith('tidal:'),
-                      ),
+                  // Desktop keeps the sections in the header's column.
+                  SliverPadding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isDesktopPlatform
+                          ? wideListInset(context)
+                          : 0,
                     ),
-                  if (_error != null)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: ErrorCard(
-                          error: _error!,
-                          colorScheme: colorScheme,
-                          onRetry: _fetchDiscography,
-                        ),
-                      ),
-                    ),
-                  if (!_isLoadingDiscography && _error == null) ...[
-                    if (context.isMornye &&
-                        albums.isNotEmpty &&
-                        !isSelectionMode)
-                      SliverToBoxAdapter(
-                        child: _buildMornyeFeaturedAlbum(context, albums.first),
-                      ),
-                    if (_topTracks != null && _topTracks!.isNotEmpty)
-                      SliverToBoxAdapter(
-                        child: _buildPopularSection(context, colorScheme),
-                      ),
-                    if (releases.isNotEmpty)
-                      SliverToBoxAdapter(
-                        child: _buildAlbumSection(
-                          context,
-                          context.l10n.artistReleases,
-                          releases,
-                          colorScheme,
-                        ),
-                      ),
-                    if (albumsOnly.isNotEmpty)
-                      SliverToBoxAdapter(
-                        child: _buildAlbumSection(
-                          context,
-                          context.l10n.artistAlbums,
-                          albumsOnly,
-                          colorScheme,
-                        ),
-                      ),
-                    if (singles.isNotEmpty)
-                      SliverToBoxAdapter(
-                        child: _buildAlbumSection(
-                          context,
-                          context.l10n.artistSingles,
-                          singles,
-                          colorScheme,
-                          showTypeBadge: true,
-                        ),
-                      ),
-                    if (compilations.isNotEmpty)
-                      SliverToBoxAdapter(
-                        child: _buildAlbumSection(
-                          context,
-                          context.l10n.artistCompilations,
-                          compilations,
-                          colorScheme,
-                        ),
-                      ),
-                  ],
-                  if (_isLoadingMoreAlbums || _albumsPageError != null)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            if (_albumsPageError != null)
-                              Text(
-                                _albumsPageError!,
-                                textAlign: TextAlign.center,
+                    sliver: SliverMainAxisGroup(
+                      slivers: [
+                        if (_isLoadingDiscography)
+                          SliverToBoxAdapter(
+                            child: ArtistScreenSkeleton(
+                              showCoverHeader:
+                                  !isDesktopPlatform &&
+                                  !context.isMornye &&
+                                  (_headerImageUrl ??
+                                          widget.headerImageUrl ??
+                                          widget.coverUrl) ==
+                                      null,
+                              showPopularSection:
+                                  !widget.artistId.startsWith('deezer:') &&
+                                  !widget.artistId.startsWith('qobuz:') &&
+                                  !widget.artistId.startsWith('tidal:'),
+                            ),
+                          ),
+                        if (_error != null)
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: ErrorCard(
+                                error: _error!,
+                                colorScheme: colorScheme,
+                                onRetry: _fetchDiscography,
                               ),
-                            if (_isLoadingMoreAlbums)
-                              const CircularProgressIndicator.adaptive(),
-                          ],
-                        ),
-                      ),
+                            ),
+                          ),
+                        if (!_isLoadingDiscography && _error == null) ...[
+                          if (context.isMornye &&
+                              albums.isNotEmpty &&
+                              !isSelectionMode)
+                            SliverToBoxAdapter(
+                              child: _buildMornyeFeaturedAlbum(
+                                context,
+                                albums.first,
+                              ),
+                            ),
+                          if (_topTracks != null && _topTracks!.isNotEmpty)
+                            SliverToBoxAdapter(
+                              child: _buildPopularSection(context, colorScheme),
+                            ),
+                          if (releases.isNotEmpty)
+                            SliverToBoxAdapter(
+                              key: const ValueKey('artist-releases'),
+                              child: _buildAlbumSection(
+                                context,
+                                context.l10n.artistReleases,
+                                releases,
+                                colorScheme,
+                              ),
+                            ),
+                          if (albumsOnly.isNotEmpty)
+                            SliverToBoxAdapter(
+                              key: const ValueKey('artist-albums'),
+                              child: _buildAlbumSection(
+                                context,
+                                context.l10n.artistAlbums,
+                                albumsOnly,
+                                colorScheme,
+                              ),
+                            ),
+                          if (singles.isNotEmpty)
+                            SliverToBoxAdapter(
+                              key: const ValueKey('artist-singles'),
+                              child: _buildAlbumSection(
+                                context,
+                                context.l10n.artistSingles,
+                                singles,
+                                colorScheme,
+                                showTypeBadge: true,
+                              ),
+                            ),
+                          if (compilations.isNotEmpty)
+                            SliverToBoxAdapter(
+                              key: const ValueKey('artist-compilations'),
+                              child: _buildAlbumSection(
+                                context,
+                                context.l10n.artistCompilations,
+                                compilations,
+                                colorScheme,
+                              ),
+                            ),
+                        ],
+                        if (_isLoadingMoreAlbums || _albumsPageError != null)
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                children: [
+                                  if (_albumsPageError != null)
+                                    Text(
+                                      _albumsPageError!,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  if (_isLoadingMoreAlbums)
+                                    const AppLoadingIndicator(),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
+                  ),
                   SliverToBoxAdapter(
-                    child: SizedBox(height: isSelectionMode ? 120 : 32),
+                    child: SizedBox(
+                      height: isSelectionMode
+                          ? 120
+                          : isDesktopPlatform
+                          ? desktopDetailBottomInset
+                          : 32,
+                    ),
                   ),
                   const NavBarSliverSpacer(),
                 ],
@@ -791,7 +800,7 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen>
     required List<ArtistAlbum> albums,
     required double bottomPadding,
   }) {
-    if (!isSelectionMode) {
+    if (!showsSelectionBar) {
       _selectionOverlay.hide();
       return;
     }
@@ -856,7 +865,7 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen>
       children: [
         SizedBox(
           width: double.infinity,
-          child: FilledButton.icon(
+          child: ExpressiveButton(
             onPressed: selectedCount > 0 && !_isFetchingDiscography
                 ? () {
                     exitSelectionMode();
@@ -869,175 +878,25 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen>
                   }
                 : null,
             icon: const Icon(Icons.playlist_add),
-            label: Text(context.l10n.collectionAddToPlaylist),
+            child: Text(context.l10n.collectionAddToPlaylist),
           ),
         ),
         const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
-              child: FilledButton.icon(
+              child: ExpressiveButton(
                 onPressed: selectedCount > 0
                     ? () => _downloadSelectedAlbums(context, selectedAlbums)
                     : null,
                 icon: const Icon(Icons.download, size: 18),
-                label: Text(context.l10n.discographyDownloadSelected),
+                child: Text(context.l10n.discographyDownloadSelected),
               ),
             ),
           ],
         ),
       ],
     );
-  }
-
-  void _showDiscographyOptions(
-    BuildContext context,
-    ColorScheme colorScheme,
-    List<ArtistAlbum> albums,
-  ) {
-    final albumsOnly = albums.where((a) => a.albumType == 'album').toList();
-    final singles = albums
-        .where((a) => a.albumType == 'single' || a.albumType == 'ep')
-        .toList();
-
-    final totalTracks = albums.fold<int>(0, (sum, a) => sum + a.totalTracks);
-    final albumTracks = albumsOnly.fold<int>(
-      0,
-      (sum, a) => sum + a.totalTracks,
-    );
-    final singleTracks = singles.fold<int>(0, (sum, a) => sum + a.totalTracks);
-    final pageContext = context;
-
-    Widget buildSheet(BuildContext context) => AppBottomSheet(
-      maxHeightFactor: 0.85,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: Row(
-                children: [
-                  if (!context.isMornye) ...[
-                    Icon(Icons.download, color: colorScheme.primary),
-                    const SizedBox(width: 12),
-                  ],
-                  Expanded(
-                    child: Text(
-                      context.l10n.discographyDownload,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: context.isMornye
-                            ? FontWeight.w600
-                            : FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            if (albums.isNotEmpty)
-              _DiscographyOptionTile(
-                icon: Icons.library_music,
-                title: context.l10n.discographyDownloadAll,
-                subtitle: context.l10n.discographyDownloadAllSubtitle(
-                  totalTracks,
-                  albums.length,
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _downloadAlbums(pageContext, albums);
-                },
-              ),
-            if (albumsOnly.isNotEmpty)
-              _DiscographyOptionTile(
-                icon: Icons.album,
-                title: context.l10n.discographyAlbumsOnly,
-                subtitle: context.l10n.discographyAlbumsOnlySubtitle(
-                  albumTracks,
-                  albumsOnly.length,
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _downloadAlbums(pageContext, albumsOnly);
-                },
-              ),
-            if (singles.isNotEmpty)
-              _DiscographyOptionTile(
-                icon: Icons.music_note,
-                title: context.l10n.discographySinglesOnly,
-                subtitle: context.l10n.discographySinglesOnlySubtitle(
-                  singleTracks,
-                  singles.length,
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _downloadAlbums(pageContext, singles);
-                },
-              ),
-            _DiscographyOptionTile(
-              icon: Icons.checklist,
-              title: context.l10n.discographySelectAlbums,
-              subtitle: context.l10n.discographySelectAlbumsSubtitle,
-              showDivider: false,
-              onTap: () {
-                Navigator.pop(context);
-                enterSelectionMode(albums.first.id);
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: context.isMornye
-          ? Colors.transparent
-          : colorScheme.surfaceContainerHigh,
-      builder: (sheetContext) => sheetContext.isMornye
-          ? Theme(
-              data: MornyeTheme.fromContext(
-                sheetContext,
-                brightness: Brightness.dark,
-              ),
-              child: MornyeGlassPanel(
-                tintOpacity: 0.78,
-                child: Builder(builder: buildSheet),
-              ),
-            )
-          : buildSheet(sheetContext),
-    );
-  }
-
-  Future<void> _downloadAlbums(
-    BuildContext context,
-    List<ArtistAlbum> albums,
-  ) async {
-    final settings = ref.read(settingsProvider);
-    if (settings.askQualityBeforeDownload || settings.allowQualityVariants) {
-      DownloadServicePicker.show(
-        context,
-        recommendedService: _recommendedDownloadService(),
-        onSelect: (quality, service) {
-          _fetchAndQueueAlbums(albums, service, quality);
-        },
-      );
-    } else {
-      _fetchAndQueueAlbums(albums, settings.defaultService, null);
-    }
-  }
-
-  Future<void> _downloadSelectedAlbums(
-    BuildContext context,
-    List<ArtistAlbum> albums,
-  ) async {
-    exitSelectionMode();
-    await _downloadAlbums(context, albums);
   }
 
   Future<void> _toggleFavoriteArtist(BuildContext context) async {
@@ -1064,193 +923,5 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen>
         ),
       ),
     );
-  }
-
-  Future<void> _fetchAndQueueAlbums(
-    List<ArtistAlbum> albums,
-    String service,
-    String? qualityOverride, {
-    bool addToPlaylist = false,
-  }) async {
-    if (!mounted || _isFetchingDiscography) return;
-
-    final generation = ++_discographyFetchGeneration;
-    setState(() => _isFetchingDiscography = true);
-
-    final progressDialogKey = GlobalKey<_FetchingProgressDialogState>();
-    unawaited(
-      showAppDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => _FetchingProgressDialog(
-          key: progressDialogKey,
-          totalAlbums: albums.length,
-          onCancel: () {
-            _discographyFetchGeneration++;
-            setState(() => _isFetchingDiscography = false);
-            Navigator.pop(ctx);
-          },
-        ),
-      ).whenComplete(() {
-        if (mounted &&
-            generation == _discographyFetchGeneration &&
-            _isFetchingDiscography) {
-          _discographyFetchGeneration++;
-          setState(() => _isFetchingDiscography = false);
-        }
-      }),
-    );
-
-    final allTracks = <Track>[];
-    int fetchedCount = 0;
-    int failedCount = 0;
-
-    for (final album in albums) {
-      if (!mounted ||
-          generation != _discographyFetchGeneration ||
-          !_isFetchingDiscography) {
-        break;
-      }
-
-      try {
-        final tracks = await _fetchAlbumTracks(album);
-        if (!mounted || generation != _discographyFetchGeneration) return;
-        allTracks.addAll(tracks);
-      } catch (e) {
-        failedCount++;
-      }
-      if (!mounted || generation != _discographyFetchGeneration) return;
-
-      fetchedCount++;
-
-      if (mounted) {
-        progressDialogKey.currentState?.updateProgress(
-          fetchedCount,
-          albums.length,
-        );
-      }
-    }
-
-    if (!mounted || generation != _discographyFetchGeneration) return;
-    final cancelled = !_isFetchingDiscography;
-    setState(() => _isFetchingDiscography = false);
-    if (cancelled) return;
-
-    if (mounted) {
-      Navigator.of(context, rootNavigator: true).pop();
-    }
-
-    if (failedCount > 0 && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.discographyFailedToFetch)),
-      );
-    }
-
-    if (allTracks.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.discographyNoAlbums)),
-        );
-      }
-      return;
-    }
-
-    if (addToPlaylist) {
-      await showAddTracksToPlaylistSheet(context, ref, allTracks);
-      return;
-    }
-
-    final settings = ref.read(settingsProvider);
-    final skipExisting =
-        settings.deduplicateDownloads && !settings.allowQualityVariants;
-    final historyLookups = allTracks
-        .map(historyLookupForTrack)
-        .toList(growable: false);
-    final existingHistoryKeys = skipExisting
-        ? await ref.read(
-            downloadHistoryBatchExistsProvider(
-              HistoryBatchLookupRequest(historyLookups),
-            ).future,
-          )
-        : const <String>{};
-    final tracksToQueue = <Track>[];
-    int skippedCount = 0;
-
-    for (var i = 0; i < allTracks.length; i++) {
-      final track = allTracks[i];
-      final isDownloaded =
-          skipExisting &&
-          existingHistoryKeys.contains(historyLookups[i].lookupKey);
-
-      if (!isDownloaded) {
-        tracksToQueue.add(track);
-      } else {
-        skippedCount++;
-      }
-    }
-
-    if (tracksToQueue.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.l10n.discographySkippedDownloaded(0, skippedCount),
-            ),
-          ),
-        );
-      }
-      return;
-    }
-
-    ref
-        .read(downloadQueueProvider.notifier)
-        .addMultipleToQueue(
-          tracksToQueue,
-          service,
-          qualityOverride: qualityOverride,
-        );
-
-    if (mounted) {
-      final message = skippedCount > 0
-          ? context.l10n.discographySkippedDownloaded(
-              tracksToQueue.length,
-              skippedCount,
-            )
-          : context.l10n.discographyAddedToQueue(tracksToQueue.length);
-
-      showAppSnackBar(
-        context,
-        content: Text(message),
-        action: buildViewQueueSnackBarAction(context),
-      );
-    }
-  }
-
-  Future<List<Track>> _fetchAlbumTracks(ArtistAlbum album) async {
-    final providerId = album.providerId;
-    if (providerId != null && providerId.isNotEmpty) {
-      final resourceId = stripPrefixedResourceId(album.id);
-      final metadata = await PlatformBridge.getProviderMetadata(
-        providerId,
-        'album',
-        resourceId,
-      );
-      if (metadata['track_list'] != null) {
-        final tracksList = metadata['track_list'] as List<dynamic>;
-        return tracksList
-            .map((t) => _parseTrack(t as Map<String, dynamic>, album: album))
-            .toList();
-      }
-    } else {
-      final url = 'https://open.spotify.com/album/${album.id}';
-      final result = await PlatformBridge.handleURLWithExtension(url);
-      if (result != null && result['tracks'] != null) {
-        final tracksList = result['tracks'] as List<dynamic>;
-        return tracksList
-            .map((t) => _parseTrack(t as Map<String, dynamic>, album: album))
-            .toList();
-      }
-    }
-    return [];
   }
 }

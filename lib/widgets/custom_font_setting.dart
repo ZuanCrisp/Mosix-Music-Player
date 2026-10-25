@@ -1,10 +1,12 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/providers/theme_provider.dart';
-import 'package:mosix/services/custom_font_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/providers/theme_provider.dart';
+import 'package:mornye/services/custom_font_service.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
 
 class CustomFontSetting extends ConsumerStatefulWidget {
   const CustomFontSetting({super.key});
@@ -56,13 +58,10 @@ class _CustomFontSettingState extends ConsumerState<CustomFontSetting> {
       ),
       onTap: _importing ? null : _import,
       trailing: _importing
-          ? const SizedBox.square(
-              dimension: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
+          ? const AppLoadingIndicator(size: 24, strokeWidth: 2)
           : theme.customFontId.isEmpty
           ? const Icon(Icons.add)
-          : IconButton(
+          : AppIconButton(
               tooltip: context.l10n.appearanceCustomFontReset,
               onPressed: () =>
                   ref.read(themeProvider.notifier).setCustomFont('', ''),

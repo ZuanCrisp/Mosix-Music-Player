@@ -27,6 +27,9 @@ rust_backend/vendor/rustix-1.1.5/ORG_CODE_OF_CONDUCT.md whitespace=-blank-at-eol
 # Preserve libusb's upstream sources, license whitespace, and source hashes.
 rust_backend/vendor/libusb1-sys-0.7.0/** -whitespace
 
+# Frozen Unicode 15.0.0 case table; its generator is no longer in the repository.
+rust_backend/crates/core/src/metadata/musicbrainz/case_data.rs linguist-generated=true
+
 # Binary files
 *.png binary
 *.jpg binary

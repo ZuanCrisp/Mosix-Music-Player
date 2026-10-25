@@ -105,6 +105,11 @@ class AudioplayersPlugin : FlutterPlugin {
         val player = getPlayer(playerId)
         try {
             when (call.method) {
+                "setEqualizer" -> {
+                    val configuration = call.argument<Map<String, Any?>>("configuration")
+                        ?: error("Equalizer configuration is required")
+                    player.setEqualizer(configuration)
+                }
                 "setSourceUrl" -> {
                     val url = call.argument<String>("url") ?: error("url is required")
                     val isLocal = call.argument<Boolean>("isLocal") ?: false

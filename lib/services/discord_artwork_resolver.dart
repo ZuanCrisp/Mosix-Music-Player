@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:mosix/models/track.dart';
-import 'package:mosix/services/history_database.dart';
-import 'package:mosix/services/platform_bridge.dart';
+import 'package:mornye/models/track.dart';
+import 'package:mornye/services/history_database.dart';
+import 'package:mornye/services/platform_bridge.dart';
 
 /// Discord fetches images itself. Local artwork must never be sent as an asset
 /// key, and private/signed URLs must not be published as listening activity.

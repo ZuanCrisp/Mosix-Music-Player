@@ -61,7 +61,7 @@ impl Output {
         let state = shared.clone();
         let (tx, rx) = mpsc::sync_channel(1);
         let handle = thread::Builder::new()
-            .name("SpotiFLAC-USB-iso".into())
+            .name("Mosix-USB-iso".into())
             .spawn(move || {
                 // Best effort; failure changes scheduling only, never audio data.
                 unsafe {

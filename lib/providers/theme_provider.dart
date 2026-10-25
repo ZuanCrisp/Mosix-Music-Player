@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/models/theme_settings.dart';
+import 'package:mornye/models/theme_settings.dart';
 
 final initialThemeSettingsProvider = Provider<ThemeSettings>(
-  (ref) => const ThemeSettings(),
+  (ref) => ThemeSettings(style: defaultAppThemeStyle()),
 );
 
 ThemeSettings loadBootstrapThemeSettings(SharedPreferences prefs) {

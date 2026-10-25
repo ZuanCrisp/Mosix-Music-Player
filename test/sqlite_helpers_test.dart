@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/services/sqlite_helpers.dart';
+import 'package:mornye/services/sqlite_helpers.dart';
 
 void main() {
   group('SingleFlightInitializer', () {

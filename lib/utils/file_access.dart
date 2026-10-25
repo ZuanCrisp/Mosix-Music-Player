@@ -2,11 +2,13 @@ import 'dart:io';
 
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/services/source_deletion_events.dart';
-import 'package:mosix/utils/ios_container_paths.dart';
-import 'package:mosix/utils/mime_utils.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:mornye/services/network_storage_service.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/source_deletion_events.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/ios_container_paths.dart';
+import 'package:mornye/utils/mime_utils.dart';
 
 /// Whether the queue should run its iOS output-directory path-shape check
 /// (which can replace [outputDir] with the default Documents folder when the
@@ -107,7 +109,7 @@ bool isValidIosWritablePath(String path) {
 /// Returns a valid Documents subdirectory path if the input is invalid.
 Future<String> validateOrFixIosPath(
   String path, {
-  String subfolder = 'Mosix',
+  String subfolder = 'Mornye',
 }) async {
   if (!Platform.isIOS) return path;
 
@@ -247,6 +249,13 @@ class FileAccessStat {
   final DateTime? modified;
 
   const FileAccessStat({this.size, this.modified});
+}
+
+/// Deletes [file] when it exists and swallows any error.
+Future<void> deleteFileQuietly(File file) async {
+  try {
+    if (await file.exists()) await file.delete();
+  } catch (_) {}
 }
 
 bool isContentUri(String? path) {
@@ -432,6 +441,14 @@ Future<void> openFile(String path) async {
   final realPath = path;
   if (isContentUri(realPath)) {
     await PlatformBridge.openContentUri(realPath, mimeType: '');
+    return;
+  }
+  if (isDesktopPlatform) {
+    // open_filex has no desktop implementation; the OS opens file URIs with
+    // the user's default application.
+    if (!await launchUrl(Uri.file(realPath))) {
+      throw Exception('No application can open $realPath');
+    }
     return;
   }
   final mimeType = audioMimeTypeForPath(realPath);

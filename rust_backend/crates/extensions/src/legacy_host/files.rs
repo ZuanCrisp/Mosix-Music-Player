@@ -27,7 +27,7 @@ pub(super) fn register<'js>(
                 let mut file = path
                     .open(OpenOptions::new().read(true))
                     .map_err(|error| format!("failed to open file: {error}"))?;
-                spotiflac_core::media::probe_quality(&mut file, &check)
+                mornye_core::media::probe_quality(&mut file, &check)
             })();
             match result {
                 Ok(quality) => json!({

@@ -1,0 +1,31 @@
+group 'com.zarz.mornye.discord'
+version '1.0'
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+def discordSdkEnabled = System.getenv('MORNYE_DISCORD_SDK') != '0'
+
+android {
+    namespace 'com.zarz.mornye.discord'
+    compileSdk 37
+    ndkVersion '30.0.16248370'
+    defaultConfig {
+        minSdk 24
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_STL=c++_static',
+                    "-DMORNYE_DISCORD_SDK=${discordSdkEnabled ? 'ON' : 'OFF'}"
+            }
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_25
+        targetCompatibility JavaVersion.VERSION_25
+    }
+    kotlinOptions { jvmTarget = '25' }
+    if (discordSdkEnabled) sourceSets.main.assets.srcDir('../sdk/notices')
+    externalNativeBuild {
+        cmake { path 'CMakeLists.txt'; version '4.1.2' }
+    }
+}

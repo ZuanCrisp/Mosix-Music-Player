@@ -1,25 +1,36 @@
+import 'dart:io' show exit;
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:mosix/constants/app_info.dart';
-import 'package:mosix/services/update_checker.dart';
-import 'package:mosix/services/apk_downloader.dart';
-import 'package:mosix/services/notification_service.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/utils/string_utils.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/widgets/app_action_button.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mornye/constants/app_info.dart';
+import 'package:mornye/services/update_checker.dart';
+import 'package:mornye/services/apk_downloader.dart';
+import 'package:mornye/services/desktop_diagnostics.dart';
+import 'package:mornye/services/desktop_updater.dart';
+import 'package:mornye/services/notification_service.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/utils/string_utils.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_action_button.dart';
+import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mornye/widgets/app_progress_indicator.dart';
+import 'package:mornye/theme/mornye_theme.dart';
 
 class UpdateDialog extends StatefulWidget {
   final UpdateInfo updateInfo;
   final VoidCallback onDismiss;
   final VoidCallback onDisableUpdates;
 
+  /// When true the dialog cannot be dismissed: the installed version is too
+  /// many releases behind and updating is mandatory.
+  final bool forced;
+
   const UpdateDialog({
     super.key,
     required this.updateInfo,
     required this.onDismiss,
     required this.onDisableUpdates,
+    this.forced = false,
   });
 
   @override
@@ -44,17 +55,36 @@ class _UpdateDialogState extends State<UpdateDialog> {
   static final RegExp _boldPattern = RegExp(r'\*\*([^*]+)\*\*');
   static final RegExp _codePattern = RegExp(r'`([^`]+)`');
 
-  Future<void> _downloadAndInstall() async {
-    final apkUrl = widget.updateInfo.apkDownloadUrl;
+  /// Set once a desktop update needs one more step from the user: quitting
+  /// (macOS) or restarting (Linux AppImage).
+  _DesktopFinish? _desktopFinish;
 
-    if (apkUrl == null) {
-      final uri = Uri.parse(widget.updateInfo.downloadUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-      if (mounted) Navigator.pop(context);
+  bool get _opensReleasePage {
+    final info = widget.updateInfo;
+    if (info.installKind == UpdateInstallKind.apk) {
+      return info.apkDownloadUrl == null;
+    }
+    return !info.hasDesktopPackage;
+  }
+
+  Future<void> _openReleasePage() async {
+    final uri = Uri.parse(widget.updateInfo.downloadUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+    if (mounted && !widget.forced) Navigator.pop(context);
+  }
+
+  Future<void> _downloadAndInstall() async {
+    if (_opensReleasePage) {
+      await _openReleasePage();
       return;
     }
+    if (widget.updateInfo.hasDesktopPackage) {
+      await _downloadAndInstallDesktop();
+      return;
+    }
+    final apkUrl = widget.updateInfo.apkDownloadUrl!;
 
     setState(() {
       _isDownloading = true;
@@ -105,7 +135,16 @@ class _UpdateDialogState extends State<UpdateDialog> {
       );
 
       if (mounted) {
-        Navigator.pop(context);
+        if (widget.forced) {
+          // Keep the mandatory dialog up behind the installer so backing out
+          // of the install cannot bypass it; allow a retry.
+          setState(() {
+            _isDownloading = false;
+            _statusText = '';
+          });
+        } else {
+          Navigator.pop(context);
+        }
       }
 
       await ApkDownloader.installApk(filePath);
@@ -127,13 +166,84 @@ class _UpdateDialogState extends State<UpdateDialog> {
     }
   }
 
+  Future<void> _downloadAndInstallDesktop() async {
+    final info = widget.updateInfo;
+    final updater = DesktopUpdater();
+    setState(() {
+      _isDownloading = true;
+      _progress = 0;
+      _statusText = context.l10n.updateStartingDownload;
+    });
+
+    try {
+      final file = await updater.download(
+        info,
+        onProgress: (received, total) {
+          if (!mounted) return;
+          setState(() {
+            _progress = total > 0 ? received / total : 0;
+            _statusText =
+                '${formatMegabytes(received)} / ${formatMegabytes(total)} MB';
+          });
+        },
+      );
+      if (!mounted) return;
+
+      switch (info.installKind) {
+        case UpdateInstallKind.windowsInstaller:
+          setState(() => _statusText = context.l10n.updateStartingInstaller);
+          await updater.startWindowsInstaller(file);
+          // The installer waits for this process to close its files. A
+          // planned quit, so the next launch reports no crash.
+          DesktopDiagnostics.instance?.endSession();
+          exit(0);
+        case UpdateInstallKind.macosDiskImage:
+          await updater.openDiskImage(file);
+          if (mounted) {
+            setState(() {
+              _isDownloading = false;
+              _desktopFinish = _DesktopFinish.quit;
+            });
+          }
+        case UpdateInstallKind.linuxAppImage:
+          await updater.replaceAppImage(file, info.appImagePath!);
+          if (mounted) {
+            setState(() {
+              _isDownloading = false;
+              _desktopFinish = _DesktopFinish.restart;
+            });
+          }
+        case UpdateInstallKind.apk:
+        case UpdateInstallKind.releasePage:
+          break;
+      }
+    } catch (_) {
+      // DesktopUpdater logs the cause.
+      if (!mounted) return;
+      setState(() {
+        _isDownloading = false;
+        _statusText = context.l10n.updateDownloadFailed;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.updateFailedMessage)));
+    }
+  }
+
+  Future<void> _finishDesktopUpdate() async {
+    if (_desktopFinish == _DesktopFinish.restart) {
+      await DesktopUpdater().restartAppImage(widget.updateInfo.appImagePath!);
+    }
+    DesktopDiagnostics.instance?.endSession();
+    exit(0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return PopScope(
-      canPop: true,
+      canPop: !widget.forced,
       child: AppDialogSurface(
         backgroundColor: colorScheme.surfaceContainerHigh,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
@@ -166,15 +276,25 @@ class _UpdateDialogState extends State<UpdateDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            context.l10n.updateAvailable,
+                            widget.forced
+                                ? context.l10n.updateRequiredTitle
+                                : context.l10n.updateAvailable,
                             style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            context.l10n.updateNewVersionReady,
+                            widget.forced
+                                ? context.l10n.updateRequiredNotice(
+                                    widget.updateInfo.releasesBehind,
+                                  )
+                                : context.l10n.updateNewVersionReady,
                             style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: colorScheme.onSurfaceVariant),
+                                ?.copyWith(
+                                  color: widget.forced
+                                      ? colorScheme.error
+                                      : colorScheme.onSurfaceVariant,
+                                ),
                           ),
                         ],
                       ),
@@ -188,27 +308,14 @@ class _UpdateDialogState extends State<UpdateDialog> {
                     horizontal: 16,
                     vertical: 12,
                   ),
-                  decoration: BoxDecoration(
-                    color: context.isMornye
-                        ? MornyeTheme.controlFill(context)
-                        : isDark
-                        ? Color.alphaBlend(
-                            Colors.white.withValues(alpha: 0.08),
-                            colorScheme.surface,
-                          )
-                        : Color.alphaBlend(
-                            Colors.black.withValues(alpha: 0.04),
-                            colorScheme.surface,
-                          ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: context.isMornye
-                        ? null
-                        : Border.all(
-                            color: colorScheme.outlineVariant.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                  ),
+                  // Material's version chips carry their own containers, so
+                  // the row is not boxed a second time.
+                  decoration: context.isMornye
+                      ? BoxDecoration(
+                          color: MornyeTheme.controlFill(context),
+                          borderRadius: BorderRadius.circular(16),
+                        )
+                      : null,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -241,33 +348,24 @@ class _UpdateDialogState extends State<UpdateDialog> {
 
                 if (_isDownloading) ...[
                   Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: context.isMornye
-                          ? MornyeTheme.controlFill(context)
-                          : isDark
-                          ? Color.alphaBlend(
-                              Colors.white.withValues(alpha: 0.05),
-                              colorScheme.surface,
-                            )
-                          : Color.alphaBlend(
-                              Colors.black.withValues(alpha: 0.03),
-                              colorScheme.surface,
-                            ),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                    padding: context.isMornye
+                        ? const EdgeInsets.all(16)
+                        : EdgeInsets.zero,
+                    decoration: context.isMornye
+                        ? BoxDecoration(
+                            color: MornyeTheme.controlFill(context),
+                            borderRadius: BorderRadius.circular(16),
+                          )
+                        : null,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: colorScheme.primary,
-                              ),
+                            AppLoadingIndicator(
+                              size: 20,
+                              strokeWidth: 2,
+                              color: colorScheme.primary,
                             ),
                             const SizedBox(width: 12),
                             Text(
@@ -280,11 +378,10 @@ class _UpdateDialogState extends State<UpdateDialog> {
                         const SizedBox(height: 12),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
+                          child: AppProgressIndicator.linear(
                             value: _progress,
                             minHeight: 6,
-                            backgroundColor:
-                                colorScheme.surfaceContainerHighest,
+                            trackColor: colorScheme.surfaceContainerHighest,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -311,6 +408,13 @@ class _UpdateDialogState extends State<UpdateDialog> {
                       ],
                     ),
                   ),
+                ] else if (_desktopFinish != null) ...[
+                  Text(
+                    _desktopFinish == _DesktopFinish.restart
+                        ? context.l10n.updateReadyToRestart
+                        : context.l10n.updateMacInstallHint,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ] else ...[
                   Text(
                     context.l10n.updateWhatsNew,
@@ -321,18 +425,12 @@ class _UpdateDialogState extends State<UpdateDialog> {
                   const SizedBox(height: 8),
                   Container(
                     constraints: const BoxConstraints(maxHeight: 180),
+                    // The scroll well uses the next tonal step above the
+                    // dialog surface.
                     decoration: BoxDecoration(
                       color: context.isMornye
                           ? MornyeTheme.controlFill(context)
-                          : isDark
-                          ? Color.alphaBlend(
-                              Colors.white.withValues(alpha: 0.05),
-                              colorScheme.surface,
-                            )
-                          : Color.alphaBlend(
-                              Colors.black.withValues(alpha: 0.03),
-                              colorScheme.surface,
-                            ),
+                          : colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: SingleChildScrollView(
@@ -354,17 +452,19 @@ class _UpdateDialogState extends State<UpdateDialog> {
                 if (_isDownloading)
                   SizedBox(
                     width: double.infinity,
-                    child: AppDialogAction(
-                      outlined: true,
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(context.l10n.dialogCancel),
-                    ),
+                    child: widget.forced
+                        ? const SizedBox.shrink()
+                        : AppDialogAction(
+                            outlined: true,
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(context.l10n.dialogCancel),
+                          ),
                   )
                 else
                   Column(
@@ -372,9 +472,26 @@ class _UpdateDialogState extends State<UpdateDialog> {
                       SizedBox(
                         width: double.infinity,
                         child: AppActionButton(
-                          onPressed: _downloadAndInstall,
-                          icon: const Icon(Icons.download_rounded, size: 20),
-                          label: Text(context.l10n.updateDownloadInstall),
+                          onPressed: _desktopFinish != null
+                              ? _finishDesktopUpdate
+                              : _downloadAndInstall,
+                          icon: Icon(switch (_desktopFinish) {
+                            _DesktopFinish.restart => Icons.restart_alt_rounded,
+                            _DesktopFinish.quit => Icons.exit_to_app_rounded,
+                            null =>
+                              _opensReleasePage
+                                  ? Icons.open_in_new_rounded
+                                  : Icons.download_rounded,
+                          }, size: 20),
+                          label: Text(switch (_desktopFinish) {
+                            _DesktopFinish.restart =>
+                              context.l10n.updateRestartNow,
+                            _DesktopFinish.quit => context.l10n.updateQuitApp,
+                            null =>
+                              _opensReleasePage
+                                  ? context.l10n.updateViewRelease
+                                  : context.l10n.updateDownloadInstall,
+                          }),
                           style: FilledButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
@@ -383,52 +500,53 @@ class _UpdateDialogState extends State<UpdateDialog> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: AppDialogAction(
-                              onPressed: () {
-                                widget.onDisableUpdates();
-                                Navigator.pop(context);
-                              },
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
+                      if (!widget.forced) const SizedBox(height: 8),
+                      if (!widget.forced)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: AppDialogAction(
+                                onPressed: () {
+                                  widget.onDisableUpdates();
+                                  Navigator.pop(context);
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Text(
-                                context.l10n.updateDontRemind,
-                                style: TextStyle(
-                                  color: colorScheme.onSurfaceVariant,
+                                child: Text(
+                                  context.l10n.updateDontRemind,
+                                  style: TextStyle(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: AppDialogAction(
-                              outlined: true,
-                              onPressed: () {
-                                widget.onDismiss();
-                                Navigator.pop(context);
-                              },
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: AppDialogAction(
+                                outlined: true,
+                                onPressed: () {
+                                  widget.onDismiss();
+                                  Navigator.pop(context);
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                                child: Text(context.l10n.updateLater),
                               ),
-                              child: Text(context.l10n.updateLater),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
                     ],
                   ),
               ],
@@ -439,7 +557,6 @@ class _UpdateDialogState extends State<UpdateDialog> {
     );
   }
 
-  /// Format changelog - clean up markdown and extract relevant content
   String _formatChangelog(String changelog, String emptyFallback) {
     var content = changelog;
 
@@ -506,6 +623,8 @@ class _UpdateDialogState extends State<UpdateDialog> {
   }
 }
 
+enum _DesktopFinish { quit, restart }
+
 class _VersionChip extends StatelessWidget {
   final String version;
   final String label;
@@ -562,14 +681,16 @@ Future<void> showUpdateDialog(
   BuildContext context, {
   required UpdateInfo updateInfo,
   required VoidCallback onDisableUpdates,
+  bool forced = false,
 }) async {
   return showAppDialog<void>(
     context: context,
-    barrierDismissible: true,
+    barrierDismissible: !forced,
     builder: (context) => UpdateDialog(
       updateInfo: updateInfo,
       onDismiss: () {},
       onDisableUpdates: onDisableUpdates,
+      forced: forced,
     ),
   );
 }

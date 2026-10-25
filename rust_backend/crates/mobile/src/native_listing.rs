@@ -26,7 +26,12 @@ pub(crate) fn execute(request: &Value, bytes: Option<&[u8]>) -> Result<Value, St
     let base_segments = decoded_segments(&base)?;
     let mut entries = Vec::<Value>::new();
     let mut positions = HashMap::<String, usize>::new();
-    let mut add = |href: &str, directory: bool, size: Option<i64>| -> Result<(), String> {
+    let mut add = |href: &str,
+                   directory: bool,
+                   size: Option<i64>,
+                   modified_time: Option<i64>,
+                   etag: Option<String>|
+     -> Result<(), String> {
         let uri = base.join(&dart_href(href)).map_err(|e| e.to_string())?;
         if uri.origin() != base.origin()
             || uri.query().is_some()
@@ -52,7 +57,14 @@ pub(crate) fn execute(request: &Value, bytes: Option<&[u8]>) -> Result<Value, St
             return Ok(());
         }
         let relative = format!("{path}{name}{}", if directory { "/" } else { "" });
-        let entry = json!({"path": relative, "name": name, "directory": directory, "size": size});
+        let mut entry =
+            json!({"path": relative, "name": name, "directory": directory, "size": size});
+        if let Some(modified_time) = modified_time {
+            entry["modifiedTime"] = modified_time.into();
+        }
+        if let Some(etag) = etag {
+            entry["etag"] = etag.into();
+        }
         if let Some(index) = positions.get(&relative) {
             entries[*index] = entry;
         } else {
@@ -62,7 +74,7 @@ pub(crate) fn execute(request: &Value, bytes: Option<&[u8]>) -> Result<Value, St
         Ok(())
     };
     if request["protocol"] == "webdav" {
-        crate::native_xml::check_depth(&body)?;
+        mornye_core::xml::check_depth(&body)?;
         let document = roxmltree::Document::parse(&body).map_err(|e| e.to_string())?;
         for response in document
             .descendants()
@@ -88,7 +100,18 @@ pub(crate) fn execute(request: &Value, bytes: Option<&[u8]>) -> Result<Value, St
                     .iter()
                     .find(|node| named(**node, "getcontentlength"))
                     .and_then(|node| inner_text(*node).trim().parse::<i64>().ok());
-                add(&inner_text(href), directory, size)?;
+                let modified_time = values
+                    .iter()
+                    .find(|node| named(**node, "getlastmodified"))
+                    .and_then(|node| {
+                        chrono::DateTime::parse_from_rfc2822(inner_text(*node).trim()).ok()
+                    })
+                    .map(|date| date.timestamp_millis());
+                let etag = values
+                    .iter()
+                    .find(|node| named(**node, "getetag"))
+                    .map(|node| inner_text(*node).trim().to_owned());
+                add(&inner_text(href), directory, size, modified_time, etag)?;
             }
         }
     } else {
@@ -98,7 +121,7 @@ pub(crate) fn execute(request: &Value, bytes: Option<&[u8]>) -> Result<Value, St
             let href = anchor.value().attr("href").unwrap_or_default();
             let path = href.split(['?', '#']).next().unwrap_or_default();
             let directory = path.ends_with('/') || path.ends_with('\\');
-            add(href, directory, None)?;
+            add(href, directory, None, None, None)?;
         }
     }
     entries.sort_by(|a, b| {
@@ -231,6 +254,32 @@ mod tests {
             result["entries"],
             json!([{"path":"Album/A B.flac", "name":"A B.flac", "directory":false, "size":123}])
         );
+    }
+
+    #[test]
+    fn dav_retains_successful_validators_and_tolerates_invalid_dates() {
+        for date in ["Mon, 19 Oct 2026 12:00:00 GMT", "invalid", ""] {
+            let body = format!(
+                "<d:multistatus xmlns:d='DAV:'><d:response><d:href>/dav/song.flac</d:href>\
+                 <d:propstat><d:prop><d:getcontentlength>123</d:getcontentlength>\
+                 <d:getlastmodified>{date}</d:getlastmodified><d:getetag>&quot;one&quot;</d:getetag>\
+                 </d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat>\
+                 <d:propstat><d:prop><d:getetag>invalid</d:getetag></d:prop>\
+                 <d:status>HTTP/1.1 404 Not Found</d:status></d:propstat></d:response></d:multistatus>"
+            );
+            let result = execute(
+                &json!({"base_url":"https://nas.test/dav/", "path":"", "protocol":"webdav", "body":body}),
+                None,
+            )
+            .unwrap();
+            let entry = &result["entries"][0];
+            assert_eq!(entry["etag"], "\"one\"");
+            if date.starts_with("Mon") {
+                assert_eq!(entry["modifiedTime"], 1792411200000_i64);
+            } else {
+                assert!(entry["modifiedTime"].is_null());
+            }
+        }
     }
 
     #[test]

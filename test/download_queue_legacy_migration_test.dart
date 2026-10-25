@@ -3,8 +3,8 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mosix/services/app_state_database.dart';
-import 'package:mosix/services/download_queue_codec.dart';
+import 'package:mornye/services/app_state_database.dart';
+import 'package:mornye/services/download_queue_codec.dart';
 
 import 'support/sqlite_process_database.dart';
 

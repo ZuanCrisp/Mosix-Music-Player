@@ -84,7 +84,9 @@ Track buildTrackForMetadataEmbedding(
     backendResult['cover_url']?.toString(),
   );
   final baseCoverUrl = normalizeCoverReference(baseTrack.coverUrl);
-  final resolvedCoverUrl = baseCoverUrl ?? backendCoverUrl;
+  // The backend retains the selected metadata cover and may upgrade a search
+  // thumbnail through source enrichment before resolving the audio provider.
+  final resolvedCoverUrl = backendCoverUrl ?? baseCoverUrl;
   final backendAlbumArtist = normalizeOptionalString(
     backendResult['album_artist'] as String?,
   );
@@ -150,7 +152,7 @@ Track buildTrackForMetadataEmbedding(
       (sourceReleaseDate == null && backendYear != null) ||
       (sourceAlbumName == null && backendAlbum != null) ||
       (sourceIsrc == null && backendIsrc != null) ||
-      (baseCoverUrl == null && backendCoverUrl != null) ||
+      resolvedCoverUrl != baseCoverUrl ||
       (sourceAlbumArtist == null &&
           resolvedAlbumArtist == null &&
           backendAlbumArtist != null) ||

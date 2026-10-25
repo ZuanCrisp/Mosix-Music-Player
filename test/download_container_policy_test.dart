@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/utils/audio_format_utils.dart';
+import 'package:mornye/utils/audio_format_utils.dart';
 
 void main() {
   test('container conversion agrees with the native pipeline fixture', () {

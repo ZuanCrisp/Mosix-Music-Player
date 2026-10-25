@@ -1,6 +1,6 @@
 use crate::cancellation::{CancellationError, RequestLease};
-use spotiflac_core::downloads::DownloadState as CoreState;
-use spotiflac_core::progress::{ProgressError, ProgressSubscription};
+use mornye_core::downloads::DownloadState as CoreState;
+use mornye_core::progress::{ProgressError, ProgressSubscription};
 use std::sync::Arc;
 
 #[derive(Debug, thiserror::Error, uniffi::Error)]
@@ -98,17 +98,6 @@ impl DownloadState {
 
     pub fn all_progress(&self) -> Result<String, DownloadProgressError> {
         self.inner.progress.snapshot().map_err(Into::into)
-    }
-
-    pub fn wait_progress_delta(
-        &self,
-        since: i64,
-        timeout_ms: i64,
-    ) -> Result<String, DownloadProgressError> {
-        self.inner
-            .progress
-            .wait_delta(since, timeout_ms)
-            .map_err(Into::into)
     }
 
     pub fn subscribe_progress(

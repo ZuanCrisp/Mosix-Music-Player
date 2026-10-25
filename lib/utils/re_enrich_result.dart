@@ -1,4 +1,4 @@
-import 'package:mosix/l10n/l10n.dart';
+import 'package:mornye/l10n/l10n.dart';
 
 String? reEnrichLyricsMessage(AppLocalizations l10n, String? status) =>
     switch (status) {

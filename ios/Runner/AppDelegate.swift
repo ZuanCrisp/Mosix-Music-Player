@@ -7,13 +7,13 @@ import UniformTypeIdentifiers
 @objc class AppDelegate: FlutterAppDelegate {
     // Widget playback intents can launch the process before any scene exists.
     // Keep one headless-capable engine and attach that same player to the UI.
-    lazy var playerEngine = FlutterEngine(name: "spotiflac-player", project: nil, allowHeadlessExecution: true)
-    private let CHANNEL = "com.zuancrisp.mosix/backend"
-    private let DOWNLOAD_PROGRESS_STREAM_CHANNEL = "com.zuancrisp.mosix/download_progress_stream"
-    private let LIBRARY_SCAN_PROGRESS_STREAM_CHANNEL = "com.zuancrisp.mosix/library_scan_progress_stream"
+    lazy var playerEngine = FlutterEngine(name: "mornye-player", project: nil, allowHeadlessExecution: true)
+    private let CHANNEL = "com.zarz.mornye/backend"
+    private let DOWNLOAD_PROGRESS_STREAM_CHANNEL = "com.zarz.mornye/download_progress_stream"
+    private let LIBRARY_SCAN_PROGRESS_STREAM_CHANNEL = "com.zarz.mornye/library_scan_progress_stream"
     private let LARGE_JSON_RESULT_FILE_KEY = "__json_file"
     private let LARGE_JSON_RESULT_FILE_THRESHOLD_BYTES = 256 * 1024
-    private let streamQueue = DispatchQueue(label: "com.zuancrisp.mosix.progress_stream", qos: .utility)
+    private let streamQueue = DispatchQueue(label: "com.zarz.mornye.progress_stream", qos: .utility)
     private lazy var downloadProgressSubscription = DownloadProgressSubscription(connect: { [weak self] in
         guard let self else { throw NSError(domain: "CoreBackend", code: 1) }
         return try self.coreBackend.openDownloadProgress()
@@ -25,13 +25,14 @@ import UniformTypeIdentifiers
     private var backendChannel: FlutterMethodChannel?
     private var concertCalendar: ConcertCalendarBridge?
     private var playbackNotification: PlaybackNotificationBridge?
+    private var audioRouteInfo: AudioRouteInfoBridge?
+    private var musicHaptics: MusicHapticsBridge?
     private let coreBackend: CoreBackend = createCoreBackend()
     private var pendingSessionGrantEvents: [[String: Any]] = []
 
     private let securityScopedAccessLock = NSLock()
     private var securityScopedAccesses: [String: (URL, CoreDirectoryScope)] = [:]
 
-    /// Pending Flutter result for the native folder picker
     private var pendingDirectoryPickerResult: FlutterResult?
 
     /// Whether a download queue is active; while true a background assertion
@@ -45,7 +46,7 @@ import UniformTypeIdentifiers
 
     /// Strong reference to the in-flight ASWebAuthenticationSession; the
     /// session is deallocated (and its sheet dismissed) without it.
-    private var activeWebAuthSession: AnyObject?
+    private var activeWebAuthSession: ASWebAuthenticationSession?
 
     override func application(
         _ application: UIApplication,
@@ -115,9 +116,11 @@ import UniformTypeIdentifiers
 
         GeneratedPluginRegistrant.register(with: registry)
         playbackNotification = PlaybackNotificationBridge(messenger: messenger)
+        audioRouteInfo = AudioRouteInfoBridge(messenger: messenger)
+        musicHaptics = MusicHapticsBridge(messenger: messenger)
         registry.registrar(forPlugin: "AudioOutputView")?.register(
             AudioOutputViewFactory(messenger: messenger),
-            withId: "com.zuancrisp.mosix/audio_output"
+            withId: "com.zarz.mornye/audio_output"
         )
     }
 
@@ -130,11 +133,11 @@ import UniformTypeIdentifiers
     }
 
     /// Extension return URLs:
-    /// - OAuth: spotiflac://callback?code=...&state=<one_time_nonce>
-    /// - Signed session: spotiflac://session-grant?grant=...&state=<one_time_nonce>
+    /// - OAuth: mornye://callback?code=...&state=<one_time_nonce>
+    /// - Signed session: mornye://session-grant?grant=...&state=<one_time_nonce>
     @discardableResult
     func handleExtensionOAuthRedirect(url: URL) -> Bool {
-        if url.scheme == "spotiflac", url.host == "player" {
+        if url.scheme == "mornye", url.host == "player" {
             Task { _ = await PlayerWidgetBridge.shared.perform("open") }
             return true
         }
@@ -152,9 +155,9 @@ import UniformTypeIdentifiers
                 }
             } catch {
                 if extensionId.isEmpty {
-                    NSLog("Mosix: Rejected invalid or expired extension callback")
+                    NSLog("Mornye: Rejected invalid or expired extension callback")
                 } else {
-                    NSLog("Mosix: Extension callback failed (code \((error as NSError).code))")
+                    NSLog("Mornye: Extension callback failed (code \((error as NSError).code))")
                 }
             }
         }
@@ -253,7 +256,7 @@ import UniformTypeIdentifiers
             try payload.write(to: url, atomically: true, encoding: .utf8)
             return [LARGE_JSON_RESULT_FILE_KEY: url.path]
         } catch {
-            NSLog("Mosix: failed to spill large bridge JSON result to file: \(error.localizedDescription)")
+            NSLog("Mornye: failed to spill large bridge JSON result to file: \(error.localizedDescription)")
             return payload
         }
     }
@@ -273,7 +276,7 @@ import UniformTypeIdentifiers
             result(nil)
             return
         }
-        if coreBackend.routesApplication && !osMethods.contains(call.method) {
+        if !osMethods.contains(call.method) {
             if call.method == "cancelNativeDataJob" {
                 do {
                     result(try coreBackend.invokeApplication(method: call.method, arguments: call.arguments))
@@ -304,7 +307,7 @@ import UniformTypeIdentifiers
         switch call.method {
         case "beginBackgroundDownloadTask":
             downloadsActive = true
-            // Request the assertion before the long-running Go call starts.
+            // Request the assertion before the long-running backend call starts.
             // Waiting for applicationDidEnterBackground is too late: iOS may
             // suspend the process before the assertion is granted.
             beginBackgroundDownloadTask()
@@ -334,7 +337,7 @@ import UniformTypeIdentifiers
         case "startWebAuthSession":
             let args = call.arguments as? [String: Any] ?? [:]
             let urlString = (args["url"] as? String) ?? ""
-            let callbackScheme = (args["callback_scheme"] as? String) ?? "spotiflac"
+            let callbackScheme = (args["callback_scheme"] as? String) ?? "mornye"
             startWebAuthSession(
                 urlString: urlString,
                 callbackScheme: callbackScheme,
@@ -347,7 +350,7 @@ import UniformTypeIdentifiers
 
         DispatchQueue.global(qos: .userInitiated).async {
             do {
-                let response = try self.invokeGoMethod(call: call)
+                let response = try self.invokeOsMethod(call: call)
                 DispatchQueue.main.async {
                     result(response)
                 }
@@ -371,15 +374,11 @@ import UniformTypeIdentifiers
         callbackScheme: String,
         result: @escaping FlutterResult
     ) {
-        guard #available(iOS 13.0, *) else {
-            result(false)
-            return
-        }
         guard let url = URL(string: urlString), url.scheme?.lowercased() == "https" else {
             result(false)
             return
         }
-        let scheme = callbackScheme.isEmpty ? "spotiflac" : callbackScheme
+        let scheme = callbackScheme.isEmpty ? "mornye" : callbackScheme
         let session = ASWebAuthenticationSession(
             url: url,
             callbackURLScheme: scheme
@@ -387,7 +386,7 @@ import UniformTypeIdentifiers
             self?.activeWebAuthSession = nil
             guard let callbackURL = callbackURL else {
                 if let error = error {
-                    NSLog("Mosix: web auth session ended: \(error.localizedDescription)")
+                    NSLog("Mornye: web auth session ended: \(error.localizedDescription)")
                 }
                 return
             }
@@ -430,10 +429,10 @@ import UniformTypeIdentifiers
     private func beginBackgroundDownloadTask() {
         if downloadBackgroundTask != .invalid { return }
         downloadBackgroundTask = UIApplication.shared.beginBackgroundTask(
-            withName: "MosixDownloads"
+            withName: "MornyeDownloads"
         ) { [weak self] in
             if self?.downloadsActive == true {
-                NSLog("Mosix: download background task expired")
+                NSLog("Mornye: download background task expired")
                 // Flutter channel delivery is asynchronous and iOS may suspend
                 // us immediately after this callback. Cancel live requests
                 // synchronously first; Dart then persists/requeues the items.
@@ -460,9 +459,9 @@ import UniformTypeIdentifiers
     private func beginBackgroundWorkTask(kind: String) {
         guard !kind.isEmpty, backgroundWorkTasks[kind] == nil else { return }
         backgroundWorkTasks[kind] = UIApplication.shared.beginBackgroundTask(
-            withName: "Mosix-\(kind)"
+            withName: "Mornye-\(kind)"
         ) { [weak self] in
-            NSLog("Mosix: \(kind) background task expired")
+            NSLog("Mornye: \(kind) background task expired")
             if kind == "library_scan" {
                 try? self?.coreBackend.cancelLibraryScan()
             }
@@ -477,14 +476,14 @@ import UniformTypeIdentifiers
         }
     }
 
-    private func invokeGoMethod(call: FlutterMethodCall) throws -> Any? {
+    private func invokeOsMethod(call: FlutterMethodCall) throws -> Any? {
 
         switch call.method {
         case "getBackendImplementations":
             return [
                 "filename": coreBackend.implementation,
                 "file_metadata": coreBackend.fileMetadataImplementation(path: (call.arguments as? [String: Any])?["file_path"] as? String ?? ""),
-                "extensions": coreBackend.routesApplication ? "rust" : "go",
+                "extensions": coreBackend.implementation,
                 "downloads": coreBackend.implementation,
             ]
 
@@ -549,7 +548,7 @@ import UniformTypeIdentifiers
 
         case "releaseMemoryUnderPressure":
             try coreBackend.releaseMemoryUnderPressure()
-            NSLog("Mosix: Backend memory pressure release completed")
+            NSLog("Mornye: Backend memory pressure release completed")
             return nil
 
 
@@ -629,7 +628,7 @@ import UniformTypeIdentifiers
 
         default:
             throw NSError(
-                domain: "Mosix",
+                domain: "Mornye",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "Method not implemented: \(call.method)"]
             )
@@ -672,7 +671,7 @@ import UniformTypeIdentifiers
 
     private func invalidArgumentsError(_ method: String) -> NSError {
         return NSError(
-            domain: "Mosix",
+            domain: "Mornye",
             code: -1,
             userInfo: [NSLocalizedDescriptionKey: "Invalid arguments for \(method)"]
         )
@@ -682,7 +681,7 @@ import UniformTypeIdentifiers
     private func startAccessingIosBookmark(_ bookmarkBase64: String) throws -> [String: String] {
         guard let bookmarkData = Data(base64Encoded: bookmarkBase64) else {
             throw NSError(
-                domain: "Mosix",
+                domain: "Mornye",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "Invalid base64 bookmark data"]
             )
@@ -704,7 +703,7 @@ import UniformTypeIdentifiers
             )
         } catch {
             throw NSError(
-                domain: "Mosix",
+                domain: "Mornye",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "Failed to resolve bookmark: \(error.localizedDescription)"]
             )
@@ -712,7 +711,7 @@ import UniformTypeIdentifiers
 
         guard url.startAccessingSecurityScopedResource() else {
             throw NSError(
-                domain: "Mosix",
+                domain: "Mornye",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "Failed to start accessing security-scoped resource at \(url.path)"]
             )
@@ -742,7 +741,6 @@ import UniformTypeIdentifiers
     }
 }
 
-@available(iOS 13.0, *)
 extension AppDelegate: ASWebAuthenticationPresentationContextProviding {
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         return activeWindow ?? ASPresentationAnchor()

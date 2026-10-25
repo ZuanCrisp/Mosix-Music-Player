@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mornye/utils/desktop_platform.dart';
 
 class UserProfile {
   const UserProfile({this.name = '', this.photoPath});
@@ -21,7 +22,13 @@ class UserProfileStore {
     Future<SharedPreferences> Function()? preferences,
     Future<Directory> Function()? documents,
   }) : _preferences = preferences ?? SharedPreferences.getInstance,
-       _documents = documents ?? getApplicationDocumentsDirectory;
+       // Desktop Documents is the user's own folder; keep the avatar in the
+       // app's support folder there.
+       _documents =
+           documents ??
+           (isDesktopPlatform
+               ? getApplicationSupportDirectory
+               : getApplicationDocumentsDirectory);
 
   static const _key = 'user_profile_v1';
   final Future<SharedPreferences> Function() _preferences;

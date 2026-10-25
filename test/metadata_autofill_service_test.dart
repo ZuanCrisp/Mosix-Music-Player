@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/services/metadata_autofill_service.dart';
+import 'package:mornye/providers/extension_provider.dart';
+import 'package:mornye/services/metadata_autofill_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -127,7 +127,7 @@ void main() {
 
   for (final instrumental in [false, true]) {
     test('lyrics-only enrichment handles instrumental=$instrumental', () async {
-      const channel = MethodChannel('com.zuancrisp.mosix/backend');
+      const channel = MethodChannel('com.zarz.mornye/backend');
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       var synced = false;

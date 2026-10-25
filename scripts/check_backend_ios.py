@@ -25,7 +25,7 @@ VALID_ARCHES = {"arm64", "x86_64"}
 PLATFORM_NAMES = {"ios": "IOS", "ios-simulator": "IOSSIMULATOR"}
 GO_SECTIONS = ("__gopclntab", "__go_buildinfo")
 GO_SYMBOLS = ("_GobackendSetAppVersion", "_crosscall2")
-RUST_SYMBOL = "_uniffi_spotiflac_mobile_"
+RUST_SYMBOL = "_uniffi_mornye_mobile_"
 
 
 class AuditError(Exception):
@@ -180,8 +180,8 @@ def audit(app: Path, backend: str, archs: Sequence[str], platform: str, release:
         if "Gobackend.framework" in parts and backend == "rust":
             raise AuditError("Rust app contains Gobackend.framework: " + relative.as_posix())
         rust_framework_path |= any(
-            part == "MosixBackend" or part.startswith("MosixBackend.")
-            or part == "MosixBackendFFI" or part.startswith("MosixBackendFFI.")
+            part == "MornyeBackend" or part.startswith("MornyeBackend.")
+            or part == "MornyeBackendFFI" or part.startswith("MornyeBackendFFI.")
             for part in parts
         )
         if release and path.name in {"kernel_blob.bin", "Runner.debug.dylib"}:

@@ -1,9 +1,12 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/expressive_seek_track.dart';
-import 'package:mosix/widgets/playback_seek_slider.dart';
+import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mornye/widgets/expressive_seek_track.dart';
+import 'package:mornye/widgets/playback_seek_slider.dart';
 
 Widget _host({
   bool playing = true,
@@ -42,6 +45,89 @@ ExpressiveSeekTrackShape _track(WidgetTester tester) =>
         as ExpressiveSeekTrackShape;
 
 void main() {
+  testWidgets(
+    'wave ticks repaint raster pixels without rebuilding slider theme',
+    (tester) async {
+      var builds = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ExpressiveSeekTrack(
+              playing: true,
+              child: Builder(
+                builder: (context) {
+                  SliderTheme.of(context);
+                  builds++;
+                  return Slider(value: 0.5, onChanged: (_) {});
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find
+            .descendant(
+              of: find.byType(ExpressiveSeekTrack),
+              matching: find.byType(RepaintBoundary),
+            )
+            .first,
+      );
+      Future<List<int>> pixels() async => (await tester.runAsync(() async {
+        final image = await boundary.toImage();
+        try {
+          return (await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          ))!.buffer.asUint8List().toList(growable: false);
+        } finally {
+          image.dispose();
+        }
+      }))!;
+      final shape = _track(tester);
+      final initialBuilds = builds;
+      final before = await pixels();
+      await tester.pump(const Duration(milliseconds: 150));
+      final after = await pixels();
+      expect(after, isNot(orderedEquals(before)));
+      expect(builds, initialBuilds);
+      expect(_track(tester), same(shape));
+      expect(shape.amplitude, 1);
+    },
+  );
+
+  testWidgets('wave ticks retain slider theme and its dependent subtree', (
+    tester,
+  ) async {
+    var builds = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ExpressiveSeekTrack(
+            playing: true,
+            child: Builder(
+              builder: (context) {
+                SliderTheme.of(context);
+                builds++;
+                return Slider(value: 0.3, onChanged: (_) {});
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    final shape = _track(tester);
+    final initialBuilds = builds;
+    final initialPhase = shape.phase;
+    for (var frame = 0; frame < 90; frame++) {
+      await tester.pump(const Duration(milliseconds: 8));
+    }
+    expect(builds, initialBuilds);
+    expect(_track(tester), same(shape));
+    expect(shape.phase, isNot(initialPhase));
+    expect(shape.amplitude, 1);
+  });
+
   testWidgets('wave travels during playback and settles smoothly on pause', (
     tester,
   ) async {

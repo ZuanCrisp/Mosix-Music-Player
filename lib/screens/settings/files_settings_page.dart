@@ -1,23 +1,37 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/widgets/app_switch.dart';
-import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/app_choice_chip.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:mornye/theme/material_expressive.dart';
+import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mornye/widgets/app_switch.dart';
+import 'package:mornye/widgets/app_text_field.dart';
+import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mornye/widgets/app_choice_chip.dart';
+import 'package:mornye/theme/mornye_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/screens/network_storage_screen.dart';
-import 'package:mosix/models/settings.dart';
-import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/utils/file_access.dart';
-import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mornye/l10n/l10n.dart';
+import 'package:mornye/screens/network_storage_screen.dart';
+import 'package:mornye/models/settings.dart';
+import 'package:mornye/providers/settings_provider.dart';
+import 'package:mornye/services/platform_bridge.dart';
+import 'package:mornye/services/folder_path_template.dart';
+import 'package:mornye/utils/desktop_folders.dart';
+import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mornye/utils/nav_bar_inset.dart';
+import 'package:mornye/utils/file_access.dart';
+import 'package:mornye/utils/saf_download_tree.dart';
+import 'package:mornye/widgets/settings_group.dart';
+import 'package:mornye/widgets/app_icon.dart';
+import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mornye/widgets/app_sliver_header.dart';
+
+part 'files_settings_page_widgets.dart';
 
 class FilesSettingsPage extends ConsumerStatefulWidget {
   const FilesSettingsPage({super.key});
@@ -53,17 +67,7 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
   }
 
   Future<void> _pickSafTreeAndSave() async {
-    final result = await PlatformBridge.pickSafTree();
-    if (result == null) return;
-    final treeUri = result['tree_uri'] as String? ?? '';
-    final displayName = result['display_name'] as String? ?? '';
-    if (treeUri.isEmpty) return;
-    final notifier = ref.read(settingsProvider.notifier);
-    notifier.setStorageMode('saf');
-    notifier.setDownloadTreeUri(
-      treeUri,
-      displayName: displayName.isNotEmpty ? displayName : treeUri,
-    );
+    await pickAndStoreSafDownloadTree(ref);
   }
 
   Future<void> _initDeviceInfo() async {
@@ -147,7 +151,9 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
                     subtitle: settings.downloadDirectory.isEmpty
                         ? (Platform.isIOS
                               ? context.l10n.setupAppDocumentsFolder
-                              : 'Download/Mosix')
+                              : isDesktopPlatform
+                              ? 'Music/$desktopOutputFolderName'
+                              : 'Download/Mornye')
                         : settings.downloadDirectory,
                     onTap: () => _pickDirectory(context, ref),
                     showDivider: false,
@@ -188,7 +194,8 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
                   title: context.l10n.downloadFolderAccessLostTitle,
                   message: context.l10n.downloadFolderAccessLostSubtitle,
                   margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                  action: FilledButton.tonal(
+                  action: ExpressiveButton(
+                    tonal: true,
                     onPressed: () async {
                       await _pickSafTreeAndSave();
                       await _checkSafAccess();
@@ -256,6 +263,16 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
                         .read(settingsProvider.notifier)
                         .setSeparateSingles(value),
                   ),
+                  SettingsItem(
+                    icon: Icons.folder_copy_outlined,
+                    title: context.l10n.downloadFolderTemplate,
+                    subtitle:
+                        !settings.separateSingles &&
+                            settings.folderOrganization == 'custom'
+                        ? settings.folderPathTemplate
+                        : context.l10n.downloadFolderTemplateDescription,
+                    onTap: () => _showFolderTemplateEditor(context, ref),
+                  ),
                   if (settings.separateSingles)
                     SettingsItem(
                       icon: Icons.folder_outlined,
@@ -317,7 +334,7 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
                       filterAlbumArtistContributors:
                           settings.filterContributingArtistsInAlbumArtist,
                     ),
-                    trailing: Icon(
+                    trailing: AppIcon(
                       _artistFolderFiltersExpanded
                           ? Icons.expand_less
                           : Icons.expand_more,
@@ -391,7 +408,7 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
+                      AppIcon(
                         Icons.info_outline,
                         size: 16,
                         color: colorScheme.onSurfaceVariant,
@@ -411,6 +428,7 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
             ],
 
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const NavBarSliverSpacer(),
           ],
         ),
       ),
@@ -436,6 +454,8 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
 
   String _getFolderOrganizationLabel(BuildContext context, String value) {
     switch (value) {
+      case 'custom':
+        return context.l10n.folderOrganizationCustom;
       case 'playlist':
         return context.l10n.folderOrganizationByPlaylist;
       case 'artist':
@@ -477,15 +497,46 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
   }
 
   Future<void> _pickDirectory(BuildContext context, WidgetRef ref) async {
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
+    if (isDesktopPlatform) {
+      await _pickDesktopDirectory(context, ref);
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       _showIOSDirectoryOptions(context, ref);
     } else if (defaultTargetPlatform == TargetPlatform.android) {
       _showAndroidDirectoryOptions(context, ref);
     }
   }
 
+  /// Desktop folders are plain paths: no SAF tree and no iOS bookmark.
+  Future<void> _pickDesktopDirectory(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final title = context.l10n.setupDownloadLocationTitle;
+    final current = ref.read(settingsProvider).downloadDirectory;
+    String? picked;
+    try {
+      picked = await FilePicker.getDirectoryPath(
+        dialogTitle: title,
+        initialDirectory: await resolveDesktopPickerInitialDirectory(current),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.l10n.snackbarFolderPickerFailed(context.friendlyError(e)),
+            ),
+          ),
+        );
+      }
+      return;
+    }
+    if (picked == null || picked.isEmpty) return;
+    await ref.read(settingsProvider.notifier).useAppFolderStorage(picked);
+  }
+
   Future<String> _getDefaultAndroidDirectory() async {
-    const directDownloadPath = '/storage/emulated/0/Download/Mosix';
+    const directDownloadPath = '/storage/emulated/0/Download/Mornye';
     try {
       final downloadDir = Directory(directDownloadPath);
       if (!await downloadDir.exists()) {
@@ -497,7 +548,7 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
       final externalDir = await getExternalStorageDirectory();
       if (externalDir != null) {
         final downloadDir = Directory(
-          '${externalDir.parent.parent.parent.parent.path}/Download/Mosix',
+          '${externalDir.parent.parent.parent.parent.path}/Download/Mornye',
         );
         if (!await downloadDir.exists()) {
           await downloadDir.create(recursive: true);
@@ -506,7 +557,7 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
       }
     } catch (_) {}
     final appDir = await getApplicationDocumentsDirectory();
-    final fallbackDir = Directory('${appDir.path}/Mosix');
+    final fallbackDir = Directory('${appDir.path}/Mornye');
     if (!await fallbackDir.exists()) await fallbackDir.create(recursive: true);
     return fallbackDir.path;
   }
@@ -516,38 +567,24 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
     final settings = ref.read(settingsProvider);
     final isSafMode =
         settings.storageMode == 'saf' && settings.downloadTreeUri.isNotEmpty;
-    showAppModalBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      builder: (ctx) => SafeArea(
+      title: context.l10n.setupDownloadLocationTitle,
+      subtitle: context.l10n.downloadLocationSubtitle,
+      builder: (ctx, controller) => SingleChildScrollView(
+        controller: controller,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-              child: Text(
-                context.l10n.setupDownloadLocationTitle,
-                style: Theme.of(
-                  ctx,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            AppSheetOption.choice(
+              leading: AppIcon(
+                Icons.folder_special,
+                color: colorScheme.primary,
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: Text(
-                context.l10n.downloadLocationSubtitle,
-                style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            AppSheetOption(
-              leading: Icon(Icons.folder_special, color: colorScheme.primary),
               title: Text(context.l10n.storageAutomaticFolder),
               subtitle: Text(context.l10n.storageAutomaticDownloadFolder),
-              trailing: !isSafMode ? const Icon(Icons.check) : null,
+              selected: !isSafMode,
               onTap: () async {
                 Navigator.pop(ctx);
                 final defaultDir = await _getDefaultAndroidDirectory();
@@ -557,11 +594,11 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
                 notifier.setDownloadTreeUri('');
               },
             ),
-            AppSheetOption(
-              leading: Icon(Icons.folder_open, color: colorScheme.primary),
+            AppSheetOption.choice(
+              leading: AppIcon(Icons.folder_open, color: colorScheme.primary),
               title: Text(context.l10n.storageSafRecommended),
               subtitle: Text(context.l10n.storageDownloadFolderHint),
-              trailing: isSafMode ? const Icon(Icons.check) : null,
+              selected: isSafMode,
               onTap: () async {
                 Navigator.pop(ctx);
                 await _pickSafTreeAndSave();
@@ -577,38 +614,24 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
 
   void _showIOSDirectoryOptions(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    showAppModalBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      builder: (ctx) => SafeArea(
+      title: context.l10n.setupDownloadLocationTitle,
+      subtitle: context.l10n.setupDownloadLocationIosMessage,
+      builder: (ctx, controller) => SingleChildScrollView(
+        controller: controller,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-              child: Text(
-                context.l10n.setupDownloadLocationTitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: Text(
-                context.l10n.setupDownloadLocationIosMessage,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
             AppSheetOption(
-              leading: Icon(Icons.folder_special, color: colorScheme.primary),
+              leading: AppIcon(
+                Icons.folder_special,
+                color: colorScheme.primary,
+              ),
               title: Text(context.l10n.setupAppDocumentsFolder),
               subtitle: Text(context.l10n.setupAppDocumentsFolderSubtitle),
-              trailing: Icon(Icons.check_circle, color: colorScheme.primary),
+              trailing: AppIcon(Icons.check_circle, color: colorScheme.primary),
               onTap: () async {
                 final dir = await getApplicationDocumentsDirectory();
                 ref
@@ -618,7 +641,7 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
               },
             ),
             AppSheetOption(
-              leading: Icon(
+              leading: AppIcon(
                 Icons.cloud,
                 color: context.isMornye
                     ? colorScheme.primary
@@ -699,20 +722,41 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
     String? title,
     String? description,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
     final save =
         onSave ?? ref.read(settingsProvider.notifier).setFilenameFormat;
 
-    showAppModalBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: colorScheme.surface,
-      builder: (context) => _FilenameFormatEditorSheet(
+      title: title ?? context.l10n.filenameFormat,
+      subtitle:
+          description ??
+          context.l10n.downloadFilenameDescription(
+            '{album}',
+            '{artist}',
+            '{date}',
+            '{disc}',
+            '{title}',
+            '{track}',
+            '{year}',
+          ),
+      builder: (context, controller) => _FilenameFormatEditorSheet(
         initialText: current,
         onSave: save,
-        title: title,
-        description: description,
+        scrollController: controller,
+      ),
+    );
+  }
+
+  void _showFolderTemplateEditor(BuildContext context, WidgetRef ref) {
+    showAppScrollableBottomSheet<void>(
+      context: context,
+      title: context.l10n.downloadFolderTemplate,
+      subtitle: context.l10n.downloadFolderTemplateDescription,
+      builder: (context, controller) => _FilenameFormatEditorSheet(
+        initialText: ref.read(settingsProvider).folderPathTemplate,
+        onSave: ref.read(settingsProvider.notifier).setFolderPathTemplate,
+        scrollController: controller,
+        folderTemplate: true,
       ),
     );
   }
@@ -722,93 +766,67 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
     WidgetRef ref,
     String current,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    showAppModalBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      isScrollControlled: true,
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.7,
-      ),
-      builder: (context) => SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                child: Text(
-                  context.l10n.downloadAlbumFolderStructure,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
+      title: context.l10n.downloadAlbumFolderStructure,
+      subtitle: context.l10n.albumFolderStructureDescription,
+      builder: (context, controller) => SingleChildScrollView(
+        controller: controller,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final option in [
+              (
+                'artist_album',
+                context.l10n.albumFolderArtistAlbum,
+                context.l10n.albumFolderArtistAlbumSubtitle,
+                Icons.folder_outlined,
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                child: Text(
-                  context.l10n.albumFolderStructureDescription,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
+              (
+                'artist_year_album',
+                context.l10n.albumFolderArtistYearAlbum,
+                context.l10n.albumFolderArtistYearAlbumSubtitle,
+                Icons.calendar_today_outlined,
               ),
-              for (final option in [
-                (
-                  'artist_album',
-                  context.l10n.albumFolderArtistAlbum,
-                  context.l10n.albumFolderArtistAlbumSubtitle,
-                  Icons.folder_outlined,
-                ),
-                (
-                  'artist_year_album',
-                  context.l10n.albumFolderArtistYearAlbum,
-                  context.l10n.albumFolderArtistYearAlbumSubtitle,
-                  Icons.calendar_today_outlined,
-                ),
-                (
-                  'album_only',
-                  context.l10n.albumFolderAlbumOnly,
-                  context.l10n.albumFolderAlbumOnlySubtitle,
-                  Icons.album_outlined,
-                ),
-                (
-                  'year_album',
-                  context.l10n.albumFolderYearAlbum,
-                  context.l10n.albumFolderYearAlbumSubtitle,
-                  Icons.event_outlined,
-                ),
-                (
-                  'artist_album_singles',
-                  context.l10n.albumFolderArtistAlbumSingles,
-                  context.l10n.albumFolderArtistAlbumSinglesSubtitle,
-                  Icons.person_outlined,
-                ),
-                (
-                  'artist_album_flat',
-                  context.l10n.albumFolderArtistAlbumFlat,
-                  context.l10n.albumFolderArtistAlbumFlatSubtitle,
-                  Icons.person_outline_outlined,
-                ),
-              ])
-                AppSheetOption(
-                  leading: Icon(option.$4),
-                  title: Text(option.$2),
-                  subtitle: Text(option.$3),
-                  trailing: current == option.$1
-                      ? const Icon(Icons.check)
-                      : null,
-                  onTap: () {
-                    ref
-                        .read(settingsProvider.notifier)
-                        .setAlbumFolderStructure(option.$1);
-                    Navigator.pop(context);
-                  },
-                ),
-            ],
-          ),
+              (
+                'album_only',
+                context.l10n.albumFolderAlbumOnly,
+                context.l10n.albumFolderAlbumOnlySubtitle,
+                Icons.album_outlined,
+              ),
+              (
+                'year_album',
+                context.l10n.albumFolderYearAlbum,
+                context.l10n.albumFolderYearAlbumSubtitle,
+                Icons.event_outlined,
+              ),
+              (
+                'artist_album_singles',
+                context.l10n.albumFolderArtistAlbumSingles,
+                context.l10n.albumFolderArtistAlbumSinglesSubtitle,
+                Icons.person_outlined,
+              ),
+              (
+                'artist_album_flat',
+                context.l10n.albumFolderArtistAlbumFlat,
+                context.l10n.albumFolderArtistAlbumFlatSubtitle,
+                Icons.person_outline_outlined,
+              ),
+            ])
+              AppSheetOption.choice(
+                leading: AppIcon(option.$4),
+                title: Text(option.$2),
+                subtitle: Text(option.$3),
+                selected: current == option.$1,
+                onTap: () {
+                  ref
+                      .read(settingsProvider.notifier)
+                      .setAlbumFolderStructure(option.$1);
+                  Navigator.pop(context);
+                },
+              ),
+          ],
         ),
       ),
     );
@@ -819,373 +837,72 @@ class _FilesSettingsPageState extends ConsumerState<FilesSettingsPage> {
     WidgetRef ref,
     String current,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    showAppModalBottomSheet<void>(
+    showAppScrollableBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      backgroundColor: colorScheme.surfaceContainerHigh,
-      isScrollControlled: true,
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.7,
-      ),
-      builder: (context) => SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                child: Text(
-                  context.l10n.downloadFolderOrganization,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
+      title: context.l10n.downloadFolderOrganization,
+      subtitle: context.l10n.folderOrganizationDescription,
+      builder: (context, controller) => SingleChildScrollView(
+        controller: controller,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final option in [
+              (
+                'none',
+                context.l10n.folderOrganizationNone,
+                context.l10n.folderOrganizationNoneSubtitle,
+                'Mornye/Track.flac',
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                child: Text(
-                  context.l10n.folderOrganizationDescription,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
+              (
+                'playlist',
+                context.l10n.folderOrganizationByPlaylist,
+                context.l10n.folderOrganizationByPlaylistSubtitle,
+                'Mornye/Playlist Name/Track.flac',
               ),
-              for (final option in [
-                (
-                  'none',
-                  context.l10n.folderOrganizationNone,
-                  context.l10n.folderOrganizationNoneSubtitle,
-                  'Mosix/Track.flac',
-                ),
-                (
-                  'playlist',
-                  context.l10n.folderOrganizationByPlaylist,
-                  context.l10n.folderOrganizationByPlaylistSubtitle,
-                  'Mosix/Playlist Name/Track.flac',
-                ),
-                (
-                  'artist',
-                  context.l10n.folderOrganizationByArtist,
-                  context.l10n.folderOrganizationByArtistSubtitle,
-                  'Mosix/Artist Name/Track.flac',
-                ),
-                (
-                  'album',
-                  context.l10n.folderOrganizationByAlbum,
-                  context.l10n.folderOrganizationByAlbumSubtitle,
-                  'Mosix/Album Name/Track.flac',
-                ),
-                (
-                  'artist_album',
-                  context.l10n.folderOrganizationByArtistAlbum,
-                  context.l10n.folderOrganizationByArtistAlbumSubtitle,
-                  'Mosix/Artist/Album/Track.flac',
-                ),
-              ])
-                _FolderOption(
-                  title: option.$2,
-                  subtitle: option.$3,
-                  example: option.$4,
-                  isSelected: current == option.$1,
-                  onTap: () {
-                    ref
-                        .read(settingsProvider.notifier)
-                        .setFolderOrganization(option.$1);
+              (
+                'artist',
+                context.l10n.folderOrganizationByArtist,
+                context.l10n.folderOrganizationByArtistSubtitle,
+                'Mornye/Artist Name/Track.flac',
+              ),
+              (
+                'album',
+                context.l10n.folderOrganizationByAlbum,
+                context.l10n.folderOrganizationByAlbumSubtitle,
+                'Mornye/Album Name/Track.flac',
+              ),
+              (
+                'artist_album',
+                context.l10n.folderOrganizationByArtistAlbum,
+                context.l10n.folderOrganizationByArtistAlbumSubtitle,
+                'Mornye/Artist/Album/Track.flac',
+              ),
+              (
+                'custom',
+                context.l10n.folderOrganizationCustom,
+                context.l10n.downloadFolderTemplateDescription,
+                ref.read(settingsProvider).folderPathTemplate,
+              ),
+            ])
+              _FolderOption(
+                title: option.$2,
+                subtitle: option.$3,
+                example: option.$4,
+                isSelected: current == option.$1,
+                onTap: () {
+                  if (option.$1 == 'custom') {
                     Navigator.pop(context);
-                  },
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FolderOption extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String example;
-  final bool isSelected;
-  final VoidCallback onTap;
-  const _FolderOption({
-    required this.title,
-    required this.subtitle,
-    required this.example,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return AppSheetOption(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-      title: Text(title),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(subtitle),
-          const SizedBox(height: 4),
-          Text(
-            example,
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 11,
-              color: colorScheme.primary,
-            ),
-          ),
-        ],
-      ),
-      trailing: isSelected
-          ? Icon(Icons.check_circle, color: colorScheme.primary)
-          : Icon(Icons.circle_outlined, color: colorScheme.outline),
-      onTap: onTap,
-    );
-  }
-}
-
-/// Bottom sheet for editing a filename format. Owns its controller and disposes
-/// it in [dispose] to avoid use-after-dispose during the close animation.
-class _FilenameFormatEditorSheet extends StatefulWidget {
-  final String initialText;
-  final void Function(String) onSave;
-  final String? title;
-  final String? description;
-
-  const _FilenameFormatEditorSheet({
-    required this.initialText,
-    required this.onSave,
-    this.title,
-    this.description,
-  });
-
-  @override
-  State<_FilenameFormatEditorSheet> createState() =>
-      _FilenameFormatEditorSheetState();
-}
-
-class _FilenameFormatEditorSheetState
-    extends State<_FilenameFormatEditorSheet> {
-  static const _basicTags = [
-    '{artist}',
-    '{title}',
-    '{album}',
-    '{track}',
-    '{year}',
-    '{date}',
-    '{disc}',
-    '{playlist_position}',
-  ];
-  static const _advancedTags = [
-    '{isrc}',
-    '{provider}',
-    '{provider_id}',
-    '{track_raw}',
-    '{track:02}',
-    '{track:1}',
-    '{playlist_position_raw}',
-    '{playlist_position:02}',
-    '{date:%Y}',
-    '{date:%Y-%m-%d}',
-    '{disc_raw}',
-    '{disc:02}',
-  ];
-
-  late final TextEditingController _controller;
-  late bool _showAdvancedTags;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialText);
-    _showAdvancedTags = RegExp(
-      r'\{(?:isrc|provider|platform|provider_id|id|track_raw|disc_raw|track:\d+|disc:\d+|date:[^}]+)\}',
-      caseSensitive: false,
-    ).hasMatch(widget.initialText);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _insertTag(String tag) {
-    final text = _controller.text;
-    final selection = _controller.selection;
-    final start = selection.start >= 0 ? selection.start : text.length;
-    final end = selection.end >= 0 ? selection.end : text.length;
-    String insertion = tag;
-    if (start > 0) {
-      final before = text.substring(0, start);
-      if (!before.trim().endsWith('-')) {
-        insertion = ' - $tag';
-      } else if (before.trim().endsWith('-') && !before.endsWith(' ')) {
-        insertion = ' $tag';
-      }
-    }
-    final newText = text.replaceRange(start, end, insertion);
-    _controller.value = TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: start + insertion.length),
-    );
-  }
-
-  Widget _tagChip(ColorScheme colorScheme, String tag) {
-    if (context.isMornye) {
-      return AppChoiceChip(
-        label: Text(tag),
-        selected: false,
-        onSelected: (_) => _insertTag(tag),
-      );
-    }
-    return ActionChip(
-      label: Text(tag),
-      onPressed: () => _insertTag(tag),
-      backgroundColor: colorScheme.surfaceContainerHighest.withValues(
-        alpha: 0.5,
-      ),
-      side: BorderSide.none,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      labelStyle: TextStyle(
-        color: colorScheme.onSurface,
-        fontWeight: FontWeight.w500,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SingleChildScrollView(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const AppSheetHandle(),
-                Text(
-                  widget.title ?? context.l10n.filenameFormat,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.description ??
-                      context.l10n.downloadFilenameDescription(
-                        '{album}',
-                        '{artist}',
-                        '{date}',
-                        '{disc}',
-                        '{title}',
-                        '{track}',
-                        '{year}',
-                      ),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: _controller,
-                  decoration: InputDecoration(
-                    hintText: '{artist} - {title}',
-                    filled: true,
-                    fillColor: colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.3,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  autofocus: true,
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  context.l10n.downloadFilenameInsertTag,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _basicTags
-                      .map((tag) => _tagChip(colorScheme, tag))
-                      .toList(),
-                ),
-                const SizedBox(height: 12),
-                AppSwitchListTile(
-                  value: _showAdvancedTags,
-                  onChanged: (value) =>
-                      setState(() => _showAdvancedTags = value),
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(context.l10n.filenameShowAdvancedTags),
-                  subtitle: Text(
-                    context.l10n.filenameShowAdvancedTagsDescription,
-                  ),
-                ),
-                if (_showAdvancedTags) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _advancedTags
-                        .map((tag) => _tagChip(colorScheme, tag))
-                        .toList(),
-                  ),
-                ],
-                const SizedBox(height: 32),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppDialogAction(
-                        onPressed: () => Navigator.pop(context),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Text(context.l10n.dialogCancel),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: AppDialogAction(
-                        filled: true,
-                        onPressed: () {
-                          widget.onSave(_controller.text);
-                          Navigator.pop(context);
-                        },
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Text(context.l10n.dialogSave),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
+                    _showFolderTemplateEditor(this.context, ref);
+                    return;
+                  }
+                  ref
+                      .read(settingsProvider.notifier)
+                      .setFolderOrganization(option.$1);
+                  Navigator.pop(context);
+                },
+              ),
+          ],
         ),
       ),
     );

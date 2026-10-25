@@ -1,4 +1,4 @@
-use spotiflac_core::cancellation as core;
+use mornye_core::cancellation as core;
 use std::sync::Arc;
 
 #[derive(uniffi::Enum)]

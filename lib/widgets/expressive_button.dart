@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mosix/theme/material_expressive.dart';
+import 'package:mornye/theme/material_expressive.dart';
+import 'package:mornye/widgets/app_icon.dart';
 
 /// Expressive actions retain caller colors, disabled states and flexible labels.
 class ExpressiveButton extends StatelessWidget {
@@ -12,6 +13,7 @@ class ExpressiveButton extends StatelessWidget {
     this.style,
     this.outlined = false,
     this.tonal = false,
+    this.text = false,
   });
 
   final VoidCallback? onPressed;
@@ -21,38 +23,76 @@ class ExpressiveButton extends StatelessWidget {
   final bool outlined;
   final bool tonal;
 
+  /// Low-emphasis action without a container, like [TextButton].
+  final bool text;
+
   @override
   Widget build(BuildContext context) {
-    final content = Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (icon != null) ...[icon!, const SizedBox(width: 8)],
-        Flexible(child: child),
-      ],
-    );
+    final icon = this.icon == null ? null : symbolIconWidget(this.icon!);
     if (!materialExpressiveEnabled(context)) {
-      if (outlined) {
-        return OutlinedButton(
+      if (icon != null) {
+        // Keep the standard icon spacing and asymmetric padding.
+        if (text) {
+          return TextButton.icon(
+            onPressed: onPressed,
+            style: style,
+            icon: icon,
+            label: child,
+          );
+        }
+        if (outlined) {
+          return OutlinedButton.icon(
+            onPressed: onPressed,
+            style: style,
+            icon: icon,
+            label: child,
+          );
+        }
+        if (tonal) {
+          return FilledButton.tonalIcon(
+            onPressed: onPressed,
+            style: style,
+            icon: icon,
+            label: child,
+          );
+        }
+        return FilledButton.icon(
           onPressed: onPressed,
           style: style,
-          child: content,
+          icon: icon,
+          label: child,
         );
+      }
+      if (text) {
+        return TextButton(onPressed: onPressed, style: style, child: child);
+      }
+      if (outlined) {
+        return OutlinedButton(onPressed: onPressed, style: style, child: child);
       }
       if (tonal) {
         return FilledButton.tonal(
           onPressed: onPressed,
           style: style,
-          child: content,
+          child: child,
         );
       }
-      return FilledButton(onPressed: onPressed, style: style, child: content);
+      return FilledButton(onPressed: onPressed, style: style, child: child);
     }
+    final content = Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (icon != null) ...[icon, const SizedBox(width: 8)],
+        Flexible(child: child),
+      ],
+    );
     final states = <WidgetState>{if (onPressed == null) WidgetState.disabled};
     return MaterialExpressiveScope(
       child: M3EButton(
         onPressed: onPressed,
-        style: outlined
+        style: text
+            ? M3EButtonStyle.text
+            : outlined
             ? M3EButtonStyle.outlined
             : tonal
             ? M3EButtonStyle.tonal

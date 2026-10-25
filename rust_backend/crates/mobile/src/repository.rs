@@ -1,5 +1,5 @@
 use crate::manager::ExtensionManager;
-use spotiflac_extensions::repository::{ExtensionRepository as CoreRepository, RepositoryError};
+use mornye_extensions::repository::{ExtensionRepository as CoreRepository, RepositoryError};
 use std::path::Path;
 use std::sync::Arc;
 

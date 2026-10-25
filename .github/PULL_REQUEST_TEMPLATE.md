@@ -19,7 +19,7 @@
 
 <!-- Check only commands relevant to this change. Explain skipped checks below. -->
 
-- [ ] `dart format --output=none --set-exit-if-changed lib test`
+- [ ] `dart format --output=none --set-exit-if-changed lib test integration_test`
 - [ ] `flutter analyze`
 - [ ] `flutter test`
 - [ ] `bash scripts/check_rust_backend.sh`

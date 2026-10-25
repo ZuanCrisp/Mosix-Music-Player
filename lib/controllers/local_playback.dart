@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/playback_provider.dart';
-import 'package:mornye/utils/file_access.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/playback_provider.dart';
+import 'package:mosix/utils/file_access.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
 
 /// Plays [track] from download history or the local library when a matching
 /// file already exists on disk.

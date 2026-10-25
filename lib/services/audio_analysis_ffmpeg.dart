@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:mornye/services/audio_analysis_models.dart';
+import 'package:mosix/services/audio_analysis_models.dart';
 
 const int audioSpectrogramWidth = 1600;
 const int audioSpectrogramHeight = 800;

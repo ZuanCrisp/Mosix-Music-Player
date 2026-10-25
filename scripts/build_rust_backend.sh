@@ -14,11 +14,11 @@ case "$PLATFORM" in
 esac
 
 if [[ "$PLATFORM" == "android" ]]; then
-  ANDROID_ABIS_RAW="${MORNYE_RUST_ANDROID_ABIS-arm64-v8a,armeabi-v7a}"
+  ANDROID_ABIS_RAW="${MOSIX_RUST_ANDROID_ABIS-arm64-v8a,armeabi-v7a}"
   case "$ANDROID_ABIS_RAW" in
     arm64-v8a|armeabi-v7a|arm64-v8a,armeabi-v7a|armeabi-v7a,arm64-v8a) ;;
     *)
-      echo "Error: MORNYE_RUST_ANDROID_ABIS must contain arm64-v8a and/or armeabi-v7a, comma-separated without spaces or duplicates." >&2
+      echo "Error: MOSIX_RUST_ANDROID_ABIS must contain arm64-v8a and/or armeabi-v7a, comma-separated without spaces or duplicates." >&2
       exit 1
       ;;
   esac
@@ -170,11 +170,11 @@ elif [[ "$PLATFORM" == "ios" ]]; then
     cargo build --locked --release -p mornye-mobile --target "$target"
   done
   HEADERS_DIR="$CARGO_TARGET_DIR/ios/headers"
-  FRAMEWORK_DIR="$CARGO_TARGET_DIR/ios/MornyeBackendFFI.xcframework"
+  FRAMEWORK_DIR="$CARGO_TARGET_DIR/ios/MosixBackendFFI.xcframework"
   SIMULATOR_LIBRARY="$CARGO_TARGET_DIR/ios/simulator/libmornye_mobile.a"
   mkdir -p "$HEADERS_DIR" "$(dirname "$SIMULATOR_LIBRARY")"
-  cp "$CARGO_TARGET_DIR/bindings/swift/MornyeBackendFFI.h" "$HEADERS_DIR/"
-  cp "$CARGO_TARGET_DIR/bindings/swift/MornyeBackendFFI.modulemap" "$HEADERS_DIR/module.modulemap"
+  cp "$CARGO_TARGET_DIR/bindings/swift/MosixBackendFFI.h" "$HEADERS_DIR/"
+  cp "$CARGO_TARGET_DIR/bindings/swift/MosixBackendFFI.modulemap" "$HEADERS_DIR/module.modulemap"
   # Flutter/CocoaPods may request both simulator architectures, even on an
   # ARM64 Mac. Supply one universal simulator slice.
   xcrun lipo -create \
@@ -191,8 +191,8 @@ elif [[ "$PLATFORM" == "ios" ]]; then
     -output "$FRAMEWORK_DIR"
   # CocoaPods does not traverse nested symlinks, including a relocated target/.
   # Stage one pod root that Podfile can resolve before scanning its files.
-  cp "$CARGO_TARGET_DIR/bindings/swift/MornyeBackend.swift" "$CARGO_TARGET_DIR/ios/"
-  cp "$RUST_BACKEND_DIR/MornyeBackend.podspec" "$CARGO_TARGET_DIR/ios/"
+  cp "$CARGO_TARGET_DIR/bindings/swift/MosixBackend.swift" "$CARGO_TARGET_DIR/ios/"
+  cp "$RUST_BACKEND_DIR/MosixBackend.podspec" "$CARGO_TARGET_DIR/ios/"
   cp "$PROJECT_DIR/LICENSE" "$CARGO_TARGET_DIR/ios/"
 fi
 

@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:mornye/services/ffmpeg_models.dart';
-import 'package:mornye/services/ffmpeg_support.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/services/ffmpeg_models.dart';
+import 'package:mosix/services/ffmpeg_support.dart';
+import 'package:mosix/utils/logger.dart';
 
 final _log = AppLogger('FFmpeg');
 

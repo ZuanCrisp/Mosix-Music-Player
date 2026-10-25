@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:mornye/services/download_scheduler.dart';
+import 'package:mosix/services/download_scheduler.dart';
 
 /// Original scheduler for paired device timing. Keep its scheduling/draining
 /// behavior intact so both variants include the same futures and timer costs.

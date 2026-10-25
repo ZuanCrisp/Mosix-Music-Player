@@ -9,38 +9,38 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/app.dart';
-import 'package:mornye/constants/app_info.dart';
-import 'package:mornye/models/library_database_models.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/providers/theme_provider.dart';
-import 'package:mornye/services/notification_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/services/share_intent_service.dart';
-import 'package:mornye/services/cover_cache_manager.dart';
-import 'package:mornye/services/app_state_database.dart';
-import 'package:mornye/services/app_navigation_service.dart';
-import 'package:mornye/services/app_orientation.dart';
-import 'package:mornye/services/activity_attachment.dart';
-import 'package:mornye/services/app_crash_service.dart';
-import 'package:mornye/services/desktop_deep_links.dart';
-import 'package:mornye/services/desktop_diagnostics.dart';
-import 'package:mornye/services/desktop_library_watcher.dart';
-import 'package:mornye/services/music_player_service.dart';
-import 'package:mornye/services/player_widget_service.dart';
-import 'package:mornye/screens/now_playing_screen.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/local_library_scan_prefs.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/utils/extension_auth_launcher.dart';
-import 'package:mornye/widgets/desktop/desktop_inspector.dart'
+import 'package:mosix/app.dart';
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/models/library_database_models.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/providers/theme_provider.dart';
+import 'package:mosix/services/notification_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/services/share_intent_service.dart';
+import 'package:mosix/services/cover_cache_manager.dart';
+import 'package:mosix/services/app_state_database.dart';
+import 'package:mosix/services/app_navigation_service.dart';
+import 'package:mosix/services/app_orientation.dart';
+import 'package:mosix/services/activity_attachment.dart';
+import 'package:mosix/services/app_crash_service.dart';
+import 'package:mosix/services/desktop_deep_links.dart';
+import 'package:mosix/services/desktop_diagnostics.dart';
+import 'package:mosix/services/desktop_library_watcher.dart';
+import 'package:mosix/services/music_player_service.dart';
+import 'package:mosix/services/player_widget_service.dart';
+import 'package:mosix/screens/now_playing_screen.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/local_library_scan_prefs.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/utils/extension_auth_launcher.dart';
+import 'package:mosix/widgets/desktop/desktop_inspector.dart'
     show bindDesktopFullScreenLyrics;
-import 'package:mornye/widgets/desktop/desktop_window.dart'
+import 'package:mosix/widgets/desktop/desktop_window.dart'
     show listenDesktopWindowFullScreen;
 
 final _log = AppLogger('Main');
@@ -164,7 +164,7 @@ void main() {
             initialThemeSettingsProvider.overrideWithValue(bootstrapTheme),
           ],
           child: EagerInitialization(
-            child: MornyeApp(
+            child: MosixApp(
               disableOverscrollEffects: runtimeProfile.disableOverscrollEffects,
             ),
           ),

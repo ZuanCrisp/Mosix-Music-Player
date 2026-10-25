@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/widgets/lyrics_screen_awake.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/widgets/lyrics_screen_awake.dart';
 
 class _Settings extends SettingsNotifier {
   @override
@@ -18,7 +18,7 @@ class _Settings extends SettingsNotifier {
 
 void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   late List<bool> requests;
 
   setUp(() {

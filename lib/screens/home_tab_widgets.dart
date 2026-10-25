@@ -295,7 +295,7 @@ class _TrackItemWithStatus extends ConsumerWidget {
                           track.name,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
-                                fontWeight: context.isMornye
+                                fontWeight: context.isMosix
                                     ? FontWeight.w600
                                     : FontWeight.w500,
                               ),
@@ -484,7 +484,7 @@ class _CollectionItemWidget extends StatelessWidget {
                       Text(
                         item.name,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: context.isMornye
+                          fontWeight: context.isMosix
                               ? FontWeight.w600
                               : FontWeight.w500,
                         ),
@@ -509,7 +509,7 @@ class _CollectionItemWidget extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (!context.isMornye)
+                if (!context.isMosix)
                   Icon(
                     Icons.chevron_right,
                     color: colorScheme.onSurfaceVariant,

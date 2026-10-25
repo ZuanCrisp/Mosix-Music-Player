@@ -110,7 +110,7 @@ struct PlayerWidgetView: View {
 
     private var metadata: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(entry.state.title.isEmpty ? "Mornye Player" : entry.state.title)
+            Text(entry.state.title.isEmpty ? "Mosix Player" : entry.state.title)
                 .font(.system(size: family == .systemSmall ? 14 : 17, weight: .semibold))
                 .lineLimit(family == .systemMedium ? 2 : 1)
                 .minimumScaleFactor(0.85)
@@ -148,12 +148,12 @@ struct PlayerWidgetView: View {
 }
 
 @main
-struct MornyePlayerWidget: Widget {
+struct MosixPlayerWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: PlayerWidgetState.kind, intent: PlayerWidgetConfiguration.self, provider: PlayerTimelineProvider()) { entry in
             PlayerWidgetView(entry: entry)
         }
-        .configurationDisplayName("Mornye Player")
+        .configurationDisplayName("Mosix Player")
         .description("Your music, artwork, and playback controls.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }

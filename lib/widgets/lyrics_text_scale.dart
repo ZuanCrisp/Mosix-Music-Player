@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/providers/theme_provider.dart';
+import 'package:mosix/providers/theme_provider.dart';
 
 /// Applies the lyric preference on top of the system's accessibility scaling.
 class LyricsTextScale extends ConsumerWidget {

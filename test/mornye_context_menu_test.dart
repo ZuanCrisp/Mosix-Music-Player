@@ -6,12 +6,12 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/theme_settings.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/theme_settings.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
 
 class _Settings extends SettingsNotifier {
   _Settings(this._forceBlur);
@@ -39,7 +39,7 @@ void main() {
     bool lowEnd = false,
     Color? backgroundColor,
     GlobalKey? capture,
-    double glassClarity = kDefaultMornyeGlassClarity,
+    double glassClarity = kDefaultMosixGlassClarity,
     bool dense = false,
     Color? chromeSurface,
   }) async {
@@ -54,7 +54,7 @@ void main() {
           backdropBlurEnabledProvider.overrideWithValue(false),
         ],
         child: MaterialApp(
-          theme: MornyeTheme.build(
+          theme: MosixTheme.build(
             brightness,
             glassClarity: glassClarity,
             chromeSurface: chromeSurface,
@@ -77,19 +77,19 @@ void main() {
               builder: (context) => Center(
                 child: TextButton(
                   onPressed: () async {
-                    final result = await showMornyeContextMenu<String>(
+                    final result = await showMosixContextMenu<String>(
                       context: context,
                       anchor: anchor,
                       preferAbove: preferAbove,
                       builder: (menuContext) {
-                        MornyeMenuAction action(String label, IconData icon) =>
-                            MornyeMenuAction(
+                        MosixMenuAction action(String label, IconData icon) =>
+                            MosixMenuAction(
                               icon: icon,
                               label: label,
                               onPressed: () =>
                                   Navigator.of(menuContext).pop(label),
                             );
-                        return MornyeContextMenu(
+                        return MosixContextMenu(
                           dense: dense,
                           inheritSurface: chromeSurface != null,
                           quickActions: [
@@ -160,7 +160,7 @@ void main() {
   }))!;
 
   for (final brightness in Brightness.values) {
-    for (final clarity in [0.0, kDefaultMornyeGlassClarity, 1.0]) {
+    for (final clarity in [0.0, kDefaultMosixGlassClarity, 1.0]) {
       for (final background in [
         Colors.white,
         Colors.black,
@@ -182,13 +182,13 @@ void main() {
                 capture: capture,
                 onResult: (_) {},
               );
-              final menu = tester.getRect(find.byType(MornyeContextMenu));
+              final menu = tester.getRect(find.byType(MosixContextMenu));
               final pixels = await samplePixels(tester, capture, [
                 for (final x in [menu.left + 8, menu.right - 8])
                   for (final fraction in [0.25, 0.5, 0.75])
                     Offset(x, menu.top + menu.height * fraction),
               ]);
-              final foreground = MornyeTheme.build(
+              final foreground = MosixTheme.build(
                 brightness,
               ).colorScheme.onSurface;
               for (final inside in pixels) {
@@ -230,7 +230,7 @@ void main() {
         brightness: brightness,
         onResult: (value) => result = value,
       );
-      final rect = tester.getRect(find.byType(MornyeContextMenu));
+      final rect = tester.getRect(find.byType(MosixContextMenu));
       expect(rect.left, greaterThanOrEqualTo(16));
       expect(rect.right, lessThanOrEqualTo(374));
       expect(rect.top, greaterThanOrEqualTo(40));
@@ -239,7 +239,7 @@ void main() {
       await tester.tap(find.text('Share'));
       await tester.pumpAndSettle();
       expect(result, 'Share');
-      expect(find.byType(MornyeContextMenu), findsNothing);
+      expect(find.byType(MosixContextMenu), findsNothing);
       expect(tester.takeException(), isNull);
     });
   }
@@ -259,7 +259,7 @@ void main() {
         capture: capture,
         onResult: (_) {},
       );
-      final rect = tester.getRect(find.byType(MornyeContextMenu));
+      final rect = tester.getRect(find.byType(MosixContextMenu));
       colors.addAll(
         await samplePixels(tester, capture, [
           Offset(rect.left + 8, rect.center.dy),
@@ -281,7 +281,7 @@ void main() {
       onResult: (_) {},
     );
     final originalHeight = tester
-        .getSize(find.byType(MornyeContextMenu))
+        .getSize(find.byType(MosixContextMenu))
         .height;
     await tester.pumpWidget(const SizedBox());
     await openMenu(
@@ -291,7 +291,7 @@ void main() {
       onResult: (_) {},
     );
     expect(
-      tester.getSize(find.byType(MornyeContextMenu)).height,
+      tester.getSize(find.byType(MosixContextMenu)).height,
       lessThan(originalHeight - 30),
     );
     for (final button in find.byType(CupertinoButton).evaluate()) {
@@ -323,7 +323,7 @@ void main() {
         dense: true,
         onResult: (_) {},
       );
-      final bounds = tester.getRect(find.byType(MornyeContextMenu));
+      final bounds = tester.getRect(find.byType(MosixContextMenu));
       final pixels = await samplePixels(tester, capture, [
         Offset(bounds.left + 8, bounds.center.dy),
       ]);
@@ -355,12 +355,12 @@ void main() {
         capture: capture,
         onResult: (_) {},
       );
-      final menu = find.byType(MornyeContextMenu);
+      final menu = find.byType(MosixContextMenu);
       final rect = tester.getRect(menu);
       final pixels = await samplePixels(tester, capture, [
         Offset(rect.left + 8, rect.center.dy),
       ]);
-      final theme = MornyeTheme.build(Brightness.dark);
+      final theme = MosixTheme.build(Brightness.dark);
       expect(pixels.single, theme.colorScheme.surfaceContainerHigh);
       expect(
         find.descendant(of: menu, matching: find.byType(BackdropFilter)),
@@ -382,7 +382,7 @@ void main() {
       forceBlur: true,
       onResult: (_) {},
     );
-    final menu = find.byType(MornyeContextMenu);
+    final menu = find.byType(MosixContextMenu);
     expect(find.byType(BackdropFilter), findsWidgets);
     expect(MediaQuery.highContrastOf(tester.element(menu)), isTrue);
     await tester.tap(find.text('Share'));
@@ -403,7 +403,7 @@ void main() {
         preferAbove: true,
         onResult: (value) => result = value,
       );
-      final rect = tester.getRect(find.byType(MornyeContextMenu));
+      final rect = tester.getRect(find.byType(MosixContextMenu));
       expect(rect.top, greaterThanOrEqualTo(40));
       expect(rect.bottom, lessThanOrEqualTo(280));
       expect(find.text('Download').hitTestable(), findsOneWidget);
@@ -428,13 +428,13 @@ void main() {
       onResult: results.add,
     );
     expect(
-      tester.getRect(find.byType(MornyeContextMenu)).top,
+      tester.getRect(find.byType(MosixContextMenu)).top,
       greaterThanOrEqualTo(84),
     );
     await tester.tapAt(const Offset(8, 800));
     await tester.pump();
     expect(results, [null]);
-    expect(find.byType(MornyeContextMenu), findsNothing);
+    expect(find.byType(MosixContextMenu), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

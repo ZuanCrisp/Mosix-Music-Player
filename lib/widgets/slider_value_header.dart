@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 /// The title row above a settings slider, with the slider's current value.
 ///
 /// Material shows the value with its unit in a tonal pill at the trailing
-/// end, so it reads without touching the slider. Mornye shows it as iOS
+/// end, so it reads without touching the slider. Mosix shows it as iOS
 /// detail text in the secondary label color.
 class SliderValueHeader extends StatelessWidget {
   const SliderValueHeader({
@@ -68,7 +68,7 @@ class SliderValueHeader extends StatelessWidget {
           ),
         ),
         SizedBox(width: tokens.gapSm),
-        if (context.isMornye)
+        if (context.isMosix)
           Text(
             value,
             style: theme.textTheme.bodyLarge?.copyWith(

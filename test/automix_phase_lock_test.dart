@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/automix_phase_lock.dart';
+import 'package:mosix/services/automix_phase_lock.dart';
 
 void main() {
   void samples(AutoMixPhaseLock lock, List<double?> errors) {

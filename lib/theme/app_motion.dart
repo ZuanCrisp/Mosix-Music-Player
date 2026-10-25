@@ -1,7 +1,7 @@
 import 'package:flutter/physics.dart';
 import 'package:flutter/widgets.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/material_expressive.dart';
+import 'package:mosix/theme/material_expressive.dart';
 
 /// A duration and curve pair for implicit animations.
 @immutable
@@ -48,7 +48,7 @@ class SpringCurve extends Curve {
 /// Material 3 Expressive motion for the Material theme.
 ///
 /// Spatial springs (position, size, scale) overshoot slightly; effects
-/// springs (opacity, color) settle without overshoot. Mornye and reduced
+/// springs (opacity, color) settle without overshoot. Mosix and reduced
 /// motion keep each call site's original [AppMotionSpec].
 abstract final class AppMotion {
   static final _spatialFast = SpringCurve(M3EMotion.expressiveSpatialFast);

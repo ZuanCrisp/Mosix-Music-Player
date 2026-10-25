@@ -4,16 +4,16 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/routes/now_playing_route.dart';
-import 'package:mornye/utils/playback_seek_preview.dart';
-import 'package:mornye/widgets/audio_quality_badges.dart';
-import 'package:mornye/widgets/material_player_layout.dart';
-import 'package:mornye/widgets/player_details_sheet.dart';
-import 'package:mornye/widgets/player_gesture_regions.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/routes/now_playing_route.dart';
+import 'package:mosix/utils/playback_seek_preview.dart';
+import 'package:mosix/widgets/audio_quality_badges.dart';
+import 'package:mosix/widgets/material_player_layout.dart';
+import 'package:mosix/widgets/player_details_sheet.dart';
+import 'package:mosix/widgets/player_gesture_regions.dart';
 
 MediaItem _item(String id, {String? source}) => MediaItem(
   id: id,

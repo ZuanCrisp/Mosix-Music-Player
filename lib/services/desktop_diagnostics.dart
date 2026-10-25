@@ -6,9 +6,9 @@ import 'dart:ui' show AppExitResponse;
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/constants/app_info.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/logger.dart';
 
 /// Desktop crash and log handling (desktop design 6.6), without telemetry:
 /// rotating log files in `<app support>/logs`, a "session running" marker

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/services/library_collections_database.dart';
+import 'package:mosix/services/library_collections_database.dart';
 
 // Exercises the database boundary's bounded requests and aggregation without
 // requiring a platform SQLite plugin. The production SQL is passed unchanged.

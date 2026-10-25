@@ -7,17 +7,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/services/app_state_database.dart';
-import 'package:mornye/services/autoplay_personalization.dart';
-import 'package:mornye/services/listening_statistics.dart';
-import 'package:mornye/services/music_player_service.dart';
-import 'package:mornye/services/playback_deck.dart';
-import 'package:mornye/services/playback_notification.dart';
-import 'package:mornye/services/source_deletion_events.dart';
-import 'package:mornye/utils/file_access.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/services/app_state_database.dart';
+import 'package:mosix/services/autoplay_personalization.dart';
+import 'package:mosix/services/listening_statistics.dart';
+import 'package:mosix/services/music_player_service.dart';
+import 'package:mosix/services/playback_deck.dart';
+import 'package:mosix/services/playback_notification.dart';
+import 'package:mosix/services/source_deletion_events.dart';
+import 'package:mosix/utils/file_access.dart';
+import 'package:mosix/utils/logger.dart';
 
 class _Deck implements PlaybackDeck {
   @override
@@ -763,7 +763,7 @@ void main() {
       final cached = await File(
         '${directory.path}/copy.flac',
       ).writeAsString('audio');
-      const channel = MethodChannel('com.zarz.mornye/backend');
+      const channel = MethodChannel('com.zuancrisp.mosix/backend');
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       messenger.setMockMethodCallHandler(
@@ -834,7 +834,7 @@ void main() {
       ).writeAsString('new');
       final copying = Completer<void>();
       final release = Completer<String>();
-      const channel = MethodChannel('com.zarz.mornye/backend');
+      const channel = MethodChannel('com.zuancrisp.mosix/backend');
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       var copies = 0;

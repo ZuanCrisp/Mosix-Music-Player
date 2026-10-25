@@ -1,36 +1,36 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mornye/models/theme_settings.dart';
-import 'package:mornye/theme/app_tokens.dart';
+import 'package:mosix/models/theme_settings.dart';
+import 'package:mosix/theme/app_tokens.dart';
 
-/// Flutter counterpart of Mornye's iPhone visual system. Reference values come
+/// Flutter counterpart of Mosix's iPhone visual system. Reference values come
 /// from AccentColor.colorset, Components.swift, PlayerViews.swift and Motion.md
-/// in the Mornye project; keep this palette independent of wallpaper colors.
+/// in the Mosix project; keep this palette independent of wallpaper colors.
 @immutable
-class MornyeTheme extends ThemeExtension<MornyeTheme> {
-  const MornyeTheme({
+class MosixTheme extends ThemeExtension<MosixTheme> {
+  const MosixTheme({
     this.chromeSurface,
-    this.accent = MornyeAccent.red,
+    this.accent = MosixAccent.red,
     this.useSystemFont = false,
     this.fontFamily,
-    this.glassClarity = kDefaultMornyeGlassClarity,
+    this.glassClarity = kDefaultMosixGlassClarity,
     this.glassOutlines = true,
   });
 
   final Color? chromeSurface;
-  final MornyeAccent accent;
+  final MosixAccent accent;
   final bool useSystemFont;
   final String? fontFamily;
   final double glassClarity;
   final bool glassOutlines;
 
   static double glassClarityOf(BuildContext context) =>
-      Theme.of(context).extension<MornyeTheme>()?.glassClarity ??
-      kDefaultMornyeGlassClarity;
+      Theme.of(context).extension<MosixTheme>()?.glassClarity ??
+      kDefaultMosixGlassClarity;
 
   static bool glassOutlinesOf(BuildContext context) =>
-      Theme.of(context).extension<MornyeTheme>()?.glassOutlines ?? true;
+      Theme.of(context).extension<MosixTheme>()?.glassOutlines ?? true;
 
   /// A single translucent fill for controls inside an existing glass surface.
   static Color controlFill(BuildContext context, {bool enabled = true}) {
@@ -54,14 +54,14 @@ class MornyeTheme extends ThemeExtension<MornyeTheme> {
 
   static double chromeOpacity(BuildContext context) {
     final theme = Theme.of(context);
-    if (theme.extension<MornyeTheme>()?.chromeSurface != null) return 0.36;
+    if (theme.extension<MosixTheme>()?.chromeSurface != null) return 0.36;
     // Light glass needs more fill to keep dark subtitles readable over black.
     return theme.brightness == Brightness.dark ? 0.60 : 0.70;
   }
 
   static double navigationOpacity(BuildContext context) {
     final theme = Theme.of(context);
-    if (theme.extension<MornyeTheme>()?.chromeSurface != null) return 0.24;
+    if (theme.extension<MosixTheme>()?.chromeSurface != null) return 0.24;
     return theme.brightness == Brightness.dark ? 0.36 : 0.49;
   }
 
@@ -69,22 +69,22 @@ class MornyeTheme extends ThemeExtension<MornyeTheme> {
   // iOS dark systemRed: accent text stays readable on #1C1C1E cells.
   static const darkAccent = Color.fromRGBO(255, 69, 58, 1);
 
-  static Color accentColor(MornyeAccent accent, Brightness brightness) {
+  static Color accentColor(MosixAccent accent, Brightness brightness) {
     final dark = brightness == Brightness.dark;
     final color = switch (accent) {
-      MornyeAccent.red => const CupertinoDynamicColor.withBrightness(
+      MosixAccent.red => const CupertinoDynamicColor.withBrightness(
         color: lightAccent,
         darkColor: darkAccent,
       ),
-      MornyeAccent.orange => CupertinoColors.systemOrange,
-      MornyeAccent.green => CupertinoColors.systemGreen,
-      MornyeAccent.teal => CupertinoColors.systemTeal,
-      MornyeAccent.blue => CupertinoColors.systemBlue,
-      MornyeAccent.purple => CupertinoColors.systemPurple,
-      MornyeAccent.pink => CupertinoColors.systemPink,
+      MosixAccent.orange => CupertinoColors.systemOrange,
+      MosixAccent.green => CupertinoColors.systemGreen,
+      MosixAccent.teal => CupertinoColors.systemTeal,
+      MosixAccent.blue => CupertinoColors.systemBlue,
+      MosixAccent.purple => CupertinoColors.systemPurple,
+      MosixAccent.pink => CupertinoColors.systemPink,
     };
     // Accents also label links and small controls on white surfaces.
-    if (!dark && accent == MornyeAccent.green) return const Color(0xff24863d);
+    if (!dark && accent == MosixAccent.green) return const Color(0xff24863d);
     return dark ? color.darkColor : color.highContrastColor;
   }
 
@@ -122,17 +122,17 @@ class MornyeTheme extends ThemeExtension<MornyeTheme> {
   // key because it controls fonts and route transitions.
   static final _themeCache =
       <
-        (TargetPlatform, Brightness, Color?, MornyeAccent, bool, String?),
+        (TargetPlatform, Brightness, Color?, MosixAccent, bool, String?),
         ThemeData
       >{};
 
   static ThemeData build(
     Brightness brightness, {
     Color? chromeSurface,
-    MornyeAccent accent = MornyeAccent.red,
+    MosixAccent accent = MosixAccent.red,
     bool useSystemFont = false,
     String? fontFamily,
-    double glassClarity = kDefaultMornyeGlassClarity,
+    double glassClarity = kDefaultMosixGlassClarity,
     bool glassOutlines = true,
   }) {
     final key = (
@@ -169,8 +169,8 @@ class MornyeTheme extends ThemeExtension<MornyeTheme> {
     double value,
     bool outlines,
   ) {
-    final clarity = normalizeMornyeGlassClarity(value);
-    final preferences = theme.extension<MornyeTheme>()!;
+    final clarity = normalizeMosixGlassClarity(value);
+    final preferences = theme.extension<MosixTheme>()!;
     if (preferences.glassClarity == clarity &&
         preferences.glassOutlines == outlines) {
       return theme;
@@ -178,7 +178,7 @@ class MornyeTheme extends ThemeExtension<MornyeTheme> {
     return theme.copyWith(
       extensions: [
         for (final extension in theme.extensions.values)
-          if (extension is MornyeTheme)
+          if (extension is MosixTheme)
             extension.copyWith(glassClarity: clarity, glassOutlines: outlines)
           else
             extension,
@@ -186,21 +186,21 @@ class MornyeTheme extends ThemeExtension<MornyeTheme> {
     );
   }
 
-  /// Rebuild local surfaces without losing the user's Mornye preferences.
+  /// Rebuild local surfaces without losing the user's Mosix preferences.
   static ThemeData fromContext(
     BuildContext context, {
     Brightness? brightness,
     Color? chromeSurface,
   }) {
     final theme = Theme.of(context);
-    final preferences = theme.extension<MornyeTheme>();
+    final preferences = theme.extension<MosixTheme>();
     return build(
       brightness ?? theme.brightness,
       chromeSurface: chromeSurface,
-      accent: preferences?.accent ?? MornyeAccent.red,
+      accent: preferences?.accent ?? MosixAccent.red,
       useSystemFont: preferences?.useSystemFont ?? false,
       fontFamily: preferences?.fontFamily,
-      glassClarity: preferences?.glassClarity ?? kDefaultMornyeGlassClarity,
+      glassClarity: preferences?.glassClarity ?? kDefaultMosixGlassClarity,
       glassOutlines: preferences?.glassOutlines ?? true,
     );
   }
@@ -208,7 +208,7 @@ class MornyeTheme extends ThemeExtension<MornyeTheme> {
   static ThemeData _build(
     Brightness brightness, {
     Color? chromeSurface,
-    required MornyeAccent selectedAccent,
+    required MosixAccent selectedAccent,
     required bool useSystemFont,
     String? fontFamily,
   }) {
@@ -321,7 +321,7 @@ class MornyeTheme extends ThemeExtension<MornyeTheme> {
       fontFamily: text.fontFamily,
       splashFactory: NoSplash.splashFactory,
       extensions: <ThemeExtension<dynamic>>[
-        MornyeTheme(
+        MosixTheme(
           chromeSurface: chromeSurface,
           accent: selectedAccent,
           useSystemFont: useSystemFont,
@@ -418,14 +418,14 @@ class MornyeTheme extends ThemeExtension<MornyeTheme> {
   }
 
   @override
-  MornyeTheme copyWith({
+  MosixTheme copyWith({
     Color? chromeSurface,
-    MornyeAccent? accent,
+    MosixAccent? accent,
     bool? useSystemFont,
     String? fontFamily,
     double? glassClarity,
     bool? glassOutlines,
-  }) => MornyeTheme(
+  }) => MosixTheme(
     chromeSurface: chromeSurface ?? this.chromeSurface,
     accent: accent ?? this.accent,
     useSystemFont: useSystemFont ?? this.useSystemFont,
@@ -435,7 +435,7 @@ class MornyeTheme extends ThemeExtension<MornyeTheme> {
   );
 
   @override
-  MornyeTheme lerp(covariant MornyeTheme? other, double t) => MornyeTheme(
+  MosixTheme lerp(covariant MosixTheme? other, double t) => MosixTheme(
     chromeSurface: Color.lerp(chromeSurface, other?.chromeSurface, t),
     accent: t < 0.5 ? accent : other?.accent ?? accent,
     fontFamily: t < 0.5 ? fontFamily : other?.fontFamily,
@@ -451,20 +451,20 @@ class MornyeTheme extends ThemeExtension<MornyeTheme> {
   );
 }
 
-extension MornyeThemeContext on BuildContext {
-  bool get isMornye => Theme.of(this).extension<MornyeTheme>() != null;
+extension MosixThemeContext on BuildContext {
+  bool get isMosix => Theme.of(this).extension<MosixTheme>() != null;
 }
 
 /// Settings uses iOS's inset grouped surfaces while the music library keeps
 /// its artwork-led, plain background.
-class MornyeSettingsTheme extends StatelessWidget {
-  const MornyeSettingsTheme({super.key, required this.child});
+class MosixSettingsTheme extends StatelessWidget {
+  const MosixSettingsTheme({super.key, required this.child});
 
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    if (!context.isMornye) return child;
+    if (!context.isMosix) return child;
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
     final background = dark ? Colors.black : const Color(0xfff2f2f7);

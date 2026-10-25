@@ -6,8 +6,8 @@ import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/services/update_checker.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/services/update_checker.dart';
+import 'package:mosix/utils/logger.dart';
 
 final _log = AppLogger('DesktopUpdater');
 

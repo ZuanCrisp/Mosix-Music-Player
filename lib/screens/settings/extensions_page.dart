@@ -1,30 +1,30 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
-import 'package:mornye/widgets/app_switch.dart';
-import 'package:mornye/widgets/extension_row.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:mosix/widgets/app_switch.dart';
+import 'package:mosix/widgets/extension_row.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/explore_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/settings/download_fallback_extensions_page.dart';
-import 'package:mornye/screens/settings/extension_detail_page.dart';
-import 'package:mornye/screens/settings/metadata_provider_priority_page.dart';
-import 'package:mornye/screens/settings/provider_priority_page.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/home_feed_region_setting.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
-import 'package:mornye/widgets/extension_health.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/explore_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/settings/download_fallback_extensions_page.dart';
+import 'package:mosix/screens/settings/extension_detail_page.dart';
+import 'package:mosix/screens/settings/metadata_provider_priority_page.dart';
+import 'package:mosix/screens/settings/provider_priority_page.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/home_feed_region_setting.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/extension_health.dart';
 
 part 'extensions_page_widgets.dart';
 
@@ -63,7 +63,7 @@ class _ExtensionsPageState extends ConsumerState<ExtensionsPage> {
       onPressed: _installExtension,
       icon: const AppIcon(Icons.add),
       label: Text(context.l10n.extensionsInstallButton),
-      outlined: context.isMornye,
+      outlined: context.isMosix,
       glass: false,
       style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -215,8 +215,8 @@ class _ExtensionsPageState extends ConsumerState<ExtensionsPage> {
                     final inset = settingsHorizontalInset(constraints.maxWidth);
                     return Padding(
                       padding: EdgeInsets.fromLTRB(inset, 16, inset, 16),
-                      child: context.isMornye
-                          ? MornyeGlassPanel.overlay(
+                      child: context.isMosix
+                          ? MosixGlassPanel.overlay(
                               radius: 28,
                               child: installButton,
                             )

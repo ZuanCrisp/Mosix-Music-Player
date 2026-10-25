@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/track_card.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/track_card.dart';
 
 /// Album-style track row: track number, title/subtitle, and a trailing play
 /// button that's hidden once selection mode is active.
@@ -97,10 +97,10 @@ class AlbumTrackPlayButton extends StatelessWidget {
       tooltip: isPlaying ? context.l10n.actionPause : context.l10n.tooltipPlay,
       onPressed: onPlay,
       icon: Icon(
-        context.isMornye
+        context.isMosix
             ? (isPlaying ? CupertinoIcons.pause_fill : CupertinoIcons.play_fill)
             : (isPlaying ? Icons.pause : Icons.play_arrow),
-        color: context.isMornye
+        color: context.isMosix
             ? colorScheme.primary
             : colorScheme.onSecondaryContainer,
         size: dense ? 18 : null,
@@ -109,7 +109,7 @@ class AlbumTrackPlayButton extends StatelessWidget {
         minimumSize: Size.square(dense ? 32 : context.tokens.minTouchTarget),
         padding: dense ? EdgeInsets.zero : null,
         tapTargetSize: dense ? MaterialTapTargetSize.shrinkWrap : null,
-        backgroundColor: context.isMornye
+        backgroundColor: context.isMosix
             ? Colors.transparent
             : colorScheme.secondaryContainer,
       ),

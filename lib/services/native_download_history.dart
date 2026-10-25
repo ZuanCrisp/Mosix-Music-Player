@@ -1,4 +1,4 @@
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/utils/logger.dart';
 
 /// A completed file and a persisted Library entry are separate guarantees.
 /// In particular, `already_exists` does not mean history was ever saved.

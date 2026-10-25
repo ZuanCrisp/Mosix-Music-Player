@@ -1,10 +1,10 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_state.dart';
-import 'package:mornye/utils/chunked_list.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_state.dart';
+import 'package:mosix/utils/chunked_list.dart';
 
 DownloadItem _item(int i, {String? requestId}) => DownloadItem(
   id: requestId ?? 'request-$i',

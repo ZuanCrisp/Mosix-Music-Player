@@ -1,6 +1,6 @@
 # Network storage
 
-Open Settings → Network storage in Material or Mornye. Add a named connection,
+Open Settings → Network storage in Material or Mosix. Add a named connection,
 choose the protocol, enter its address and optional credentials, then choose
 **Connect and save**. The app checks access before saving. Edit the connection
 to change credentials or remove it. Removing a connection never deletes files

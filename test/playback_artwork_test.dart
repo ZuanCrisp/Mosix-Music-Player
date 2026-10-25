@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/utils/playback_artwork.dart';
+import 'package:mosix/utils/playback_artwork.dart';
 
 void main() {
   late Directory directory;

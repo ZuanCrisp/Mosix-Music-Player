@@ -3,15 +3,15 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/services/app_navigation_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/extension_session_callback.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/services/app_navigation_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/extension_session_callback.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/expressive_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 final _log = AppLogger('ExtensionAuthLauncher');

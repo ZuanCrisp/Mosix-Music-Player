@@ -1,7 +1,7 @@
 part of 'track_metadata_screen.dart';
 
-extension _TrackMetadataMornye on _TrackMetadataScreenState {
-  Widget _buildMornyePage(BuildContext context) {
+extension _TrackMetadataMosix on _TrackMetadataScreenState {
+  Widget _buildMosixPage(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final artwork = resolveMetadataArtworkSource(
@@ -177,15 +177,15 @@ extension _TrackMetadataMornye on _TrackMetadataScreenState {
     ColorScheme scheme, {
     required Widget child,
   }) {
-    if (context.isMornye) {
+    if (context.isMosix) {
       return Material(
-        color: MornyeTheme.controlFill(context),
+        color: MosixTheme.controlFill(context),
         borderRadius: BorderRadius.circular(28),
         clipBehavior: Clip.antiAlias,
         child: DividerTheme(
           data: DividerTheme.of(
             context,
-          ).copyWith(color: MornyeTheme.metadataDividerColor(context)),
+          ).copyWith(color: MosixTheme.metadataDividerColor(context)),
           child: child,
         ),
       );

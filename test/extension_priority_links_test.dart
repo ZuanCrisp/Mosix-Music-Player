@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/settings/download_fallback_extensions_page.dart';
-import 'package:mornye/screens/settings/extensions_page.dart';
-import 'package:mornye/screens/settings/metadata_provider_priority_page.dart';
-import 'package:mornye/screens/settings/provider_priority_page.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/settings/download_fallback_extensions_page.dart';
+import 'package:mosix/screens/settings/extensions_page.dart';
+import 'package:mosix/screens/settings/metadata_provider_priority_page.dart';
+import 'package:mosix/screens/settings/provider_priority_page.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 import 'support/fixed_settings.dart';
 
@@ -79,7 +79,7 @@ void main() {
               ],
               child: MaterialApp(
                 theme: mornye
-                    ? MornyeTheme.build(Brightness.dark)
+                    ? MosixTheme.build(Brightness.dark)
                     : ThemeData(),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,

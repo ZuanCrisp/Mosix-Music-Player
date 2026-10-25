@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/services/download_queue_codec.dart';
-import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/services/download_queue_codec.dart';
+import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
+import 'package:mosix/utils/logger.dart';
 
 final _log = AppLogger('AppStateDb');
 

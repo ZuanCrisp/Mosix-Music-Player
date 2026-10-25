@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/track_card.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/track_card.dart';
 
 /// End-to-start swipe that removes a track row over a delete background.
 ///
 /// The background takes the row's [TrackCardSegment] corners. With expressive
 /// motion the icon grows with the swipe and the fill deepens to the error
-/// color once letting go would dismiss. Mornye and reduced motion keep the
+/// color once letting go would dismiss. Mosix and reduced motion keep the
 /// static background.
 class SwipeDeleteDismissible extends StatefulWidget {
   const SwipeDeleteDismissible({

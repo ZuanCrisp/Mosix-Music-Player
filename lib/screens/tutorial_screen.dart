@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/scroll_edge_fade.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/app_progress_indicator.dart';
-import 'package:mornye/widgets/app_search_field.dart';
-import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/scroll_edge_fade.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/app_progress_indicator.dart';
+import 'package:mosix/widgets/app_search_field.dart';
+import 'package:mosix/widgets/expressive_button.dart';
 
 class TutorialScreen extends ConsumerStatefulWidget {
   const TutorialScreen({super.key});

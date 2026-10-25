@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:mornye/utils/string_utils.dart';
+import 'package:mosix/utils/string_utils.dart';
 
 /// Editable tags and request generations, independent of sheet navigation.
 class MetadataEditorController {

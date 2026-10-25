@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/ordered_range_selection.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/ordered_range_selection.dart';
 
 /// How a desktop click changes a list selection.
 enum DesktopClick {

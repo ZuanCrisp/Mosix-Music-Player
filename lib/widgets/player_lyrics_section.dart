@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/lyrics_parser.dart';
-import 'package:mornye/utils/playback_seek_preview.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/player_lyrics.dart';
-import 'package:mornye/widgets/lyrics_text_scale.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mosix/utils/playback_seek_preview.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/player_lyrics.dart';
+import 'package:mosix/widgets/lyrics_text_scale.dart';
 
 class PlayerLyricsSection extends ConsumerWidget {
   const PlayerLyricsSection({
@@ -132,7 +132,7 @@ class PlayerLyricsSection extends ConsumerWidget {
           ),
           if (options != null)
             PositionedDirectional(
-              start: context.isMornye ? mornyeLyricsContentInset : 24,
+              start: context.isMosix ? mornyeLyricsContentInset : 24,
               bottom: 8,
               child: options!,
             ),

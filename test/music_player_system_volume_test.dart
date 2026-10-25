@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/system_volume_service.dart';
+import 'package:mosix/services/system_volume_service.dart';
 
 import 'support/music_player_automix_harness.dart';
 

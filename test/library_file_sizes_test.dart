@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/library_file_sizes.dart';
-import 'package:mornye/services/library_queue_store.dart';
-import 'package:mornye/services/library_database_models.dart';
+import 'package:mosix/services/library_file_sizes.dart';
+import 'package:mosix/services/library_queue_store.dart';
+import 'package:mosix/services/library_database_models.dart';
 
 import 'support/library_paging_fixture.dart';
 import 'support/sqlite_process_database.dart';
@@ -298,7 +298,7 @@ void main() {
   });
 
   test('SAF sizes come from document metadata without copying audio', () async {
-    const channel = MethodChannel('com.zarz.mornye/backend');
+    const channel = MethodChannel('com.zuancrisp.mosix/backend');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(channel, (call) async {

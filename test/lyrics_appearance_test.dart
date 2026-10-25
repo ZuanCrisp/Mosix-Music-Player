@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/theme_settings.dart';
-import 'package:mornye/providers/theme_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/lyrics_parser.dart';
-import 'package:mornye/widgets/app_slider.dart';
-import 'package:mornye/widgets/lyrics_size_setting.dart';
-import 'package:mornye/widgets/lyrics_text_scale.dart';
-import 'package:mornye/widgets/player_lyrics.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/theme_settings.dart';
+import 'package:mosix/providers/theme_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mosix/widgets/app_slider.dart';
+import 'package:mosix/widgets/lyrics_size_setting.dart';
+import 'package:mosix/widgets/lyrics_text_scale.dart';
+import 'package:mosix/widgets/player_lyrics.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -57,11 +57,11 @@ void main() {
 
   for (final reduced in [false, true]) {
     testWidgets(
-      'Mornye subtly scales active lyrics without changing layout (reduced=$reduced)',
+      'Mosix subtly scales active lyrics without changing layout (reduced=$reduced)',
       (tester) async {
         final preview = ValueNotifier<Duration?>(const Duration(seconds: 1));
         addTearDown(preview.dispose);
-        final theme = MornyeTheme.build(Brightness.dark);
+        final theme = MosixTheme.build(Brightness.dark);
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(

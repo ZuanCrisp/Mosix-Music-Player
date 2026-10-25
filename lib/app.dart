@@ -4,24 +4,24 @@ import 'package:material_ui/material_ui.dart' as material_ui;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mornye/constants/app_info.dart';
-import 'package:mornye/screens/main_shell.dart';
-import 'package:mornye/screens/setup_screen.dart';
-import 'package:mornye/screens/tutorial_screen.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/providers/equalizer_provider.dart';
-import 'package:mornye/services/app_navigation_service.dart';
-import 'package:mornye/services/app_orientation.dart';
-import 'package:mornye/theme/dynamic_color_wrapper.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/l10n/supported_locales.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
-import 'package:mornye/widgets/desktop/desktop_shortcuts.dart';
-import 'package:mornye/widgets/desktop/library_drop_target.dart';
-import 'package:mornye/widgets/mornye_glass_preparation.dart';
-import 'package:mornye/widgets/playback_feedback.dart';
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/screens/main_shell.dart';
+import 'package:mosix/screens/setup_screen.dart';
+import 'package:mosix/screens/tutorial_screen.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/providers/equalizer_provider.dart';
+import 'package:mosix/services/app_navigation_service.dart';
+import 'package:mosix/services/app_orientation.dart';
+import 'package:mosix/theme/dynamic_color_wrapper.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/l10n/supported_locales.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:mosix/widgets/desktop/desktop_shortcuts.dart';
+import 'package:mosix/widgets/desktop/library_drop_target.dart';
+import 'package:mosix/widgets/mornye_glass_preparation.dart';
+import 'package:mosix/widgets/playback_feedback.dart';
 
 String initialLocationForAppState({
   required bool isFirstLaunch,
@@ -194,10 +194,10 @@ class _OrientationFadeState extends State<_OrientationFade>
   }
 }
 
-class MornyeApp extends ConsumerWidget {
+class MosixApp extends ConsumerWidget {
   final bool disableOverscrollEffects;
 
-  const MornyeApp({super.key, this.disableOverscrollEffects = false});
+  const MosixApp({super.key, this.disableOverscrollEffects = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -265,7 +265,7 @@ class MornyeApp extends ConsumerWidget {
             }
             return MediaQuery(
               data: mediaQuery.copyWith(displayFeatures: const []),
-              child: MornyeGlassPreparation(
+              child: MosixGlassPreparation(
                 child: AdaptiveUiScaler(child: appContent),
               ),
             );

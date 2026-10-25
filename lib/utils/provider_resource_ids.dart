@@ -1,4 +1,4 @@
-import 'package:mornye/constants/music_services.dart';
+import 'package:mosix/constants/music_services.dart';
 
 /// Maps a legacy prefixed resource id (e.g. "deezer:123") to its provider id,
 /// or null when the value carries no known provider prefix.

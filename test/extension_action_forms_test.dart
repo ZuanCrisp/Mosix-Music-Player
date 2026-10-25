@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/controllers/extension_action_forms.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/controllers/extension_action_forms.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
 
 import 'support/fixed_settings.dart';
 
 void main() {
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   tearDown(
     () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null),
@@ -28,7 +28,7 @@ void main() {
       ProviderScope(
         overrides: [settingsProvider.overrideWith(FixedSettingsNotifier.new)],
         child: MaterialApp(
-          theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+          theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(

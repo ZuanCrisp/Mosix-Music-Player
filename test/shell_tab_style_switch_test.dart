@@ -1,16 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/screens/main_shell.dart';
-import 'package:mornye/services/shell_navigation_service.dart';
+import 'package:mosix/screens/main_shell.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
 
 void main() {
   int? switched(
     int index, {
-    required bool fromMornye,
+    required bool fromMosix,
     required bool showStore,
     bool desktop = true,
   }) => shellIndexOfTab(
-    shellTabAt(index, mornye: fromMornye, showStore: showStore),
-    mornye: !fromMornye,
+    shellTabAt(index, mornye: fromMosix, showStore: showStore),
+    mornye: !fromMosix,
     showStore: showStore,
     desktop: desktop,
   );
@@ -25,29 +25,29 @@ void main() {
 
         // Material Settings stays Settings instead of becoming Search.
         expect(
-          switched(materialSettings, fromMornye: false, showStore: showStore),
+          switched(materialSettings, fromMosix: false, showStore: showStore),
           mornyeSettings,
         );
         expect(
-          switched(mornyeSettings, fromMornye: true, showStore: showStore),
+          switched(mornyeSettings, fromMosix: true, showStore: showStore),
           materialSettings,
         );
-        // Mornye's Search lands on Material's Home, where Material searches.
+        // Mosix's Search lands on Material's Home, where Material searches.
         expect(
-          switched(mornyeSearch, fromMornye: true, showStore: showStore),
+          switched(mornyeSearch, fromMosix: true, showStore: showStore),
           0,
         );
         for (final index in [0, 1, if (showStore) 2]) {
           expect(
-            switched(index, fromMornye: false, showStore: showStore),
+            switched(index, fromMosix: false, showStore: showStore),
             index,
           );
         }
-        // Mornye phones have no Settings destination.
+        // Mosix phones have no Settings destination.
         expect(
           switched(
             materialSettings,
-            fromMornye: false,
+            fromMosix: false,
             showStore: showStore,
             desktop: false,
           ),
@@ -57,7 +57,7 @@ void main() {
     );
   }
 
-  test('Mornye Search maps to its own tab', () {
+  test('Mosix Search maps to its own tab', () {
     expect(shellTabAt(2, mornye: true, showStore: false), ShellTab.search);
   });
 }

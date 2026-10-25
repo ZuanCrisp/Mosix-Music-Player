@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/utils/logger.dart';
 
 const fullPlayerRouteName = '/full-player';
 final _log = AppLogger('Orientation');

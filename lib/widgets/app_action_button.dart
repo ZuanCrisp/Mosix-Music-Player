@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/expressive_button.dart';
 
 /// Shared sheet actions follow the selected design on every platform.
 class AppActionButton extends StatelessWidget {
@@ -33,7 +33,7 @@ class AppActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!context.isMornye) {
+    if (!context.isMosix) {
       return ExpressiveButton(
         onPressed: onPressed,
         icon: icon,
@@ -56,12 +56,12 @@ class AppActionButton extends StatelessWidget {
       color: prominent
           ? scheme.primary
           : tonal
-          ? MornyeTheme.controlFill(context)
+          ? MosixTheme.controlFill(context)
           : Colors.transparent,
       disabledColor: !prominent && !tonal && !glass
           ? Colors.transparent
           : tonal && !prominent
-          ? MornyeTheme.controlFill(context, enabled: false)
+          ? MosixTheme.controlFill(context, enabled: false)
           : scheme.surfaceContainerHighest,
       onPressed: onPressed,
       child: DefaultTextStyle(
@@ -90,6 +90,6 @@ class AppActionButton extends StatelessWidget {
     // These buttons sit inside glass sheets/groups; avoid another blur pass.
     return prominent || tonal || !glass
         ? action
-        : MornyeGlass.navigation(radius: 28, blurEnabled: false, child: action);
+        : MosixGlass.navigation(radius: 28, blurEnabled: false, child: action);
   }
 }

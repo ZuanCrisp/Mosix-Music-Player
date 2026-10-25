@@ -4,48 +4,48 @@ import 'dart:math';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/collection_scaffold.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/desktop/context_menu.dart';
-import 'package:mornye/widgets/desktop/desktop_selection.dart';
-import 'package:mornye/widgets/desktop/track_list_table.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/expressive_button_group.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/widgets/track_card.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/collection_scaffold.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/desktop/context_menu.dart';
+import 'package:mosix/widgets/desktop/desktop_selection.dart';
+import 'package:mosix/widgets/desktop/track_list_table.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/expressive_button_group.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/widgets/track_card.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mornye_icons.dart';
 import 'package:share_plus/share_plus.dart' show ShareParams, SharePlus, XFile;
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/services/m3u_playlist_service.dart';
-import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mornye/utils/file_access.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/playback_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/cover_art_utils.dart';
-import 'package:mornye/screens/collapsing_header_scroll_mixin.dart';
-import 'package:mornye/screens/selection_mode_mixin.dart';
-import 'package:mornye/controllers/library_tracks_folder_data.dart';
-import 'package:mornye/screens/track_metadata_screen.dart';
-import 'package:mornye/widgets/selection_action_button.dart';
-import 'package:mornye/widgets/selection_bottom_bar.dart';
-import 'package:mornye/widgets/in_library_badge.dart';
-import 'package:mornye/widgets/playlist_picker_sheet.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/widgets/track_detail_actions.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/services/m3u_playlist_service.dart';
+import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mosix/utils/file_access.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/playback_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/cover_art_utils.dart';
+import 'package:mosix/screens/collapsing_header_scroll_mixin.dart';
+import 'package:mosix/screens/selection_mode_mixin.dart';
+import 'package:mosix/controllers/library_tracks_folder_data.dart';
+import 'package:mosix/screens/track_metadata_screen.dart';
+import 'package:mosix/widgets/selection_action_button.dart';
+import 'package:mosix/widgets/selection_bottom_bar.dart';
+import 'package:mosix/widgets/in_library_badge.dart';
+import 'package:mosix/widgets/playlist_picker_sheet.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/widgets/track_detail_actions.dart';
 
 String? _resolveRawCoverUrl(Track track) {
   final rawCover = track.coverUrl?.trim();
@@ -950,7 +950,7 @@ class _LibraryTracksFolderScreenState
                 horizontal: 24,
                 vertical: 4,
               ),
-              leading: context.isMornye
+              leading: context.isMosix
                   ? Icon(
                       mornyeIconFor(Icons.image_outlined),
                       color: colorScheme.primary,
@@ -979,7 +979,7 @@ class _LibraryTracksFolderScreenState
                   horizontal: 24,
                   vertical: 4,
                 ),
-                leading: context.isMornye
+                leading: context.isMosix
                     ? Icon(
                         mornyeIconFor(Icons.delete_outline),
                         color: colorScheme.primary,
@@ -1116,9 +1116,9 @@ class _CollectionTrackTile extends ConsumerWidget {
     final heroTag = inMemoryHistoryItem != null
         ? 'cover_${inMemoryHistoryItem.id}'
         : null;
-    // Material rows mark the current track; Mornye rows show no
+    // Material rows mark the current track; Mosix rows show no
     // current-track state.
-    final playback = context.isMornye
+    final playback = context.isMosix
         ? null
         : ref.watch(catalogTrackPlaybackUiProvider(catalogTrackKey(track)));
     final isCurrent = playback?.isCurrent ?? false;

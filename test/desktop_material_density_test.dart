@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/desktop/track_table.dart';
-import 'package:mornye/widgets/selection_action_button.dart';
-import 'package:mornye/widgets/selection_bottom_bar.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/desktop/track_table.dart';
+import 'package:mosix/widgets/selection_action_button.dart';
+import 'package:mosix/widgets/selection_bottom_bar.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 void main() {
   setUp(() => debugDesktopPlatformOverride = true);
   tearDown(() => debugDesktopPlatformOverride = null);
 
   Widget app({required bool mornye, required Widget child}) => MaterialApp(
-    theme: mornye ? MornyeTheme.build(Brightness.light) : AppTheme.light(),
+    theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(body: child),
@@ -70,9 +70,9 @@ void main() {
         mornye
             ? (1920 - desktopContentMaxWidth) / 2
             : (1920 - desktopMaterialContentMaxWidth) / 2,
-        reason: 'Mornye=$mornye',
+        reason: 'Mosix=$mornye',
       );
-      expect(rowHeight, mornye ? 40 : 44, reason: 'Mornye=$mornye');
+      expect(rowHeight, mornye ? 40 : 44, reason: 'Mosix=$mornye');
     }
   });
 

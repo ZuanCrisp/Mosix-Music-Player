@@ -238,7 +238,7 @@ class _AccountFormDialogState extends State<_AccountFormDialog> {
     final label = field['label'] as String? ?? key;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final last = index == widget.form.fields.length - 1;
     final secret = field['type'] == 'password' || field['secret'] == true;
     final keyboard = field['type'] == 'number'
@@ -264,7 +264,7 @@ class _AccountFormDialogState extends State<_AccountFormDialog> {
       input = mornye
           ? CupertinoButton(
               onPressed: () => _chooseOption(field),
-              color: MornyeTheme.controlFill(context),
+              color: MosixTheme.controlFill(context),
               borderRadius: BorderRadius.circular(12),
               padding: const EdgeInsets.all(12),
               child: Row(
@@ -319,7 +319,7 @@ class _AccountFormDialogState extends State<_AccountFormDialog> {
               controller: _controllers[key],
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: MornyeTheme.controlFill(context),
+                color: MosixTheme.controlFill(context),
                 borderRadius: BorderRadius.circular(12),
               ),
               style: theme.textTheme.bodyLarge,

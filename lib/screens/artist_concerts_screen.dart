@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/artist_concert.dart';
-import 'package:mornye/screens/concert_detail_screen.dart';
-import 'package:mornye/services/shell_navigation_service.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/nav_bar_inset.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/app_shape.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
-import 'package:mornye/widgets/animation_utils.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/artist_concert.dart';
+import 'package:mosix/screens/concert_detail_screen.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/app_shape.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
+import 'package:mosix/widgets/animation_utils.dart';
 
 class ArtistConcertsScreen extends StatefulWidget {
   const ArtistConcertsScreen({
@@ -39,7 +39,7 @@ class _ArtistConcertsScreenState extends State<ArtistConcertsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (context.isMornye) {
+    if (context.isMosix) {
       final theme = Theme.of(context);
       final route = ModalRoute.of(context);
       if (route != null) {

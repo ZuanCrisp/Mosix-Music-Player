@@ -8,7 +8,7 @@
 #   build/ffmpeg/macos-universal  (bash scripts/fetch_desktop_ffmpeg.sh macos-universal)
 #   build/ffmpeg/macos-<host arch>
 # When none is staged the phase only warns, so developer builds keep working
-# with an ffmpeg on PATH. Set MORNYE_REQUIRE_FFMPEG=1 (CI and releases) to
+# with an ffmpeg on PATH. Set MOSIX_REQUIRE_FFMPEG=1 (CI and releases) to
 # fail instead.
 
 set -euo pipefail
@@ -50,7 +50,7 @@ rm -rf "$DESTINATION_DIR"
 
 if [[ -z "$SOURCE_DIR" ]]; then
   message="no LGPL FFmpeg is staged in $STAGE_ROOT/macos-universal or macos-$(host_arch). Run: bash scripts/fetch_desktop_ffmpeg.sh macos-universal"
-  if [[ "${MORNYE_REQUIRE_FFMPEG:-0}" == "1" ]]; then
+  if [[ "${MOSIX_REQUIRE_FFMPEG:-0}" == "1" ]]; then
     echo "error: $message" >&2
     exit 1
   fi

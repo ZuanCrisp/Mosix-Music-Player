@@ -15,8 +15,8 @@
 #   Linux, Windows: BtbN/FFmpeg-Builds static "lgpl" variants (no GPL or
 #     nonfree parts; includes libmp3lame, libopus, libsoxr and TLS). The
 #     archive is checked against the checksums.sha256 file of the same
-#     release. MORNYE_FFMPEG_BTBN_TAG (default: latest) selects the release
-#     and MORNYE_FFMPEG_BTBN_ASSET overrides the archive name, which a dated
+#     release. MOSIX_FFMPEG_BTBN_TAG (default: latest) selects the release
+#     and MOSIX_FFMPEG_BTBN_ASSET overrides the archive name, which a dated
 #     autobuild tag needs.
 #   macOS: built from source (FFmpeg, LAME, Opus, SoX Resampler) with pinned
 #     SHA-256 sums. No known prebuilt macOS FFmpeg is LGPL. Needs the Xcode
@@ -32,13 +32,13 @@
 #
 # Bundle layout (the desktop bundling must place the staged files here; the
 # app resolves them in lib/services/ffmpeg_desktop.dart):
-#   macOS:   Mornye.app/Contents/Resources/ffmpeg/{ffmpeg,ffprobe}
+#   macOS:   Mosix.app/Contents/Resources/ffmpeg/{ffmpeg,ffprobe}
 #            (Contents/MacOS/{ffmpeg,ffprobe} is also accepted)
 #   Windows: <folder of the .exe>\ffmpeg\{ffmpeg.exe,ffprobe.exe}
 #   Linux:   <folder of the executable>/lib/ffmpeg/{ffmpeg,ffprobe}
 # Ship LICENSE.txt and SOURCE.txt next to the binaries.
 #
-# Runtime lookup order: $MORNYE_FFMPEG_DIR, then the bundle layout above,
+# Runtime lookup order: $MOSIX_FFMPEG_DIR, then the bundle layout above,
 # then PATH. PATH is a developer fallback only: a package manager FFmpeg
 # (for example Homebrew's) is usually built with --enable-gpl and must never
 # be bundled. This script refuses to stage a build whose configuration
@@ -61,7 +61,7 @@ SOXR_SHA256="b111c15fdc8c029989330ff559184198c161100a59312f5dc19ddeb9b5a15889"
 NASM_VERSION="2.16.03"
 NASM_SHA256="1412a1c760bbd05db026b6c0d1657affd6631cd0a63cddb6f73cc6d4aa616148"
 BTBN_BRANCH="9.0"
-BTBN_TAG="${MORNYE_FFMPEG_BTBN_TAG:-latest}"
+BTBN_TAG="${MOSIX_FFMPEG_BTBN_TAG:-latest}"
 MACOS_MIN_VERSION="12.0"
 
 # Encoders the app requests: conversions and the extension host (aac, alac,
@@ -150,7 +150,7 @@ fetch_btbn() {
     windows-x64) platform=win64 ext=zip ;;
     windows-arm64) platform=winarm64 ext=zip ;;
   esac
-  asset="${MORNYE_FFMPEG_BTBN_ASSET:-ffmpeg-n$BTBN_BRANCH-latest-$platform-lgpl-$BTBN_BRANCH.$ext}"
+  asset="${MOSIX_FFMPEG_BTBN_ASSET:-ffmpeg-n$BTBN_BRANCH-latest-$platform-lgpl-$BTBN_BRANCH.$ext}"
   base="https://github.com/BtbN/FFmpeg-Builds/releases/download/$BTBN_TAG"
 
   # "latest" moves; always fetch the checksums that match the archive.

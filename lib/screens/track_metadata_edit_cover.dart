@@ -15,7 +15,7 @@ extension _EditMetadataSheetCover on _EditMetadataSheetState {
               sheetContext.l10n.trackConvertOriginal,
             )
           : '$value px',
-      icon: (sheetContext, value) => context.isMornye
+      icon: (sheetContext, value) => context.isMosix
           ? CupertinoIcons.photo
           : value == 0
           ? Icons.photo_size_select_actual_outlined

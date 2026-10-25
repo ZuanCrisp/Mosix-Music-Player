@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/player_playback_controls.dart';
-import 'package:mornye/widgets/player_artwork.dart';
-import 'package:mornye/widgets/player_queue_dismissible.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/player_playback_controls.dart';
+import 'package:mosix/widgets/player_artwork.dart';
+import 'package:mosix/widgets/player_queue_dismissible.dart';
 
 Future<void> showPlayerQueueSheet(
   BuildContext context,

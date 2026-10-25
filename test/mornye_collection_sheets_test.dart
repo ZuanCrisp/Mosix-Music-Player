@@ -6,18 +6,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/playlist_picker_sheet.dart';
-import 'package:mornye/widgets/track_collection_quick_actions.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/playlist_picker_sheet.dart';
+import 'package:mosix/widgets/track_collection_quick_actions.dart';
 
 const _track = Track(
   id: 'example-track',
@@ -106,7 +106,7 @@ Widget _app(
   ],
   child: MaterialApp(
     navigatorObservers: navigatorObservers,
-    theme: mornye ? MornyeTheme.build(brightness) : ThemeData(),
+    theme: mornye ? MosixTheme.build(brightness) : ThemeData(),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     builder: (context, child) => MediaQuery(
@@ -149,7 +149,7 @@ void main() {
       );
       await tester.tap(find.byIcon(CupertinoIcons.ellipsis));
       await tester.pumpAndSettle();
-      expect(find.byType(MornyeGlassPanel), findsOneWidget);
+      expect(find.byType(MosixGlassPanel), findsOneWidget);
       expect(find.byType(ListTile), findsNothing);
       expect(find.byIcon(CupertinoIcons.doc_on_doc), findsNWidgets(2));
 
@@ -157,7 +157,7 @@ void main() {
       await tester.tap(find.text('Add to playlist'));
       await tester.pumpAndSettle();
       expect(find.text('No playlists yet'), findsOneWidget);
-      expect(find.byType(MornyeGlassPanel), findsOneWidget);
+      expect(find.byType(MosixGlassPanel), findsOneWidget);
       expect(find.text('Done').hitTestable(), findsOneWidget);
 
       await tester.tap(find.text('Create playlist'));
@@ -175,13 +175,13 @@ void main() {
       await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
       expect(collections.additions, ['Evening music']);
-      expect(find.byType(MornyeGlassPanel), findsNothing);
+      expect(find.byType(MosixGlassPanel), findsNothing);
       expect(tester.takeException(), isNull);
     });
   }
 
   for (final mornye in [true, false]) {
-    testWidgets('picker submits and closes once (Mornye: $mornye)', (
+    testWidgets('picker submits and closes once (Mosix: $mornye)', (
       tester,
     ) async {
       final addition = Completer<void>();
@@ -228,7 +228,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('picker retains selections after failure (Mornye: $mornye)', (
+    testWidgets('picker retains selections after failure (Mosix: $mornye)', (
       tester,
     ) async {
       final firstAddition = Completer<void>()..complete();
@@ -277,7 +277,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('picker adds only new selections (Mornye: $mornye)', (
+    testWidgets('picker adds only new selections (Mosix: $mornye)', (
       tester,
     ) async {
       final collections = _Collections()

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoColors;
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_icon.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_icon.dart';
 
 /// One switch style for settings, extension controls and editing sheets.
-/// Mornye keeps its wide oval thumb even when glass or motion is disabled.
+/// Mosix keeps its wide oval thumb even when glass or motion is disabled.
 class AppSwitch extends StatelessWidget {
   const AppSwitch({
     super.key,
@@ -33,13 +33,13 @@ class AppSwitch extends StatelessWidget {
         ),
       );
     }
-    if (!context.isMornye) {
+    if (!context.isMosix) {
       return adaptive
           ? Switch.adaptive(value: value, onChanged: onChanged)
           : Switch(value: value, onChanged: onChanged);
     }
 
-    return _MornyeSwitch(
+    return _MosixSwitch(
       value: value,
       onChanged: onChanged,
       semanticLabel: semanticLabel,
@@ -47,8 +47,8 @@ class AppSwitch extends StatelessWidget {
   }
 }
 
-class _MornyeSwitch extends StatefulWidget {
-  const _MornyeSwitch({
+class _MosixSwitch extends StatefulWidget {
+  const _MosixSwitch({
     required this.value,
     required this.onChanged,
     required this.semanticLabel,
@@ -59,10 +59,10 @@ class _MornyeSwitch extends StatefulWidget {
   final String? semanticLabel;
 
   @override
-  State<_MornyeSwitch> createState() => _MornyeSwitchState();
+  State<_MosixSwitch> createState() => _MosixSwitchState();
 }
 
-class _MornyeSwitchState extends State<_MornyeSwitch> {
+class _MosixSwitchState extends State<_MosixSwitch> {
   double? _dragPosition;
   bool _dragCancelled = false;
 
@@ -186,7 +186,7 @@ class AppSwitchListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!context.isMornye && !materialExpressiveEnabled(context)) {
+    if (!context.isMosix && !materialExpressiveEnabled(context)) {
       return adaptive
           ? SwitchListTile.adaptive(
               value: value,

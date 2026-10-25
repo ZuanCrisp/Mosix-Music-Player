@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/material_expressive.dart';
+import 'package:mosix/theme/material_expressive.dart';
 
 /// Checkbox row for Material dialogs and sheets. Expressive builds use the
 /// M3E checkbox; reduced motion falls back to the static Material tile.
-/// Mornye call sites keep their own check-circle rows.
+/// Mosix call sites keep their own check-circle rows.
 class AppCheckboxListTile extends StatelessWidget {
   const AppCheckboxListTile({
     super.key,

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/audio_analysis_jobs.dart';
+import 'package:mosix/services/audio_analysis_jobs.dart';
 
 void main() {
   test(

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/download_completion_audio.dart';
+import 'package:mosix/services/download_completion_audio.dart';
 
 void main() {
   const backend = <String, dynamic>{

@@ -4,10 +4,10 @@ import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/services/playback_deck.dart';
-import 'package:mornye/services/playback_equalizer.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/services/playback_deck.dart';
+import 'package:mosix/services/playback_equalizer.dart';
 
 final _log = AppLogger('AudioOutput');
 
@@ -132,8 +132,8 @@ class AudioplayersPlaybackDeck implements PlaybackDeck {
     ]);
   }
 
-  static const _channel = MethodChannel('com.zarz.mornye/usb_pcm');
-  static const _events = EventChannel('com.zarz.mornye/usb_pcm/events');
+  static const _channel = MethodChannel('com.zuancrisp.mosix/usb_pcm');
+  static const _events = EventChannel('com.zuancrisp.mosix/usb_pcm/events');
   static Stream<dynamic>? _nativeEvents;
   static int _nextToken = 0;
   final AudioPlayer _ordinary;

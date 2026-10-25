@@ -3,28 +3,28 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/explore_provider.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/library_browse_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/recent_access_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/providers/track_provider.dart';
-import 'package:mornye/providers/user_profile_provider.dart';
-import 'package:mornye/screens/home_tab.dart';
-import 'package:mornye/screens/queue_tab.dart';
-import 'package:mornye/services/album_completeness.dart';
-import 'package:mornye/services/user_profile_store.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_search_field.dart';
-import 'package:mornye/widgets/lazy_tab_view.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/explore_provider.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/library_browse_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/recent_access_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/providers/track_provider.dart';
+import 'package:mosix/providers/user_profile_provider.dart';
+import 'package:mosix/screens/home_tab.dart';
+import 'package:mosix/screens/queue_tab.dart';
+import 'package:mosix/services/album_completeness.dart';
+import 'package:mosix/services/user_profile_store.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_search_field.dart';
+import 'package:mosix/widgets/lazy_tab_view.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 import 'performance_probe.dart';
 
@@ -64,7 +64,7 @@ final _albums = List.generate(
 void main() {
   final binding = PerformanceTestBinding.ensureInitialized();
 
-  testWidgets('Mornye production screens with deterministic 2000-track data', (
+  testWidgets('Mosix production screens with deterministic 2000-track data', (
     tester,
   ) async {
     final probe = PerformanceProbe(binding, tester, suite: 'mornye_screens');
@@ -129,7 +129,7 @@ void main() {
           }),
         ],
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -266,7 +266,7 @@ void main() {
       for (final value in [0, 1, 2, 3, 0]) {
         await tester.tap(
           find.descendant(
-            of: find.byType(MornyeTabBar),
+            of: find.byType(MosixTabBar),
             matching: find.text(
               ['Home', 'Library', 'Search', 'Downloads'][value],
             ),
@@ -293,7 +293,7 @@ void main() {
     await probe.finish(
       metadata: {
         'scope':
-            'Production QueueTab, MornyeLibraryScreen, HomeTab, LazyTabView and MornyeTabBar; synthetic provider data, no artwork/network/database/IME.',
+            'Production QueueTab, MosixLibraryScreen, HomeTab, LazyTabView and MosixTabBar; synthetic provider data, no artwork/network/database/IME.',
         'trackCount': _tracks.length,
         'albumCount': _albums.length,
         'queueCount': 2000,
@@ -328,7 +328,7 @@ class _Tabs extends StatelessWidget {
           QueueTab(key: ValueKey('downloads'), librarySection: 'downloads'),
         ],
       ),
-      bottomNavigationBar: MornyeTabBar(
+      bottomNavigationBar: MosixTabBar(
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
           NavigationDestination(

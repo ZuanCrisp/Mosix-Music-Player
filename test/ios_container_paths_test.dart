@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/utils/ios_container_paths.dart';
+import 'package:mosix/utils/ios_container_paths.dart';
 
 void main() {
   group('rebaseIosSandboxPath', () {

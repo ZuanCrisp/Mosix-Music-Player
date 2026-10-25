@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/constants/language_choices.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/providers/theme_provider.dart';
-import 'package:mornye/models/theme_settings.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/nav_bar_inset.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
-import 'package:mornye/widgets/custom_font_setting.dart';
-import 'package:mornye/widgets/desktop/desktop_window_controls.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/constants/language_choices.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/providers/theme_provider.dart';
+import 'package:mosix/models/theme_settings.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/custom_font_setting.dart';
+import 'package:mosix/widgets/desktop/desktop_window_controls.dart';
 
 part 'appearance_settings_page_widgets.dart';
 
@@ -54,7 +54,7 @@ class AppearanceSettingsPage extends ConsumerWidget {
                         children: [
                           Text(
                             style == AppThemeStyle.mornye
-                                ? 'Mornye'
+                                ? 'Mosix'
                                 : 'Material',
                           ),
                           if (style == AppThemeStyle.mornye)
@@ -80,7 +80,7 @@ class AppearanceSettingsPage extends ConsumerWidget {
                             ),
                         ],
                       ),
-                      leading: context.isMornye
+                      leading: context.isMosix
                           ? null
                           : AppIcon(
                               style == AppThemeStyle.mornye
@@ -118,13 +118,13 @@ class AppearanceSettingsPage extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: SettingsGroup(
                   children: [
-                    _MornyeAccentPicker(
+                    _MosixAccentPicker(
                       selected: themeSettings.mornyeAccent,
                       onChanged: ref
                           .read(themeProvider.notifier)
-                          .setMornyeAccent,
+                          .setMosixAccent,
                     ),
-                    const _MornyeGlassClaritySlider(),
+                    const _MosixGlassClaritySlider(),
                     SettingsSwitchItem(
                       key: const ValueKey('mornye-glass-outlines'),
                       icon: Icons.rounded_corner,
@@ -133,7 +133,7 @@ class AppearanceSettingsPage extends ConsumerWidget {
                       value: themeSettings.mornyeGlassOutlines,
                       onChanged: ref
                           .read(themeProvider.notifier)
-                          .setMornyeGlassOutlines,
+                          .setMosixGlassOutlines,
                       showDivider: false,
                     ),
                   ],

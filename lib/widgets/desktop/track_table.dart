@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/desktop/context_menu.dart';
-import 'package:mornye/widgets/desktop/desktop_selection.dart';
-import 'package:mornye/widgets/now_playing_indicator.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/desktop/context_menu.dart';
+import 'package:mosix/widgets/desktop/desktop_selection.dart';
+import 'package:mosix/widgets/now_playing_indicator.dart';
 
 /// A column of a [SliverTrackTable], in display order.
 enum TrackTableColumn { number, title, artist, album, quality, duration }
@@ -245,7 +245,7 @@ class _SliverTrackTableState extends State<SliverTrackTable> {
                   : (position) => widget.onContextMenu!(row.id, position),
             );
             final rowPlayback = row.playback;
-            if (rowPlayback == null || context.isMornye) {
+            if (rowPlayback == null || context.isMosix) {
               return rowView(key: ValueKey(row.id));
             }
             // Each row follows only its own track, so a track change
@@ -339,7 +339,7 @@ class TrackTableLayout {
   // Pointer rows: Music's 40pt, and the M3 compact list density for Material
   // instead of the 48dp touch row.
   static double rowMinHeightFor(BuildContext context) =>
-      context.isMornye ? 40 : 44;
+      context.isMosix ? 40 : 44;
 
   static double headerHeightFor(BuildContext context) =>
       MediaQuery.textScalerOf(context).scale(20) + 16;
@@ -555,7 +555,7 @@ class _TrackTableRowViewState extends State<_TrackTableRowView> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final tokens = context.tokens;
-    final material = !context.isMornye;
+    final material = !context.isMosix;
     // Material text takes the content color of the row's fill. A selected
     // row keeps the selection fill; being current then shows only through
     // the glyph and the title weight.
@@ -668,7 +668,7 @@ class _TrackTableRowViewState extends State<_TrackTableRowView> {
       ),
     };
 
-    final selectedFill = context.isMornye
+    final selectedFill = context.isMosix
         ? colorScheme.primary.withValues(alpha: 0.16)
         : colorScheme.secondaryContainer;
     final ink = InkWell(
@@ -869,7 +869,7 @@ class _AlbumRowViewState extends State<_AlbumRowView> {
           ),
       ],
     );
-    final selectedFill = context.isMornye
+    final selectedFill = context.isMosix
         ? scheme.primary.withValues(alpha: 0.16)
         : scheme.secondaryContainer;
     return Semantics(

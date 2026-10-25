@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/settings/lyrics_provider_priority_page.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_text_field.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/lyrics_provider_names.dart';
-import 'package:mornye/utils/nav_bar_inset.dart';
-import 'package:mornye/widgets/lyrics_size_setting.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/settings/lyrics_provider_priority_page.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_text_field.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/lyrics_provider_names.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/widgets/lyrics_size_setting.dart';
 
 class LyricsSettingsPage extends ConsumerWidget {
   const LyricsSettingsPage({super.key});
@@ -318,7 +318,7 @@ class LyricsSettingsPage extends ConsumerWidget {
                     child: Text(context.l10n.dialogSave),
                   ),
                 ];
-                return context.isMornye
+                return context.isMosix
                     ? Wrap(
                         alignment: WrapAlignment.end,
                         spacing: 8,

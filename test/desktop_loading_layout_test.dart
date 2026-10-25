@@ -5,17 +5,17 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/screens/extension_collection_screens.dart';
-import 'package:mornye/services/backend/native_backend_transport.dart';
-import 'package:mornye/services/backend/rust_ffi_backend.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/widgets/desktop/track_table.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/screens/extension_collection_screens.dart';
+import 'package:mosix/services/backend/native_backend_transport.dart';
+import 'package:mosix/services/backend/rust_ffi_backend.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/widgets/desktop/track_table.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _PendingMetadata implements NativeBackendTransport {
@@ -69,7 +69,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: mornye ? MornyeTheme.build(Brightness.dark) : AppTheme.light(),
+          theme: mornye ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Align(
@@ -97,7 +97,7 @@ void main() {
     for (final width in [600.0, 1100.0, 1800.0]) {
       for (final album in [false, true]) {
         testWidgets(
-          'desktop loading matches table at $width, Mornye=$mornye, album=$album',
+          'desktop loading matches table at $width, Mosix=$mornye, album=$album',
           (tester) async {
             final albumLayout = album && mornye;
             final textScale = width == 600 ? 2.0 : 1.0;
@@ -201,7 +201,7 @@ void main() {
         );
       }
 
-      testWidgets('artist loading fits scaled text at $width, Mornye=$mornye', (
+      testWidgets('artist loading fits scaled text at $width, Mosix=$mornye', (
         tester,
       ) async {
         await mount(
@@ -226,7 +226,7 @@ void main() {
       });
     }
 
-    testWidgets('collection loading keeps one desktop header, Mornye=$mornye', (
+    testWidgets('collection loading keeps one desktop header, Mosix=$mornye', (
       tester,
     ) async {
       final pending = _PendingMetadata();

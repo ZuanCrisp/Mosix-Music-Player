@@ -5,8 +5,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:liquid_glass_easy/liquid_glass_easy.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mornye_liquid_backdrop.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_liquid_backdrop.dart';
 
 Future<ui.FragmentProgram>? _selectionMaskProgram;
 ui.FragmentProgram? _loadedSelectionMaskProgram;
@@ -16,8 +16,8 @@ const _pillRadius = 32.0;
 
 /// Selection with a transient lens over the fixed-size foreground while held.
 /// It refracts both the bar's backdrop and its icons, rendered only once.
-class MornyeSelectionPill extends StatefulWidget {
-  const MornyeSelectionPill({
+class MosixSelectionPill extends StatefulWidget {
+  const MosixSelectionPill({
     super.key,
     required this.labels,
     required this.selectedIndex,
@@ -55,10 +55,10 @@ class MornyeSelectionPill extends StatefulWidget {
   interactionBuilder;
 
   @override
-  State<MornyeSelectionPill> createState() => _MornyeSelectionPillState();
+  State<MosixSelectionPill> createState() => _MosixSelectionPillState();
 }
 
-class _MornyeSelectionPillState extends State<MornyeSelectionPill>
+class _MosixSelectionPillState extends State<MosixSelectionPill>
     with SingleTickerProviderStateMixin {
   int? _dragIndex;
   bool _dragCancelled = false;
@@ -98,7 +98,7 @@ class _MornyeSelectionPillState extends State<MornyeSelectionPill>
       _loadedSelectionMaskProgram = program;
       if (mounted) setState(() => _maskProgram = program);
     } catch (error) {
-      debugPrint('Mornye selection mask unavailable: $error');
+      debugPrint('Mosix selection mask unavailable: $error');
     }
   }
 
@@ -116,7 +116,7 @@ class _MornyeSelectionPillState extends State<MornyeSelectionPill>
   }
 
   @override
-  void didUpdateWidget(MornyeSelectionPill oldWidget) {
+  void didUpdateWidget(MosixSelectionPill oldWidget) {
     super.didUpdateWidget(oldWidget);
     _items = null;
     if (oldWidget.selectionColor == null && widget.selectionColor != null) {
@@ -274,7 +274,7 @@ class _MornyeSelectionPillState extends State<MornyeSelectionPill>
                                 borderRadius: BorderRadius.circular(
                                   _pillRadius,
                                 ),
-                                border: MornyeTheme.glassOutlinesOf(context)
+                                border: MosixTheme.glassOutlinesOf(context)
                                     ? Border.all(
                                         color: scheme.onSurface.withValues(
                                           alpha: 0.05 * restingOpacity,
@@ -364,7 +364,7 @@ class _MornyeSelectionPillState extends State<MornyeSelectionPill>
       widget.selectionColor == null && index == selected,
     );
     return widget.maskItemForeground
-        ? MornyeSelectionForeground(child: child)
+        ? MosixSelectionForeground(child: child)
         : child;
   }
 
@@ -429,7 +429,7 @@ class _MornyeSelectionPillState extends State<MornyeSelectionPill>
             child: ClipRRect(
               borderRadius: BorderRadius.circular(_pillRadius),
               child: LiquidGlassBatch.exclude(
-                child: MornyeLiquidBackdrop(
+                child: MosixLiquidBackdrop(
                   borderRadius: BorderRadius.circular(_pillRadius),
                   clarity: 1,
                   interaction: true,
@@ -449,7 +449,7 @@ class _MornyeSelectionPillState extends State<MornyeSelectionPill>
                                 ? 0.24
                                 : 0.08),
                       ),
-                      border: MornyeTheme.glassOutlinesOf(context)
+                      border: MosixTheme.glassOutlinesOf(context)
                           ? Border.all(
                               color: Colors.white.withValues(
                                 alpha: 0.6 * progress,
@@ -472,17 +472,17 @@ class _MornyeSelectionPillState extends State<MornyeSelectionPill>
 
 /// Paint only icons and labels with the sliding selection color. Badge fills
 /// and counters can remain outside this widget and retain their own contrast.
-class MornyeSelectionForeground extends StatefulWidget {
-  const MornyeSelectionForeground({super.key, required this.child});
+class MosixSelectionForeground extends StatefulWidget {
+  const MosixSelectionForeground({super.key, required this.child});
 
   final Widget child;
 
   @override
-  State<MornyeSelectionForeground> createState() =>
-      _MornyeSelectionForegroundState();
+  State<MosixSelectionForeground> createState() =>
+      _MosixSelectionForegroundState();
 }
 
-class _MornyeSelectionForegroundState extends State<MornyeSelectionForeground> {
+class _MosixSelectionForegroundState extends State<MosixSelectionForeground> {
   ui.FragmentProgram? _program;
   ui.FragmentShader? _shader;
 

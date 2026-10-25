@@ -6,53 +6,53 @@ import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/download_history_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/routes/now_playing_route.dart';
-import 'package:mornye/screens/downloaded_album_screen.dart';
-import 'package:mornye/screens/local_album_screen.dart';
-import 'package:mornye/screens/equalizer_screen.dart';
-import 'package:mornye/screens/lyrics_share_screen.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/player_artwork_theme.dart';
-import 'package:mornye/utils/clickable_metadata.dart';
-import 'package:mornye/utils/file_access.dart';
-import 'package:mornye/utils/lyrics_parser.dart';
-import 'package:mornye/utils/playback_seek_preview.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/expressive_icon_button.dart';
-import 'package:mornye/widgets/audio_output_button.dart';
-import 'package:mornye/widgets/desktop/desktop_commands.dart'
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/routes/now_playing_route.dart';
+import 'package:mosix/screens/downloaded_album_screen.dart';
+import 'package:mosix/screens/local_album_screen.dart';
+import 'package:mosix/screens/equalizer_screen.dart';
+import 'package:mosix/screens/lyrics_share_screen.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/player_artwork_theme.dart';
+import 'package:mosix/utils/clickable_metadata.dart';
+import 'package:mosix/utils/file_access.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mosix/utils/playback_seek_preview.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/expressive_icon_button.dart';
+import 'package:mosix/widgets/audio_output_button.dart';
+import 'package:mosix/widgets/desktop/desktop_commands.dart'
     show DesktopCommand, desktopTooltip;
-import 'package:mornye/widgets/desktop/desktop_inspector.dart';
-import 'package:mornye/widgets/lyrics_screen_awake.dart';
-import 'package:mornye/widgets/player_artwork.dart';
-import 'package:mornye/widgets/player_gesture_regions.dart';
-import 'package:mornye/widgets/player_queue_sheet.dart';
-import 'package:mornye/widgets/player_details_sheet.dart';
-import 'package:mornye/widgets/material_player_backdrop.dart';
-import 'package:mornye/widgets/material_player_layout.dart';
-import 'package:mornye/widgets/mornye_player_layout.dart';
-import 'package:mornye/widgets/player_lyrics_controls.dart';
-import 'package:mornye/widgets/player_lyrics_section.dart';
-import 'package:mornye/widgets/playlist_picker_sheet.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/mornye_player_background.dart';
-import 'package:mornye/widgets/mornye_artwork_contrast.dart';
-import 'package:mornye/widgets/mornye_player_actions_sheet.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
-import 'package:mornye/widgets/mornye_player_artwork.dart';
-import 'package:mornye/providers/player_motion_artwork_provider.dart';
+import 'package:mosix/widgets/desktop/desktop_inspector.dart';
+import 'package:mosix/widgets/lyrics_screen_awake.dart';
+import 'package:mosix/widgets/player_artwork.dart';
+import 'package:mosix/widgets/player_gesture_regions.dart';
+import 'package:mosix/widgets/player_queue_sheet.dart';
+import 'package:mosix/widgets/player_details_sheet.dart';
+import 'package:mosix/widgets/material_player_backdrop.dart';
+import 'package:mosix/widgets/material_player_layout.dart';
+import 'package:mosix/widgets/mornye_player_layout.dart';
+import 'package:mosix/widgets/player_lyrics_controls.dart';
+import 'package:mosix/widgets/player_lyrics_section.dart';
+import 'package:mosix/widgets/playlist_picker_sheet.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/mornye_player_background.dart';
+import 'package:mosix/widgets/mornye_artwork_contrast.dart';
+import 'package:mosix/widgets/mornye_player_actions_sheet.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/mornye_player_artwork.dart';
+import 'package:mosix/providers/player_motion_artwork_provider.dart';
 
-export 'package:mornye/routes/now_playing_route.dart';
+export 'package:mosix/routes/now_playing_route.dart';
 
 final _log = AppLogger('NowPlaying');
 
@@ -83,7 +83,7 @@ class NowPlayingScreen extends ConsumerStatefulWidget {
   final PlayerMetadataController Function()? metadataControllerFactory;
 
   /// The page shown first: 0 is the player, 1 the lyrics and 2 Up Next
-  /// (Mornye only).
+  /// (Mosix only).
   final int initialPage;
 
   /// Shown in the desktop content pane rather than as a route. Minimizing
@@ -164,7 +164,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final size = MediaQuery.sizeOf(context);
-    _landscape = context.isMornye && size.width > size.height;
+    _landscape = context.isMosix && size.width > size.height;
     if (_landscape || MediaQuery.accessibleNavigationOf(context)) {
       _lyricsControlsHidden = false;
     }
@@ -233,7 +233,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     );
     return LyricsScreenAwake(
       visible: _currentPage == 1 && mediaItem != null,
-      child: context.isMornye
+      child: context.isMosix
           ? _buildPlayer(context, mediaItem, fullScreenCover: fullScreenCover)
           // Material takes the track's artwork scheme. The providers it needs
           // are read above, so the scoped builder reads none.
@@ -255,9 +255,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     MediaItem? mediaItem, {
     required bool fullScreenCover,
   }) {
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final colorScheme = mornye
-        ? MornyeTheme.fromContext(
+        ? MosixTheme.fromContext(
             context,
             brightness: Brightness.dark,
           ).colorScheme
@@ -299,7 +299,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
             : null);
     final squareArtwork =
         motionArtwork == null || (motionRatio != null && motionRatio >= 0.95);
-    // Motion artwork is always full-bleed in Mornye; still covers follow the
+    // Motion artwork is always full-bleed in Mosix; still covers follow the
     // cover style setting through the same layout, as a square video would.
     final fullBleed = mornye && (motionArtwork != null || fullScreenCover);
     final screen = MediaQuery.sizeOf(context);
@@ -320,7 +320,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     if (!fullBleed && _artworkForeground.value.isNotEmpty) {
       _artworkForeground.value = {};
     }
-    Widget artwork() => MornyePlayerArtwork(
+    Widget artwork() => MosixPlayerArtwork(
       mediaItem: mediaItem,
       videoUrl: motionArtwork?.source,
       resolvingVideo: motionState?.isLoading == true,
@@ -342,7 +342,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
       },
     );
 
-    // The Mornye route moves the entire player together. A second,
+    // The Mosix route moves the entire player together. A second,
     // delayed content fade would make dismissal appear to pause partway down.
     final route = ModalRoute.of(context);
     final routeAnimation = route?.animation ?? kAlwaysCompleteAnimation;
@@ -370,7 +370,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
           ),
           fullBleed: key == _motionArtworkKey,
           child: Theme(
-            data: MornyeTheme.fromContext(context, brightness: Brightness.dark),
+            data: MosixTheme.fromContext(context, brightness: Brightness.dark),
             child: key == _compactArtworkKey
                 ? PlayerArtwork(
                     artUri: mediaItem.artUri?.toString(),
@@ -481,7 +481,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                 child: mornye
                     ? NotificationListener<ScrollUpdateNotification>(
                         onNotification: _onLyricsScroll,
-                        child: MornyePlayerLayout(
+                        child: MosixPlayerLayout(
                           mediaItem: mediaItem,
                           metadata: _trackMetadata,
                           seekPreview: _seekPreview,
@@ -509,7 +509,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                             showOptions: showOptions,
                           ),
                           lyricsOptions: _lyricsOptionsButton(colorScheme),
-                          onPageChanged: _setMornyePage,
+                          onPageChanged: _setMosixPage,
                           onTrackNavigation: _showTrackNavigationMenu,
                           onMoreActions: (buttonContext, item, anchor) =>
                               _showMoreActions(
@@ -561,7 +561,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                                 icon: const AppIcon(
                                   CupertinoIcons.quote_bubble,
                                 ),
-                                onPressed: _toggleMornyeLyrics,
+                                onPressed: _toggleMosixLyrics,
                               ),
                               AudioOutputButton(
                                 color: Colors.white,
@@ -582,7 +582,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                                 ),
                                 icon: const AppIcon(CupertinoIcons.list_bullet),
                                 onPressed: () =>
-                                    _setMornyePage(_currentPage == 2 ? 0 : 2),
+                                    _setMosixPage(_currentPage == 2 ? 0 : 2),
                               ),
                             ],
                           ),
@@ -640,14 +640,14 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     }
     return HeroMode(
       // A route Hero renders outside the panel's gradient and slide, briefly
-      // exposing a detached rectangle. Keep Mornye artwork inside its panel.
+      // exposing a detached rectangle. Keep Mosix artwork inside its panel.
       enabled: false,
       child: Theme(
-        data: MornyeTheme.fromContext(context, brightness: Brightness.dark),
+        data: MosixTheme.fromContext(context, brightness: Brightness.dark),
         child: Stack(
           fit: StackFit.expand,
           children: [
-            MornyeArtworkContrast(
+            MosixArtworkContrast(
               enabled: fullBleed && !_landscape && _currentPage == 0,
               continuous: motionArtwork != null,
               targets: {
@@ -659,7 +659,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                 if (!mounted) return;
                 _artworkForeground.value = colors;
               },
-              child: MornyePlayerBackground(
+              child: MosixPlayerBackground(
                 artUri: mediaItem.artUri,
                 squareArtwork: squareArtwork,
                 artworkAspectRatio: artworkRatio,
@@ -713,11 +713,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     }
   }
 
-  void _toggleMornyeLyrics() {
-    _setMornyePage(_currentPage == 1 ? 0 : 1);
+  void _toggleMosixLyrics() {
+    _setMosixPage(_currentPage == 1 ? 0 : 1);
   }
 
-  void _setMornyePage(int page) {
+  void _setMosixPage(int page) {
     if (_toggleInspector(page)) return;
     setState(() {
       _currentPage = page;
@@ -736,7 +736,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
   }
 
   bool get _canAutoHideLyricsControls =>
-      context.isMornye &&
+      context.isMosix &&
       !_landscape &&
       _currentPage == 1 &&
       ref.read(playbackPlayingProvider) &&
@@ -791,7 +791,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     return false;
   }
 
-  Widget _autoHidingLyricsControls(Widget child) => context.isMornye
+  Widget _autoHidingLyricsControls(Widget child) => context.isMosix
       ? PlayerLyricsControlsVisibility(
           hidden: _currentPage == 1 && _lyricsControlsHidden && !_landscape,
           child: child,
@@ -948,18 +948,18 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
         if (painter.width + 80 > menuWidth) menuWidth = painter.width + 80;
         painter.dispose();
       }
-      final action = context.isMornye
-          ? await showMornyeContextMenu<String>(
+      final action = context.isMosix
+          ? await showMosixContextMenu<String>(
               context: buttonContext,
               anchor: anchor,
               preferAbove: true,
               maxWidth: menuWidth,
-              builder: (menuContext) => MornyeContextMenu(
+              builder: (menuContext) => MosixContextMenu(
                 dense: true,
                 groups: [
                   [
                     for (final (value, label, icon) in actions)
-                      MornyeMenuAction(
+                      MosixMenuAction(
                         icon: icon,
                         label: label,
                         onPressed: () => Navigator.of(menuContext).pop(value),
@@ -1017,11 +1017,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     BuildContext titleContext,
     MediaItem mediaItem,
   ) async {
-    final action = await showMornyeContextMenu<String>(
+    final action = await showMosixContextMenu<String>(
       context: titleContext,
       preferAbove: true,
       maxWidth: 280,
-      builder: (_) => MornyePlayerNavigationMenu(mediaItem: mediaItem),
+      builder: (_) => MosixPlayerNavigationMenu(mediaItem: mediaItem),
     );
     if (!mounted) return;
     if (action == 'album') {
@@ -1087,13 +1087,13 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
               context,
             ).formatTimeOfDay(TimeOfDay.fromDateTime(sleepTimerEndsAt)),
           );
-    final action = context.isMornye
-        ? await showMornyeContextMenu<String>(
+    final action = context.isMosix
+        ? await showMosixContextMenu<String>(
             context: context,
             anchor: anchor,
             preferAbove: true,
             maxWidth: 280,
-            builder: (_) => MornyePlayerActionsSheet(
+            builder: (_) => MosixPlayerActionsSheet(
               mediaItem: mediaItem,
               sleepTimerSubtitle: sleepTimerSubtitle,
             ),
@@ -1335,8 +1335,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
   /// player's artwork scope.
   void _showQueueSheet(BuildContext context, ColorScheme colorScheme) {
     if (_toggleInspector(2)) return;
-    if (context.isMornye) {
-      _setMornyePage(2);
+    if (context.isMosix) {
+      _setMosixPage(2);
       return;
     }
     if (_queueSheetShowing) return;

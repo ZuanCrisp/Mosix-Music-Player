@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mosix/l10n/app_localizations.dart';
 
 /// A control or submenu that can be discovered from the root Settings search.
 ///

@@ -1,4 +1,4 @@
-; Inno Setup 6 script for the per-user Mornye installer.
+; Inno Setup 6 script for the per-user Mosix installer.
 ;
 ; Built by scripts/package_windows.ps1, which passes:
 ;   /DAppVersion=5.3.0          display version (release tag without "v")
@@ -7,12 +7,12 @@
 ;   /DArch=x64 or arm64
 ;   /DOutputDir=<path> /DOutputBaseName=<file name without .exe>
 ;
-; Installs to %LOCALAPPDATA%\Programs\Mornye without elevation, adds a Start
+; Installs to %LOCALAPPDATA%\Programs\Mosix without elevation, adds a Start
 ; Menu shortcut (desktop shortcut optional), registers the mornye:// URL
-; protocol under HKCU\Software\Classes and closes a running Mornye before
+; protocol under HKCU\Software\Classes and closes a running Mosix before
 ; replacing files. The in-app updater runs the installer with
 ;   /SILENT /SP- /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /RELAUNCH=1
-; and /RELAUNCH=1 starts Mornye again once a silent install finishes.
+; and /RELAUNCH=1 starts Mosix again once a silent install finishes.
 
 #ifndef AppVersion
   #error AppVersion is required
@@ -30,13 +30,13 @@
   #define OutputDir "."
 #endif
 #ifndef OutputBaseName
-  #define OutputBaseName "Mornye-setup"
+  #define OutputBaseName "Mosix-setup"
 #endif
 
-#define AppName "Mornye"
+#define AppName "Mosix"
 #define AppExe "mornye.exe"
-#define AppUserModelId "com.zarz.mornye"
-#define AppUrl "https://github.com/mornyeapp/Mornye"
+#define AppUserModelId "com.zuancrisp.mosix"
+#define AppUrl "https://github.com/ZuanCrisp/Mosix-Music-Player"
 
 #if Arch == "arm64"
   #define AllowedArchitectures "arm64"
@@ -52,7 +52,7 @@ AppVerName={#AppName} {#AppVersion}
 AppPublisher=zarzet
 AppPublisherURL={#AppUrl}
 AppSupportURL={#AppUrl}/issues
-AppUpdatesURL=https://github.com/mornyeapp/Mornye-Desktop/releases
+AppUpdatesURL=https://github.com/ZuanCrisp/Mosix-Music-Player-Desktop/releases
 VersionInfoVersion={#NumericVersion}
 VersionInfoProductName={#AppName}
 VersionInfoDescription={#AppName} Setup

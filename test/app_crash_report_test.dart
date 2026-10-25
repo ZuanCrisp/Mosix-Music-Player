@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/models/app_crash_report.dart';
-import 'package:mornye/providers/app_crash_provider.dart';
-import 'package:mornye/services/app_crash_service.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/widgets/app_crash_banner.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/models/app_crash_report.dart';
+import 'package:mosix/providers/app_crash_provider.dart';
+import 'package:mosix/services/app_crash_service.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/widgets/app_crash_banner.dart';
 
 Map<String, dynamic> _report() => {
   'id': '123456',
@@ -27,7 +27,7 @@ Map<String, dynamic> _report() => {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const backend = MethodChannel('com.zarz.mornye/backend');
+  const backend = MethodChannel('com.zuancrisp.mosix/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   Map<String, dynamic>? stored;
@@ -294,7 +294,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
             locale: const Locale('id'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

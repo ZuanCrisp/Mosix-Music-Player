@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 /// Keeps touch-first tablets on the bottom navigation used by phones. A rail
 /// is reserved for genuinely desktop-width windows; the old 600dp threshold
@@ -8,7 +8,7 @@ import 'package:mornye/utils/desktop_platform.dart';
 const double navigationRailBreakpoint = 1440;
 
 /// Material's expanded window class. Landscape tablets switch the Material
-/// theme to a navigation rail and Mornye to compact, centered chrome; portrait
+/// theme to a navigation rail and Mosix to compact, centered chrome; portrait
 /// tablets stay below it.
 const double expandedLayoutBreakpoint = 840;
 const double defaultWideContentMaxWidth = 840;
@@ -112,7 +112,7 @@ double wideInsetForWidth(
 }) => maxWidth > contentMaxWidth ? (maxWidth - contentMaxWidth) / 2 : 0;
 
 /// Horizontal inset that centers full-width list content on tablets/landscape;
-/// zero on phones, so rows stop stretching across the whole screen. Mornye
+/// zero on phones, so rows stop stretching across the whole screen. Mosix
 /// desktop pages run across the whole content pane, as Music's do, and center
 /// only past [desktopContentMaxWidth]. Material desktop pages center past
 /// [desktopMaterialContentMaxWidth], so long lists keep a reading width
@@ -123,7 +123,7 @@ double wideListInset(BuildContext context, {double? contentMaxWidth}) =>
       contentMaxWidth:
           contentMaxWidth ??
           (isDesktopPlatform
-              ? (context.isMornye
+              ? (context.isMosix
                     ? desktopContentMaxWidth
                     : desktopMaterialContentMaxWidth)
               : defaultWideContentMaxWidth),

@@ -2,13 +2,13 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/widgets/mornye_playback_button.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/widgets/mornye_playback_button.dart';
 
-class MornyePlayerFavoriteButton extends ConsumerStatefulWidget {
-  const MornyePlayerFavoriteButton({
+class MosixPlayerFavoriteButton extends ConsumerStatefulWidget {
+  const MosixPlayerFavoriteButton({
     super.key,
     required this.mediaItem,
     this.compact = false,
@@ -22,12 +22,12 @@ class MornyePlayerFavoriteButton extends ConsumerStatefulWidget {
   final double? iconSize;
 
   @override
-  ConsumerState<MornyePlayerFavoriteButton> createState() =>
-      _MornyePlayerFavoriteButtonState();
+  ConsumerState<MosixPlayerFavoriteButton> createState() =>
+      _MosixPlayerFavoriteButtonState();
 }
 
-class _MornyePlayerFavoriteButtonState
-    extends ConsumerState<MornyePlayerFavoriteButton> {
+class _MosixPlayerFavoriteButtonState
+    extends ConsumerState<MosixPlayerFavoriteButton> {
   bool _saving = false;
 
   Future<void> _toggle() async {
@@ -65,7 +65,7 @@ class _MornyePlayerFavoriteButtonState
     );
     return Semantics(
       toggled: loved,
-      child: MornyePlaybackButton(
+      child: MosixPlaybackButton(
         icon: loved ? CupertinoIcons.star_fill : CupertinoIcons.star,
         tooltip: loved
             ? context.l10n.trackOptionRemoveFromLoved

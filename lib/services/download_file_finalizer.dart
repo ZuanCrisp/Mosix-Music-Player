@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:mornye/models/download_result.dart';
-import 'package:mornye/services/download_saf_file_replacer.dart';
-import 'package:mornye/services/ffmpeg_models.dart';
-import 'package:mornye/utils/audio_conversion_utils.dart';
-import 'package:mornye/utils/audio_format_utils.dart';
-import 'package:mornye/utils/file_access.dart';
+import 'package:mosix/models/download_result.dart';
+import 'package:mosix/services/download_saf_file_replacer.dart';
+import 'package:mosix/services/ffmpeg_models.dart';
+import 'package:mosix/utils/audio_conversion_utils.dart';
+import 'package:mosix/utils/audio_format_utils.dart';
+import 'package:mosix/utils/file_access.dart';
 
 typedef DecryptDownloadFile =
     Future<String?> Function({

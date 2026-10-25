@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/utils/audio_format_utils.dart';
-import 'package:mornye/utils/file_access.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/utils/audio_format_utils.dart';
+import 'package:mosix/utils/file_access.dart';
 
 void main() {
   group('Finalized SAF audio names', () {

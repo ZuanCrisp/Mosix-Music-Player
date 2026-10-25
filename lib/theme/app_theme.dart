@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/models/theme_settings.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/models/theme_settings.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 class AppTheme {
   static const Color defaultSeedColor = Color(kDefaultSeedColor);

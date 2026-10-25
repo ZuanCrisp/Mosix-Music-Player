@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/services/notification_service.dart';
-import 'package:mornye/services/verification_notification.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/services/notification_service.dart';
+import 'package:mosix/services/verification_notification.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/backend/native_backend_transport.dart';
-import 'package:mornye/services/backend/rust_ffi_backend.dart';
-import 'package:mornye/services/desktop_deep_links.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/services/backend/native_backend_transport.dart';
+import 'package:mosix/services/backend/rust_ffi_backend.dart';
+import 'package:mosix/services/desktop_deep_links.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 class _FakeTransport implements NativeBackendTransport {
   final calls = <(String, Object?)>[];
@@ -80,7 +80,7 @@ void main() {
   setUp(transport.calls.clear);
 
   test('only mornye URLs are app links, logged without the query', () {
-    expect(DesktopDeepLinks.isAppLink(Uri.parse('MORNYE://callback')), true);
+    expect(DesktopDeepLinks.isAppLink(Uri.parse('MOSIX://callback')), true);
     expect(DesktopDeepLinks.isAppLink(Uri.parse('https://example.com')), false);
     expect(
       DesktopDeepLinks.describe(

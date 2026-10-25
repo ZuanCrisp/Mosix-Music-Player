@@ -1,4 +1,4 @@
-import 'package:mornye/models/metadata_separators.dart';
+import 'package:mosix/models/metadata_separators.dart';
 
 class DownloadRequestPayload {
   static const int nativeWorkerContractVersion = 1;

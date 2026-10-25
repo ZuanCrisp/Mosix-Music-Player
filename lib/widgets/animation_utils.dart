@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/desktop/track_table.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/desktop/track_table.dart';
 
 /// Wraps a child in a staggered fade-in + slide-up animation.
 ///
@@ -247,7 +247,7 @@ class SkeletonBox extends StatelessWidget {
 class TrackListSkeleton extends StatelessWidget {
   final int itemCount;
 
-  /// Mornye only; Material loading screens show the real header.
+  /// Mosix only; Material loading screens show the real header.
   final bool showCoverHeader;
 
   const TrackListSkeleton({
@@ -261,7 +261,7 @@ class TrackListSkeleton extends StatelessWidget {
     if (isDesktopPlatform) {
       return _DesktopTrackListSkeleton(itemCount: itemCount, showArtwork: true);
     }
-    if (context.isMornye) {
+    if (context.isMosix) {
       return ShimmerLoading(
         child: SingleChildScrollView(
           child: Column(
@@ -269,7 +269,7 @@ class TrackListSkeleton extends StatelessWidget {
               if (showCoverHeader)
                 const _CollectionHeaderSkeleton(showSubtitle: false),
               for (var index = 0; index < itemCount; index++)
-                _MornyeTrackSkeleton(
+                _MosixTrackSkeleton(
                   numbered: false,
                   index: index,
                   showPreview: true,
@@ -381,7 +381,7 @@ class AlbumTrackListSkeleton extends StatelessWidget {
   final int itemCount;
   final bool showQuality;
 
-  /// Mornye only; Material loading screens show the real header.
+  /// Mosix only; Material loading screens show the real header.
   final bool showCoverHeader;
 
   const AlbumTrackListSkeleton({
@@ -396,18 +396,18 @@ class AlbumTrackListSkeleton extends StatelessWidget {
     if (isDesktopPlatform) {
       return _DesktopTrackListSkeleton(
         itemCount: itemCount,
-        albumLayout: context.isMornye,
+        albumLayout: context.isMosix,
         showQuality: showQuality,
       );
     }
-    if (context.isMornye) {
+    if (context.isMosix) {
       return ShimmerLoading(
         child: SingleChildScrollView(
           child: Column(
             children: [
               if (showCoverHeader) const _CollectionHeaderSkeleton(),
               for (var index = 0; index < itemCount; index++)
-                _MornyeTrackSkeleton(
+                _MosixTrackSkeleton(
                   numbered: true,
                   index: index,
                   showPreview: true,
@@ -440,7 +440,7 @@ class AlbumTrackListSkeleton extends StatelessWidget {
 }
 
 /// Uses the loaded desktop table's columns and row density. The collection
-/// header is already visible above these rows, including in the Mornye style.
+/// header is already visible above these rows, including in the Mosix style.
 class _DesktopTrackListSkeleton extends StatelessWidget {
   const _DesktopTrackListSkeleton({
     required this.itemCount,
@@ -609,7 +609,7 @@ class _DesktopTrackListSkeleton extends StatelessWidget {
   }
 }
 
-/// Mirrors Mornye's collection header: full-width square artwork and a
+/// Mirrors Mosix's collection header: full-width square artwork and a
 /// compact primary action between two circular controls. Material loading
 /// screens show the real [AlbumDetailHeader] instead.
 class _CollectionHeaderSkeleton extends StatelessWidget {
@@ -734,21 +734,21 @@ class CollectionHeaderSkeletonRows {
 
   static Widget actions(BuildContext context) {
     if (isDesktopPlatform) {
-      final target = context.isMornye ? 36.0 : 40.0;
+      final target = context.isMosix ? 36.0 : 40.0;
       return ShimmerLoading(
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          spacing: context.isMornye ? 10 : 8,
+          spacing: context.isMosix ? 10 : 8,
           children: [
-            if (context.isMornye)
+            if (context.isMosix)
               SkeletonBox(
                 width: target,
                 height: target,
                 borderRadius: target / 2,
               ),
             SkeletonBox(
-              width: context.isMornye ? 130 : 112,
-              height: context.isMornye ? 36 : 40,
+              width: context.isMosix ? 130 : 112,
+              height: context.isMosix ? 36 : 40,
               borderRadius: 20,
             ),
             SkeletonBox(
@@ -756,7 +756,7 @@ class CollectionHeaderSkeletonRows {
               height: target,
               borderRadius: target / 2,
             ),
-            if (!context.isMornye)
+            if (!context.isMosix)
               SkeletonBox(
                 width: target,
                 height: target,
@@ -822,7 +822,7 @@ class ArtistScreenSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (context.isMornye) {
+    if (context.isMosix) {
       return ShimmerLoading(
         child: SingleChildScrollView(
           child: Column(
@@ -913,7 +913,7 @@ class ArtistScreenSkeleton extends StatelessWidget {
                   child: SkeletonBox(width: 110, height: 24, borderRadius: 4),
                 ),
                 for (var index = 0; index < _popularCount; index++)
-                  _MornyeTrackSkeleton(numbered: false, index: index),
+                  _MosixTrackSkeleton(numbered: false, index: index),
               ],
               const Padding(
                 padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
@@ -1049,8 +1049,8 @@ class _ArtistAlbumShelfSkeleton extends StatelessWidget {
   }
 }
 
-class _MornyeTrackSkeleton extends StatelessWidget {
-  const _MornyeTrackSkeleton({
+class _MosixTrackSkeleton extends StatelessWidget {
+  const _MosixTrackSkeleton({
     required this.numbered,
     required this.index,
     this.showPreview = false,
@@ -1149,7 +1149,7 @@ class HomeSearchSkeleton extends StatelessWidget {
     int itemCount, {
     required bool round,
   }) {
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final colorScheme = Theme.of(context).colorScheme;
     final inset = wideListInset(context);
     final rows = List.generate(itemCount, (index) {
@@ -1186,7 +1186,7 @@ class HomeSearchSkeleton extends StatelessWidget {
         ),
       );
     });
-    // Material uses the result groups' own container tier; Mornye's glass
+    // Material uses the result groups' own container tier; Mosix's glass
     // results keep a faint neutral wash.
     final groupColor = mornye
         ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)

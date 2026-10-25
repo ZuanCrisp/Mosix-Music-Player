@@ -2,26 +2,26 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/music_playback_deck.dart';
-import 'package:mornye/services/music_player_service.dart'
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/music_playback_deck.dart';
+import 'package:mosix/services/music_player_service.dart'
     show resetAutoplayLearning;
-import 'package:mornye/screens/listening_statistics_screen.dart';
-import 'package:mornye/screens/equalizer_screen.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/nav_bar_inset.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
-import 'package:mornye/widgets/beta_badge.dart';
-import 'package:mornye/widgets/player_volume_control.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/discord_presence_settings.dart';
-import 'package:mornye/widgets/automix_settings.dart';
-import 'package:mornye/widgets/music_haptics_settings.dart';
-import 'package:mornye/widgets/playback_normalization_settings.dart';
+import 'package:mosix/screens/listening_statistics_screen.dart';
+import 'package:mosix/screens/equalizer_screen.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/beta_badge.dart';
+import 'package:mosix/widgets/player_volume_control.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/discord_presence_settings.dart';
+import 'package:mosix/widgets/automix_settings.dart';
+import 'package:mosix/widgets/music_haptics_settings.dart';
+import 'package:mosix/widgets/playback_normalization_settings.dart';
 
 class PlaybackSettingsPage extends ConsumerStatefulWidget {
   const PlaybackSettingsPage({super.key});

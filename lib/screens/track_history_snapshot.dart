@@ -1,1 +1,1 @@
-export 'package:mornye/controllers/track_history_snapshot.dart';
+export 'package:mosix/controllers/track_history_snapshot.dart';

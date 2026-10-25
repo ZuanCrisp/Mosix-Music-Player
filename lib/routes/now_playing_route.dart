@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/services/app_orientation.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/services/app_orientation.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 /// Hero tag shared by the mini player artwork and the full player artwork so
 /// the cover visually expands when the player opens.
@@ -123,7 +123,7 @@ class NowPlayingRoute extends PageRoute<void> {
   bool didPop(void result) {
     final context = subtreeContext;
     if (context != null &&
-        context.isMornye &&
+        context.isMosix &&
         !MediaQuery.disableAnimationsOf(context) &&
         (controller?.value ?? 0) > 0) {
       final coveredSize = _coveredOverlaySize;
@@ -230,10 +230,10 @@ class NowPlayingRoute extends PageRoute<void> {
       );
     }
     final reversing = animation.status == AnimationStatus.reverse;
-    // Mornye's full-bleed artwork travels with its panel. Material keeps the
+    // Mosix's full-bleed artwork travels with its panel. Material keeps the
     // independent cover flight back to the mini-player on button/back pop.
     final inPlacePop =
-        reversing && !_interactiveTransition && !context.isMornye;
+        reversing && !_interactiveTransition && !context.isMosix;
     final slide = _interactiveTransition
         ? animation
         : animation.drive(CurveTween(curve: Easing.emphasizedDecelerate));

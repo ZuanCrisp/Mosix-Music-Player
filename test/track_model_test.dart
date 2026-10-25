@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/track.dart';
+import 'package:mosix/models/track.dart';
 
 void main() {
   group('Track', () {

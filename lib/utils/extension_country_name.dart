@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:mornye/l10n/l10n.dart';
+import 'package:mosix/l10n/l10n.dart';
 
 String extensionCountryName(BuildContext context, String code) {
   final l10n = context.l10n;

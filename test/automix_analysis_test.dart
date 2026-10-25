@@ -2,9 +2,9 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/automix_options.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/services/automix_analysis.dart';
+import 'package:mosix/models/automix_options.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/services/automix_analysis.dart';
 
 Uint8List drumPattern(double bpm, {double phase = 0.17, bool fade = false}) {
   const sampleRate = 11025;

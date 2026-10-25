@@ -1,50 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/cover_palette.dart';
-import 'package:mornye/screens/track_history_snapshot.dart';
-import 'package:mornye/widgets/collection_scaffold.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/cover_palette.dart';
+import 'package:mosix/screens/track_history_snapshot.dart';
+import 'package:mosix/widgets/collection_scaffold.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:mornye/services/cover_cache_manager.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/recent_access_provider.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/image_cache_utils.dart';
-import 'package:mornye/utils/string_utils.dart';
-import 'package:mornye/utils/cover_art_utils.dart';
-import 'package:mornye/screens/collapsing_header_scroll_mixin.dart';
-import 'package:mornye/screens/selection_mode_mixin.dart';
-import 'package:mornye/widgets/error_card.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/expressive_button_group.dart';
-import 'package:mornye/widgets/album_description.dart';
-import 'package:mornye/utils/editorial_notes.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/provider_resource_ids.dart';
-import 'package:mornye/utils/ttl_cache.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/widgets/playlist_picker_sheet.dart';
-import 'package:mornye/utils/clickable_metadata.dart';
-import 'package:mornye/widgets/cross_extension_share_sheet.dart';
-import 'package:mornye/widgets/track_list_tile.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/desktop/detail_header.dart';
-import 'package:mornye/widgets/desktop/desktop_selection.dart';
-import 'package:mornye/widgets/desktop/track_list_table.dart';
-import 'package:mornye/widgets/audio_quality_badges.dart';
-import 'package:mornye/widgets/motion_header_banner.dart';
-import 'package:mornye/widgets/track_detail_actions.dart';
-import 'package:mornye/widgets/selection_action_button.dart';
-import 'package:mornye/widgets/selection_bottom_bar.dart';
-import 'package:mornye/widgets/downloadable_cover.dart';
-import 'package:mornye/widgets/disc_separator_chip.dart';
-import 'package:mornye/widgets/mornye_artist_header.dart';
+import 'package:mosix/services/cover_cache_manager.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/recent_access_provider.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/image_cache_utils.dart';
+import 'package:mosix/utils/string_utils.dart';
+import 'package:mosix/utils/cover_art_utils.dart';
+import 'package:mosix/screens/collapsing_header_scroll_mixin.dart';
+import 'package:mosix/screens/selection_mode_mixin.dart';
+import 'package:mosix/widgets/error_card.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/expressive_button_group.dart';
+import 'package:mosix/widgets/album_description.dart';
+import 'package:mosix/utils/editorial_notes.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/provider_resource_ids.dart';
+import 'package:mosix/utils/ttl_cache.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/widgets/playlist_picker_sheet.dart';
+import 'package:mosix/utils/clickable_metadata.dart';
+import 'package:mosix/widgets/cross_extension_share_sheet.dart';
+import 'package:mosix/widgets/track_list_tile.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/desktop/detail_header.dart';
+import 'package:mosix/widgets/desktop/desktop_selection.dart';
+import 'package:mosix/widgets/desktop/track_list_table.dart';
+import 'package:mosix/widgets/audio_quality_badges.dart';
+import 'package:mosix/widgets/motion_header_banner.dart';
+import 'package:mosix/widgets/track_detail_actions.dart';
+import 'package:mosix/widgets/selection_action_button.dart';
+import 'package:mosix/widgets/selection_bottom_bar.dart';
+import 'package:mosix/widgets/downloadable_cover.dart';
+import 'package:mosix/widgets/disc_separator_chip.dart';
+import 'package:mosix/widgets/mornye_artist_header.dart';
 
 class _AlbumCache {
   static final _cache = TtlCache<({List<Track> tracks, String? description})>(
@@ -362,7 +362,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
     final items = <Widget>[];
 
     final genre = _tracks?.firstOrNull?.genre?.trim();
-    if (context.isMornye && genre != null && genre.isNotEmpty) {
+    if (context.isMosix && genre != null && genre.isNotEmpty) {
       items.add(HeaderMetaItem(genre));
     }
     final year = _releaseYear(releaseDate);
@@ -431,8 +431,8 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
 
   @override
   Widget build(BuildContext context) {
-    if (context.isMornye) {
-      return MornyeArtistSurface(
+    if (context.isMosix) {
+      return MosixArtistSurface(
         imageSource:
             widget.coverUrl ?? _headerImageUrl ?? widget.headerImageUrl,
         neutralActions: true,
@@ -445,7 +445,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
   Widget _buildPage(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final tracks = _tracks ?? [];
-    final commonQualityTrack = context.isMornye
+    final commonQualityTrack = context.isMosix
         ? null
         : _commonQualityTrack(tracks);
     final pageBackgroundColor = colorScheme.surface;
@@ -538,7 +538,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
         motionUrl.trim().isNotEmpty &&
         Uri.tryParse(motionUrl)?.hasAuthority == true;
     final coverThumbUrl = widget.coverUrl ?? _headerImageUrl;
-    final showSquareCover = context.isMornye || !hasMotion;
+    final showSquareCover = context.isMosix || !hasMotion;
     final expandedHeight = calculateExpandedHeight(context);
     final cacheWidth = coverCacheWidthForViewport(context);
     final headerBgUrl =
@@ -567,7 +567,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
 
     return AlbumDetailHeader(
       title: widget.albumName,
-      immersive: context.isMornye,
+      immersive: context.isMosix,
       squareArtwork: !hasMotion && headerBgUrl == coverThumbUrl,
       expandedHeight: expandedHeight,
       showTitleInAppBar: showTitleInAppBar,
@@ -576,7 +576,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
       paletteSource: coverThumbUrl,
       blurAndScrimBackground: showSquareCover,
       coverBuilder: showSquareCover
-          ? (context, coverSize) => context.isMornye && hasMotion
+          ? (context, coverSize) => context.isMosix && hasMotion
                 ? background
                 : coverThumbUrl != null
                 ? DownloadableCover(
@@ -627,7 +627,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
                     : TextStyle(
                         color: colorScheme.primary,
                         fontSize: context.tokens.headerSubtitleSize,
-                        fontWeight: context.isMornye
+                        fontWeight: context.isMosix
                             ? FontWeight.w400
                             : FontWeight.w600,
                       ),
@@ -647,10 +647,10 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
               children: [
                 _buildLoveAllButton(),
                 HeaderFilledButton(
-                  icon: context.isMornye
+                  icon: context.isMosix
                       ? CupertinoIcons.arrow_down_circle_fill
                       : Icons.download,
-                  label: context.isMornye
+                  label: context.isMosix
                       ? context.l10n.dialogDownload
                       : context.l10n.downloadAllCount(tracks.length),
                   onPressed: tracks.isEmpty
@@ -660,7 +660,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
                 _buildAddToPlaylistButton(context),
               ],
             )
-          : context.isMornye
+          : context.isMosix
           ? Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -774,7 +774,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
         selectedIds: selectedIds,
         onSelect: applyDesktopClick,
         onActivate: activate,
-        albumLayout: context.isMornye,
+        albumLayout: context.isMosix,
         albumArtist:
             widget.artistName ??
             (tracks.isEmpty
@@ -805,7 +805,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
                       forceQualityPicker: forceQualityPicker,
                     ),
                 clickableArtist: true,
-                showQualityBadges: context.isMornye
+                showQualityBadges: context.isMosix
                     ? !_audioTraits.any(
                         (trait) => trait.toLowerCase().contains('lossless'),
                       )

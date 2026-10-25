@@ -6,19 +6,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/explore_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/widgets/explore_featured_section.dart';
-import 'package:mornye/widgets/audio_quality_badges.dart';
-import 'package:mornye/l10n/app_localizations.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/explore_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/widgets/explore_featured_section.dart';
+import 'package:mosix/widgets/audio_quality_badges.dart';
+import 'package:mosix/l10n/app_localizations.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('home feed cache ownership', () {
-    const channel = MethodChannel('com.zarz.mornye/backend');
+    const channel = MethodChannel('com.zuancrisp.mosix/backend');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     tearDown(() => messenger.setMockMethodCallHandler(channel, null));

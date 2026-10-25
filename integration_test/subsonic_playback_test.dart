@@ -3,10 +3,10 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mornye/services/music_player_runtime.dart';
-import 'package:mornye/services/network_library_scanner.dart';
-import 'package:mornye/services/network_metadata_service.dart';
-import 'package:mornye/services/network_storage_service.dart';
+import 'package:mosix/services/music_player_runtime.dart';
+import 'package:mosix/services/network_library_scanner.dart';
+import 'package:mosix/services/network_metadata_service.dart';
+import 'package:mosix/services/network_storage_service.dart';
 
 import '../test/support/subsonic_fixture.dart';
 

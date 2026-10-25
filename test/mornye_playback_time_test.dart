@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/widgets/mornye_playback_time.dart';
+import 'package:mosix/widgets/mornye_playback_time.dart';
 
 Widget _app(int seconds, {bool remaining = false, bool reduceMotion = false}) =>
     MaterialApp(
@@ -9,7 +9,7 @@ Widget _app(int seconds, {bool remaining = false, bool reduceMotion = false}) =>
         child: Scaffold(
           body: Align(
             alignment: Alignment.centerRight,
-            child: MornyePlaybackTime(
+            child: MosixPlaybackTime(
               seconds: seconds,
               remaining: remaining,
               style: const TextStyle(fontSize: 14),
@@ -29,7 +29,7 @@ void main() {
         await tester.pumpWidget(_app(increasing ? 34 : 35));
         final oldPosition = tester.getTopLeft(find.text(oldDigit));
         final colonPosition = tester.getTopLeft(find.text(':'));
-        final initialSize = tester.getSize(find.byType(MornyePlaybackTime));
+        final initialSize = tester.getSize(find.byType(MosixPlaybackTime));
 
         await tester.pumpWidget(_app(increasing ? 35 : 34));
         await tester.pump(const Duration(milliseconds: 80));
@@ -44,7 +44,7 @@ void main() {
           increasing ? greaterThan(oldPosition.dy) : lessThan(oldPosition.dy),
         );
         expect(tester.getTopLeft(find.text(':')), colonPosition);
-        expect(tester.getSize(find.byType(MornyePlaybackTime)), initialSize);
+        expect(tester.getSize(find.byType(MosixPlaybackTime)), initialSize);
 
         await tester.pumpAndSettle();
         expect(find.text(oldDigit), findsNothing);

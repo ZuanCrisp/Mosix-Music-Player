@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/library_schema.dart';
-import 'package:mornye/services/sqlite_helpers.dart';
-import 'package:mornye/utils/path_match_keys.dart';
+import 'package:mosix/services/library_schema.dart';
+import 'package:mosix/services/sqlite_helpers.dart';
+import 'package:mosix/utils/path_match_keys.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'support/sqlite_process_database.dart';

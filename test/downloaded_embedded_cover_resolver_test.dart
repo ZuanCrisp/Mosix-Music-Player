@@ -4,12 +4,12 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
+import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const backendChannel = MethodChannel('com.zarz.mornye/backend');
+  const backendChannel = MethodChannel('com.zuancrisp.mosix/backend');
   final sourcePaths = <String>[];
   final tempDirectories = <Directory>[];
 

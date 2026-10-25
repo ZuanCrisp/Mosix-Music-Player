@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:mornye/services/media_kit_playback_deck.dart';
+import 'package:mosix/services/media_kit_playback_deck.dart';
 
 /// An in-memory libmpv for `MediaKitPlaybackDeck` tests on any host.
 class FakeMpvEngine implements MpvEngine {

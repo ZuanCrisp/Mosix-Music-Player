@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/repo_provider.dart';
-import 'package:mornye/screens/repo_tab.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/widgets/extension_row.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/repo_provider.dart';
+import 'package:mosix/screens/repo_tab.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/widgets/extension_row.dart';
 
 class _LoadingRepo extends RepoNotifier {
   @override
@@ -52,7 +52,7 @@ void main() {
     }
 
     for (final mornye in [false, true]) {
-      testWidgets('store skeleton fits at $width with Mornye=$mornye', (
+      testWidgets('store skeleton fits at $width with Mosix=$mornye', (
         tester,
       ) async {
         tester.view.physicalSize = Size(width, 1200);
@@ -71,7 +71,7 @@ void main() {
             overrides: [repoProvider.overrideWith(_LoadingRepo.new)],
             child: MaterialApp(
               theme: mornye
-                  ? MornyeTheme.build(Brightness.dark)
+                  ? MosixTheme.build(Brightness.dark)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,

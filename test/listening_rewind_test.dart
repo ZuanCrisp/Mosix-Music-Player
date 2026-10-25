@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/screens/listening_rewind_screen.dart';
-import 'package:mornye/services/listening_rewind.dart';
-import 'package:mornye/services/listening_statistics.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/screens/listening_rewind_screen.dart';
+import 'package:mosix/services/listening_rewind.dart';
+import 'package:mosix/services/listening_statistics.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 import 'support/sqlite_process_database.dart';
 
@@ -278,7 +278,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             // Reduced motion: no auto-advance, so the story waits for taps.
@@ -466,7 +466,7 @@ void main() {
             listeningRewindProvider.overrideWith((ref, period) async => rewind),
           ],
           child: MaterialApp(
-            theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             builder: (context, child) => MediaQuery(

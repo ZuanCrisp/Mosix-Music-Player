@@ -7,28 +7,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/system_volume_provider.dart';
-import 'package:mornye/screens/settings/settings_tab.dart';
-import 'package:mornye/services/app_remote_config_service.dart';
-import 'package:mornye/services/shell_navigation_service.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/desktop/desktop_commands.dart';
-import 'package:mornye/widgets/desktop/desktop_downloads_button.dart';
-import 'package:mornye/widgets/desktop/desktop_inspector.dart';
-import 'package:mornye/widgets/desktop/desktop_navigation.dart';
-import 'package:mornye/widgets/desktop/desktop_now_playing.dart';
-import 'package:mornye/widgets/playback_seek_slider.dart';
-import 'package:mornye/widgets/player_artwork.dart';
-import 'package:mornye/widgets/desktop/desktop_shortcuts.dart';
-import 'package:mornye/widgets/desktop/desktop_window.dart'
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/system_volume_provider.dart';
+import 'package:mosix/screens/settings/settings_tab.dart';
+import 'package:mosix/services/app_remote_config_service.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/desktop/desktop_commands.dart';
+import 'package:mosix/widgets/desktop/desktop_downloads_button.dart';
+import 'package:mosix/widgets/desktop/desktop_inspector.dart';
+import 'package:mosix/widgets/desktop/desktop_navigation.dart';
+import 'package:mosix/widgets/desktop/desktop_now_playing.dart';
+import 'package:mosix/widgets/playback_seek_slider.dart';
+import 'package:mosix/widgets/player_artwork.dart';
+import 'package:mosix/widgets/desktop/desktop_shortcuts.dart';
+import 'package:mosix/widgets/desktop/desktop_window.dart'
     show desktopWindowFullScreen;
 
 class _Queue extends DownloadQueueNotifier {
@@ -67,7 +67,7 @@ DownloadItem _download(
 const _track = MediaItem(id: 'track', title: 'A song', artist: 'An artist');
 
 ThemeData _theme(bool mornye) =>
-    mornye ? MornyeTheme.build(Brightness.light) : AppTheme.light();
+    mornye ? MosixTheme.build(Brightness.light) : AppTheme.light();
 
 void main() {
   setUp(() {
@@ -114,7 +114,7 @@ void main() {
   );
 
   for (final mornye in [false, true]) {
-    final style = mornye ? 'Mornye' : 'Material';
+    final style = mornye ? 'Mosix' : 'Material';
 
     group('$style settings', () {
       testWidgets('shows categories beside the selected page', (tester) async {
@@ -418,7 +418,7 @@ void main() {
       ShellNavigationService.registerTabSelectionHandler(
         owner: owner,
         handler: requested.add,
-        // Like the shell: only the Mornye sidebar has Library links.
+        // Like the shell: only the Mosix sidebar has Library links.
         libraryLinkHandler: (id) {
           if (!mornye) return false;
           links.add(id);
@@ -457,7 +457,7 @@ void main() {
         find.byKey(const ValueKey('desktop-downloads-show-all')),
       );
       await tester.pumpAndSettle();
-      // Mornye opens its Downloads page, not whichever Library page was
+      // Mosix opens its Downloads page, not whichever Library page was
       // open last.
       expect(requested, mornye ? isEmpty : [ShellTab.library]);
       expect(links, mornye ? ['downloads'] : isEmpty);

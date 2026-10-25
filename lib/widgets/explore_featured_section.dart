@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/providers/explore_provider.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
-import 'package:mornye/widgets/desktop/desktop_scroll_arrows.dart';
-import 'package:mornye/widgets/audio_quality_badges.dart';
+import 'package:mosix/providers/explore_provider.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
+import 'package:mosix/widgets/desktop/desktop_scroll_arrows.dart';
+import 'package:mosix/widgets/audio_quality_badges.dart';
 
 /// Large editorial cards requested by a home-feed provider.
 class ExploreFeaturedSection extends StatelessWidget {

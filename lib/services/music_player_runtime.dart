@@ -4,27 +4,27 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/services/app_state_database.dart';
-import 'package:mornye/services/autoplay_personalization.dart';
-import 'package:mornye/services/discord_presence_service.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/services/listening_statistics.dart';
-import 'package:mornye/services/media_kit_playback_deck.dart';
-import 'package:mornye/services/media_session_desktop.dart';
-import 'package:mornye/services/music_playback_deck.dart';
-import 'package:mornye/services/music_player_service.dart';
-import 'package:mornye/services/network_metadata_service.dart';
-import 'package:mornye/services/network_storage_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/services/playback_deck.dart';
-import 'package:mornye/services/playback_notification.dart';
-import 'package:mornye/services/playback_output_volume.dart';
-import 'package:mornye/services/player_widget_service.dart';
-import 'package:mornye/services/source_deletion_events.dart';
-import 'package:mornye/services/system_volume_service.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/services/app_state_database.dart';
+import 'package:mosix/services/autoplay_personalization.dart';
+import 'package:mosix/services/discord_presence_service.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/services/listening_statistics.dart';
+import 'package:mosix/services/media_kit_playback_deck.dart';
+import 'package:mosix/services/media_session_desktop.dart';
+import 'package:mosix/services/music_playback_deck.dart';
+import 'package:mosix/services/music_player_service.dart';
+import 'package:mosix/services/network_metadata_service.dart';
+import 'package:mosix/services/network_storage_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/services/playback_deck.dart';
+import 'package:mosix/services/playback_notification.dart';
+import 'package:mosix/services/playback_output_volume.dart';
+import 'package:mosix/services/player_widget_service.dart';
+import 'package:mosix/services/source_deletion_events.dart';
+import 'package:mosix/services/system_volume_service.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/logger.dart';
 
 final _log = AppLogger('MusicPlayerRuntime');
 
@@ -48,7 +48,7 @@ class PlaybackDependencies {
     bool? isIOS,
     bool? isAndroid,
     this.notificationChannel = const MethodChannel(
-      'com.zarz.mornye/playback_notification',
+      'com.zuancrisp.mosix/playback_notification',
     ),
   }) : _sessionDatabase = sessionDatabase,
        _libraryDatabase = libraryDatabase,
@@ -116,7 +116,7 @@ class PlaybackDependencies {
     return AudioService.init(
       builder: builder,
       config: const AudioServiceConfig(
-        androidNotificationChannelId: 'com.zarz.mornye.playback',
+        androidNotificationChannelId: 'com.zuancrisp.mosix.playback',
         androidNotificationChannelName: 'Playback',
         // System UI draws only the small icon's alpha. The opaque launcher
         // default became a blank dot in the status bar and output switcher.

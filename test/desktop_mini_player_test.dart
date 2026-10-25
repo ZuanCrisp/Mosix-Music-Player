@@ -7,19 +7,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/services/shell_navigation_service.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/lyrics_parser.dart';
-import 'package:mornye/widgets/desktop/desktop_commands.dart';
-import 'package:mornye/widgets/desktop/desktop_navigation.dart';
-import 'package:mornye/widgets/desktop/desktop_player_bar.dart';
-import 'package:mornye/widgets/desktop/desktop_window.dart';
-import 'package:mornye/widgets/player_lyrics.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mosix/widgets/desktop/desktop_commands.dart';
+import 'package:mosix/widgets/desktop/desktop_navigation.dart';
+import 'package:mosix/widgets/desktop/desktop_player_bar.dart';
+import 'package:mosix/widgets/desktop/desktop_window.dart';
+import 'package:mosix/widgets/player_lyrics.dart';
 
 const _track = MediaItem(
   id: 'track',
@@ -42,7 +42,7 @@ const _ttml =
     '<span begin="12s" end="14s">words</span></p>'
     '</div></body></tt>';
 
-const _channel = MethodChannel('com.zarz.mornye/window');
+const _channel = MethodChannel('com.zuancrisp.mosix/window');
 
 Future<List<int>> _wordPixels(WidgetTester tester) async {
   final paint = find.descendant(
@@ -231,7 +231,7 @@ void main() {
   });
 
   for (final mornye in [false, true]) {
-    final style = mornye ? 'Mornye' : 'Material';
+    final style = mornye ? 'Mosix' : 'Material';
 
     testWidgets(
       '$style TTML words follow pause and seeks during panel resizing',
@@ -261,7 +261,7 @@ void main() {
             ],
             child: MaterialApp(
               theme: mornye
-                  ? MornyeTheme.build(Brightness.light)
+                  ? MosixTheme.build(Brightness.light)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
@@ -334,7 +334,7 @@ void main() {
           ],
           child: MaterialApp(
             theme: mornye
-                ? MornyeTheme.build(Brightness.light)
+                ? MosixTheme.build(Brightness.light)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -459,7 +459,7 @@ void main() {
           ],
           child: MaterialApp(
             theme: mornye
-                ? MornyeTheme.build(Brightness.light)
+                ? MosixTheme.build(Brightness.light)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

@@ -3,18 +3,18 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/theme/cover_palette.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/services/shell_navigation_service.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/theme/cover_palette.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
 
 /// Share the same artwork-derived dark surface while loading and after the
 /// artist metadata arrives, including when the app itself uses light mode.
-class MornyeArtistSurface extends StatefulWidget {
-  const MornyeArtistSurface({
+class MosixArtistSurface extends StatefulWidget {
+  const MosixArtistSurface({
     super.key,
     required this.imageSource,
     required this.child,
@@ -30,10 +30,10 @@ class MornyeArtistSurface extends StatefulWidget {
   final bool neutralActions;
 
   @override
-  State<MornyeArtistSurface> createState() => _MornyeArtistSurfaceState();
+  State<MosixArtistSurface> createState() => _MosixArtistSurfaceState();
 }
 
-class _MornyeArtistSurfaceState extends State<MornyeArtistSurface> {
+class _MosixArtistSurfaceState extends State<MosixArtistSurface> {
   @override
   void dispose() {
     ShellNavigationService.clearChromeBrightness(this);
@@ -45,7 +45,7 @@ class _MornyeArtistSurfaceState extends State<MornyeArtistSurface> {
     // Desktop album and playlist pages keep the plain pane background and
     // app accent; artist pages keep their artwork tint, as in Apple Music.
     if (isDesktopPlatform && widget.neutralActions) return widget.child;
-    final darkTheme = MornyeTheme.fromContext(
+    final darkTheme = MosixTheme.fromContext(
       context,
       brightness: Brightness.dark,
     );
@@ -146,10 +146,10 @@ class _MornyeArtistSurfaceState extends State<MornyeArtistSurface> {
   }
 }
 
-/// Portrait and centered identity from Mornye's MobileArtistView. Actions stay
+/// Portrait and centered identity from Mosix's MobileArtistView. Actions stay
 /// supplied by the screen so remote artists retain download/favorite behavior.
-class MornyeArtistHeader extends StatelessWidget {
-  const MornyeArtistHeader({
+class MosixArtistHeader extends StatelessWidget {
+  const MosixArtistHeader({
     super.key,
     required this.name,
     required this.artwork,

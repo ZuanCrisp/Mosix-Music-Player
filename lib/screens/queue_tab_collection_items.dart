@@ -453,14 +453,14 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: context.isMornye
+            color: context.isMosix
                 ? iconBgColor ?? colorScheme.surfaceContainerHighest
                 : colorScheme.secondaryContainer,
             borderRadius: BorderRadius.circular(8),
           ),
           child: AppIcon(
             icon ?? Icons.folder,
-            color: context.isMornye
+            color: context.isMosix
                 ? iconColor ?? Colors.white
                 : colorScheme.onSecondaryContainer,
             size: 28,
@@ -610,14 +610,14 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
         coverWidget ??
         Container(
           decoration: BoxDecoration(
-            color: context.isMornye
+            color: context.isMosix
                 ? iconBgColor ?? colorScheme.surfaceContainerHighest
                 : colorScheme.secondaryContainer,
             borderRadius: BorderRadius.circular(8),
           ),
           child: AppIcon(
             icon ?? Icons.folder,
-            color: context.isMornye
+            color: context.isMosix
                 ? iconColor ?? Colors.white
                 : colorScheme.onSecondaryContainer,
             size: 40,

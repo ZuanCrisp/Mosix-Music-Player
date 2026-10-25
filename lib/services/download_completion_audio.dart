@@ -1,7 +1,7 @@
-import 'package:mornye/models/download_result.dart';
-import 'package:mornye/utils/audio_format_utils.dart';
-import 'package:mornye/utils/file_access.dart';
-import 'package:mornye/utils/int_utils.dart';
+import 'package:mosix/models/download_result.dart';
+import 'package:mosix/utils/audio_format_utils.dart';
+import 'package:mosix/utils/file_access.dart';
+import 'package:mosix/utils/int_utils.dart';
 
 typedef DownloadCompletionAudio = ({
   String quality,

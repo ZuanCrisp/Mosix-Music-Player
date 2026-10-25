@@ -1,5 +1,5 @@
-import 'package:mornye/services/history_database.dart';
-import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mosix/services/history_database.dart';
+import 'package:mosix/utils/audio_format_utils.dart';
 
 /// Maps history JSON to storage rows and back without opening a database.
 abstract final class HistoryRowMapper {

@@ -1,7 +1,7 @@
 part of 'listening_rewind_screen.dart';
 
 /// Colors of one slide. Material cycles through the tonal containers;
-/// Mornye stays dark over blurred artwork.
+/// Mosix stays dark over blurred artwork.
 class _RewindPalette {
   const _RewindPalette(this.background, this.foreground, this.accent);
 
@@ -10,7 +10,7 @@ class _RewindPalette {
     int index,
     ListeningRewind rewind,
   ) {
-    if (context.isMornye) {
+    if (context.isMosix) {
       return _RewindPalette(
         Colors.black,
         Colors.white,
@@ -412,7 +412,7 @@ class _RewindSlide extends StatelessWidget {
   }
 }
 
-/// Artwork the Mornye backdrop shows behind [slide].
+/// Artwork the Mosix backdrop shows behind [slide].
 String? _slideArtwork(_Slide slide, ListeningRewind rewind) => switch (slide) {
   _Slide.topArtist ||
   _Slide.artists ||
@@ -429,7 +429,7 @@ String? _slideArtwork(_Slide slide, ListeningRewind rewind) => switch (slide) {
 /// One background behind every slide, so colors blend while swiping.
 ///
 /// Material floats large expressive shapes that drift, turn and follow the
-/// swipe. Mornye cross-fades the slides' blurred artwork while it slowly
+/// swipe. Mosix cross-fades the slides' blurred artwork while it slowly
 /// zooms. Reduced motion keeps the shapes and artwork still.
 class _RewindBackdrop extends StatefulWidget {
   const _RewindBackdrop({
@@ -489,7 +489,7 @@ class _RewindBackdropState extends State<_RewindBackdrop>
           final to = math.min(from + 1, last);
           final blend = page - from;
           final t = _ambient.value * 2 * math.pi;
-          return context.isMornye
+          return context.isMosix
               ? _mornye(from, to, blend, t)
               : _material(from, to, blend, page, t);
         },

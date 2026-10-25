@@ -21,7 +21,7 @@ final class CoreDownloadProgress {
 final class DownloadProgressSubscription {
     typealias Waiter = (Int64, Int64) -> String
     private final class Session {
-        let queue = DispatchQueue(label: "com.zarz.mornye.download_progress_subscription", qos: .utility)
+        let queue = DispatchQueue(label: "com.zuancrisp.mosix.download_progress_subscription", qos: .utility)
         private let lock = NSLock()
         private var cancelled = false
         private var source: CoreDownloadProgress?

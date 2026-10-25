@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/backup_service.dart';
+import 'package:mosix/services/backup_service.dart';
 
 void main() {
   late Directory directory;
@@ -46,7 +46,7 @@ void main() {
         final metadata = <String, dynamic>{
           'magic': BackupService.magic,
           'format_version': version,
-          'app': 'Mornye',
+          'app': 'Mosix',
           'app_version': '5.1.0',
           'created_at': '2026-10-07T00:00:00.000Z',
           'history_count': 0,

@@ -3,16 +3,16 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:liquid_glass_easy/liquid_glass_easy.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/mornye_selection_pill.dart';
-import 'package:mornye/widgets/mornye_liquid_backdrop.dart';
-import 'package:mornye/widgets/mornye_squircle_border.dart';
-import 'package:mornye/widgets/animation_utils.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/mornye_selection_pill.dart';
+import 'package:mosix/widgets/mornye_liquid_backdrop.dart';
+import 'package:mosix/widgets/mornye_squircle_border.dart';
+import 'package:mosix/widgets/animation_utils.dart';
 
-class MornyeSegmentedControl extends ConsumerWidget {
-  const MornyeSegmentedControl({
+class MosixSegmentedControl extends ConsumerWidget {
+  const MosixSegmentedControl({
     super.key,
     required this.labels,
     required this.selectedIndex,
@@ -38,10 +38,10 @@ class MornyeSegmentedControl extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: SizedBox(
         height: height,
-        child: MornyeGlass.navigation(
+        child: MosixGlass.navigation(
           blurEnabled: ref.watch(mornyeBlurEnabledProvider),
           radius: height / 2,
-          child: MornyeSelectionPill(
+          child: MosixSelectionPill(
             contrastBlocked: contrastBlocked,
             // The held lens follows a finger. A click never holds it, and over
             // an opaque toolbar it only refracts a flat fill, so desktop skips
@@ -49,7 +49,7 @@ class MornyeSegmentedControl extends ConsumerWidget {
             liquidInteraction:
                 !isDesktopPlatform &&
                 ref.watch(mornyeLiquidGlassProvider) &&
-                MornyeTheme.glassClarityOf(context) > 0.2,
+                MosixTheme.glassClarityOf(context) > 0.2,
             labels: labels,
             selectedIndex: selectedIndex,
             onChanged: onChanged,
@@ -72,8 +72,8 @@ class MornyeSegmentedControl extends ConsumerWidget {
 }
 
 /// Shared material for panels, menus, dialogs and floating sheets.
-class MornyeGlassPanel extends ConsumerWidget {
-  const MornyeGlassPanel({
+class MosixGlassPanel extends ConsumerWidget {
+  const MosixGlassPanel({
     super.key,
     required this.child,
     this.radius = 32,
@@ -89,7 +89,7 @@ class MornyeGlassPanel extends ConsumerWidget {
     this.glassProgress = 1,
   }) : _composedBackdrop = false;
 
-  const MornyeGlassPanel.overlay({
+  const MosixGlassPanel.overlay({
     super.key,
     required this.child,
     this.radius = 32,
@@ -121,7 +121,7 @@ class MornyeGlassPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final glass = MornyeGlass.navigation(
+    final glass = MosixGlass.navigation(
       radius: radius,
       firstInGroup: firstInGroup,
       lastInGroup: lastInGroup,
@@ -145,8 +145,8 @@ class MornyeGlassPanel extends ConsumerWidget {
 
 /// Bounded glass: Impeller lenses refract a blurred backdrop, while frosted
 /// surfaces share ordinary blur passes. Foreground content stays above glass.
-class MornyeGlass extends ConsumerWidget {
-  const MornyeGlass({
+class MosixGlass extends ConsumerWidget {
+  const MosixGlass({
     super.key,
     required this.child,
     required this.blurEnabled,
@@ -163,7 +163,7 @@ class MornyeGlass extends ConsumerWidget {
        lastInGroup = true,
        samplesBackdrop = true;
 
-  const MornyeGlass.navigation({
+  const MosixGlass.navigation({
     super.key,
     required this.child,
     required this.blurEnabled,
@@ -213,13 +213,13 @@ class MornyeGlass extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    final clarity = MornyeTheme.glassClarityOf(context);
+    final clarity = MosixTheme.glassClarityOf(context);
     final level = ref.watch(mornyeGlassLevelProvider);
     final reveal = glassProgress.clamp(0.0, 1.0);
     final translucent =
         reveal > 0 &&
         blurEnabled &&
-        level != MornyeGlassLevel.flat &&
+        level != MosixGlassLevel.flat &&
         clarity > 0 &&
         !ref.watch(
           mornyeGlassContrastBlockedProvider(
@@ -227,14 +227,14 @@ class MornyeGlass extends ConsumerWidget {
           ),
         );
     final dark = scheme.brightness == Brightness.dark;
-    final outlines = MornyeTheme.glassOutlinesOf(context);
+    final outlines = MosixTheme.glassOutlinesOf(context);
     final shape = BorderRadius.vertical(
       top: firstInGroup ? Radius.circular(radius) : Radius.zero,
       bottom: lastInGroup ? Radius.circular(radius) : Radius.zero,
     );
     final artworkTint = Theme.of(
       context,
-    ).extension<MornyeTheme>()?.chromeSurface;
+    ).extension<MosixTheme>()?.chromeSurface;
     var tintSource =
         tintColor ?? (dark ? scheme.surfaceContainerHigh : Colors.white);
     var opacity = tintOpacity ?? (strongTint ? 0.80 : 0.60);
@@ -276,7 +276,7 @@ class MornyeGlass extends ConsumerWidget {
         null;
     // At low clarity the tint obscures almost all detail. In particular, 10%
     // must not suddenly enable backdrop sampling on a mid-range GPU.
-    final blurThreshold = level == MornyeGlassLevel.frosted ? 0.5 : 0.2;
+    final blurThreshold = level == MosixGlassLevel.frosted ? 0.5 : 0.2;
     final sampleBackdrop =
         translucent &&
         samplesBackdrop &&
@@ -286,11 +286,11 @@ class MornyeGlass extends ConsumerWidget {
         sampleBackdrop &&
         firstInGroup &&
         lastInGroup &&
-        level == MornyeGlassLevel.liquid &&
+        level == MosixGlassLevel.liquid &&
         ImageFilter.isShaderFilterSupported;
     // Clear glass softens the backdrop less. Keep the mid-range fallback at
     // its small blur budget, and reuse these filters in the lens renderer too.
-    final filterIndex = level == MornyeGlassLevel.frosted
+    final filterIndex = level == MosixGlassLevel.frosted
         ? 1
         : clarity >= 0.9
         ? 0
@@ -309,7 +309,7 @@ class MornyeGlass extends ConsumerWidget {
     final squircle = smoothCorners && firstInGroup && lastInGroup;
     final surface = DecoratedBox(
       decoration: squircle
-          ? ShapeDecoration(color: fill, shape: MornyeSquircleBorder(radius))
+          ? ShapeDecoration(color: fill, shape: MosixSquircleBorder(radius))
           : BoxDecoration(color: fill, borderRadius: shape),
       // Child controls paint on this surface; never re-blur their parent.
       child: _GlassBackdropScope(child: child),
@@ -325,7 +325,7 @@ class MornyeGlass extends ConsumerWidget {
           ]
         : null;
     final backdrop = useLens
-        ? MornyeLiquidBackdrop(
+        ? MosixLiquidBackdrop(
             borderRadius: shape,
             clarity: clarity,
             blurSigma: _blurSigmas[filterIndex],
@@ -340,7 +340,7 @@ class MornyeGlass extends ConsumerWidget {
     return DecoratedBox(
       decoration: squircle
           ? ShapeDecoration(
-              shape: MornyeSquircleBorder(radius),
+              shape: MosixSquircleBorder(radius),
               shadows: shadows,
             )
           : BoxDecoration(borderRadius: shape, boxShadow: shadows),
@@ -348,7 +348,7 @@ class MornyeGlass extends ConsumerWidget {
         // The optical lens already draws its own rim. Avoid a second dark
         // contact stroke on top, particularly visible against light pages.
         foregroundPainter: outlines && (!useLens || highlightBorder)
-            ? _MornyeGlassRim(
+            ? _MosixGlassRim(
                 shape: shape,
                 firstInGroup: firstInGroup,
                 lastInGroup: lastInGroup,
@@ -361,7 +361,7 @@ class MornyeGlass extends ConsumerWidget {
             : null,
         child: squircle
             ? ClipPath.shape(
-                shape: MornyeSquircleBorder(radius),
+                shape: MosixSquircleBorder(radius),
                 child: backdrop,
               )
             : ClipRRect(borderRadius: shape, child: backdrop),
@@ -378,8 +378,8 @@ class _GlassBackdropScope extends InheritedWidget {
 }
 
 /// Subtle edge definition without another offscreen layer or backdrop read.
-class _MornyeGlassRim extends CustomPainter {
-  const _MornyeGlassRim({
+class _MosixGlassRim extends CustomPainter {
+  const _MosixGlassRim({
     required this.shape,
     required this.firstInGroup,
     required this.lastInGroup,
@@ -416,7 +416,7 @@ class _MornyeGlassRim extends CustomPainter {
     void stroke(double inset, Paint paint) {
       if (smoothCorners) {
         canvas.drawPath(
-          MornyeSquircleBorder(
+          MosixSquircleBorder(
             (shape.topLeft.x - inset).clamp(0, double.infinity),
           ).getOuterPath(bounds.deflate(inset)),
           paint,
@@ -468,7 +468,7 @@ class _MornyeGlassRim extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _MornyeGlassRim oldDelegate) =>
+  bool shouldRepaint(covariant _MosixGlassRim oldDelegate) =>
       shape != oldDelegate.shape ||
       firstInGroup != oldDelegate.firstInGroup ||
       lastInGroup != oldDelegate.lastInGroup ||
@@ -480,8 +480,8 @@ class _MornyeGlassRim extends CustomPainter {
 }
 
 /// A searchable category uses the same material as the navigation capsule.
-class MornyeFilterChip extends ConsumerWidget {
-  const MornyeFilterChip({
+class MosixFilterChip extends ConsumerWidget {
+  const MosixFilterChip({
     super.key,
     required this.label,
     required this.selected,
@@ -514,7 +514,7 @@ class MornyeFilterChip extends ConsumerWidget {
             ? scheme.primary.withValues(alpha: 0.12)
             : glass
             ? Colors.transparent
-            : MornyeTheme.controlFill(context, enabled: onTap != null),
+            : MosixTheme.controlFill(context, enabled: onTap != null),
         child: InkWell(
           onTap: onTap,
           child: Padding(
@@ -542,7 +542,7 @@ class MornyeFilterChip extends ConsumerWidget {
     if (!glass) {
       return ClipRRect(borderRadius: BorderRadius.circular(24), child: content);
     }
-    return MornyeGlass.navigation(
+    return MosixGlass.navigation(
       radius: 24,
       blurEnabled: blurEnabled && ref.watch(mornyeBlurEnabledProvider),
       child: content,
@@ -550,8 +550,8 @@ class MornyeFilterChip extends ConsumerWidget {
   }
 }
 
-class MornyeNavigationIcon extends StatelessWidget {
-  const MornyeNavigationIcon({
+class MosixNavigationIcon extends StatelessWidget {
+  const MosixNavigationIcon({
     super.key,
     required this.icon,
     required this.badgeCount,
@@ -566,13 +566,13 @@ class MornyeNavigationIcon extends StatelessWidget {
     child: Badge(
       isLabelVisible: badgeCount > 0,
       label: Text('$badgeCount'),
-      child: MornyeSelectionForeground(child: Icon(icon)),
+      child: MosixSelectionForeground(child: Icon(icon)),
     ),
   );
 }
 
-class MornyeTabBar extends ConsumerWidget {
-  const MornyeTabBar({
+class MosixTabBar extends ConsumerWidget {
+  const MosixTabBar({
     super.key,
     required this.destinations,
     required this.selectedIndex,
@@ -602,7 +602,7 @@ class MornyeTabBar extends ConsumerWidget {
   }) =>
       blurEnabled &&
       liquidGlass &&
-      MornyeTheme.glassClarityOf(context) > 0 &&
+      MosixTheme.glassClarityOf(context) > 0 &&
       !MediaQuery.disableAnimationsOf(context) &&
       !contrastBlocked;
 
@@ -620,12 +620,12 @@ class MornyeTabBar extends ConsumerWidget {
     );
     return Padding(
       padding: EdgeInsets.symmetric(vertical: floating ? 8 : 0),
-      child: MornyeSelectionPill(
+      child: MosixSelectionPill(
         contrastBlocked: contrastBlocked,
         selectionColor: scheme.primary,
         maskItemForeground: false,
         liquidInteraction:
-            floating && MornyeTheme.glassClarityOf(context) > 0.2,
+            floating && MosixTheme.glassClarityOf(context) > 0.2,
         labels: [for (final destination in destinations) destination.label],
         selectedIndex: selectedIndex,
         onChanged: onSelected,
@@ -642,10 +642,10 @@ class MornyeTabBar extends ConsumerWidget {
               child: Transform.scale(
                 scaleX: 1 + 0.025 * progress,
                 scaleY: 1 + 0.06 * progress,
-                child: MornyeGlass.navigation(
+                child: MosixGlass.navigation(
                   blurEnabled: blurEnabled,
                   strongTint: true,
-                  tintOpacity: MornyeTheme.navigationOpacity(context),
+                  tintOpacity: MosixTheme.navigationOpacity(context),
                   refractionDepth: 0.45 + 0.15 * progress,
                   child: const SizedBox.expand(),
                 ),
@@ -670,15 +670,15 @@ class MornyeTabBar extends ConsumerWidget {
                   ),
                   child: Opacity(
                     opacity: hiddenIconIndices.contains(index) ? 0 : 1,
-                    child: destinations[index].icon is MornyeNavigationIcon
+                    child: destinations[index].icon is MosixNavigationIcon
                         ? destinations[index].icon
-                        : MornyeSelectionForeground(
+                        : MosixSelectionForeground(
                             child: destinations[index].icon,
                           ),
                   ),
                 ),
                 const SizedBox(height: 2),
-                MornyeSelectionForeground(
+                MosixSelectionForeground(
                   child: Text(
                     destinations[index].label,
                     maxLines: 1,

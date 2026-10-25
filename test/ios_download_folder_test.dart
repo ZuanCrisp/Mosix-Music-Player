@@ -6,12 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/settings/files_settings_page.dart';
-import 'package:mornye/screens/setup_screen.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/settings/files_settings_page.dart';
+import 'package:mosix/screens/setup_screen.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 class _SetupSettings extends SettingsNotifier {
   @override
@@ -23,7 +23,7 @@ class _SetupSettings extends SettingsNotifier {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const backend = MethodChannel('com.zarz.mornye/backend');
+  const backend = MethodChannel('com.zuancrisp.mosix/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late Completer<Map<String, String>?> picker;
@@ -65,7 +65,7 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
-          theme: mornye ? MornyeTheme.build(Brightness.light) : ThemeData(),
+          theme: mornye ? MosixTheme.build(Brightness.light) : ThemeData(),
           locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,

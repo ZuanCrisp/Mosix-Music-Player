@@ -127,7 +127,7 @@ class _EqualizerOverview extends StatelessWidget {
   final EqualizerSettings settings;
   final String presetName;
 
-  /// Shows the master switch beside the title; Mornye keeps it in its own
+  /// Shows the master switch beside the title; Mosix keeps it in its own
   /// row above.
   final ValueChanged<bool>? onEnabledChanged;
 
@@ -369,10 +369,10 @@ class _BandEditor extends StatelessWidget {
     final count = settings.gains.length;
     const counts = EqualizerSettings.bandCounts;
     void select(int index) => onChanged(settings.withBandCount(counts[index]));
-    if (context.isMornye) {
+    if (context.isMosix) {
       return Semantics(
         label: context.l10n.equalizerBands,
-        child: MornyeSegmentedControl(
+        child: MosixSegmentedControl(
           labels: [for (final value in counts) '$value'],
           selectedIndex: counts.indexOf(count),
           onChanged: select,
@@ -516,7 +516,7 @@ class _BandFader extends StatelessWidget {
     final colors = theme.colorScheme;
     final tokens = context.tokens;
     final active = gain != 0;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final hz = _frequency(frequency);
     final valueStyle = theme.textTheme.labelMedium?.copyWith(
       fontWeight: FontWeight.w600,
@@ -566,7 +566,7 @@ class _BandFader extends StatelessWidget {
         SizedBox(
           height: height,
           child: mornye
-              ? MornyeLevelSlider(
+              ? MosixLevelSlider(
                   vertical: true,
                   value: gain,
                   min: -15,
@@ -637,7 +637,7 @@ class _SliderTile extends StatelessWidget {
   /// Aligns an icon-less sub-setting with the text of the rows above it.
   final bool indented;
 
-  /// Ends a Mornye group, which separates rows with hairlines.
+  /// Ends a Mosix group, which separates rows with hairlines.
   final bool last;
   final ValueChanged<double> onChanged;
 
@@ -654,7 +654,7 @@ class _SliderTile extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final tokens = context.tokens;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final content = Padding(
       padding: EdgeInsetsDirectional.fromSTEB(
         tokens.rowPaddingH + (indented && !mornye ? 24 + tokens.rowIconGap : 0),
@@ -669,7 +669,7 @@ class _SliderTile extends StatelessWidget {
             title: title,
             subtitle: subtitle,
             value: _format(value),
-            // Mornye rows, like iOS Settings, carry no leading glyphs.
+            // Mosix rows, like iOS Settings, carry no leading glyphs.
             leading: icon == null || mornye
                 ? null
                 : AppIcon.adaptive(
@@ -679,7 +679,7 @@ class _SliderTile extends StatelessWidget {
                   ),
           ),
           if (mornye)
-            MornyeLevelSlider(
+            MosixLevelSlider(
               value: value.clamp(min, max),
               min: min,
               max: max,

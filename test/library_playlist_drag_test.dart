@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/widgets/library_playlist_drag_source.dart';
-import 'package:mornye/widgets/track_card.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/widgets/library_playlist_drag_source.dart';
+import 'package:mosix/widgets/track_card.dart';
 
 void main() {
   for (final grid in [false, true]) {

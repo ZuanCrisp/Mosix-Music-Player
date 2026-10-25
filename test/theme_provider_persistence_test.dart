@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/models/theme_settings.dart';
-import 'package:mornye/providers/theme_provider.dart';
+import 'package:mosix/models/theme_settings.dart';
+import 'package:mosix/providers/theme_provider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +20,8 @@ void main() {
         kUseDynamicColorKey: false,
         kUseAmoledKey: true,
         kUseSystemFontKey: true,
-        kMornyeAccentKey: 'blue',
-        kMornyeGlassClarityKey: 0.2,
+        kMosixAccentKey: 'blue',
+        kMosixGlassClarityKey: 0.2,
       });
       final prefs = await SharedPreferences.getInstance();
       final releaseLoad = Completer<SharedPreferences>();
@@ -36,8 +36,8 @@ void main() {
       final notifier = container.read(themeProvider.notifier);
       // An explicit edit equal to the bootstrap default still owns this field.
       final savingMode = notifier.setThemeMode(ThemeMode.system);
-      final savingAccent = notifier.setMornyeAccent(MornyeAccent.red);
-      await notifier.setMornyeGlassClarity(0.8, persist: false);
+      final savingAccent = notifier.setMosixAccent(MosixAccent.red);
+      await notifier.setMosixGlassClarity(0.8, persist: false);
       var saved = false;
       unawaited(savingAccent.then((_) => saved = true));
       await Future<void>.delayed(Duration.zero);
@@ -49,7 +49,7 @@ void main() {
       await Future.wait([savingMode, savingAccent]);
       final state = container.read(themeProvider);
       expect(state.themeMode, ThemeMode.system);
-      expect(state.mornyeAccent, MornyeAccent.red);
+      expect(state.mornyeAccent, MosixAccent.red);
       expect(state.mornyeGlassClarity, 0.8);
       expect(state.style, AppThemeStyle.mornye);
       expect(state.seedColorValue, 0xff123456);
@@ -62,8 +62,8 @@ void main() {
 
   test('early preview remains immediate without writing preferences', () async {
     SharedPreferences.setMockInitialValues({
-      kMornyeGlassClarityKey: 0.2,
-      kMornyeAccentKey: 'blue',
+      kMosixGlassClarityKey: 0.2,
+      kMosixAccentKey: 'blue',
     });
     final prefs = await SharedPreferences.getInstance();
     final releaseLoad = Completer<SharedPreferences>();
@@ -77,16 +77,16 @@ void main() {
     );
     addTearDown(container.dispose);
     container.listen(themeProvider, (_, next) {
-      if (next.mornyeAccent == MornyeAccent.blue) loaded.complete();
+      if (next.mornyeAccent == MosixAccent.blue) loaded.complete();
     });
     await container
         .read(themeProvider.notifier)
-        .setMornyeGlassClarity(0.8, persist: false);
+        .setMosixGlassClarity(0.8, persist: false);
     expect(container.read(themeProvider).mornyeGlassClarity, 0.8);
     releaseLoad.complete(prefs);
     await loaded.future;
     expect(container.read(themeProvider).mornyeGlassClarity, 0.8);
-    expect(prefs.getDouble(kMornyeGlassClarityKey), 0.2);
+    expect(prefs.getDouble(kMosixGlassClarityKey), 0.2);
   });
 
   test(

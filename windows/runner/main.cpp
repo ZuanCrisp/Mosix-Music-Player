@@ -12,11 +12,11 @@
 namespace {
 
 // Per user session, so two signed-in users each get their own instance.
-constexpr wchar_t kSingleInstanceMutex[] = L"Local\\com.zarz.mornye.instance";
+constexpr wchar_t kSingleInstanceMutex[] = L"Local\\com.zuancrisp.mosix.instance";
 
 // Same ID as the installer's Start Menu shortcut (windows/installer), so the
 // taskbar groups the window with its pinned shortcut.
-constexpr wchar_t kAppUserModelId[] = L"com.zarz.mornye";
+constexpr wchar_t kAppUserModelId[] = L"com.zuancrisp.mosix";
 
 constexpr wchar_t kUrlSchemeKey[] = L"Software\\Classes\\mornye";
 constexpr wchar_t kUrlCommandKey[] =
@@ -46,7 +46,7 @@ void RegisterUrlScheme() {
       ::_wcsicmp(current, command.c_str()) == 0) {
     return;
   }
-  SetUserRegistryString(kUrlSchemeKey, nullptr, L"URL:Mornye Protocol");
+  SetUserRegistryString(kUrlSchemeKey, nullptr, L"URL:Mosix Protocol");
   SetUserRegistryString(kUrlSchemeKey, L"URL Protocol", L"");
   SetUserRegistryString(L"Software\\Classes\\mornye\\DefaultIcon", nullptr,
                         executable + L",0");
@@ -96,7 +96,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 800);
-  if (!window.Create(L"Mornye", origin, size)) {
+  if (!window.Create(L"Mosix", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);

@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/providers/download_history_provider.dart';
-import 'package:mornye/services/history_database.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/services/history_database.dart';
 
 class _History extends DownloadHistoryNotifier {
   @override

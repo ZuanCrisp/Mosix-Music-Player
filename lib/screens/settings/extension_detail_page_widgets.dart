@@ -8,7 +8,7 @@ class _ExtensionOverviewSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = Padding(padding: const EdgeInsets.all(20), child: child);
-    if (context.isMornye) return MornyeGlassPanel(child: content);
+    if (context.isMosix) return MosixGlassPanel(child: content);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Theme.of(
@@ -33,8 +33,8 @@ class _ExtensionDivider extends StatelessWidget {
           height: 1,
           indent: indent,
           endIndent: 16,
-          color: context.isMornye
-              ? MornyeTheme.metadataDividerColor(context)
+          color: context.isMosix
+              ? MosixTheme.metadataDividerColor(context)
               : Theme.of(
                   context,
                 ).colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -145,7 +145,7 @@ class _CapabilityItem extends StatelessWidget {
             children: [
               AppIcon(
                 context.adaptiveIcon(icon),
-                color: context.isMornye || enabled
+                color: context.isMosix || enabled
                     ? colorScheme.primary
                     : colorScheme.outline,
               ),
@@ -168,12 +168,12 @@ class _CapabilityItem extends StatelessWidget {
                 ),
               ),
               AppIcon(
-                context.isMornye
+                context.isMosix
                     ? (enabled
                           ? CupertinoIcons.check_mark_circled_solid
                           : CupertinoIcons.xmark_circle)
                     : (enabled ? Icons.check_circle : Icons.cancel_outlined),
-                color: context.isMornye || enabled
+                color: context.isMosix || enabled
                     ? colorScheme.primary
                     : colorScheme.outline,
               ),
@@ -264,7 +264,7 @@ class _HealthSummaryItem extends StatelessWidget {
                         color: colorScheme.primary,
                       )
                     : AppIcon(
-                        context.isMornye
+                        context.isMosix
                             ? CupertinoIcons.refresh
                             : Icons.refresh,
                       ),
@@ -382,7 +382,7 @@ class _PermissionItem extends StatelessWidget {
             children: [
               AppIcon(
                 context.adaptiveIcon(icon),
-                color: context.isMornye
+                color: context.isMosix
                     ? colorScheme.primary
                     : colorScheme.onSurfaceVariant,
               ),
@@ -619,7 +619,7 @@ class _SettingItemState extends State<_SettingItem> {
       context: context,
       builder: (context) => AppAlertDialog(
         title: Text(widget.setting.label),
-        content: context.isMornye
+        content: context.isMosix
             ? Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: CupertinoTextField(
@@ -699,16 +699,16 @@ class _PostProcessingHookItem extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: context.isMornye
+                  color: context.isMosix
                       ? Colors.transparent
                       : colorScheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: AppIcon(
-                  context.isMornye
+                  context.isMosix
                       ? CupertinoIcons.wand_stars
                       : Icons.auto_fix_high,
-                  color: context.isMornye
+                  color: context.isMosix
                       ? colorScheme.primary
                       : colorScheme.onSecondaryContainer,
                   size: 20,
@@ -808,14 +808,14 @@ class _URLHandlerInfo extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: context.isMornye
+                  color: context.isMosix
                       ? Colors.transparent
                       : colorScheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: AppIcon(
-                  context.isMornye ? CupertinoIcons.link : Icons.link,
-                  color: context.isMornye
+                  context.isMosix ? CupertinoIcons.link : Icons.link,
+                  color: context.isMosix
                       ? colorScheme.primary
                       : colorScheme.onSecondaryContainer,
                   size: 24,
@@ -932,16 +932,16 @@ class _QualityOptionItem extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: context.isMornye
+                  color: context.isMosix
                       ? Colors.transparent
                       : colorScheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: AppIcon(
-                  context.isMornye
+                  context.isMosix
                       ? CupertinoIcons.waveform
                       : Icons.high_quality,
-                  color: context.isMornye
+                  color: context.isMosix
                       ? colorScheme.primary
                       : colorScheme.onSecondaryContainer,
                   size: 20,
@@ -968,7 +968,7 @@ class _QualityOptionItem extends StatelessWidget {
                         ),
                       ),
                     ],
-                    if (!context.isMornye) ...[
+                    if (!context.isMosix) ...[
                       const SizedBox(height: 4),
                       Text(
                         quality.id,

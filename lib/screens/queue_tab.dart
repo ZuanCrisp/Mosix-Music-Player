@@ -4,36 +4,36 @@ import 'package:flutter/foundation.dart' show ValueListenable, clampDouble;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart'
     show BoxHitTestResult, BoxParentData, RenderShiftedBox;
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_choice_chip.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/services/local_track_batch_actions.dart';
-import 'package:mornye/services/shell_navigation_service.dart';
-import 'package:mornye/widgets/error_card.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/swipe_delete_dismissible.dart';
-import 'package:mornye/widgets/track_card.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/pinned_section_sliver_list.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/app_progress_indicator.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/app_search_field.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
-import 'package:mornye/widgets/library_search_results.dart';
-import 'package:mornye/widgets/library_track_selection_bar.dart';
-import 'package:mornye/widgets/library_selection_playback_actions.dart';
-import 'package:mornye/widgets/local_library_artwork_builder.dart';
-import 'package:mornye/widgets/library_playlist_drag_source.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/playlist_picker_sheet.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_choice_chip.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/services/local_track_batch_actions.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
+import 'package:mosix/widgets/error_card.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/swipe_delete_dismissible.dart';
+import 'package:mosix/widgets/track_card.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/pinned_section_sliver_list.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/app_progress_indicator.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/app_search_field.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:mosix/widgets/library_search_results.dart';
+import 'package:mosix/widgets/library_track_selection_bar.dart';
+import 'package:mosix/widgets/library_selection_playback_actions.dart';
+import 'package:mosix/widgets/local_library_artwork_builder.dart';
+import 'package:mosix/widgets/library_playlist_drag_source.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/playlist_picker_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -44,64 +44,64 @@ import 'package:material_3_expressive/material_3_expressive.dart'
         M3EButtonGroupType,
         M3EButtonSize,
         M3EButtonStyle;
-import 'package:mornye/providers/library_browse_provider.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/widgets/app_shape.dart';
-import 'package:mornye/widgets/library_fast_scroller.dart';
-import 'package:mornye/widgets/player_artwork.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/audio_quality_badge_policy.dart';
-import 'package:mornye/utils/nav_bar_inset.dart';
-import 'package:mornye/utils/file_access.dart';
-import 'package:mornye/utils/library_format_filters.dart';
-import 'package:mornye/utils/ordered_range_selection.dart';
-import 'package:mornye/utils/saf_download_tree.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/unified_library_item.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/playback_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/services/music_player_service.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/services/album_completeness.dart';
-import 'package:mornye/services/local_track_redownload_service.dart';
-import 'package:mornye/services/batch_track_actions.dart';
-import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mornye/screens/track_metadata_screen.dart';
-import 'package:mornye/screens/listening_rewind_screen.dart';
-import 'package:mornye/screens/favorite_artists_screen.dart';
-import 'package:mornye/screens/downloaded_album_screen.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
+import 'package:mosix/providers/library_browse_provider.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/widgets/app_shape.dart';
+import 'package:mosix/widgets/library_fast_scroller.dart';
+import 'package:mosix/widgets/player_artwork.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/audio_quality_badge_policy.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/utils/file_access.dart';
+import 'package:mosix/utils/library_format_filters.dart';
+import 'package:mosix/utils/ordered_range_selection.dart';
+import 'package:mosix/utils/saf_download_tree.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/unified_library_item.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/playback_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/services/music_player_service.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/services/album_completeness.dart';
+import 'package:mosix/services/local_track_redownload_service.dart';
+import 'package:mosix/services/batch_track_actions.dart';
+import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mosix/screens/track_metadata_screen.dart';
+import 'package:mosix/screens/listening_rewind_screen.dart';
+import 'package:mosix/screens/favorite_artists_screen.dart';
+import 'package:mosix/screens/downloaded_album_screen.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:mornye/services/cover_cache_manager.dart';
-import 'package:mornye/screens/library_tracks_folder_screen.dart';
-import 'package:mornye/screens/local_album_screen.dart';
-import 'package:mornye/screens/mornye_library_screen.dart';
-import 'package:mornye/controllers/completion_bridge_tracker.dart';
-import 'package:mornye/controllers/queue_library_pager.dart';
-import 'package:mornye/controllers/queue_library_refresh_policy.dart';
-import 'package:mornye/utils/clickable_metadata.dart';
-import 'package:mornye/utils/string_utils.dart';
-import 'package:mornye/widgets/download_service_picker.dart';
-import 'package:mornye/widgets/animated_library_sliver_grid.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/widgets/selection_bottom_bar.dart';
-import 'package:mornye/widgets/smoothed_progress.dart';
-import 'package:mornye/widgets/scroll_edge_fade.dart';
-import 'package:mornye/widgets/two_finger_pinch_listener.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/desktop/context_menu.dart';
-import 'package:mornye/widgets/desktop/desktop_selection.dart';
-import 'package:mornye/widgets/desktop/hover_play_button.dart';
-import 'package:mornye/widgets/desktop/library_track_menu.dart';
-import 'package:mornye/widgets/desktop/track_table.dart';
+import 'package:mosix/services/cover_cache_manager.dart';
+import 'package:mosix/screens/library_tracks_folder_screen.dart';
+import 'package:mosix/screens/local_album_screen.dart';
+import 'package:mosix/screens/mornye_library_screen.dart';
+import 'package:mosix/controllers/completion_bridge_tracker.dart';
+import 'package:mosix/controllers/queue_library_pager.dart';
+import 'package:mosix/controllers/queue_library_refresh_policy.dart';
+import 'package:mosix/utils/clickable_metadata.dart';
+import 'package:mosix/utils/string_utils.dart';
+import 'package:mosix/widgets/download_service_picker.dart';
+import 'package:mosix/widgets/animated_library_sliver_grid.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/widgets/selection_bottom_bar.dart';
+import 'package:mosix/widgets/smoothed_progress.dart';
+import 'package:mosix/widgets/scroll_edge_fade.dart';
+import 'package:mosix/widgets/two_finger_pinch_listener.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/desktop/context_menu.dart';
+import 'package:mosix/widgets/desktop/desktop_selection.dart';
+import 'package:mosix/widgets/desktop/hover_play_button.dart';
+import 'package:mosix/widgets/desktop/library_track_menu.dart';
+import 'package:mosix/widgets/desktop/track_table.dart';
 
 part 'queue_tab_helpers.dart';
 part 'queue_tab_widgets.dart';
@@ -490,8 +490,8 @@ class _QueueTabState extends ConsumerState<QueueTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (context.isMornye && widget.librarySection == null) {
-      return MornyeLibraryScreen(
+    if (context.isMosix && widget.librarySection == null) {
+      return MosixLibraryScreen(
         onOpenSection: (section) => Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => Scaffold(body: QueueTab(librarySection: section)),
@@ -876,7 +876,7 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                           final playlistCount = _getVisibleCollectionEntries(
                             collectionState,
                           ).length;
-                          if (!context.isMornye) {
+                          if (!context.isMosix) {
                             return _LibraryPageTabs(
                               selectedIndex: activePage,
                               onSelected: _animateToFilterPage,
@@ -970,8 +970,8 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                           onOpenArtist: (artist) => Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (_) => Scaffold(
-                                body: MornyeLibraryScreen(
-                                  page: MornyeLibraryPage.albums,
+                                body: MosixLibraryScreen(
+                                  page: MosixLibraryPage.albums,
                                   artist: artist,
                                   onOpenSection: (_) {},
                                 ),

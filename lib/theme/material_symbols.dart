@@ -12,7 +12,7 @@ typedef MaterialSymbol = ({IconData icon, bool filled});
 /// Rounded Material Symbols for the legacy icons used by the Material theme,
 /// or null for icons without a counterpart (and for non-Material fonts).
 ///
-/// Call sites keep `Icons.*` so the Mornye Cupertino mapping stays keyed by the
+/// Call sites keep `Icons.*` so the Mosix Cupertino mapping stays keyed by the
 /// same constants.
 MaterialSymbol? materialSymbolFor(IconData? icon) {
   if (icon == null || icon.fontFamily != Icons.add.fontFamily) return null;

@@ -7,12 +7,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/repo_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/extension_storage_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/repo_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/extension_storage_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
 
 class _DelayedSettingsNotifier extends SettingsNotifier {
   final _ready = Completer<void>();
@@ -89,7 +89,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const paths = MethodChannel('plugins.flutter.io/path_provider');
   const secure = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
-  const backend = MethodChannel('com.zarz.mornye/backend');
+  const backend = MethodChannel('com.zuancrisp.mosix/backend');
   late Directory root;
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;

@@ -2,9 +2,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/screens/settings/backup_restore_page.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/screens/settings/backup_restore_page.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 class _BackupFilePicker extends FilePickerPlatform {
   bool opened = false;

@@ -3,8 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 /// A draggable scroll thumb for long library lists, with a bubble naming the
 /// section under the thumb (a letter or a month).
@@ -209,7 +209,7 @@ class _LibraryFastScrollerState extends State<LibraryFastScroller> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final reduced = MediaQuery.disableAnimationsOf(context);
     final motion = AppMotion.spatialFast(
       context,
@@ -367,7 +367,7 @@ class _BubbleLayout extends SingleChildLayoutDelegate {
 }
 
 /// The section bubble beside the thumb. Material uses a container-colored
-/// shape pointing at the thumb; Mornye a plain rounded tile.
+/// shape pointing at the thumb; Mosix a plain rounded tile.
 class _Bubble extends StatelessWidget {
   const _Bubble({
     super.key,

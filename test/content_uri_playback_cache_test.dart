@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/content_uri_playback_cache.dart';
+import 'package:mosix/services/content_uri_playback_cache.dart';
 
 void main() {
   late Directory directory;

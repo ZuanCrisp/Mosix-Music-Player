@@ -6,12 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/services/update_checker.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/widgets/update_dialog.dart';
+import 'package:mosix/services/update_checker.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/widgets/update_dialog.dart';
 
 Map<String, Object?> release(String version) => {
   'tag_name': 'v$version',
@@ -20,13 +20,13 @@ Map<String, Object?> release(String version) => {
   'body': '- Release notes',
   'published_at': '2026-09-26T06:32:33Z',
   'html_url':
-      'https://github.com/mornyeapp/Mornye/releases/tag/v$version',
+      'https://github.com/ZuanCrisp/Mosix-Music-Player/releases/tag/v$version',
   'assets': [
     for (final abi in ['arm32', 'arm64'])
       {
-        'name': 'Mornye-v$version-$abi.apk',
+        'name': 'Mosix-v$version-$abi.apk',
         'browser_download_url':
-            'https://example.test/Mornye-v$version-$abi.apk',
+            'https://example.test/Mosix-v$version-$abi.apk',
         'digest': 'sha256:${List.filled(64, 'a').join()}',
       },
   ],
@@ -87,14 +87,14 @@ void main() {
     });
   }
 
-  test('discovers Mornye release assets after the app rename', () async {
+  test('discovers Mosix release assets after the app rename', () async {
     final renamedRelease = release('5.2.1')
       ..['assets'] = [
         for (final abi in ['arm32', 'arm64'])
           {
-            'name': 'Mornye-5.2.1-$abi.apk',
+            'name': 'Mosix-5.2.1-$abi.apk',
             'browser_download_url':
-                'https://example.test/Mornye-5.2.1-$abi.apk',
+                'https://example.test/Mosix-5.2.1-$abi.apk',
             'digest': 'sha256:${List.filled(64, 'a').join()}',
           },
       ];
@@ -109,7 +109,7 @@ void main() {
     final update = await checker.checkForUpdate();
     expect(
       update?.apkDownloadUrl,
-      'https://example.test/Mornye-5.2.1-arm64.apk',
+      'https://example.test/Mosix-5.2.1-arm64.apk',
     );
     expect(update?.apkSha256, List.filled(64, 'a').join());
   });
@@ -304,7 +304,7 @@ void main() {
           ProviderScope(
             overrides: [lowEndDeviceProvider.overrideWithValue(false)],
             child: MaterialApp(
-              theme: mornye ? MornyeTheme.build(Brightness.dark) : null,
+              theme: mornye ? MosixTheme.build(Brightness.dark) : null,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(

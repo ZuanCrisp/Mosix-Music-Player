@@ -3,13 +3,13 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/services/library_cleanup.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/services/library_schema.dart';
-import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
-import 'package:mornye/services/sqlite_native_snapshot.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/utils/native_platform_name.dart';
+import 'package:mosix/services/library_cleanup.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/services/library_schema.dart';
+import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
+import 'package:mosix/services/sqlite_native_snapshot.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/utils/native_platform_name.dart';
 
 typedef NativeLibraryJobRunner =
     Future<Map<String, dynamic>> Function(

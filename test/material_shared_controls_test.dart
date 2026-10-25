@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_checkbox.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/widgets/app_menu_button.dart';
-import 'package:mornye/widgets/app_text_field.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_checkbox.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/widgets/app_menu_button.dart';
+import 'package:mosix/widgets/app_text_field.dart';
 
 Widget _host(Widget child, {ThemeData? theme, bool reduceMotion = false}) =>
     ProviderScope(
@@ -277,7 +277,7 @@ void main() {
               ),
             ),
             theme: variant == 'mornye'
-                ? MornyeTheme.build(Brightness.dark)
+                ? MosixTheme.build(Brightness.dark)
                 : null,
             reduceMotion: variant == 'reduced',
           ),
@@ -297,7 +297,7 @@ void main() {
     );
   }
 
-  testWidgets('Mornye cards honor explicit margins and press callbacks', (
+  testWidgets('Mosix cards honor explicit margins and press callbacks', (
     tester,
   ) async {
     var taps = 0;
@@ -310,7 +310,7 @@ void main() {
           onLongPress: () => longPresses++,
           child: const SizedBox(height: 60, child: Text('Press card')),
         ),
-        theme: MornyeTheme.build(Brightness.dark),
+        theme: MosixTheme.build(Brightness.dark),
       ),
     );
     expect(tester.getSize(find.byType(AppContentCard)).height, 84);

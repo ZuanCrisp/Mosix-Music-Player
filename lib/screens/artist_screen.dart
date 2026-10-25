@@ -2,67 +2,67 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/app_progress_indicator.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/widgets/mornye_artist_header.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/screens/track_history_snapshot.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/theme/cover_palette.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/app_progress_indicator.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/widgets/mornye_artist_header.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/screens/track_history_snapshot.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/theme/cover_palette.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/models/artist_concert.dart';
-import 'package:mornye/widgets/artist_concerts_button.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/track_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/recent_access_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/string_utils.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/nav_bar_inset.dart';
-import 'package:mornye/utils/provider_resource_ids.dart';
-import 'package:mornye/utils/ttl_cache.dart';
-import 'package:mornye/screens/album_screen.dart';
-import 'package:mornye/screens/extension_collection_screens.dart'
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/models/artist_concert.dart';
+import 'package:mosix/widgets/artist_concerts_button.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/track_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/recent_access_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/string_utils.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/utils/provider_resource_ids.dart';
+import 'package:mosix/utils/ttl_cache.dart';
+import 'package:mosix/screens/album_screen.dart';
+import 'package:mosix/screens/extension_collection_screens.dart'
     show ExtensionAlbumScreen;
-import 'package:mornye/controllers/local_playback.dart';
-import 'package:mornye/widgets/download_service_picker.dart';
-import 'package:mornye/widgets/error_card.dart';
-import 'package:mornye/widgets/selection_bottom_bar.dart';
-import 'package:mornye/widgets/in_library_badge.dart';
-import 'package:mornye/widgets/track_collection_quick_actions.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/screens/selection_mode_mixin.dart';
-import 'package:mornye/utils/clickable_metadata.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
-import 'package:mornye/widgets/playlist_picker_sheet.dart';
-import 'package:mornye/widgets/motion_header_banner.dart';
-import 'package:mornye/widgets/cross_extension_share_sheet.dart';
-import 'package:mornye/widgets/view_queue_snackbar_action.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
-import 'package:mornye/widgets/downloadable_cover.dart';
-import 'package:mornye/widgets/expressive_button_group.dart';
-import 'package:mornye/widgets/expressive_icon_button.dart';
-import 'package:mornye/widgets/desktop/context_menu.dart';
-import 'package:mornye/widgets/desktop/desktop_scroll_arrows.dart';
-import 'package:mornye/widgets/desktop/desktop_selection.dart';
-import 'package:mornye/widgets/desktop/detail_header.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/material_expressive.dart';
+import 'package:mosix/controllers/local_playback.dart';
+import 'package:mosix/widgets/download_service_picker.dart';
+import 'package:mosix/widgets/error_card.dart';
+import 'package:mosix/widgets/selection_bottom_bar.dart';
+import 'package:mosix/widgets/in_library_badge.dart';
+import 'package:mosix/widgets/track_collection_quick_actions.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/screens/selection_mode_mixin.dart';
+import 'package:mosix/utils/clickable_metadata.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
+import 'package:mosix/widgets/playlist_picker_sheet.dart';
+import 'package:mosix/widgets/motion_header_banner.dart';
+import 'package:mosix/widgets/cross_extension_share_sheet.dart';
+import 'package:mosix/widgets/view_queue_snackbar_action.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:mosix/widgets/downloadable_cover.dart';
+import 'package:mosix/widgets/expressive_button_group.dart';
+import 'package:mosix/widgets/expressive_icon_button.dart';
+import 'package:mosix/widgets/desktop/context_menu.dart';
+import 'package:mosix/widgets/desktop/desktop_scroll_arrows.dart';
+import 'package:mosix/widgets/desktop/desktop_selection.dart';
+import 'package:mosix/widgets/desktop/detail_header.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/material_expressive.dart';
 
 part 'artist_screen_widgets.dart';
 part 'artist_screen_discography.dart';
@@ -611,8 +611,8 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen>
 
   @override
   Widget build(BuildContext context) {
-    if (context.isMornye) {
-      return MornyeArtistSurface(
+    if (context.isMosix) {
+      return MosixArtistSurface(
         imageSource:
             _headerImageUrl ?? widget.headerImageUrl ?? widget.coverUrl,
         logoSource: _headerLogoUrl ?? widget.headerLogoUrl,
@@ -679,7 +679,7 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen>
                             child: ArtistScreenSkeleton(
                               showCoverHeader:
                                   !isDesktopPlatform &&
-                                  !context.isMornye &&
+                                  !context.isMosix &&
                                   (_headerImageUrl ??
                                           widget.headerImageUrl ??
                                           widget.coverUrl) ==
@@ -702,11 +702,11 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen>
                             ),
                           ),
                         if (!_isLoadingDiscography && _error == null) ...[
-                          if (context.isMornye &&
+                          if (context.isMosix &&
                               albums.isNotEmpty &&
                               !isSelectionMode)
                             SliverToBoxAdapter(
-                              child: _buildMornyeFeaturedAlbum(
+                              child: _buildMosixFeaturedAlbum(
                                 context,
                                 albums.first,
                               ),

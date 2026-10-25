@@ -2,16 +2,16 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/player_artwork_theme.dart';
-import 'package:mornye/widgets/album_track_tile.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/widgets/desktop/track_table.dart';
-import 'package:mornye/widgets/now_playing_indicator.dart';
-import 'package:mornye/widgets/track_card.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/player_artwork_theme.dart';
+import 'package:mosix/widgets/album_track_tile.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/widgets/desktop/track_table.dart';
+import 'package:mosix/widgets/now_playing_indicator.dart';
+import 'package:mosix/widgets/track_card.dart';
 
 /// Long enough for the effect and spatial springs to settle.
 const _settle = Duration(seconds: 1);
@@ -54,7 +54,7 @@ Widget _app(
     playbackLoadingProvider.overrideWith((ref) => false),
   ],
   child: MaterialApp(
-    theme: mornye ? MornyeTheme.build(Brightness.light) : AppTheme.light(),
+    theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     builder: (context, child) => MediaQuery(
@@ -292,7 +292,7 @@ void main() {
       );
     });
 
-    testWidgets('Mornye keeps the plain row', (tester) async {
+    testWidgets('Mosix keeps the plain row', (tester) async {
       await tester.pumpWidget(
         _app(_table(), mornye: true, currentId: 'media-0'),
       );
@@ -470,7 +470,7 @@ void main() {
       expect(find.byType(NowPlayingIndicator), findsOneWidget);
     });
 
-    testWidgets('Mornye ignores the current track', (tester) async {
+    testWidgets('Mosix ignores the current track', (tester) async {
       await tester.pumpWidget(_app(card(current: true), mornye: true));
       await tester.pump();
 
@@ -482,7 +482,7 @@ void main() {
       expect(_textStyle(tester, 'Song')?.fontWeight, FontWeight.w500);
     });
 
-    testWidgets('Mornye keeps its selection tint', (tester) async {
+    testWidgets('Mosix keeps its selection tint', (tester) async {
       await tester.pumpWidget(_app(card(selected: true), mornye: true));
       await tester.pump();
 

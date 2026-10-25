@@ -10,24 +10,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mini_player.dart';
-import 'package:mornye/widgets/mornye_bottom_bar.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/mornye_liquid_backdrop.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mini_player.dart';
+import 'package:mosix/widgets/mornye_bottom_bar.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mornye_liquid_backdrop.dart';
 
 import 'performance_probe.dart';
 
 void main() {
   final binding = PerformanceTestBinding.ensureInitialized();
-  const focused = bool.fromEnvironment('MORNYE_GLASS_FOCUS');
+  const focused = bool.fromEnvironment('MOSIX_GLASS_FOCUS');
   for (final clarity in focused ? [0.6, 1.0] : [0.0, 0.1, 0.6, 1.0]) {
-    testWidgets('Mornye real rendering at clarity $clarity', (tester) async {
+    testWidgets('Mosix real rendering at clarity $clarity', (tester) async {
       final probe = PerformanceProbe(
         binding,
         tester,
@@ -47,7 +47,7 @@ void main() {
         );
         await probe.wait(const Duration(milliseconds: 600));
       });
-      expect(find.byType(MornyeBottomBar), findsOneWidget);
+      expect(find.byType(MosixBottomBar), findsOneWidget);
       expect(find.byType(MiniPlayer), findsOneWidget);
       final player = tester.state(find.byType(MiniPlayer));
 
@@ -81,7 +81,7 @@ void main() {
         await probe.measure('tab_changes', () async {
           for (final label in ['Library', 'Repo', 'Search', 'Home']) {
             final tab = find.descendant(
-              of: find.byType(MornyeTabBar),
+              of: find.byType(MosixTabBar),
               matching: find.text(label),
             );
             await tester.tapAt(tester.getCenter(tab.first));
@@ -93,7 +93,7 @@ void main() {
 
       if (clarity > 0.2) {
         await probe.measure('held_lens_drag', () async {
-          final tabs = find.byType(MornyeTabBar);
+          final tabs = find.byType(MosixTabBar);
           final home = tester.getCenter(
             find.descendant(of: tabs, matching: find.text('Home')).first,
           );
@@ -103,19 +103,19 @@ void main() {
           final gesture = await tester.startGesture(home);
           await probe.wait(const Duration(milliseconds: 280));
           final lens = find.byWidgetPredicate(
-            (widget) => widget is MornyeLiquidBackdrop && widget.interaction,
+            (widget) => widget is MosixLiquidBackdrop && widget.interaction,
           );
           if (ui.ImageFilter.isShaderFilterSupported) {
             // Await the final painted pose even if the emulator delays a frame.
             for (
               var attempt = 0;
-              tester.widget<MornyeLiquidBackdrop>(lens).progress < 1 &&
+              tester.widget<MosixLiquidBackdrop>(lens).progress < 1 &&
                   attempt < 20;
               attempt++
             ) {
               await probe.wait(const Duration(milliseconds: 100));
             }
-            expect(tester.widget<MornyeLiquidBackdrop>(lens).progress, 1);
+            expect(tester.widget<MosixLiquidBackdrop>(lens).progress, 1);
           }
           for (var step = 1; step <= 60; step++) {
             final fraction = (1 - math.cos(step / 60 * math.pi * 2)) / 2;
@@ -149,7 +149,7 @@ void main() {
           'tracks': 2000,
           'unique_local_covers': fixture.covers.length,
           'scope':
-              'production Mornye chrome and MiniPlayer over a fixture grid',
+              'production Mosix chrome and MiniPlayer over a fixture grid',
         },
       );
     });
@@ -167,7 +167,7 @@ class _Fixture {
   final Directory directory;
   final List<Uint8List> covers;
   final Uri artUri;
-  final chrome = MornyeChromeController();
+  final chrome = MosixChromeController();
   final scroll = ScrollController();
   final activeTab = ValueNotifier<int>(0);
   final media = StreamController<MediaItem?>.broadcast(sync: true);
@@ -235,10 +235,10 @@ class _Fixture {
       musicPlayerControllerProvider.overrideWithValue(MusicPlayerController()),
       lowEndDeviceProvider.overrideWithValue(false),
       backdropBlurEnabledProvider.overrideWithValue(true),
-      mornyeGlassLevelProvider.overrideWithValue(MornyeGlassLevel.liquid),
+      mornyeGlassLevelProvider.overrideWithValue(MosixGlassLevel.liquid),
     ],
     child: MaterialApp(
-      theme: MornyeTheme.build(Brightness.dark, glassClarity: clarity),
+      theme: MosixTheme.build(Brightness.dark, glassClarity: clarity),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
@@ -291,7 +291,7 @@ class _Fixture {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: ListenableBuilder(
               listenable: Listenable.merge([chrome, activeTab]),
-              builder: (context, child) => MornyeBottomBar(
+              builder: (context, child) => MosixBottomBar(
                 collapsed: chrome.value,
                 destinations: const [
                   NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
@@ -345,7 +345,7 @@ class _Fixture {
     activeTab.dispose();
     await directory.delete(recursive: true);
     debugPrint(
-      'Mornye fixture cache after cleanup: ${imageCache.currentSizeBytes} bytes',
+      'Mosix fixture cache after cleanup: ${imageCache.currentSizeBytes} bytes',
     );
   }
 }

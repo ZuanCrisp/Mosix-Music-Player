@@ -1,9 +1,9 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/library_collections.dart';
-import 'package:mornye/services/library_playlist_search.dart';
-import 'package:mornye/services/library_search.dart';
+import 'package:mosix/models/library_collections.dart';
+import 'package:mosix/services/library_playlist_search.dart';
+import 'package:mosix/services/library_search.dart';
 
 List<PlaylistSearchEntry> _referencePage(PlaylistSearchRequest request) {
   final query = LibrarySearchQuery(request.query);

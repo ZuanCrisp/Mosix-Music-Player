@@ -97,22 +97,18 @@ extension _MainShellStartupPrompts on _MainShellState {
 
     final settings = ref.read(settingsProvider);
 
-    // The check runs even when the user disabled update prompts: versions
-    // that fall forceUpdateThreshold stable releases behind must update, and
-    // that enforcement cannot be opted out of.
+    // Update notices remain optional, so an available release never blocks
+    // normal app use.
     final updateInfo = await UpdateChecker().checkForUpdate(
       channel: settings.updateChannel,
     );
     if (updateInfo == null || !mounted) return false;
 
-    final forced =
-        updateInfo.releasesBehind >= UpdateChecker.forceUpdateThreshold;
-    if (!forced && !settings.checkForUpdates) return false;
+    if (!settings.checkForUpdates) return false;
 
     showUpdateDialog(
       context,
       updateInfo: updateInfo,
-      forced: forced,
       onDisableUpdates: () {
         ref.read(settingsProvider.notifier).setCheckForUpdates(false);
       },

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
 
 /// One row of an [AppMenuButton].
 class AppMenuItem<T extends Object> {
@@ -25,7 +25,7 @@ class AppMenuItem<T extends Object> {
 }
 
 /// Overflow and picker menus. Expressive builds open the M3E menu from an
-/// icon button; Mornye and reduced motion keep the popup menu.
+/// icon button; Mosix and reduced motion keep the popup menu.
 class AppMenuButton<T extends Object> extends StatelessWidget {
   const AppMenuButton({
     super.key,
@@ -59,7 +59,7 @@ class AppMenuButton<T extends Object> extends StatelessWidget {
       icon: icon,
       tooltip: tooltip,
       offset: offset,
-      shape: context.isMornye
+      shape: context.isMosix
           ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
           : null,
       popUpAnimationStyle: AppMotion.surfaceEntrance(context),

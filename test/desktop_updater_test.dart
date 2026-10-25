@@ -6,21 +6,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/services/desktop_updater.dart';
-import 'package:mornye/services/update_checker.dart';
+import 'package:mosix/services/desktop_updater.dart';
+import 'package:mosix/services/update_checker.dart';
 
 const _version = 'v5.3.0';
 
 const _desktopAssetNames = [
-  'Mornye-$_version-arm64.apk',
-  'Mornye-$_version-macos-universal.dmg',
-  'Mornye-$_version-windows-x64-setup.exe',
-  'Mornye-$_version-windows-x64-portable.zip',
-  'Mornye-$_version-windows-arm64-setup.exe',
-  'Mornye-$_version-linux-x86_64.AppImage',
-  'Mornye-$_version-linux-aarch64.AppImage',
-  'Mornye-$_version-linux-amd64.deb',
-  'Mornye-$_version-linux-arm64.deb',
+  'Mosix-$_version-arm64.apk',
+  'Mosix-$_version-macos-universal.dmg',
+  'Mosix-$_version-windows-x64-setup.exe',
+  'Mosix-$_version-windows-x64-portable.zip',
+  'Mosix-$_version-windows-arm64-setup.exe',
+  'Mosix-$_version-linux-x86_64.AppImage',
+  'Mosix-$_version-linux-aarch64.AppImage',
+  'Mosix-$_version-linux-amd64.deb',
+  'Mosix-$_version-linux-arm64.deb',
   'SHA256SUMS.txt',
 ];
 
@@ -33,7 +33,7 @@ const _appImageHost = UpdateHost(
   os: 'linux',
   arch: 'x64',
   linuxPackage: LinuxPackageKind.appImage,
-  appImagePath: '/home/user/Applications/Mornye.AppImage',
+  appImagePath: '/home/user/Applications/Mosix.AppImage',
 );
 
 void main() {
@@ -45,29 +45,29 @@ void main() {
     for (final (host, expected) in [
       (
         const UpdateHost(os: 'macos', arch: 'arm64'),
-        'Mornye-$_version-macos-universal.dmg',
+        'Mosix-$_version-macos-universal.dmg',
       ),
       (
         const UpdateHost(os: 'macos', arch: 'x64'),
-        'Mornye-$_version-macos-universal.dmg',
+        'Mosix-$_version-macos-universal.dmg',
       ),
       (
         const UpdateHost(os: 'windows', arch: 'x64'),
-        'Mornye-$_version-windows-x64-setup.exe',
+        'Mosix-$_version-windows-x64-setup.exe',
       ),
       (
         const UpdateHost(os: 'windows', arch: 'arm64'),
-        'Mornye-$_version-windows-arm64-setup.exe',
+        'Mosix-$_version-windows-arm64-setup.exe',
       ),
-      (_appImageHost, 'Mornye-$_version-linux-x86_64.AppImage'),
+      (_appImageHost, 'Mosix-$_version-linux-x86_64.AppImage'),
       (
         const UpdateHost(
           os: 'linux',
           arch: 'arm64',
           linuxPackage: LinuxPackageKind.appImage,
-          appImagePath: '/opt/apps/Mornye.AppImage',
+          appImagePath: '/opt/apps/Mosix.AppImage',
         ),
-        'Mornye-$_version-linux-aarch64.AppImage',
+        'Mosix-$_version-linux-aarch64.AppImage',
       ),
     ]) {
       test('${host.os} ${host.arch} picks $expected', () {
@@ -84,14 +84,14 @@ void main() {
           withoutArm,
           const UpdateHost(os: 'windows', arch: 'arm64'),
         )?.name,
-        'Mornye-$_version-windows-x64-setup.exe',
+        'Mosix-$_version-windows-x64-setup.exe',
       );
     });
 
     test('an x64 host never gets an arm64 package', () {
       final armOnly = _assets([
-        'Mornye-$_version-windows-arm64-setup.exe',
-        'Mornye-$_version-linux-aarch64.AppImage',
+        'Mosix-$_version-windows-arm64-setup.exe',
+        'Mosix-$_version-linux-aarch64.AppImage',
       ]);
       expect(
         UpdateChecker.selectDesktopAsset(
@@ -124,8 +124,8 @@ void main() {
     test('APPIMAGE marks an AppImage', () {
       expect(
         UpdateHost.detectLinuxPackage(
-          environment: {'APPIMAGE': '/home/user/Mornye.AppImage'},
-          resolvedExecutable: '/tmp/.mount_MornyeAbc/usr/lib/mornye/mornye',
+          environment: {'APPIMAGE': '/home/user/Mosix.AppImage'},
+          resolvedExecutable: '/tmp/.mount_MosixAbc/usr/lib/mornye/mornye',
         ),
         LinuxPackageKind.appImage,
       );
@@ -144,7 +144,7 @@ void main() {
     test('Flatpak wins over everything else', () {
       expect(
         UpdateHost.detectLinuxPackage(
-          environment: {'FLATPAK_ID': 'com.zarz.mornye'},
+          environment: {'FLATPAK_ID': 'com.zuancrisp.mosix'},
           resolvedExecutable: '/app/lib/mornye/mornye',
         ),
         LinuxPackageKind.flatpak,
@@ -174,20 +174,20 @@ void main() {
     final a = List.filled(64, 'a').join();
     final b = List.filled(64, 'B').join();
     final sums =
-        '$a  Mornye-v5.3.0-linux-x86_64.AppImage\n'
-        '$b *Mornye-v5.3.0-macos-universal.dmg\r\n'
+        '$a  Mosix-v5.3.0-linux-x86_64.AppImage\n'
+        '$b *Mosix-v5.3.0-macos-universal.dmg\r\n'
         'not a checksum line\n';
     expect(
       UpdateChecker.sha256FromChecksums(
         sums,
-        'Mornye-v5.3.0-linux-x86_64.AppImage',
+        'Mosix-v5.3.0-linux-x86_64.AppImage',
       ),
       a,
     );
     expect(
       UpdateChecker.sha256FromChecksums(
         sums,
-        'Mornye-v5.3.0-macos-universal.dmg',
+        'Mosix-v5.3.0-macos-universal.dmg',
       ),
       b.toLowerCase(),
     );
@@ -232,8 +232,8 @@ void main() {
         await recording(_appImageHost).checkForUpdate();
         await recording(UpdateHost.android).checkForUpdate();
         expect(requested.map((url) => url.path), [
-          '/repos/mornyeapp/Mornye-Desktop/releases',
-          '/repos/mornyeapp/Mornye/releases',
+          '/repos/ZuanCrisp/Mosix-Music-Player-Desktop/releases',
+          '/repos/ZuanCrisp/Mosix-Music-Player/releases',
         ]);
       },
     );
@@ -262,7 +262,7 @@ void main() {
         await checker(_appImageHost).checkForUpdate();
         expect(
           (await offline.checkForUpdate())?.assetName,
-          'Mornye-$_version-linux-x86_64.AppImage',
+          'Mosix-$_version-linux-x86_64.AppImage',
         );
       },
     );
@@ -270,7 +270,7 @@ void main() {
     test('an AppImage gets its package, checksums and target path', () async {
       final update = await checker(_appImageHost).checkForUpdate();
       expect(update?.installKind, UpdateInstallKind.linuxAppImage);
-      expect(update?.assetName, 'Mornye-$_version-linux-x86_64.AppImage');
+      expect(update?.assetName, 'Mosix-$_version-linux-x86_64.AppImage');
       expect(update?.checksumsUrl, 'https://example.test/SHA256SUMS.txt');
       expect(update?.appImagePath, _appImageHost.appImagePath);
       expect(update?.apkDownloadUrl, isNull);
@@ -296,7 +296,7 @@ void main() {
         const UpdateHost(os: 'windows', arch: 'x64'),
       ).checkForUpdate();
       expect(update?.installKind, UpdateInstallKind.windowsInstaller);
-      expect(update?.assetName, 'Mornye-$_version-windows-x64-setup.exe');
+      expect(update?.assetName, 'Mosix-$_version-windows-x64-setup.exe');
     });
   });
 
@@ -304,7 +304,7 @@ void main() {
     late Directory temp;
     final payload = utf8.encode('verified package bytes');
     final payloadSha = sha256.convert(payload).toString();
-    const assetName = 'Mornye-$_version-linux-x86_64.AppImage';
+    const assetName = 'Mosix-$_version-linux-x86_64.AppImage';
 
     setUp(() async {
       temp = await Directory.systemTemp.createTemp('mornye-updater-test');
@@ -325,7 +325,7 @@ void main() {
       checksumsUrl: withChecksums
           ? 'https://example.test/SHA256SUMS.txt'
           : null,
-      appImagePath: '${temp.path}/Mornye.AppImage',
+      appImagePath: '${temp.path}/Mosix.AppImage',
     );
 
     MockClient client(String checksums) => MockClient((request) async {
@@ -395,7 +395,7 @@ void main() {
     });
 
     test('replaces the AppImage in place', () async {
-      final target = File('${temp.path}/Mornye.AppImage')
+      final target = File('${temp.path}/Mosix.AppImage')
         ..writeAsStringSync('old');
       final downloaded = File('${temp.path}/download.AppImage')
         ..writeAsStringSync('new');
@@ -404,7 +404,7 @@ void main() {
       expect(downloaded.existsSync(), isFalse);
       expect(target.statSync().mode & 0x1ff, 0x1ed); // 0755
       expect(temp.listSync().map((entry) => entry.uri.pathSegments.last), [
-        'Mornye.AppImage',
+        'Mosix.AppImage',
       ]);
     }, skip: Platform.isWindows ? 'POSIX permissions only' : false);
   });

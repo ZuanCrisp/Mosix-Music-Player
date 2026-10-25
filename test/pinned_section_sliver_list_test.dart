@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/widgets/pinned_section_sliver_list.dart';
+import 'package:mosix/widgets/pinned_section_sliver_list.dart';
 
 void main() {
   Widget list(

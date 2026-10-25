@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:mornye/models/equalizer_settings.dart';
+import 'package:mosix/models/equalizer_settings.dart';
 
 /// One filter in the equalizer's libavfilter graph.
 @immutable

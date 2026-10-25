@@ -4,7 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/widgets/mornye_artwork_contrast.dart';
+import 'package:mosix/widgets/mornye_artwork_contrast.dart';
 
 void main() {
   for (final interruption in ['none', 'disabled', 'background', 'hidden']) {
@@ -16,7 +16,7 @@ void main() {
         final captured = Completer<void>();
         final release = Completer<void>();
         var first = true;
-        MornyeArtworkContrast.debugReadback = (boundary, scale) async {
+        MosixArtworkContrast.debugReadback = (boundary, scale) async {
           final image = await boundary.toImage(pixelRatio: scale);
           if (first) {
             first = false;
@@ -26,7 +26,7 @@ void main() {
           return image;
         };
         addTearDown(() {
-          MornyeArtworkContrast.debugReadback = null;
+          MosixArtworkContrast.debugReadback = null;
           if (!release.isCompleted) release.complete();
         });
         Map<String, Color> colors = {};
@@ -37,7 +37,7 @@ void main() {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    MornyeArtworkContrast(
+                    MosixArtworkContrast(
                       key: capture,
                       enabled: enabled,
                       targets: {'header': target},
@@ -64,7 +64,7 @@ void main() {
         // Consume the only queued static invalidation while the old pixels
         // are still held, then finish without submitting another scene.
         await tester.pump(const Duration(milliseconds: 334));
-        expect(MornyeArtworkContrast.debugReadbackCount(capture), 1);
+        expect(MosixArtworkContrast.debugReadbackCount(capture), 1);
         if (interruption == 'disabled') {
           await tester.pumpWidget(app(Colors.white, enabled: false));
         } else if (interruption == 'hidden') {
@@ -80,10 +80,10 @@ void main() {
         await tester.pump(const Duration(milliseconds: 334));
         await finishReadback();
         if (interruption == 'none') {
-          expect(MornyeArtworkContrast.debugReadbackCount(capture), 2);
+          expect(MosixArtworkContrast.debugReadbackCount(capture), 2);
           expect(colors['header'], Colors.black);
         } else {
-          expect(MornyeArtworkContrast.debugReadbackCount(capture), 1);
+          expect(MosixArtworkContrast.debugReadbackCount(capture), 1);
           if (interruption == 'disabled' || interruption == 'hidden') {
             await tester.pumpWidget(app(Colors.white));
           } else {
@@ -96,12 +96,12 @@ void main() {
           await finishReadback();
           expect(colors['header'], Colors.black);
         }
-        final settled = MornyeArtworkContrast.debugReadbackCount(capture);
+        final settled = MosixArtworkContrast.debugReadbackCount(capture);
         for (var frame = 0; frame < 4; frame++) {
           await tester.pump(const Duration(milliseconds: 334));
           await finishReadback();
         }
-        expect(MornyeArtworkContrast.debugReadbackCount(capture), settled);
+        expect(MosixArtworkContrast.debugReadbackCount(capture), settled);
         await tester.pumpWidget(const SizedBox());
       },
     );
@@ -131,7 +131,7 @@ void main() {
         home: Stack(
           fit: StackFit.expand,
           children: [
-            MornyeArtworkContrast(
+            MosixArtworkContrast(
               key: capture,
               enabled: true,
               targets: {'header': target},
@@ -166,11 +166,11 @@ void main() {
 
     await sample();
     expect(colors['header'], Colors.white);
-    final initial = MornyeArtworkContrast.debugReadbackCount(capture);
+    final initial = MosixArtworkContrast.debugReadbackCount(capture);
     for (var i = 0; i < 4; i++) {
       await sample();
     }
-    expect(MornyeArtworkContrast.debugReadbackCount(capture), initial);
+    expect(MosixArtworkContrast.debugReadbackCount(capture), initial);
 
     final image = await tester.runAsync(() async {
       final recorder = ui.PictureRecorder();
@@ -189,16 +189,16 @@ void main() {
     await tester.pumpAndSettle();
     await sample();
     expect(colors['header'], Colors.black);
-    final decoded = MornyeArtworkContrast.debugReadbackCount(capture);
+    final decoded = MosixArtworkContrast.debugReadbackCount(capture);
     expect(decoded, greaterThan(initial));
     await sample();
-    expect(MornyeArtworkContrast.debugReadbackCount(capture), decoded);
+    expect(MosixArtworkContrast.debugReadbackCount(capture), decoded);
 
     targetTop.value = 500;
     await tester.pump();
     await sample();
     expect(colors['header'], Colors.white);
-    expect(MornyeArtworkContrast.debugReadbackCount(capture), decoded + 1);
+    expect(MosixArtworkContrast.debugReadbackCount(capture), decoded + 1);
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -217,7 +217,7 @@ void main() {
               TickerMode(enabled: enabled, child: child!),
           child: Stack(
             children: [
-              MornyeArtworkContrast(
+              MosixArtworkContrast(
                 key: capture,
                 enabled: true,
                 continuous: true,
@@ -242,33 +242,33 @@ void main() {
     }
 
     await sample();
-    final before = MornyeArtworkContrast.debugReadbackCount(capture);
+    final before = MosixArtworkContrast.debugReadbackCount(capture);
     await sample();
     expect(
-      MornyeArtworkContrast.debugReadbackCount(capture),
+      MosixArtworkContrast.debugReadbackCount(capture),
       greaterThan(before),
     );
     tickers.value = false;
     await tester.pump();
-    final hidden = MornyeArtworkContrast.debugReadbackCount(capture);
+    final hidden = MosixArtworkContrast.debugReadbackCount(capture);
     await sample();
     await sample();
-    expect(MornyeArtworkContrast.debugReadbackCount(capture), hidden);
+    expect(MosixArtworkContrast.debugReadbackCount(capture), hidden);
     tickers.value = true;
     await tester.pump();
     await sample();
     expect(
-      MornyeArtworkContrast.debugReadbackCount(capture),
+      MosixArtworkContrast.debugReadbackCount(capture),
       greaterThan(hidden),
     );
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-    final paused = MornyeArtworkContrast.debugReadbackCount(capture);
+    final paused = MosixArtworkContrast.debugReadbackCount(capture);
     await sample();
-    expect(MornyeArtworkContrast.debugReadbackCount(capture), paused);
+    expect(MosixArtworkContrast.debugReadbackCount(capture), paused);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await sample();
     expect(
-      MornyeArtworkContrast.debugReadbackCount(capture),
+      MosixArtworkContrast.debugReadbackCount(capture),
       greaterThan(paused),
     );
     await tester.pumpWidget(const SizedBox());
@@ -304,7 +304,7 @@ void main() {
       home: Stack(
         fit: StackFit.expand,
         children: [
-          MornyeArtworkContrast(
+          MosixArtworkContrast(
             enabled: true,
             targets: {'header': header, 'controls': controls},
             onChanged: (value) {

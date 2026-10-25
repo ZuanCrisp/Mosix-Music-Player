@@ -6,26 +6,26 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart' show CupertinoButton, CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/player_artwork_theme.dart';
-import 'package:mornye/utils/playback_seek_preview.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/desktop/desktop_inspector.dart';
-import 'package:mornye/widgets/desktop/desktop_window.dart';
-import 'package:mornye/widgets/material_player_backdrop.dart';
-import 'package:mornye/widgets/mornye_player_background.dart';
-import 'package:mornye/widgets/mornye_player_favorite_button.dart';
-import 'package:mornye/widgets/mornye_player_queue.dart';
-import 'package:mornye/widgets/no_scrollbars.dart';
-import 'package:mornye/widgets/player_artwork.dart';
-import 'package:mornye/widgets/player_lyrics_section.dart';
-import 'package:mornye/widgets/player_metadata_title.dart';
-import 'package:mornye/widgets/player_playback_controls.dart';
-import 'package:mornye/widgets/player_volume_control.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/player_artwork_theme.dart';
+import 'package:mosix/utils/playback_seek_preview.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/desktop/desktop_inspector.dart';
+import 'package:mosix/widgets/desktop/desktop_window.dart';
+import 'package:mosix/widgets/material_player_backdrop.dart';
+import 'package:mosix/widgets/mornye_player_background.dart';
+import 'package:mosix/widgets/mornye_player_favorite_button.dart';
+import 'package:mosix/widgets/mornye_player_queue.dart';
+import 'package:mosix/widgets/no_scrollbars.dart';
+import 'package:mosix/widgets/player_artwork.dart';
+import 'package:mosix/widgets/player_lyrics_section.dart';
+import 'package:mosix/widgets/player_metadata_title.dart';
+import 'package:mosix/widgets/player_playback_controls.dart';
+import 'package:mosix/widgets/player_volume_control.dart';
 
 /// Now Playing on the desktop, covering the whole window as Music's player
 /// does: the cover, title and transport on the leading side, lyrics or Up
@@ -81,7 +81,7 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
   @override
   Widget build(BuildContext context) {
     final mediaItem = ref.watch(currentMediaItemProvider).value;
-    if (context.isMornye) return _buildPlayer(context, mediaItem);
+    if (context.isMosix) return _buildPlayer(context, mediaItem);
     // Material takes the track's artwork scheme. Providers are read above,
     // so the scoped builder reads none.
     return PlayerArtworkTheme(
@@ -91,9 +91,9 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
   }
 
   Widget _buildPlayer(BuildContext context, MediaItem? mediaItem) {
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final theme = mornye
-        ? MornyeTheme.fromContext(context, brightness: Brightness.dark)
+        ? MosixTheme.fromContext(context, brightness: Brightness.dark)
         : Theme.of(context);
     final colorScheme = theme.colorScheme;
     return Theme(
@@ -104,7 +104,7 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
           fit: StackFit.expand,
           children: [
             if (mornye)
-              MornyePlayerBackground(artUri: mediaItem?.artUri)
+              MosixPlayerBackground(artUri: mediaItem?.artUri)
             else if (mediaItem != null)
               MaterialPlayerBackdrop(
                 mediaItem: mediaItem,
@@ -341,8 +341,8 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
                                     'desktop-now-playing-upNext',
                                   ),
                                   child: NoScrollbars(
-                                    child: context.isMornye
-                                        ? MornyePlayerQueue(
+                                    child: context.isMosix
+                                        ? MosixPlayerQueue(
                                             colorScheme: colorScheme,
                                           )
                                         : DesktopMaterialQueue(
@@ -386,7 +386,7 @@ class _PlayerColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final textTheme = Theme.of(context).textTheme;
     final corners = BorderRadius.circular(mornye ? 12 : 28);
     final artwork = PlayerArtwork(
@@ -453,7 +453,7 @@ class _PlayerColumn extends StatelessWidget {
               ),
             ),
             if (mornye)
-              MornyePlayerFavoriteButton(
+              MosixPlayerFavoriteButton(
                 mediaItem: mediaItem,
                 color: colorScheme.onSurface,
                 iconSize: 20,
@@ -483,7 +483,7 @@ class _Capsule extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final fill = context.isMornye
+    final fill = context.isMosix
         ? Colors.white.withValues(alpha: 0.12)
         : scheme.surfaceContainerHigh.withValues(alpha: 0.72);
     return DecoratedBox(
@@ -511,7 +511,7 @@ class _RoundButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    if (context.isMornye) {
+    if (context.isMosix) {
       return Tooltip(
         message: tooltip,
         child: Semantics(

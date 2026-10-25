@@ -8,13 +8,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/services/notification_service.dart';
-import 'package:mornye/utils/local_library_scan_prefs.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/services/notification_service.dart';
+import 'package:mosix/utils/local_library_scan_prefs.dart';
 
 class _Settings extends SettingsNotifier {
   @override
@@ -118,7 +118,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   AndroidFlutterLocalNotificationsPlugin.registerWith();
   SharedPreferences.setMockInitialValues({});
-  const backend = MethodChannel('com.zarz.mornye/backend');
+  const backend = MethodChannel('com.zuancrisp.mosix/backend');
   const paths = MethodChannel('plugins.flutter.io/path_provider');
   const notifications = MethodChannel(
     'dexterous.com/flutter/local_notifications',

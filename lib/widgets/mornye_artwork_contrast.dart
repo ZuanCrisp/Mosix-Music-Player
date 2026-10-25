@@ -32,8 +32,8 @@ double artworkPixelLuminance(int red, int green, int blue) =>
 
 /// Samples the rendered artwork and its fade, rather than an album palette.
 /// Static artwork is read again only after its scene or target geometry changes.
-class MornyeArtworkContrast extends StatefulWidget {
-  const MornyeArtworkContrast({
+class MosixArtworkContrast extends StatefulWidget {
+  const MosixArtworkContrast({
     super.key,
     required this.enabled,
     this.continuous = false,
@@ -52,17 +52,17 @@ class MornyeArtworkContrast extends StatefulWidget {
 
   @visibleForTesting
   static int debugReadbackCount(GlobalKey key) =>
-      (key.currentState! as _MornyeArtworkContrastState)._readbacks;
+      (key.currentState! as _MosixArtworkContrastState)._readbacks;
 
   @visibleForTesting
   static Future<ui.Image> Function(RenderRepaintBoundary, double)?
   debugReadback;
 
   @override
-  State<MornyeArtworkContrast> createState() => _MornyeArtworkContrastState();
+  State<MosixArtworkContrast> createState() => _MosixArtworkContrastState();
 }
 
-class _MornyeArtworkContrastState extends State<MornyeArtworkContrast>
+class _MosixArtworkContrastState extends State<MosixArtworkContrast>
     with WidgetsBindingObserver {
   final _background = GlobalKey();
   Timer? _timer;
@@ -92,7 +92,7 @@ class _MornyeArtworkContrastState extends State<MornyeArtworkContrast>
   void didChangeAppLifecycleState(AppLifecycleState state) => _schedule();
 
   @override
-  void didUpdateWidget(MornyeArtworkContrast oldWidget) {
+  void didUpdateWidget(MosixArtworkContrast oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.enabled != widget.enabled ||
         oldWidget.continuous != widget.continuous) {
@@ -176,7 +176,7 @@ class _MornyeArtworkContrastState extends State<MornyeArtworkContrast>
       final scale = (48 / boundary.size.width).clamp(0.01, 1.0);
       _readbacks++;
       image =
-          await (MornyeArtworkContrast.debugReadback?.call(boundary, scale) ??
+          await (MosixArtworkContrast.debugReadback?.call(boundary, scale) ??
               boundary.toImage(pixelRatio: scale));
       final pixels = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
       if (!mounted || !widget.enabled || !_tickersEnabled || pixels == null) {

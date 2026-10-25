@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 Color extensionHealthColor(BuildContext context, String status) {
   final colorScheme = Theme.of(context).colorScheme;
   switch (status) {
     case 'online':
-      return context.isMornye
+      return context.isMosix
           ? CupertinoColors.systemGreen.resolveFrom(context)
           : colorScheme.primary;
     case 'degraded':
@@ -19,7 +19,7 @@ Color extensionHealthColor(BuildContext context, String status) {
 }
 
 IconData extensionHealthIcon(BuildContext context, String status) {
-  if (context.isMornye) {
+  if (context.isMosix) {
     return switch (status) {
       'online' => CupertinoIcons.check_mark_circled_solid,
       'degraded' => CupertinoIcons.exclamationmark_triangle,

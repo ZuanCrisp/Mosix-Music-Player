@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/services/app_remote_config_service.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/services/app_remote_config_service.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
 
 class AppAnnouncementDialog extends StatelessWidget {
   final RemoteAnnouncement announcement;

@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/models/unified_library_item.dart';
-import 'package:mornye/providers/download_history_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/services/history_database.dart';
-import 'package:mornye/services/library_playlist_search.dart';
-import 'package:mornye/services/library_search.dart';
+import 'package:mosix/models/unified_library_item.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/services/history_database.dart';
+import 'package:mosix/services/library_playlist_search.dart';
+import 'package:mosix/services/library_search.dart';
 
 typedef LibrarySearchRequest = ({
   String query,

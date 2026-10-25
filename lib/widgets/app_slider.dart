@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/material_expressive.dart';
+import 'package:mosix/theme/material_expressive.dart';
 
 /// Settings slider with the Material 3 Expressive track and handle.
-/// Mornye and reduced motion keep the standard [Slider].
+/// Mosix and reduced motion keep the standard [Slider].
 class AppSlider extends StatelessWidget {
   const AppSlider({
     super.key,

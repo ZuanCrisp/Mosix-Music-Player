@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/constants/app_info.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/logger.dart';
 
 final _log = AppLogger('UpdateChecker');
 
@@ -166,7 +166,7 @@ class UpdateInfo {
   final bool isPrerelease;
 
   /// How many stable (non-prerelease) releases are newer than the installed
-  /// version. Drives the forced-update flow.
+  /// version. Used to provide context in an optional update notice.
   final int releasesBehind;
 
   final UpdateInstallKind installKind;
@@ -246,7 +246,6 @@ class UpdateChecker {
 
   /// Installed versions this many stable releases (or more) behind must
   /// update before continuing to use the app.
-  static const int forceUpdateThreshold = 3;
 
   // Revalidate on every check. A local TTL can hide a newly published release;
   // ETag still avoids downloading the release list when it has not changed.

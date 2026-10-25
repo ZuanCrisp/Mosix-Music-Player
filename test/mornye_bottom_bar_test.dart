@@ -5,28 +5,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/widgets/mornye_selection_pill.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/screens/settings/settings_tab.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/nav_bar_inset.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/collection_scaffold.dart';
-import 'package:mornye/widgets/mini_player.dart';
-import 'package:mornye/widgets/mornye_artist_header.dart';
-import 'package:mornye/widgets/mornye_bottom_bar.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mornye_selection_pill.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/screens/settings/settings_tab.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/collection_scaffold.dart';
+import 'package:mosix/widgets/mini_player.dart';
+import 'package:mosix/widgets/mornye_artist_header.dart';
+import 'package:mosix/widgets/mornye_bottom_bar.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 void main() {
-  late MornyeChromeController chrome;
+  late MosixChromeController chrome;
   late ScrollController scroll;
   late int searches;
   final capture = GlobalKey();
 
   setUp(() {
-    chrome = MornyeChromeController();
+    chrome = MosixChromeController();
     scroll = ScrollController();
     searches = 0;
   });
@@ -71,7 +71,7 @@ void main() {
           mornyeLiquidGlassProvider.overrideWithValue(liquidGlass),
         ],
         child: MaterialApp(
-          theme: MornyeTheme.build(
+          theme: MosixTheme.build(
             brightness,
             chromeSurface: chromeSurface,
             glassClarity: glassClarity,
@@ -95,7 +95,7 @@ void main() {
             ),
             bottomNavigationBar: ListenableBuilder(
               listenable: Listenable.merge([chrome, ?activeTab]),
-              builder: (_, _) => MornyeBottomBar(
+              builder: (_, _) => MosixBottomBar(
                 collapsed: chrome.value,
                 destinations: const [
                   NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
@@ -146,7 +146,7 @@ void main() {
         int sharedSurfaces = 2,
       }) {
         final filters = find.descendant(
-          of: find.byType(MornyeBottomBar),
+          of: find.byType(MosixBottomBar),
           matching: find.byType(BackdropFilter),
         );
         final renderers = filters
@@ -278,7 +278,7 @@ void main() {
         activeTab: activeTab,
         brightness: Brightness.dark,
       );
-      final scheme = MornyeTheme.build(Brightness.dark).colorScheme;
+      final scheme = MosixTheme.build(Brightness.dark).colorScheme;
       final primary = scheme.primary;
       Color? iconColor(String key, IconData data) {
         final icon = find.descendant(
@@ -298,7 +298,7 @@ void main() {
           tester.getCenter(
             find
                 .descendant(
-                  of: find.byType(MornyeTabBar),
+                  of: find.byType(MosixTabBar),
                   matching: find.text(label),
                 )
                 .first,
@@ -307,7 +307,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(activeTab.value, index);
         final tabIcons = find.descendant(
-          of: find.byType(MornyeTabBar),
+          of: find.byType(MosixTabBar),
           matching: find.byIcon(Icons.home),
         );
         // Edge icons stay in the glass bar's selected/unselected layers at
@@ -345,7 +345,7 @@ void main() {
         );
         final originalTabIcon = find
             .descendant(
-              of: find.byType(MornyeTabBar),
+              of: find.byType(MosixTabBar),
               matching: find.byIcon(movingIcon),
             )
             .first;
@@ -358,7 +358,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 100));
         expect(
           tester
-              .widget<MornyeTabBar>(find.byType(MornyeTabBar))
+              .widget<MosixTabBar>(find.byType(MosixTabBar))
               .hiddenIconIndices,
           {index == 3 ? 0 : index, 3},
         );
@@ -383,7 +383,7 @@ void main() {
         chrome.expand();
         await tester.pumpAndSettle();
         expect(
-          tester.widget<MornyeTabBar>(find.byType(MornyeTabBar)).selectedIndex,
+          tester.widget<MosixTabBar>(find.byType(MosixTabBar)).selectedIndex,
           index,
         );
       }
@@ -401,7 +401,7 @@ void main() {
         final element = tester.element(icon);
         final tabIcon = find
             .descendant(
-              of: find.byType(MornyeTabBar),
+              of: find.byType(MosixTabBar),
               matching: find.byIcon(Icons.home),
             )
             .first;
@@ -435,12 +435,12 @@ void main() {
       'Search joins full tabs and separates when compact (glass: $blur)',
       (tester) async {
         await pumpShell(tester, blur: blur);
-        final tabs = find.byType(MornyeTabBar);
+        final tabs = find.byType(MosixTabBar);
         final search = find.byKey(const ValueKey('mornye-compact-search'));
         final repo = find
             .descendant(of: tabs, matching: find.text('Repo'))
             .first;
-        expect(tester.widget<MornyeTabBar>(tabs).destinations, hasLength(4));
+        expect(tester.widget<MosixTabBar>(tabs).destinations, hasLength(4));
         final searchLabel = find
             .descendant(of: tabs, matching: find.text('Search'))
             .first;
@@ -458,7 +458,7 @@ void main() {
         );
         expect(
           tester.getSize(tabs).width,
-          tester.getSize(find.byType(MornyeBottomBar)).width,
+          tester.getSize(find.byType(MosixBottomBar)).width,
         );
         final searchIcon = find
             .descendant(of: tabs, matching: find.byIcon(Icons.search))
@@ -486,7 +486,7 @@ void main() {
       tester,
     ) async {
       await pumpShell(tester, withPlayer: withPlayer);
-      final bar = find.byType(MornyeBottomBar);
+      final bar = find.byType(MosixBottomBar);
       var previousHeight = tester.getSize(bar).height;
       final playerState = withPlayer
           ? tester.state(find.byType(MiniPlayer))
@@ -545,7 +545,7 @@ void main() {
             final artist = find.text('Artist');
             final libraryIcon = find
                 .descendant(
-                  of: find.byType(MornyeTabBar),
+                  of: find.byType(MosixTabBar),
                   matching: find.byIcon(Icons.music_note),
                 )
                 .first;
@@ -614,21 +614,21 @@ void main() {
   ) async {
     await pumpShell(tester);
     final playerState = tester.state(find.byType(MiniPlayer));
-    final expandedHeight = tester.getSize(find.byType(MornyeBottomBar)).height;
+    final expandedHeight = tester.getSize(find.byType(MosixBottomBar)).height;
     await tester.drag(find.byType(ListView), const Offset(0, -240));
     await tester.pumpAndSettle();
     expect(chrome.value, isTrue);
     expect(tester.state(find.byType(MiniPlayer)), same(playerState));
     expect(tester.widget<MiniPlayer>(find.byType(MiniPlayer)).compact, isTrue);
     expect(
-      tester.getSize(find.byType(MornyeBottomBar)).height,
+      tester.getSize(find.byType(MosixBottomBar)).height,
       lessThan(expandedHeight - 60),
     );
     expect(find.byTooltip('Next track'), findsNothing);
     await tester.tap(find.byTooltip('Home'));
     await tester.pumpAndSettle();
     expect(chrome.value, isFalse);
-    expect(tester.getSize(find.byType(MornyeBottomBar)).height, expandedHeight);
+    expect(tester.getSize(find.byType(MosixBottomBar)).height, expandedHeight);
     expect(tester.takeException(), isNull);
   });
 
@@ -641,7 +641,7 @@ void main() {
       final previous = debugOnRebuildDirtyWidget;
       debugOnRebuildDirtyWidget = (element, builtOnce) {
         previous?.call(element, builtOnce);
-        if (element.widget is MornyeTabBar) tabBuilds++;
+        if (element.widget is MosixTabBar) tabBuilds++;
         if (element.widget is MiniPlayer) playerBuilds++;
       };
       addTearDown(() => debugOnRebuildDirtyWidget = previous);
@@ -711,7 +711,7 @@ void main() {
               return CustomScrollView(
                 controller: scroll,
                 slivers: [
-                  ...const MornyeArtistHeader(
+                  ...const MosixArtistHeader(
                     name: 'Artist',
                     showTitle: false,
                     artwork: ColoredBox(color: Colors.blue),
@@ -817,20 +817,20 @@ void main() {
     'glass bar stays mounted and pauses its tickers while collapsed',
     (tester) async {
       await pumpShell(tester, blur: true);
-      final glass = tester.element(find.byType(MornyeSelectionPill));
+      final glass = tester.element(find.byType(MosixSelectionPill));
       final player = tester.state(find.byType(MiniPlayer));
       expect(TickerMode.valuesOf(glass).enabled, isTrue);
       chrome.value = true;
       await tester.pumpAndSettle();
-      expect(find.byType(MornyeSelectionPill), findsNothing);
+      expect(find.byType(MosixSelectionPill), findsNothing);
       expect(
-        tester.element(find.byType(MornyeSelectionPill, skipOffstage: false)),
+        tester.element(find.byType(MosixSelectionPill, skipOffstage: false)),
         same(glass),
       );
       expect(TickerMode.valuesOf(glass).enabled, isFalse);
       chrome.expand();
       await tester.pumpAndSettle();
-      expect(tester.element(find.byType(MornyeSelectionPill)), same(glass));
+      expect(tester.element(find.byType(MosixSelectionPill)), same(glass));
       expect(tester.state(find.byType(MiniPlayer)), same(player));
       expect(TickerMode.valuesOf(glass).enabled, isTrue);
       expect(tester.takeException(), isNull);

@@ -1,5 +1,5 @@
-name: mornye
-description: Mornye, extension-driven music metadata and downloads for mobile devices
+name: mosix
+description: Mosix, extension-driven music metadata and downloads for mobile devices
 publish_to: "none"
 version: 5.2.6+165
 
@@ -160,24 +160,17 @@ dev_dependencies:
 
 flutter_launcher_icons:
   android: true
-  ios: true
+  ios: false
   image_path: "icon.png"
   image_path_android: "icon_android.png"
-  adaptive_icon_background: "#1E4E4F"
+  adaptive_icon_background: "#000000"
   adaptive_icon_foreground: "icon_foreground_android.png"
-  adaptive_icon_foreground_inset: 0
-  adaptive_icon_monochrome: "icon_monochrome_android.png"
-  ios_content_mode: scaleAspectFill
-  remove_alpha_ios: true
-  background_color_ios: "#1E4E4F"
-  # The macOS source places the badge on Apple's 824 pt icon grid.
+  adaptive_icon_foreground_inset: 16
+  adaptive_icon_monochrome: "icon_foreground_android.png"
   macos:
-    generate: true
-    image_path: "icon_macos.png"
+    generate: false
   windows:
-    generate: true
-    image_path: "assets/brand/logo/png/mornye-badge@1x.png"
-    icon_size: 256
+    generate: false
 
 flutter:
   uses-material-design: true

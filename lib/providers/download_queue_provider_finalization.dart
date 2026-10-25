@@ -51,7 +51,7 @@ extension _DownloadQueueFinalization on DownloadQueueNotifier {
     Map<String, dynamic> result,
   ) async {
     // Store independently of history preferences and the selected UI theme.
-    // A later switch to Mornye must still work without network access.
+    // A later switch to Mosix must still work without network access.
     try {
       final album = (
         album:

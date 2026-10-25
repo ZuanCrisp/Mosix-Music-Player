@@ -1,10 +1,10 @@
 part of 'home_tab.dart';
 
 extension _HomeTabRecentUI on _HomeTabState {
-  /// The Mornye desktop Search page lays recents out as Music does: one row
+  /// The Mosix desktop Search page lays recents out as Music does: one row
   /// of cards that scrolls sideways.
   bool get _recentAccessAsCards =>
-      context.isMornye &&
+      context.isMosix &&
       isDesktopPlatform &&
       widget.mode == HomeTabMode.search;
 
@@ -272,15 +272,15 @@ extension _HomeTabRecentUI on _HomeTabState {
 
     void showMenu(BuildContext anchorContext) {
       final box = anchorContext.findRenderObject();
-      showMornyeContextMenu<void>(
+      showMosixContextMenu<void>(
         context: anchorContext,
         anchor: box is RenderBox && box.hasSize
             ? box.localToGlobal(Offset.zero) & box.size
             : null,
-        builder: (menuContext) => MornyeContextMenu(
+        builder: (menuContext) => MosixContextMenu(
           groups: [
             [
-              MornyeMenuAction(
+              MosixMenuAction(
                 icon: mornyeIconFor(Icons.delete_outline),
                 label: menuContext.l10n.dialogRemove,
                 destructive: true,
@@ -299,7 +299,7 @@ extension _HomeTabRecentUI on _HomeTabState {
     return SizedBox(
       width: 320,
       child: Material(
-        color: MornyeTheme.controlFill(context),
+        color: MosixTheme.controlFill(context),
         borderRadius: BorderRadius.circular(tokens.radiusCard),
         clipBehavior: Clip.antiAlias,
         child: Builder(

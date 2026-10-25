@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/player_artwork_theme.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/widgets/desktop/context_menu.dart';
-import 'package:mornye/widgets/now_playing_indicator.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/player_artwork_theme.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/widgets/desktop/context_menu.dart';
+import 'package:mosix/widgets/now_playing_indicator.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 /// How a [TrackCard] paints its container.
 enum TrackCardStyle {
@@ -52,7 +52,7 @@ class TrackCardSegment extends InheritedWidget {
   final bool last;
 
   static TrackCardSegment? _of(BuildContext context) {
-    if (context.isMornye) return null;
+    if (context.isMosix) return null;
     return context.dependOnInheritedWidgetOfExactType<TrackCardSegment>();
   }
 
@@ -143,7 +143,7 @@ class TrackCard extends StatelessWidget {
   /// The row is the player's current track. The Material style fills it with
   /// `primaryContainer` of the track's artwork scheme ([PlayerArtworkTheme]),
   /// rounds its ends into a pill and shows a [NowPlayingIndicator] before
-  /// [trailing]. Mornye ignores it.
+  /// [trailing]. Mosix ignores it.
   final bool isCurrent;
 
   /// The current track is playing, so the indicator moves.
@@ -155,7 +155,7 @@ class TrackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (context.isMornye) return _buildCard(context);
+    if (context.isMosix) return _buildCard(context);
     // A selected current row keeps the app's selection fill, so a
     // selection reads as one colour.
     return _CurrentTrackArtworkTheme(
@@ -168,7 +168,7 @@ class TrackCard extends StatelessWidget {
     final tokens = context.tokens;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final material = !context.isMornye;
+    final material = !context.isMosix;
     final current = material && isCurrent;
     final filled = style == TrackCardStyle.filled;
     final borderRadius =
@@ -209,7 +209,7 @@ class TrackCard extends StatelessWidget {
     } else if (current) {
       cardColor = colorScheme.primaryContainer;
       contentColor = colorScheme.onPrimaryContainer;
-    } else if (style == TrackCardStyle.flat || context.isMornye) {
+    } else if (style == TrackCardStyle.flat || context.isMosix) {
       cardColor = Colors.transparent;
       contentColor = null;
     } else {

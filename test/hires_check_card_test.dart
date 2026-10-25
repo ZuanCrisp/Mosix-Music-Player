@@ -8,11 +8,11 @@ import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/hires_check_card.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/hires_check_card.dart';
 
 const _limitedResult = <String, dynamic>{
   'supported': true,
@@ -26,7 +26,7 @@ const _limitedResult = <String, dynamic>{
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   final capture = GlobalKey();
   var calls = 0;
 
@@ -72,7 +72,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: mornye
-            ? MornyeTheme.build(brightness)
+            ? MosixTheme.build(brightness)
             : brightness == Brightness.light
             ? AppTheme.light()
             : AppTheme.dark(),

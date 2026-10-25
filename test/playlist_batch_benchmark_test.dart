@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/collection_track_batch.dart';
+import 'package:mosix/services/collection_track_batch.dart';
 
 import 'support/library_collections_benchmark.dart';
 import 'support/playlist_batch_benchmark.dart';

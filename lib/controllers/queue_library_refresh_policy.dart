@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:mornye/utils/audio_format_utils.dart';
-import 'package:mornye/utils/audio_quality_badge_policy.dart';
-import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/utils/file_access.dart';
+import 'package:mosix/utils/audio_format_utils.dart';
+import 'package:mosix/utils/audio_quality_badge_policy.dart';
+import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/utils/file_access.dart';
 
 bool queueLibraryCountsHaveContent(QueueLibraryCounts counts) =>
     counts.allTrackCount > 0 ||

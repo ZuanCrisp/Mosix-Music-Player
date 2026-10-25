@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 /// The standard search field used by top-level app surfaces.
 ///
@@ -39,14 +39,14 @@ class AppSearchField extends StatelessWidget {
   final FocusNode? focusNode;
   final bool autofocus;
 
-  /// See [MornyeGlass.samplesBackdrop]: false where the field scrolls over
+  /// See [MosixGlass.samplesBackdrop]: false where the field scrolls over
   /// the plain page background.
   final bool samplesBackdrop;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final radius = BorderRadius.circular(
       mornye ? 28 : context.tokens.radiusSheet,
     );
@@ -111,7 +111,7 @@ class AppSearchField extends StatelessWidget {
     );
     if (!mornye) return field;
     return Consumer(
-      builder: (context, ref, child) => MornyeGlass.navigation(
+      builder: (context, ref, child) => MosixGlass.navigation(
         radius: 28,
         blurEnabled: ref.watch(mornyeBlurEnabledProvider),
         samplesBackdrop: samplesBackdrop,

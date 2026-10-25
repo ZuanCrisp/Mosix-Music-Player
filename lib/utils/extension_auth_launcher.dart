@@ -1,1 +1,1 @@
-export 'package:mornye/controllers/extension_auth_launcher.dart';
+export 'package:mosix/controllers/extension_auth_launcher.dart';

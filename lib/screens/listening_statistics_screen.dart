@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/listening_statistics_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/listening_rewind_screen.dart';
-import 'package:mornye/services/listening_statistics.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/widgets/animation_utils.dart' show SkeletonBox;
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_choice_chip.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_refresh_indicator.dart';
-import 'package:mornye/widgets/app_shape.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
-import 'package:mornye/widgets/player_artwork.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/listening_statistics_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/listening_rewind_screen.dart';
+import 'package:mosix/services/listening_statistics.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/widgets/animation_utils.dart' show SkeletonBox;
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_choice_chip.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_refresh_indicator.dart';
+import 'package:mosix/widgets/app_shape.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/player_artwork.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
-export 'package:mornye/providers/listening_statistics_provider.dart';
+export 'package:mosix/providers/listening_statistics_provider.dart';
 
 class ListeningStatisticsScreen extends ConsumerStatefulWidget {
   const ListeningStatisticsScreen({super.key});
@@ -188,14 +188,14 @@ class _ListeningStatisticsScreenState
     );
   }
 
-  /// Material rows form an expressive connected list; Mornye keeps plain rows.
+  /// Material rows form an expressive connected list; Mosix keeps plain rows.
   Widget _connectedRow(
     BuildContext context, {
     required int index,
     required int count,
     required Widget child,
   }) {
-    if (context.isMornye) return child;
+    if (context.isMosix) return child;
     return Padding(
       padding: EdgeInsets.fromLTRB(16, index == 0 ? 0 : 2, 16, 0),
       child: Material(
@@ -212,7 +212,7 @@ class _ListeningStatisticsScreenState
   }
 
   Widget _summarySkeleton(BuildContext context) {
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     return ExcludeSemantics(
       child: Column(
         children: [
@@ -308,7 +308,7 @@ class _ListeningStatisticsScreenState
 
   List<Widget> _summarySlivers(BuildContext context, ListeningSummary data) {
     final colors = Theme.of(context).colorScheme;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final artists = data.artists.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     final topArtists = artists.take(10).toList();

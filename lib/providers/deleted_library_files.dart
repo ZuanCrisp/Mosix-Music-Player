@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/providers/download_history_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
 
 /// Call only after deletion succeeds. A download can also have a scanned row;
 /// removing just one index makes its other row visible as a ghost entry.

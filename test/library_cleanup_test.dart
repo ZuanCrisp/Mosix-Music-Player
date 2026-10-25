@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/services/library_cleanup.dart';
-import 'package:mornye/utils/file_access.dart';
+import 'package:mosix/services/library_cleanup.dart';
+import 'package:mosix/utils/file_access.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/sqlite_process_database.dart';
@@ -99,7 +99,7 @@ class _CleanupDatabase implements Database, Transaction {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   tearDown(() => messenger.setMockMethodCallHandler(channel, null));

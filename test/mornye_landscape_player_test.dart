@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mornye_landscape_player.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_landscape_player.dart';
 
 void main() {
   Future<void> pumpPlayer(
@@ -28,7 +28,7 @@ void main() {
           backdropBlurEnabledProvider.overrideWithValue(blur),
         ],
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
@@ -36,7 +36,7 @@ void main() {
             body: RepaintBoundary(
               key: capture,
               child: StatefulBuilder(
-                builder: (context, setState) => MornyeLandscapePlayer(
+                builder: (context, setState) => MosixLandscapePlayer(
                   page: page,
                   isPlaying: true,
                   onPageChanged: (value) => setState(() => page = value),

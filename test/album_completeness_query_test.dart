@@ -8,19 +8,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/queue_tab.dart';
-import 'package:mornye/services/album_completeness.dart';
-import 'package:mornye/services/history_database.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_choice_chip.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/queue_tab.dart';
+import 'package:mosix/services/album_completeness.dart';
+import 'package:mosix/services/history_database.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_choice_chip.dart';
 
 String _definition(String file, String table) => RegExp(
   'CREATE TABLE $table\\s*\\([\\s\\S]*?\\n\\s*\\)',

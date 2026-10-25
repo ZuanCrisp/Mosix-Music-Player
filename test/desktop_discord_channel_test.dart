@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/discord_presence_service.dart';
+import 'package:mosix/services/discord_presence_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/routes/now_playing_route.dart';
-import 'package:mornye/widgets/player_track_swipe.dart';
+import 'package:mosix/routes/now_playing_route.dart';
+import 'package:mosix/widgets/player_track_swipe.dart';
 
 /// The footer opens the queue upwards and dismisses the route downwards.
 class PlayerQueueSwipeRegion extends StatefulWidget {

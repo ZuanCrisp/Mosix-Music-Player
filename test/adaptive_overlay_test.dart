@@ -3,22 +3,22 @@ import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/settings/download_settings_page.dart';
-import 'package:mornye/services/app_remote_config_service.dart';
-import 'package:mornye/services/update_checker.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/material_symbols.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_announcement_dialog.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_choice_chip.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/update_dialog.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/settings/download_settings_page.dart';
+import 'package:mosix/services/app_remote_config_service.dart';
+import 'package:mosix/services/update_checker.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/material_symbols.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_announcement_dialog.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_choice_chip.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/update_dialog.dart';
 
 Widget _app(ThemeData theme, Widget home) => ProviderScope(
   child: MaterialApp(
@@ -38,9 +38,9 @@ void main() {
   for (final mornye in [false, true]) {
     for (final brightness in Brightness.values) {
       final theme = mornye
-          ? MornyeTheme.build(brightness)
+          ? MosixTheme.build(brightness)
           : ThemeData(brightness: brightness);
-      final variant = 'Mornye: $mornye, $brightness';
+      final variant = 'Mosix: $mornye, $brightness';
 
       testWidgets('choice rows preserve adaptive appearance ($variant)', (
         tester,
@@ -143,7 +143,7 @@ void main() {
                 theme,
                 Theme(
                   data: pageTheme,
-                  child: const MornyeSettingsTheme(
+                  child: const MosixSettingsTheme(
                     child: DownloadSettingsPage(),
                   ),
                 ),
@@ -440,7 +440,7 @@ void main() {
         await tester.tap(find.text('Open'));
         await tester.pumpAndSettle();
         expect(
-          find.byType(MornyeGlassPanel),
+          find.byType(MosixGlassPanel),
           mornye ? findsOneWidget : findsNothing,
         );
         expect(find.byType(M3EChip), mornye ? findsNothing : findsOneWidget);
@@ -500,7 +500,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(nestedNavigator.currentState!.canPop(), isTrue);
         expect(
-          find.byType(MornyeGlassPanel),
+          find.byType(MosixGlassPanel),
           mornye ? findsOneWidget : findsNothing,
         );
         expect(
@@ -558,13 +558,13 @@ void main() {
       });
     }
 
-    testWidgets('announcement keeps explicit dismissal (Mornye: $mornye)', (
+    testWidgets('announcement keeps explicit dismissal (Mosix: $mornye)', (
       tester,
     ) async {
       var dismissals = 0;
       await tester.pumpWidget(
         _app(
-          mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+          mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
           Builder(
             builder: (context) => Scaffold(
               body: TextButton(

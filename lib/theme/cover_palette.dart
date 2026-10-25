@@ -9,9 +9,9 @@ import 'package:flutter/services.dart';
 import 'package:material_color_utilities/hct/hct.dart';
 import 'package:material_color_utilities/quantize/quantizer_celebi.dart';
 import 'package:material_color_utilities/score/score.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
 
 Future<List<List<int>>> _quantizePaletteInIsolate(Uint8List bytes) async {
   final result = await QuantizerCelebi().quantize(
@@ -92,7 +92,7 @@ class CoverPalette {
   ///
   /// With [neutralGrayscale], a near-grayscale cover ([isNearGrayscaleCover])
   /// gets a monochrome scheme instead of a tinted one. Material surfaces opt
-  /// in; Mornye derives its own neutral shading from [sourceColor].
+  /// in; Mosix derives its own neutral shading from [sourceColor].
   static ColorScheme? peek(
     String source,
     Brightness brightness, {
@@ -471,9 +471,9 @@ class _CoverPaletteBuilderState extends State<CoverPaletteBuilder> {
   void _maybeResolve() {
     final source = widget.imageSource;
     final brightness = Theme.of(context).brightness;
-    // Material headers give black and white covers a neutral scheme. Mornye
+    // Material headers give black and white covers a neutral scheme. Mosix
     // keeps the tonal one and shades neutral covers from the source colour.
-    final neutral = !context.isMornye;
+    final neutral = !context.isMosix;
     if (source == null || source.isEmpty) {
       _resolveGeneration++;
       _resolvedSource = null;

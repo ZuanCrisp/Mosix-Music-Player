@@ -1,4 +1,4 @@
-import 'package:mornye/utils/string_utils.dart';
+import 'package:mosix/utils/string_utils.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 

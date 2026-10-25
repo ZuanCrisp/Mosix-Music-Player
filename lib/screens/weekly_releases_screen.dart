@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/weekly_releases_provider.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/clickable_metadata.dart';
-import 'package:mornye/utils/nav_bar_inset.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/app_refresh_indicator.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
-import 'package:mornye/widgets/error_card.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/weekly_releases_provider.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/clickable_metadata.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/app_refresh_indicator.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
+import 'package:mosix/widgets/error_card.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 class WeeklyReleasesScreen extends ConsumerStatefulWidget {
   const WeeklyReleasesScreen({super.key});

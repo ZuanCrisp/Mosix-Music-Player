@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/l10n/supported_locales.dart';
+import 'package:mosix/l10n/supported_locales.dart';
 
 /// Display choices shared by onboarding and appearance settings.
 const appLanguageChoices = [

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/app_tokens.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/app_tokens.dart';
 
 class AudioQualityBadge extends StatelessWidget {
   final String label;

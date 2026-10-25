@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 
-/// The press response and advancing skip glyphs used by Mornye's transport.
-class MornyePlaybackButton extends StatefulWidget {
-  const MornyePlaybackButton({
+/// The press response and advancing skip glyphs used by Mosix's transport.
+class MosixPlaybackButton extends StatefulWidget {
+  const MosixPlaybackButton({
     super.key,
     required this.icon,
     required this.tooltip,
@@ -23,10 +23,10 @@ class MornyePlaybackButton extends StatefulWidget {
   final bool loading;
 
   @override
-  State<MornyePlaybackButton> createState() => _MornyePlaybackButtonState();
+  State<MosixPlaybackButton> createState() => _MosixPlaybackButtonState();
 }
 
-class _MornyePlaybackButtonState extends State<MornyePlaybackButton>
+class _MosixPlaybackButtonState extends State<MosixPlaybackButton>
     with TickerProviderStateMixin {
   final _states = WidgetStatesController();
   late final _press = AnimationController(

@@ -2,12 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
 
 const _settings = AppSettings(
   downloadDirectory: '/fixture/output',

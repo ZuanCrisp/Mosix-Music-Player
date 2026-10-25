@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/widgets/app_crash_banner.dart';
-import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/widgets/app_crash_banner.dart';
+import 'package:mosix/widgets/expressive_button.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart' show ShareParams, SharePlus;
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_menu_button.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
-import 'package:mornye/widgets/app_search_field.dart';
-import 'package:mornye/utils/ordered_range_selection.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_menu_button.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/app_search_field.dart';
+import 'package:mosix/utils/ordered_range_selection.dart';
 
 part 'log_screen_widgets.dart';
 

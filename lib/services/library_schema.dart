@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/services/library_database_models.dart';
-import 'package:mornye/services/library_row_mapper.dart';
-import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
-import 'package:mornye/utils/ios_container_paths.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/services/library_database_models.dart';
+import 'package:mosix/services/library_row_mapper.dart';
+import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
+import 'package:mosix/utils/ios_container_paths.dart';
+import 'package:mosix/utils/logger.dart';
 
 final _log = AppLogger('LibraryDatabase');
 

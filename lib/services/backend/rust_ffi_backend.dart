@@ -3,11 +3,11 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/constants/app_info.dart';
-import 'package:mornye/services/backend/backend_channel.dart';
-import 'package:mornye/services/backend/ffi_backend_transport.dart';
-import 'package:mornye/services/backend/native_backend_transport.dart';
-import 'package:mornye/services/ffmpeg_desktop.dart';
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/services/backend/backend_channel.dart';
+import 'package:mosix/services/backend/ffi_backend_transport.dart';
+import 'package:mosix/services/backend/native_backend_transport.dart';
+import 'package:mosix/services/ffmpeg_desktop.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Error code of calls made while the desktop library cannot be loaded.
@@ -42,8 +42,7 @@ class DesktopBackendConfig {
   final String documentsDir;
   final String tempDir;
 
-  /// Host version extensions check `minAppVersion` against, as the mobile
-  /// hosts pass their bundle version.
+  /// App version included in requests made by the extension host.
   final String appVersion;
 
   /// Bundled FFmpeg tools; null leaves FFmpeg work unavailable on desktop.
@@ -223,7 +222,7 @@ class RustFfiBackend extends BackendChannel {
     } on Object catch (error) {
       throw PlatformException(
         code: desktopBackendUnavailableCode,
-        message: 'The Mornye desktop backend library could not be loaded',
+        message: 'The Mosix desktop backend library could not be loaded',
         details: error.toString(),
       );
     }

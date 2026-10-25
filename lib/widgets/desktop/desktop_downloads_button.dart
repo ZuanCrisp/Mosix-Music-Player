@@ -1,15 +1,15 @@
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/services/shell_navigation_service.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_progress_indicator.dart';
-import 'package:mornye/widgets/player_artwork.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_progress_indicator.dart';
+import 'package:mosix/widgets/player_artwork.dart';
 
 /// Downloads that are waiting, running or finalizing, in queue order.
 List<DownloadItem> activeDesktopDownloads(List<DownloadItem> items) => [
@@ -53,7 +53,7 @@ class _DesktopDownloadsButtonState
 
   @override
   Widget build(BuildContext context) {
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final colorScheme = Theme.of(context).colorScheme;
     final active = activeDesktopDownloads(
       ref.watch(downloadQueueProvider.select((state) => state.items)),
@@ -79,7 +79,7 @@ class _DesktopDownloadsButtonState
         DesktopDownloadsPopover(
           onShowAll: () {
             _menu.close();
-            // Mornye lists downloads on their own sidebar page; Library
+            // Mosix lists downloads on their own sidebar page; Library
             // would reopen whichever page it showed last, such as Songs.
             if (!ShellNavigationService.requestLibraryLink('downloads')) {
               ShellNavigationService.requestTab(ShellTab.library);
@@ -94,7 +94,7 @@ class _DesktopDownloadsButtonState
           tooltip: label,
           color: mornye ? colorScheme.onSurface : null,
           onPressed: _toggle,
-          // Mornye sizes it with the other glyphs in the player capsule.
+          // Mosix sizes it with the other glyphs in the player capsule.
           icon: SizedBox.square(
             dimension: mornye ? 20 : 24,
             child: Stack(
@@ -224,7 +224,7 @@ class _DownloadRow extends ConsumerWidget {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final progress = item.progress.clamp(0.0, 1.0);
     final status = switch (item.status) {
       DownloadStatus.queued => l10n.desktopDownloadsQueued,

@@ -1,34 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/unified_library_item.dart';
-import 'package:mornye/providers/library_search_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/playback_provider.dart';
-import 'package:mornye/screens/downloaded_album_screen.dart';
-import 'package:mornye/screens/library_tracks_folder_screen.dart';
-import 'package:mornye/screens/local_album_screen.dart';
-import 'package:mornye/screens/track_metadata_screen.dart';
-import 'package:mornye/services/batch_track_actions.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/services/library_search.dart';
-import 'package:mornye/services/local_track_batch_actions.dart';
-import 'package:mornye/services/local_track_redownload_service.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_choice_chip.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
-import 'package:mornye/widgets/desktop/context_menu.dart';
-import 'package:mornye/widgets/desktop/library_track_menu.dart';
-import 'package:mornye/widgets/library_track_selection_bar.dart';
-import 'package:mornye/widgets/library_selection_playback_actions.dart';
-import 'package:mornye/widgets/selection_bottom_bar.dart';
-import 'package:mornye/widgets/track_card.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/unified_library_item.dart';
+import 'package:mosix/providers/library_search_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/playback_provider.dart';
+import 'package:mosix/screens/downloaded_album_screen.dart';
+import 'package:mosix/screens/library_tracks_folder_screen.dart';
+import 'package:mosix/screens/local_album_screen.dart';
+import 'package:mosix/screens/track_metadata_screen.dart';
+import 'package:mosix/services/batch_track_actions.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/services/library_search.dart';
+import 'package:mosix/services/local_track_batch_actions.dart';
+import 'package:mosix/services/local_track_redownload_service.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_choice_chip.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
+import 'package:mosix/widgets/desktop/context_menu.dart';
+import 'package:mosix/widgets/desktop/library_track_menu.dart';
+import 'package:mosix/widgets/library_track_selection_bar.dart';
+import 'package:mosix/widgets/library_selection_playback_actions.dart';
+import 'package:mosix/widgets/selection_bottom_bar.dart';
+import 'package:mosix/widgets/track_card.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/expressive_button.dart';
 
-/// Slivers shared by Material's Library and Mornye's Library/Songs screens.
+/// Slivers shared by Material's Library and Mosix's Library/Songs screens.
 /// Only the current query's provider families are watched; late results from
 /// an earlier query cannot replace what the user is currently searching for.
 class LibrarySearchResults extends ConsumerStatefulWidget {
@@ -409,7 +409,7 @@ class _LibrarySearchResultsState extends ConsumerState<LibrarySearchResults> {
     final key = ValueKey('${hit.kind.name}:${hit.source}:${hit.id}');
     Widget card({MediaPlaybackUi? playback}) => TrackCard(
       key: playback == null ? key : null,
-      style: hit.kind == LibrarySearchKind.songs && !context.isMornye
+      style: hit.kind == LibrarySearchKind.songs && !context.isMosix
           ? TrackCardStyle.filled
           : TrackCardStyle.flat,
       leading: ClipRRect(
@@ -458,9 +458,9 @@ class _LibrarySearchResultsState extends ConsumerState<LibrarySearchResults> {
       onLongPress: song ? () => _toggleSelection(hit) : null,
       onContextMenu: (position) => _showHitMenu(hit, position),
     );
-    if (!song || context.isMornye) return card();
+    if (!song || context.isMosix) return card();
     // Material song rows follow the file they play, so a track change
-    // rebuilds only the rows involved. Mornye rows show no current-track
+    // rebuilds only the rows involved. Mosix rows show no current-track
     // state.
     return Consumer(
       key: key,

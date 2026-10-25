@@ -1,6 +1,6 @@
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_history_provider.dart';
-import 'package:mornye/services/history_database.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/services/history_database.dart';
 
 /// Retains derived lookups while the immutable source list is unchanged.
 /// Callers replace their list for metadata, order, or filter changes.

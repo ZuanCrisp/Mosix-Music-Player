@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/services/batch_metadata_re_enrich.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/services/batch_metadata_re_enrich.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 /// Results belong above the Library selection card and metadata sheets.
 /// A page snackbar can be painted behind either of those surfaces.
@@ -199,7 +199,7 @@ class _ReEnrichReviewContent extends StatelessWidget {
                     ),
                   ],
                 ];
-                return context.isMornye
+                return context.isMosix
                     ? Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,

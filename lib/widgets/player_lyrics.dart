@@ -9,21 +9,21 @@ import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter/rendering.dart'
     show OverflowBoxFit, RenderAbstractViewport, ScrollDirection;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/lyrics_parser.dart';
-import 'package:mornye/utils/lyrics_timeline.dart';
-import 'package:mornye/utils/synced_lyrics_scroll.dart';
-import 'package:mornye/widgets/aligned_lyric_pronunciation.dart';
-import 'package:mornye/widgets/lyric_supplement_transition.dart';
-import 'package:mornye/widgets/lyric_scroll_motion.dart';
-import 'package:mornye/widgets/lyric_gap_indicator.dart';
-import 'package:mornye/widgets/mornye_player_slider.dart';
-import 'package:mornye/widgets/lyrics_text_scale.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mosix/utils/lyrics_timeline.dart';
+import 'package:mosix/utils/synced_lyrics_scroll.dart';
+import 'package:mosix/widgets/aligned_lyric_pronunciation.dart';
+import 'package:mosix/widgets/lyric_supplement_transition.dart';
+import 'package:mosix/widgets/lyric_scroll_motion.dart';
+import 'package:mosix/widgets/lyric_gap_indicator.dart';
+import 'package:mosix/widgets/mornye_player_slider.dart';
+import 'package:mosix/widgets/lyrics_text_scale.dart';
 
 part 'player_lyrics_line_style.dart';
 part 'player_lyrics_word_sweep.dart';
@@ -34,10 +34,10 @@ const _mornyeLyricFontSize = 34.0;
 /// a phone. Null keeps the text theme's size (phones and tablets).
 double? get _materialLyricFontSize => isDesktopPlatform ? 32 : null;
 double get _materialBackgroundLyricFontSize => isDesktopPlatform ? 24 : 18;
-const mornyeLyricsContentInset = 28.0 + MornyePlayerSlider.horizontalInset;
+const mornyeLyricsContentInset = 28.0 + MosixPlayerSlider.horizontalInset;
 
 /// How much of the lyrics area's bottom the player's controls cover. The
-/// Mornye phone player lays lyrics out under its controls so they can grow
+/// Mosix phone player lays lyrics out under its controls so they can grow
 /// when the controls hide; content that is not a scrolling lyric list keeps
 /// clear of this part.
 class LyricsCoveredBottom extends InheritedWidget {
@@ -409,7 +409,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     if (widget.seekPreview.value != null) {
       return LyricsParser.activeIndex(_lines, position);
     }
-    if (context.isMornye) {
+    if (context.isMosix) {
       // Read one transport snapshot: playing/loading derived providers can
       // notify separately during the same playback event.
       final playback = ref.read(playbackStateProvider).value;
@@ -535,7 +535,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     super.dispose();
   }
 
-  void _measureMornyeLines(BuildContext context, double width) {
+  void _measureMosixLines(BuildContext context, double width) {
     final style = _primaryLyricStyle(context);
     final scaler = MediaQuery.textScalerOf(context);
     final direction = Directionality.of(context);
@@ -757,7 +757,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     final curve = seeking ? Curves.easeOutCubic : LyricScrollMotion.scrollCurve;
     if (duration == Duration.zero) _stopScrollMotion();
     final extents = _targetLineExtents;
-    if (context.isMornye && extents != null && row < extents.length) {
+    if (context.isMosix && extents != null && row < extents.length) {
       final position = _scroll.position;
       final target = extents.offsetForRow(row);
       final offset = target.clamp(
@@ -860,7 +860,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     final loading = _visible
         ? ref.watch(playbackLoadingProvider)
         : ref.read(playbackLoadingProvider);
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final highContrast = MediaQuery.highContrastOf(context);
     final blurLyrics =
         mornye &&
@@ -931,7 +931,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                 previousExtents?.offsetForRow(previousScrollAnchor) ?? 0;
             final previousFocusOffset =
                 previousExtents?.offsetForRow(focusAnchor) ?? 0;
-            _measureMornyeLines(context, layoutWidth);
+            _measureMosixLines(context, layoutWidth);
             // Reuse text measurements; only interpolate row heights as the
             // supplements fade. Scrolling follows the same animation clock.
             final geometryKey = (
@@ -1470,7 +1470,7 @@ class LyricsCredits extends StatelessWidget {
 
   TextStyle _style(BuildContext context) =>
       Theme.of(context).textTheme.bodyMedium!.copyWith(
-        fontSize: context.isMornye ? 17 : 14,
+        fontSize: context.isMosix ? 17 : 14,
         fontWeight: FontWeight.w600,
         height: 1.4,
         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.48),

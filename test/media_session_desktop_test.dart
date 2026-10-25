@@ -4,11 +4,11 @@ import 'package:audio_service_platform_interface/audio_service_platform_interfac
 import 'package:dbus/dbus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/media_session_desktop.dart';
-import 'package:mornye/services/media_session_mpris.dart';
-import 'package:mornye/services/media_session_smtc.dart';
-import 'package:mornye/services/playback_deck.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/services/media_session_desktop.dart';
+import 'package:mosix/services/media_session_mpris.dart';
+import 'package:mosix/services/media_session_smtc.dart';
+import 'package:mosix/services/playback_deck.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 import 'package:smtc_windows/smtc_windows.dart' as smtc;
 
 /// Records each handler callback by request type.
@@ -197,7 +197,7 @@ void main() {
       final metadata = (await property('Metadata')).asStringVariantDict();
       final track = metadata['mpris:trackid']!;
       await call('SetPosition', [
-        DBusObjectPath('/com/zarz/mornye/track/999'),
+        DBusObjectPath('/com/zuancrisp/mosix/track/999'),
         DBusInt64(1000000),
       ]);
       expect(callbacks.requests, isEmpty);

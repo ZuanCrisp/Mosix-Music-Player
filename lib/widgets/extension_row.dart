@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 /// Square extension icon with a tinted fallback.
 class ExtensionAvatar extends StatelessWidget {

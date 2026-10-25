@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:material_ui/material_ui.dart' as material_ui;
-import 'package:mornye/providers/theme_provider.dart';
-import 'package:mornye/providers/custom_font_provider.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/models/theme_settings.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/providers/theme_provider.dart';
+import 'package:mosix/providers/custom_font_provider.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/models/theme_settings.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 class DynamicColorWrapper extends ConsumerWidget {
   final Widget Function(ThemeData light, ThemeData dark, ThemeMode mode)
@@ -26,7 +26,7 @@ class DynamicColorWrapper extends ConsumerWidget {
       builder: (lightDynamic, darkDynamic) {
         if (themeSettings.style == AppThemeStyle.mornye) {
           return builder(
-            MornyeTheme.build(
+            MosixTheme.build(
               Brightness.light,
               accent: themeSettings.mornyeAccent,
               useSystemFont: themeSettings.useSystemFont,
@@ -34,7 +34,7 @@ class DynamicColorWrapper extends ConsumerWidget {
               glassClarity: themeSettings.mornyeGlassClarity,
               glassOutlines: themeSettings.mornyeGlassOutlines,
             ),
-            MornyeTheme.build(
+            MosixTheme.build(
               Brightness.dark,
               accent: themeSettings.mornyeAccent,
               useSystemFont: themeSettings.useSystemFont,

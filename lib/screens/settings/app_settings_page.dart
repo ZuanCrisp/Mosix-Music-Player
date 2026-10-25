@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/utils/nav_bar_inset.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
 
 class AppSettingsPage extends ConsumerWidget {
   const AppSettingsPage({super.key});
@@ -232,7 +232,7 @@ class AppSettingsPage extends ConsumerWidget {
       builder: (context) => AppAlertDialog(
         content: Row(
           children: [
-            if (context.isMornye)
+            if (context.isMosix)
               const CupertinoActivityIndicator()
             else
               const AppLoadingIndicator(),
@@ -292,7 +292,7 @@ class _UpdateChannelSelector extends StatelessWidget {
             children: [
               AppIcon(
                 context.adaptiveIcon(Icons.new_releases),
-                color: context.isMornye
+                color: context.isMosix
                     ? colorScheme.primary
                     : colorScheme.onSurfaceVariant,
                 size: 24,
@@ -395,7 +395,7 @@ class _VerificationBrowserModeSelector extends StatelessWidget {
                 children: [
                   AppIcon(
                     context.adaptiveIcon(Icons.open_in_browser),
-                    color: context.isMornye
+                    color: context.isMosix
                         ? colorScheme.primary
                         : colorScheme.onSurfaceVariant,
                     size: 24,

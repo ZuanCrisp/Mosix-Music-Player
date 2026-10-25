@@ -176,7 +176,7 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
 
   void _showSortOptions(ColorScheme colorScheme) {
     var tempSort = _searchSortOption;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     showAppModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -215,8 +215,8 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
                     spacing: 8,
                     runSpacing: 8,
                     children: HomeSearchSortOption.values.map((option) {
-                      if (context.isMornye) {
-                        return MornyeFilterChip(
+                      if (context.isMosix) {
+                        return MosixFilterChip(
                           label: _sortOptionLabel(option),
                           selected: tempSort == option,
                           glass: false,
@@ -459,7 +459,7 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
   }) {
     // Material result groups are grouped rows, on the settings group tier.
     final sectionColor = colorScheme.surfaceContainer;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
 
     return [
       SliverToBoxAdapter(
@@ -532,7 +532,7 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
             if (mornye) {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: MornyeGlassPanel.overlay(
+                child: MosixGlassPanel.overlay(
                   blurEnabled: false,
                   radius: 24,
                   firstInGroup: isFirst,
@@ -714,10 +714,10 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
         _triggerSearchWithFilter(id);
       }
 
-      return context.isMornye
-          ? MornyeGlassPanel.overlay(
+      return context.isMosix
+          ? MosixGlassPanel.overlay(
               radius: 24,
-              child: MornyeFilterChip(
+              child: MosixFilterChip(
                 label: label,
                 selected: selectedFilter == id,
                 icon: icon == null ? null : mornyeIconFor(icon),
@@ -792,7 +792,7 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
     // The Material Home keeps the resting field clean; import and paste
     // appear once it is focused.
     final showInputActions =
-        context.isMornye ||
+        context.isMosix ||
         widget.mode == HomeTabMode.search ||
         _searchFocusNode.hasFocus;
 

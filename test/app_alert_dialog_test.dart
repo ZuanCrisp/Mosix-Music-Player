@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 void main() {
   for (final brightness in Brightness.values) {
@@ -15,7 +15,7 @@ void main() {
           await tester.pumpWidget(
             ProviderScope(
               child: MaterialApp(
-                theme: MornyeTheme.build(brightness),
+                theme: MosixTheme.build(brightness),
                 builder: (context, child) => MediaQuery(
                   data: MediaQuery.of(
                     context,
@@ -70,7 +70,7 @@ void main() {
               Theme.of(bodyContext).colorScheme.onSurface,
             );
           }
-          final panel = find.byType(MornyeGlassPanel);
+          final panel = find.byType(MosixGlassPanel);
           final openWidth = tester.getRect(panel).width;
           await tester.tap(find.text('Cancel'));
           await tester.pump();
@@ -91,13 +91,13 @@ void main() {
 
   for (final mornye in [true, false]) {
     testWidgets(
-      'confirmation preserves cancel and confirm results (Mornye: $mornye)',
+      'confirmation preserves cancel and confirm results (Mosix: $mornye)',
       (tester) async {
         bool? result;
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+              theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
               home: Builder(
                 builder: (context) => Scaffold(
                   body: TextButton(
@@ -134,7 +134,7 @@ void main() {
         await tester.tap(find.text('Open'));
         await tester.pumpAndSettle();
         expect(
-          find.byType(MornyeGlassPanel),
+          find.byType(MosixGlassPanel),
           mornye ? findsOneWidget : findsNothing,
         );
         expect(
@@ -153,7 +153,7 @@ void main() {
             DefaultTextStyle.of(
               tester.element(find.text('Remove')),
             ).style.color,
-            MornyeTheme.build(Brightness.dark).colorScheme.primary,
+            MosixTheme.build(Brightness.dark).colorScheme.primary,
           );
           expect(find.byType(CupertinoAlertDialog), findsNothing);
           expect(find.byType(FilledButton), findsNothing);
@@ -188,7 +188,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.light),
+          theme: MosixTheme.build(Brightness.light),
           home: MediaQuery(
             data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
             child: AppAlertDialog(

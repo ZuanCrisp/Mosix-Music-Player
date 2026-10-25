@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/utils/synced_lyrics_scroll.dart';
+import 'package:mosix/utils/synced_lyrics_scroll.dart';
 
 void main() {
   test('symmetric padding lets the final lyric line reach center', () {

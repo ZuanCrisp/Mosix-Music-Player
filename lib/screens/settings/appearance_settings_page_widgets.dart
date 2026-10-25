@@ -6,7 +6,7 @@ class _ThemePreviewCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    if (context.isMornye) {
+    if (context.isMosix) {
       return ExcludeSemantics(
         child: IgnorePointer(
           child: Container(
@@ -37,7 +37,7 @@ class _ThemePreviewCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                MornyeTabBar(
+                MosixTabBar(
                   destinations: [
                     NavigationDestination(
                       icon: const AppIcon(Icons.home_outlined),
@@ -230,8 +230,8 @@ class _ThemePreviewCard extends StatelessWidget {
   }
 }
 
-class _MornyeGlassClaritySlider extends ConsumerWidget {
-  const _MornyeGlassClaritySlider();
+class _MosixGlassClaritySlider extends ConsumerWidget {
+  const _MosixGlassClaritySlider();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -296,7 +296,7 @@ class _MornyeGlassClaritySlider extends ConsumerWidget {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(18),
-                  child: MornyeGlassPanel(
+                  child: MosixGlassPanel(
                     radius: 22,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -309,7 +309,7 @@ class _MornyeGlassClaritySlider extends ConsumerWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'Mornye',
+                              'Mosix',
                               style: theme.textTheme.titleMedium,
                             ),
                           ),
@@ -331,9 +331,9 @@ class _MornyeGlassClaritySlider extends ConsumerWidget {
               label: '${(clarity * 100).round()}%',
               onChanged: adjustable
                   ? (value) =>
-                        notifier.setMornyeGlassClarity(value, persist: false)
+                        notifier.setMosixGlassClarity(value, persist: false)
                   : null,
-              onChangeEnd: adjustable ? notifier.setMornyeGlassClarity : null,
+              onChangeEnd: adjustable ? notifier.setMosixGlassClarity : null,
             ),
           ),
           Row(
@@ -362,23 +362,23 @@ class _MornyeGlassClaritySlider extends ConsumerWidget {
   }
 }
 
-class _MornyeAccentPicker extends StatelessWidget {
-  const _MornyeAccentPicker({required this.selected, required this.onChanged});
+class _MosixAccentPicker extends StatelessWidget {
+  const _MosixAccentPicker({required this.selected, required this.onChanged});
 
-  final MornyeAccent selected;
-  final ValueChanged<MornyeAccent> onChanged;
+  final MosixAccent selected;
+  final ValueChanged<MosixAccent> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final labels = {
-      MornyeAccent.red: l10n.appearanceAccentRed,
-      MornyeAccent.orange: l10n.appearanceAccentOrange,
-      MornyeAccent.green: l10n.appearanceAccentGreen,
-      MornyeAccent.teal: l10n.appearanceAccentTeal,
-      MornyeAccent.blue: l10n.appearanceAccentBlue,
-      MornyeAccent.purple: l10n.appearanceAccentPurple,
-      MornyeAccent.pink: l10n.appearanceAccentPink,
+      MosixAccent.red: l10n.appearanceAccentRed,
+      MosixAccent.orange: l10n.appearanceAccentOrange,
+      MosixAccent.green: l10n.appearanceAccentGreen,
+      MosixAccent.teal: l10n.appearanceAccentTeal,
+      MosixAccent.blue: l10n.appearanceAccentBlue,
+      MosixAccent.purple: l10n.appearanceAccentPurple,
+      MosixAccent.pink: l10n.appearanceAccentPink,
     };
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -386,10 +386,10 @@ class _MornyeAccentPicker extends StatelessWidget {
         spacing: 8,
         runSpacing: 8,
         children: [
-          for (final accent in MornyeAccent.values)
+          for (final accent in MosixAccent.values)
             Builder(
               builder: (context) {
-                final color = MornyeTheme.accentColor(
+                final color = MosixTheme.accentColor(
                   accent,
                   Theme.of(context).brightness,
                 );
@@ -542,7 +542,7 @@ class _ThemeModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (context.isMornye) {
+    if (context.isMosix) {
       final labels = {
         ThemeMode.system: context.l10n.appearanceThemeSystem,
         ThemeMode.light: context.l10n.appearanceThemeLight,
@@ -550,7 +550,7 @@ class _ThemeModeSelector extends StatelessWidget {
       };
       return Padding(
         padding: const EdgeInsets.all(12),
-        child: MornyeSegmentedControl(
+        child: MosixSegmentedControl(
           labels: labels.values.toList(),
           selectedIndex: labels.keys.toList().indexOf(currentMode),
           onChanged: (index) => onChanged(labels.keys.elementAt(index)),
@@ -655,7 +655,7 @@ class _LanguageSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final content = ListTile(
-      leading: context.isMornye
+      leading: context.isMosix
           ? null
           : AppIcon(Icons.language, color: colorScheme.onSurfaceVariant),
       title: Text(context.l10n.appearanceLanguage),

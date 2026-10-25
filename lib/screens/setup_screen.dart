@@ -6,33 +6,33 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/app_progress_indicator.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/app_progress_indicator.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:mornye/services/setup_progress_store.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/constants/language_choices.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/desktop_folders.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/file_access.dart';
-import 'package:mornye/widgets/scroll_edge_fade.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/services/setup_progress_store.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/constants/language_choices.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/desktop_folders.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/file_access.dart';
+import 'package:mosix/widgets/scroll_edge_fade.dart';
+import 'package:mosix/utils/logger.dart';
 
 part 'setup_steps.dart';
 
@@ -585,7 +585,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   Future<String> _getDefaultDirectory() async {
     if (_platform == TargetPlatform.android) {
-      final downloadDir = Directory('/storage/emulated/0/Download/Mornye');
+      final downloadDir = Directory('/storage/emulated/0/Download/Mosix');
       try {
         if (!await downloadDir.exists()) {
           await downloadDir.create(recursive: true);
@@ -596,7 +596,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       }
     }
     final appDir = await getApplicationDocumentsDirectory();
-    return '${appDir.path}/Mornye';
+    return '${appDir.path}/Mosix';
   }
 
   Future<void> _completeSetup() async {

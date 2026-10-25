@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/library_database_models.dart';
-import 'package:mornye/services/desktop_library_watcher.dart';
+import 'package:mosix/models/library_database_models.dart';
+import 'package:mosix/services/desktop_library_watcher.dart';
 
 LocalLibrarySource _source(
   String id,

@@ -1,6 +1,6 @@
-import 'package:mornye/models/extension.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/models/extension.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/logger.dart';
 
 class MetadataAutofillResult {
   final Map<String, String> values;

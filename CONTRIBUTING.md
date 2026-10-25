@@ -1,6 +1,6 @@
-# Contributing to Mornye
+# Contributing to Mosix
 
-Thank you for helping improve Mornye. Bug reports, focused pull
+Thank you for helping improve Mosix. Bug reports, focused pull
 requests, documentation, and translations are all welcome.
 
 Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) when participating in
@@ -8,7 +8,7 @@ the project.
 
 ## Before You Start
 
-- Search the [existing issues](https://github.com/mornyeapp/Mornye/issues)
+- Search the [existing issues](https://github.com/ZuanCrisp/Mosix-Music-Player/issues)
   before opening a new one.
 - Use the issue template that best matches the problem.
 - Keep pull requests focused. Separate unrelated fixes into separate PRs.
@@ -16,7 +16,7 @@ the project.
   artifacts.
 
 Translations are managed through the
-[Mornye Crowdin project](https://crowdin.com/project/mornye).
+[Mosix Crowdin project](https://crowdin.com/project/mornye).
 The English source strings live in `lib/l10n/arb/app_en.arb`.
 
 ## Toolchain
@@ -38,9 +38,9 @@ exact Flutter version declared in `.fvmrc` and replace `fvm flutter` with
 1. Fork and clone the repository:
 
    ```bash
-   git clone https://github.com/YOUR_USERNAME/Mornye.git
-   cd Mornye
-   git remote add upstream https://github.com/mornyeapp/Mornye.git
+   git clone https://github.com/YOUR_USERNAME/Mosix.git
+   cd Mosix
+   git remote add upstream https://github.com/ZuanCrisp/Mosix-Music-Player.git
    ```
 
 2. Install the pinned Flutter SDK and Dart dependencies:
@@ -98,7 +98,7 @@ For development release APKs, use `bash scripts/build_android.sh`. Full builds
 remain the default; add `--lite` to omit the optional Discord SDK while keeping
 playback and downloads. Debug builds can also run without the SDK.
 
-To build only ARM64, set `MORNYE_RUST_ANDROID_ABIS=arm64-v8a`. The script uses
+To build only ARM64, set `MOSIX_RUST_ANDROID_ABIS=arm64-v8a`. The script uses
 the Flutter version in `.fvmrc` and audits the selected split APKs and universal
 APK. Android Gradle builds the Rust native artifacts automatically.
 
@@ -107,7 +107,7 @@ APK. Android Gradle builds the Rust native artifacts automatically.
 On macOS, run `bash scripts/build_ios.sh`, then `(cd ios && pod install)` before
 opening `ios/Runner.xcworkspace`. The application uses the Rust backend.
 
-For iOS Lite, run CocoaPods and the app build with `MORNYE_DISCORD_SDK=0`.
+For iOS Lite, run CocoaPods and the app build with `MOSIX_DISCORD_SDK=0`.
 An existing Pods installation must be regenerated with that setting. Production
 release CI requires the staged Discord SDK on iOS as well.
 
@@ -151,7 +151,7 @@ docs/         Local documentation and migration archives (gitignored)
 scripts/      Reproducible project build helpers
 ```
 
-Mornye is extension-driven. Extension-specific behavior must be
+Mosix is extension-driven. Extension-specific behavior must be
 declared through a generic manifest field, capability, or reusable app API.
 Do not add provider-name checks such as `if source == 'provider-name'` to the
 main app. The backend should parse and expose the generic declaration, and Dart
@@ -162,15 +162,15 @@ not repeated here: [android/README.md](android/README.md) (native channel
 contract), [rust_backend/README.md](rust_backend/README.md) (crate map),
 [test/README.md](test/README.md),
 [integration_test/README.md](integration_test/README.md),
-[lib/theme/README.md](lib/theme/README.md), and the `MORNYE_PATCHES.md` file
+[lib/theme/README.md](lib/theme/README.md), and the `MOSIX_PATCHES.md` file
 in each `third_party/` fork, for example
-[audio_service](third_party/audio_service/MORNYE_PATCHES.md).
+[audio_service](third_party/audio_service/MOSIX_PATCHES.md).
 
 ## Codebase Map
 
 ### Flutter (`lib/`)
 
-App files import each other as `package:mornye/...`. The intended
+App files import each other as `package:mosix/...`. The intended
 direction is screens and widgets on top, then controllers, providers, services,
 and models and utilities at the bottom. The last column is the current state
 found by scanning import lines, including today's exceptions; do not add new
@@ -178,7 +178,7 @@ ones.
 
 | Folder | What belongs there | Imports today |
 | --- | --- | --- |
-| `main.dart`, `app.dart` | Startup, `ProviderScope`, `MornyeApp`, and the `GoRouter` (`/`, `/setup`, `/tutorial`) | Any folder |
+| `main.dart`, `app.dart` | Startup, `ProviderScope`, `MosixApp`, and the `GoRouter` (`/`, `/setup`, `/tutorial`) | Any folder |
 | `screens/` | Routes and tab roots; large screens split into `<screen>_*.dart` files; settings pages in `screens/settings/` | Any folder |
 | `widgets/` | Reusable widgets and design-system components | Any folder except `screens/`; exceptions: `library_search_results.dart`, `artist_concerts_button.dart`, `mini_player.dart` |
 | `controllers/` | UI logic shared by screens and widgets: selection mixins, batch actions, the metadata editor | controllers, widgets, providers, services, models, utils, theme, l10n; `clickable_metadata.dart` also imports `screens/` |
@@ -186,7 +186,7 @@ ones.
 | `services/` | `PlatformBridge`, SQLite stores, the music player, FFmpeg, network storage, notifications | services, models, utils, constants; exceptions: re-export stubs into `providers/` and `controllers/`, and `notification_service.dart` imports `l10n/` |
 | `models/` | Data classes and their `json_serializable` output (`*.g.dart`) | models, utils; `library_database_models.dart` imports `sqlite_helpers.dart` from `services/` |
 | `utils/` | Small helpers, pure policies, and the settings search catalog | utils, models, constants, l10n; seven files import `services/` (for example `file_access.dart`, `logger.dart`), `saf_download_tree.dart` imports `providers/`, three re-export stubs point into `controllers/` |
-| `theme/` | `AppTheme`, `AppTokens`, motion, icons, and the Mornye theme | theme, models; `dynamic_color_wrapper.dart` imports `providers/`, `cover_palette.dart` imports `widgets/` and `services/` |
+| `theme/` | `AppTheme`, `AppTokens`, motion, icons, and the Mosix theme | theme, models; `dynamic_color_wrapper.dart` imports `providers/`, `cover_palette.dart` imports `widgets/` and `services/` |
 | `l10n/` | ARB sources in `arb/`, the `context.l10n` extension in `l10n.dart`, and `supported_locales.dart`; `app_localizations*.dart` is generated | utils |
 | `constants/` | App info, language choices, `MusicServices` IDs | l10n |
 | `routes/` | `now_playing_route.dart` | services, theme |
@@ -207,29 +207,29 @@ Workspace dependencies point only downward:
 | `network/` | `mornye-network` | Shared, cancellable HTTP transport | none |
 | `providers/` | `mornye-providers` | Built-in clients: Deezer, MusicBrainz, platform resolver, lyrics | core, network |
 | `extensions/` | `mornye-extensions` | Extension JavaScript runtime (rquickjs), host functions, manager, repository, and backend operations such as downloads, library scan, and tags | core, network, providers |
-| `mobile/` | `mornye-mobile` | UniFFI API, mostly methods on `ExtensionManager`; built as `cdylib` and `staticlib`; Kotlin package `com.mornye.backend`, Swift module `MornyeBackend` | core, network, extensions |
+| `mobile/` | `mornye-mobile` | UniFFI API, mostly methods on `ExtensionManager`; built as `cdylib` and `staticlib`; Kotlin package `com.mornye.backend`, Swift module `MosixBackend` | core, network, extensions |
 | `bindgen/` | `mornye-bindgen` | UniFFI bindgen CLI used by `scripts/build_rust_backend.sh` | none |
 
 ### Native
 
-Android Kotlin lives in `android/app/src/main/kotlin/com/zarz/mornye/`.
-`android/app/build.gradle.kts` adds `android/app/src/rust/kotlin/com/zarz/mornye/`
+Android Kotlin lives in `android/app/src/main/kotlin/com/zuancrisp/mosix/`.
+`android/app/build.gradle.kts` adds `android/app/src/rust/kotlin/com/zuancrisp/mosix/`
 and the generated bindings to the same source set.
 
 | Files | Role |
 | --- | --- |
-| `MainActivity.kt` | Backend channel `com.zarz.mornye/backend`, the `nativeBackendMethods` set, and the `when (call.method)` dispatch |
+| `MainActivity.kt` | Backend channel `com.zuancrisp.mosix/backend`, the `nativeBackendMethods` set, and the `when (call.method)` dispatch |
 | `MainActivity*Calls.kt`, `MainActivitySaf*.kt`, `MainActivityProgressStreams.kt`, `MainActivitySmallChannels.kt` | `MainActivity.handleX(call, result)` extension functions grouped by area, progress EventChannels, small channels |
 | `DownloadService*.kt`, `BackgroundWorkService.kt` | Foreground services: the native download worker and its snapshot, other background work |
 | `NativeDownloadFinalizer.kt`, `NativeFinalizer*.kt`, `NativeHistoryStore.kt` | Post-download finalization and the native history write |
 | `Saf*.kt` | Storage Access Framework helpers |
-| `UsbBitPerfectPlugin.kt`, `Usb*.kt`, `BitPerfectPcm.kt`, `Dsd*.kt`, `HiResPlayback.kt`, `NativeAudio.kt` | Bit-perfect and USB playback (`com.zarz.mornye/usb_pcm`) |
+| `UsbBitPerfectPlugin.kt`, `Usb*.kt`, `BitPerfectPcm.kt`, `Dsd*.kt`, `HiResPlayback.kt`, `NativeAudio.kt` | Bit-perfect and USB playback (`com.zuancrisp.mosix/usb_pcm`) |
 | `PlayerWidget*.kt`, `DownloadQueueWidgetProvider.kt` | Home-screen widgets |
 | `CoreBackend.kt`; `SelectedCoreBackend.kt`, `RustCoreBackendApplication.kt`, `NativeDataJobs.kt` | The `CoreBackend` interface and its Rust implementation `RustCoreBackend`, which maps method names to UniFFI calls |
 
 iOS code lives in `ios/Runner/`: `AppDelegate.swift` (backend channel,
 `handleMethodCall` and its `osMethods` set, progress EventChannels, background
-tasks), `CoreBackend.swift` (Rust calls through `MornyeBackend`,
+tasks), `CoreBackend.swift` (Rust calls through `MosixBackend`,
 `invokeApplication`), and smaller bridges such as `PlayerWidgetBridge.swift`
 and `ConcertCalendarBridge.swift`. The WidgetKit extension is in
 `ios/PlayerWidget/`.
@@ -394,7 +394,7 @@ in `handleDownloadByStrategy`; iOS in `CoreBackend.swift`.
 - New Rust entry points are `#[uniffi::export]` items in
   `rust_backend/crates/mobile/src/`; the build regenerates bindings (see
   [Development Setup](#development-setup)).
-- Dart tests stub `com.zarz.mornye/backend` with `setMockMethodCallHandler`,
+- Dart tests stub `com.zuancrisp.mosix/backend` with `setMockMethodCallHandler`,
   for example `test/extension_initialization_test.dart`.
 
 ### A Lyrics Provider
@@ -450,7 +450,7 @@ Commands are in [Validation](#validation).
 | --- | --- | --- |
 | Dart unit and widget | `test/` | [test/README.md](test/README.md); fixtures in `test/fixtures/`, helpers in `test/support/` |
 | Device and performance | `integration_test/` | [integration_test/README.md](integration_test/README.md) |
-| Kotlin JVM | `android/app/src/test/kotlin/com/zarz/mornye/` | Case tables in `android/app/src/test/resources/` are also read by Dart tests |
+| Kotlin JVM | `android/app/src/test/kotlin/com/zuancrisp/mosix/` | Case tables in `android/app/src/test/resources/` are also read by Dart tests |
 | Rust | `tests.rs` modules beside the code, `rust_backend/crates/extensions/tests/` | For example `rust_backend/crates/extensions/src/runtime/tests.rs` |
 | iOS | `ios/RunnerTests/` | `RunnerTests.swift` |
 
@@ -525,7 +525,7 @@ fvm flutter test
 ```
 
 Some Dart tests render audio and need `ffmpeg` and `ffprobe` on `PATH`. Set
-`MORNYE_TEST_FFMPEG` to an `ffmpeg` binary to override the path used by the
+`MOSIX_TEST_FFMPEG` to an `ffmpeg` binary to override the path used by the
 automix renderer test; the other ffmpeg tests read `PATH` directly.
 
 Performance drive runs need a dedicated emulator, `--profile` on Android and
@@ -574,6 +574,6 @@ before/after screenshots for UI changes.
 5. Respond to review feedback with follow-up commits; maintainers may squash
    commits when merging.
 
-When reporting a crash, include the Mornye version, release channel,
+When reporting a crash, include the Mosix version, release channel,
 device/OS, exact reproduction steps, storage mode, and exported app logs. For a
 cold-start Android crash, `adb logcat -b crash -d` is especially useful.

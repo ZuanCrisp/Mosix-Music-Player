@@ -1,9 +1,9 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/services/album_replaygain_readiness.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/services/album_replaygain_readiness.dart';
 
 import 'support/album_replaygain_benchmark.dart';
 

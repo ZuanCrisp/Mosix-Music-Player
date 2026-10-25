@@ -105,7 +105,7 @@ extension _QueueTabNavigation on _QueueTabState {
         );
 
     final navigator = Navigator.of(context);
-    final embeddedCoverPath = context.isMornye
+    final embeddedCoverPath = context.isMosix
         ? DownloadedEmbeddedCoverResolver.resolve(historyItem.filePath)
         : await DownloadedEmbeddedCoverResolver.resolveOrExtract(
             historyItem.filePath,
@@ -113,10 +113,10 @@ extension _QueueTabNavigation on _QueueTabState {
           );
     if (!mounted) return;
     final artworkSource = embeddedCoverPath ?? historyItem.coverUrl;
-    if (embeddedCoverPath == null && !context.isMornye) {
+    if (embeddedCoverPath == null && !context.isMosix) {
       precacheCoverImage(context, historyItem.coverUrl);
     }
-    final backdropReady = context.isMornye
+    final backdropReady = context.isMosix
         ? Future<void>.value()
         : precacheMetadataBackdrop(context, artworkSource);
     _searchFocusNode.unfocus();
@@ -150,7 +150,7 @@ extension _QueueTabNavigation on _QueueTabState {
     int? navigationIndex,
   }) async {
     final navigator = Navigator.of(context);
-    final embeddedCoverPath = context.isMornye
+    final embeddedCoverPath = context.isMosix
         ? DownloadedEmbeddedCoverResolver.resolve(item.filePath)
         : await DownloadedEmbeddedCoverResolver.resolveOrExtract(
             item.filePath,
@@ -158,10 +158,10 @@ extension _QueueTabNavigation on _QueueTabState {
           );
     if (!mounted) return;
     final artworkSource = embeddedCoverPath ?? item.coverUrl;
-    if (embeddedCoverPath == null && !context.isMornye) {
+    if (embeddedCoverPath == null && !context.isMosix) {
       precacheCoverImage(context, item.coverUrl);
     }
-    final backdropReady = context.isMornye
+    final backdropReady = context.isMosix
         ? Future<void>.value()
         : precacheMetadataBackdrop(context, artworkSource);
     _searchFocusNode.unfocus();
@@ -200,7 +200,7 @@ extension _QueueTabNavigation on _QueueTabState {
     int? navigationIndex,
   }) async {
     _searchFocusNode.unfocus();
-    if (!context.isMornye) {
+    if (!context.isMosix) {
       await precacheMetadataBackdrop(context, item.coverPath);
     }
     if (!mounted) return;

@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/mornye_player_details_sheet.dart';
-import 'package:mornye/widgets/player_details_sheet.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/mornye_player_details_sheet.dart';
+import 'package:mosix/widgets/player_details_sheet.dart';
 
 const _item = MediaItem(
   id: 'song',
@@ -33,7 +33,7 @@ void main() {
       ProviderScope(
         child: MaterialApp(
           theme: mornye
-              ? MornyeTheme.build(Brightness.light)
+              ? MosixTheme.build(Brightness.light)
               : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -91,11 +91,11 @@ void main() {
 
   for (final desktop in [false, true]) {
     testWidgets(
-      'Mornye keeps its glass details on ${desktop ? 'desktop' : 'phones'}',
+      'Mosix keeps its glass details on ${desktop ? 'desktop' : 'phones'}',
       (tester) async {
         debugDesktopPlatformOverride = desktop;
         await open(tester, mornye: true);
-        expect(find.byType(MornyePlayerDetailsSheet), findsOneWidget);
+        expect(find.byType(MosixPlayerDetailsSheet), findsOneWidget);
         expect(find.byType(AppBottomSheet), findsNothing);
         expect(find.byType(AppSheetHandle), findsOneWidget);
         expect(

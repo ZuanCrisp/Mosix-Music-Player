@@ -8,22 +8,22 @@ import 'package:analyzer/source/line_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/cover_palette.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/app_search_field.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
-import 'package:mornye/widgets/collection_scaffold.dart';
-import 'package:mornye/widgets/selection_action_button.dart';
-import 'package:mornye/widgets/selection_bottom_bar.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/track_card.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/cover_palette.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/app_search_field.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/collection_scaffold.dart';
+import 'package:mosix/widgets/selection_action_button.dart';
+import 'package:mosix/widgets/selection_bottom_bar.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/track_card.dart';
 
 import 'support/app_icon_finder.dart';
 
@@ -87,19 +87,19 @@ void main() {
         AppTokens.standard,
       );
       expect(
-        MornyeTheme.build(Brightness.light).extension<AppTokens>(),
-        MornyeTheme.tokens,
+        MosixTheme.build(Brightness.light).extension<AppTokens>(),
+        MosixTheme.tokens,
       );
       expect(
-        MornyeTheme.build(Brightness.dark).colorScheme.primary,
-        MornyeTheme.darkAccent,
+        MosixTheme.build(Brightness.dark).colorScheme.primary,
+        MosixTheme.darkAccent,
       );
     });
 
     testWidgets(
-      'Mornye keeps a font family and Cupertino tracking in text roles',
+      'Mosix keeps a font family and Cupertino tracking in text roles',
       (tester) async {
-        final theme = MornyeTheme.build(Brightness.light);
+        final theme = MosixTheme.build(Brightness.light);
         final apple = theme.platform == TargetPlatform.iOS;
         for (final role in [
           theme.textTheme.bodyLarge,
@@ -237,12 +237,12 @@ void main() {
           await tester.pumpWidget(
             ProviderScope(
               child: MaterialApp(
-                theme: MornyeTheme.build(Brightness.light),
+                theme: MosixTheme.build(Brightness.light),
                 home: Scaffold(
                   body: Directionality(
                     textDirection: direction,
                     child: StatefulBuilder(
-                      builder: (context, setState) => MornyeSegmentedControl(
+                      builder: (context, setState) => MosixSegmentedControl(
                         labels: const ['System', 'Light', 'Dark'],
                         selectedIndex: selected,
                         onChanged: (index) => setState(() => selected = index),
@@ -276,12 +276,12 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: MornyeTheme.build(Brightness.dark),
+            theme: MosixTheme.build(Brightness.dark),
             home: MediaQuery(
               data: const MediaQueryData(disableAnimations: true),
               child: Scaffold(
                 body: StatefulBuilder(
-                  builder: (context, setState) => MornyeSegmentedControl(
+                  builder: (context, setState) => MosixSegmentedControl(
                     labels: const ['System', 'Light', 'Dark'],
                     selectedIndex: selected,
                     onChanged: (index) => setState(() => selected = index),
@@ -319,7 +319,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: MornyeTheme.build(Brightness.dark),
+            theme: MosixTheme.build(Brightness.dark),
             home: Scaffold(
               body: AppSearchField(
                 controller: controller,
@@ -334,7 +334,7 @@ void main() {
         ),
       );
 
-      expect(find.byType(MornyeGlass), findsOneWidget);
+      expect(find.byType(MosixGlass), findsOneWidget);
       await tester.tap(find.byType(TextField));
       await tester.enterText(find.byType(TextField), 'Album');
       await tester.testTextInput.receiveAction(TextInputAction.search);

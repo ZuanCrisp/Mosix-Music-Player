@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/widgets/two_finger_pinch_listener.dart';
+import 'package:mosix/widgets/two_finger_pinch_listener.dart';
 
 void main() {
   Widget buildHarness({

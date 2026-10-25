@@ -1,32 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons, CupertinoTextField;
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_text_field.dart';
-import 'package:mornye/widgets/app_refresh_indicator.dart';
-import 'package:mornye/widgets/extension_row.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/widgets/app_search_field.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_text_field.dart';
+import 'package:mosix/widgets/app_refresh_indicator.dart';
+import 'package:mosix/widgets/extension_row.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/widgets/app_search_field.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/repo_provider.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/screens/repo/extension_details_screen.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/nav_bar_inset.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/extension_repo_card.dart';
-import 'package:mornye/widgets/app_choice_chip.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/repo_provider.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/screens/repo/extension_details_screen.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/extension_repo_card.dart';
+import 'package:mosix/widgets/app_choice_chip.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
 
 class RepoTab extends ConsumerStatefulWidget {
   const RepoTab({super.key});
@@ -116,7 +116,7 @@ class _RepoTabState extends ConsumerState<RepoTab> {
                 if (hasRegistryUrl)
                   AppIconButton(
                     icon: Icon(
-                      context.isMornye ? CupertinoIcons.link : Icons.link,
+                      context.isMosix ? CupertinoIcons.link : Icons.link,
                     ),
                     tooltip: context.l10n.storeChangeRepoTooltip,
                     onPressed: () => _showChangeRepoDialog(registryUrl),
@@ -239,7 +239,7 @@ class _RepoTabState extends ConsumerState<RepoTab> {
                     edge: edge,
                     downloadingId: downloadingId,
                   )
-                else if (context.isMornye)
+                else if (context.isMosix)
                   SliverToBoxAdapter(
                     child: ExtensionRepoCard(
                       margin: EdgeInsets.symmetric(
@@ -317,7 +317,7 @@ class _RepoTabState extends ConsumerState<RepoTab> {
         onUpdate: () => _updateExtension(ext),
         onTap: () => _showExtensionDetails(ext),
       );
-      return context.isMornye
+      return context.isMosix
           ? ExtensionRepoCard(margin: EdgeInsets.zero, child: item)
           : SettingsGroup(
               connected: true,
@@ -496,7 +496,7 @@ class _RepoTabState extends ConsumerState<RepoTab> {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 16),
-            if (context.isMornye)
+            if (context.isMosix)
               CupertinoTextField(
                 controller: changeUrlController,
                 placeholder: context.l10n.storeNewRepoUrlLabel,
@@ -742,7 +742,7 @@ class _CategoryChip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    if (context.isMornye) {
+    if (context.isMosix) {
       return Semantics(
         button: true,
         selected: isSelected,
@@ -750,7 +750,7 @@ class _CategoryChip extends ConsumerWidget {
         onTap: onTap,
         excludeSemantics: true,
         // Scrolls with the list over the plain page: see ExtensionRepoCard.
-        child: MornyeGlass.navigation(
+        child: MosixGlass.navigation(
           radius: 24,
           blurEnabled: ref.watch(mornyeBlurEnabledProvider),
           samplesBackdrop: false,
@@ -822,7 +822,7 @@ class _RepoListSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     // Placeholders keep their contrast on the Material group surface.
-    final surface = context.isMornye ? null : settingsGroupColor(context);
+    final surface = context.isMosix ? null : settingsGroupColor(context);
     final rows = [
       for (var index = 0; index < _count; index++)
         ExtensionRow(
@@ -888,7 +888,7 @@ class _RepoListSkeleton extends StatelessWidget {
           ),
         ),
     ];
-    if (context.isMornye) {
+    if (context.isMosix) {
       return ExtensionRepoCard(
         margin: EdgeInsets.fromLTRB(edge, 12, edge, 4),
         child: Column(mainAxisSize: MainAxisSize.min, children: rows),
@@ -945,7 +945,7 @@ class _ExtensionItem extends StatelessWidget {
       onTap: onTap,
       avatar: ExtensionAvatar(
         imageUrl: extension.iconUrl,
-        fallbackIcon: context.isMornye
+        fallbackIcon: context.isMosix
             ? mornyeIconFor(_getCategoryIcon(extension.category))
             : _getCategoryIcon(extension.category),
         background: extension.isInstalled
@@ -973,46 +973,18 @@ class _ExtensionItem extends StatelessWidget {
           ),
         ],
       ),
-      subtitle: extension.requiresNewerApp
-          ? Container(
-              padding: tokens.badgePadding,
-              decoration: BoxDecoration(
-                color: colorScheme.errorContainer,
-                borderRadius: tokens.borderRadiusBadge,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    size: 12,
-                    color: colorScheme.onErrorContainer,
-                  ),
-                  SizedBox(width: tokens.gapXs),
-                  Text(
-                    context.l10n.storeRequiresVersion(
-                      extension.minAppVersion ?? '',
-                    ),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onErrorContainer,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : Text(
-              extension.description,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+      subtitle: Text(
+        extension.description,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
       trailingBelowWhenNarrow: true,
       trailing: isDownloading
           ? const AppLoadingIndicator(size: 24)
-          : !context.isMornye
+          : !context.isMosix
           ? ExpressiveButton(
               onPressed: extension.hasUpdate
                   ? onUpdate
@@ -1039,7 +1011,7 @@ class _ExtensionItem extends StatelessWidget {
           ? FilledButton.tonal(
               onPressed: onUpdate,
               style: FilledButton.styleFrom(
-                shape: context.isMornye ? const StadiumBorder() : null,
+                shape: context.isMosix ? const StadiumBorder() : null,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 minimumSize: Size(0, context.tokens.minTouchTarget),
               ),
@@ -1049,7 +1021,7 @@ class _ExtensionItem extends StatelessWidget {
           ? OutlinedButton(
               onPressed: null,
               style: OutlinedButton.styleFrom(
-                shape: context.isMornye ? const StadiumBorder() : null,
+                shape: context.isMosix ? const StadiumBorder() : null,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 minimumSize: Size(0, context.tokens.minTouchTarget),
               ),
@@ -1057,7 +1029,7 @@ class _ExtensionItem extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    context.isMornye ? CupertinoIcons.check_mark : Icons.check,
+                    context.isMosix ? CupertinoIcons.check_mark : Icons.check,
                     size: 16,
                     color: colorScheme.outline,
                   ),
@@ -1072,11 +1044,11 @@ class _ExtensionItem extends StatelessWidget {
           : FilledButton(
               onPressed: onInstall,
               style: FilledButton.styleFrom(
-                shape: context.isMornye ? const StadiumBorder() : null,
-                backgroundColor: context.isMornye
+                shape: context.isMosix ? const StadiumBorder() : null,
+                backgroundColor: context.isMosix
                     ? colorScheme.primary.withValues(alpha: 0.12)
                     : null,
-                foregroundColor: context.isMornye ? colorScheme.primary : null,
+                foregroundColor: context.isMosix ? colorScheme.primary : null,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 minimumSize: Size(0, context.tokens.minTouchTarget),
               ),

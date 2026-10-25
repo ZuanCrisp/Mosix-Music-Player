@@ -1,8 +1,8 @@
 import 'package:audio_service/audio_service.dart' show MediaItem;
-import 'package:mornye/services/music_player_runtime.dart';
-import 'package:mornye/utils/int_utils.dart';
-import 'package:mornye/utils/ios_container_paths.dart';
-import 'package:mornye/utils/string_utils.dart';
+import 'package:mosix/services/music_player_runtime.dart';
+import 'package:mosix/utils/int_utils.dart';
+import 'package:mosix/utils/ios_container_paths.dart';
+import 'package:mosix/utils/string_utils.dart';
 
 class PlayableMedia {
   final String id;

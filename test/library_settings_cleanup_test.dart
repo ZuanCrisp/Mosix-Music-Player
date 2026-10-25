@@ -4,17 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/download_history_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/settings/library_settings_page.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/settings/library_settings_page.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 import 'support/fixed_settings.dart';
 
@@ -98,7 +98,7 @@ Future<void> _mount(
         downloadHistoryProvider.overrideWith(() => history),
       ],
       child: MaterialApp(
-        theme: mornye ? MornyeTheme.build(Brightness.dark) : AppTheme.light(),
+        theme: mornye ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const LibrarySettingsPage(),
@@ -112,7 +112,7 @@ Future<void> _mount(
 
 void main() {
   for (final mornye in [false, true]) {
-    testWidgets('source shows the scan failure reason (Mornye: $mornye)', (
+    testWidgets('source shows the scan failure reason (Mosix: $mornye)', (
       tester,
     ) async {
       const error =

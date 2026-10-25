@@ -7,14 +7,14 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/download_history_provider.dart';
-import 'package:mornye/providers/library_browse_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/mornye_library_screen.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/providers/library_browse_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/mornye_library_screen.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 import '../test/support/fixed_settings.dart';
 import '../test/support/library_paging_fixture.dart';
@@ -159,7 +159,7 @@ void main() {
     }
 
     ProviderContainer container() => ProviderScope.containerOf(
-      tester.element(find.byType(MornyeLibraryScreen)),
+      tester.element(find.byType(MosixLibraryScreen)),
     );
     LibraryBrowseState? current() =>
         container().read(libraryBrowseProvider(_request)).value;
@@ -207,13 +207,13 @@ void main() {
                   ),
               ],
               child: MaterialApp(
-                theme: MornyeTheme.build(brightness),
+                theme: MosixTheme.build(brightness),
                 locale: const Locale('en'),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
                 home: Scaffold(
-                  body: MornyeLibraryScreen(
-                    page: MornyeLibraryPage.albums,
+                  body: MosixLibraryScreen(
+                    page: MosixLibraryPage.albums,
                     onOpenSection: (_) {},
                   ),
                 ),
@@ -334,7 +334,7 @@ void main() {
             'Isolated actual SQLite schema17, 1000 two-source albums/2000 tracks, '
             '50 mirrored tracks and one unavailable source; shared decoded 384px PNG, no network.',
         'baseline':
-            'Previous growing-prefix reads through production SQL; same MornyeLibraryScreen.',
+            'Previous growing-prefix reads through production SQL; same MosixLibraryScreen.',
         'paging':
             'Production AsyncNotifier and bounded page adapter; same SQL/store and UI.',
         'runs': runCounters,

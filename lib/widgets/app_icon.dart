@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/theme/material_symbols.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/theme/material_symbols.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 /// [widget] as an [AppIcon] when it is a plain [Icon], so shared components
 /// can adopt Material Symbols without changing every caller.
@@ -23,7 +23,7 @@ Widget symbolIconWidget(Widget widget) {
 
 /// [Icon] that draws the Material theme with rounded Material Symbols.
 ///
-/// Mornye keeps [icon] unchanged, or its Cupertino counterpart with
+/// Mosix keeps [icon] unchanged, or its Cupertino counterpart with
 /// [AppIcon.adaptive]. Icons without a symbol fall back to [icon].
 class AppIcon extends StatelessWidget {
   const AppIcon(
@@ -37,7 +37,7 @@ class AppIcon extends StatelessWidget {
     this.textDirection,
   }) : _adaptive = false;
 
-  /// Uses [mornyeIconFor] when the Mornye theme is on.
+  /// Uses [mornyeIconFor] when the Mosix theme is on.
   const AppIcon.adaptive(
     this.icon, {
     super.key,
@@ -63,7 +63,7 @@ class AppIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final icon = this.icon;
-    if (context.isMornye) {
+    if (context.isMosix) {
       return Icon(
         _adaptive && icon != null ? mornyeIconFor(icon) : icon,
         size: size,

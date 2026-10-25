@@ -438,7 +438,7 @@ extension _QueueTabItemWidgets on _QueueTabState {
           children: [
             SettingsItem(
               icon: Icons.skip_next,
-              showIconInMornye: true,
+              showIconInMosix: true,
               title: context.l10n.queueDownloadNext,
               onTap: () {
                 Navigator.of(ctx).pop();
@@ -447,7 +447,7 @@ extension _QueueTabItemWidgets on _QueueTabState {
             ),
             SettingsItem(
               icon: Icons.arrow_upward,
-              showIconInMornye: true,
+              showIconInMosix: true,
               title: context.l10n.queueMoveUp,
               onTap: () {
                 Navigator.of(ctx).pop();
@@ -456,7 +456,7 @@ extension _QueueTabItemWidgets on _QueueTabState {
             ),
             SettingsItem(
               icon: Icons.arrow_downward,
-              showIconInMornye: true,
+              showIconInMosix: true,
               title: context.l10n.queueMoveDown,
               showDivider: false,
               onTap: () {
@@ -1150,8 +1150,8 @@ extension _QueueTabItemWidgets on _QueueTabState {
       label: context.l10n.a11yTrackByArtist(item.trackName, item.artistName),
       selected: isSelected,
       // Material rows follow their own file, so a track change rebuilds only
-      // the rows involved. Mornye rows show no current-track state.
-      child: context.isMornye
+      // the rows involved. Mosix rows show no current-track state.
+      child: context.isMosix
           ? card()
           : Consumer(
               builder: (context, ref, _) {
@@ -1364,7 +1364,7 @@ class _LibraryPlaybackButton extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     // Material draws a filled tonal icon button: a solid role pair rather
     // than a faded primary container.
-    final material = !context.isMornye;
+    final material = !context.isMosix;
     return AppIconButton(
       onPressed: onPressed,
       icon: Icon(

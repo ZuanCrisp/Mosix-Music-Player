@@ -1,26 +1,26 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/cover_cache_manager.dart';
-import 'package:mornye/controllers/local_playback.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/desktop/context_menu.dart';
-import 'package:mornye/widgets/playlist_picker_sheet.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/cover_cache_manager.dart';
+import 'package:mosix/controllers/local_playback.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/desktop/context_menu.dart';
+import 'package:mosix/widgets/playlist_picker_sheet.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/track_collection_action_policy.dart';
-import 'package:mornye/widgets/track_detail_actions.dart';
-import 'package:mornye/utils/clickable_metadata.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/track_collection_action_policy.dart';
+import 'package:mosix/widgets/track_detail_actions.dart';
+import 'package:mosix/utils/clickable_metadata.dart';
 
 class TrackCollectionQuickActions extends ConsumerWidget {
   final Track track;
@@ -36,7 +36,7 @@ class TrackCollectionQuickActions extends ConsumerWidget {
     this.dense = false,
   });
 
-  /// Track options: a bottom sheet (Material) or popover (Mornye) on phones
+  /// Track options: a bottom sheet (Material) or popover (Mosix) on phones
   /// and tablets, a context menu at [position] or under [context] on
   /// desktop.
   static void showTrackOptionsSheet(
@@ -63,8 +63,8 @@ class TrackCollectionQuickActions extends ConsumerWidget {
       );
       return;
     }
-    if (context.isMornye) {
-      showMornyeContextMenu<void>(
+    if (context.isMosix) {
+      showMosixContextMenu<void>(
         context: context,
         builder: (_) => _TrackOptionsSheet(
           track: track,
@@ -91,7 +91,7 @@ class TrackCollectionQuickActions extends ConsumerWidget {
     return AppIconButton(
       tooltip: MaterialLocalizations.of(context).showMenuTooltip,
       icon: AppIcon(
-        context.isMornye ? CupertinoIcons.ellipsis : Icons.more_vert,
+        context.isMosix ? CupertinoIcons.ellipsis : Icons.more_vert,
         color: colorScheme.onSurfaceVariant,
         size: 20,
       ),
@@ -265,11 +265,11 @@ class _TrackOptionsSheet extends ConsumerWidget {
       hasLocalPlaybackCandidate: hasLocalPlaybackCandidate,
     );
 
-    if (context.isMornye) {
+    if (context.isMosix) {
       final l10n = context.l10n;
-      return MornyeContextMenu(
+      return MosixContextMenu(
         quickActions: [
-          MornyeMenuAction(
+          MosixMenuAction(
             icon: CupertinoIcons.arrow_down_circle_fill,
             label: l10n.dialogDownload,
             onPressed: () {
@@ -278,13 +278,13 @@ class _TrackOptionsSheet extends ConsumerWidget {
               downloadSingleTrack(root, ref, track);
             },
           ),
-          MornyeMenuAction(
+          MosixMenuAction(
             icon: CupertinoIcons.star_fill,
             label: isLoved ? l10n.mornyeFavorited : l10n.mornyeFavorite,
             selected: isLoved,
             onPressed: () => _toggleCollection(context, ref, wishlist: false),
           ),
-          MornyeMenuAction(
+          MosixMenuAction(
             icon: CupertinoIcons.share_solid,
             label: l10n.trackMetadataShare,
             onPressed: () {
@@ -308,26 +308,26 @@ class _TrackOptionsSheet extends ConsumerWidget {
         groups: [
           [
             if (qualityVariantAction == QualityVariantMenuAction.playLocal)
-              MornyeMenuAction(
+              MosixMenuAction(
                 icon: CupertinoIcons.play,
                 label: l10n.trackMetadataPlay,
                 onPressed: () => _playLocal(context, ref),
               ),
             if (qualityVariantAction ==
                 QualityVariantMenuAction.downloadAnotherQuality)
-              MornyeMenuAction(
+              MosixMenuAction(
                 icon: CupertinoIcons.arrow_down_circle,
                 label: l10n.trackOptionDownloadQualityVariant,
                 onPressed: () => _downloadQualityVariant(context, ref),
               ),
-            MornyeMenuAction(
+            MosixMenuAction(
               icon: CupertinoIcons.square_stack,
               label: l10n.homeGoToAlbum,
               onPressed: () => _goToAlbum(context),
             ),
           ],
           [
-            MornyeMenuAction(
+            MosixMenuAction(
               icon: CupertinoIcons.text_badge_plus,
               label: l10n.collectionAddToPlaylist,
               onPressed: () {
@@ -336,7 +336,7 @@ class _TrackOptionsSheet extends ConsumerWidget {
                 showAddTrackToPlaylistSheet(root, ref, track);
               },
             ),
-            MornyeMenuAction(
+            MosixMenuAction(
               icon: isInWishlist
                   ? CupertinoIcons.checkmark_circle
                   : CupertinoIcons.add_circled,
@@ -347,17 +347,17 @@ class _TrackOptionsSheet extends ConsumerWidget {
             ),
           ],
           [
-            MornyeMenuAction(
+            MosixMenuAction(
               icon: CupertinoIcons.doc_on_doc,
               label: l10n.trackOptionCopyTrackName,
               onPressed: () => _copyText(context, track.name),
             ),
-            MornyeMenuAction(
+            MosixMenuAction(
               icon: CupertinoIcons.person,
               label: l10n.trackOptionCopyArtist,
               onPressed: () => _copyText(context, track.artistName),
             ),
-            MornyeMenuAction(
+            MosixMenuAction(
               icon: CupertinoIcons.doc_on_doc,
               label: l10n.trackOptionCopyTrackAndArtist,
               onPressed: () =>
@@ -452,7 +452,7 @@ class _TrackOptionsSheet extends ConsumerWidget {
                   ),
                 ],
               ),
-              if (context.isMornye)
+              if (context.isMosix)
                 Divider(
                   height: 1,
                   color: colorScheme.outlineVariant.withValues(alpha: 0.5),

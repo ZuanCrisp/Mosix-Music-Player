@@ -6,15 +6,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/explore_provider.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
-import 'package:mornye/widgets/home_feed_region_setting.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/explore_provider.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:mosix/widgets/home_feed_region_setting.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 const _extension = Extension(
   id: 'example.feed',
@@ -86,7 +86,7 @@ Future<void> _until(bool Function() condition) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late Map<String, dynamic> settings;
@@ -293,7 +293,7 @@ void main() {
             locale: const Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
             builder: (_, child) => AppScaffoldMessenger(child: child!),
             home: const Scaffold(
               body: SettingsGroup(children: [HomeFeedRegionSetting()]),

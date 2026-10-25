@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/editorial_notes.dart';
-import 'package:mornye/widgets/album_description.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/editorial_notes.dart';
+import 'package:mosix/widgets/album_description.dart';
 
 void main() {
   test(
@@ -59,7 +59,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             theme: mornye
-                ? MornyeTheme.build(
+                ? MosixTheme.build(
                     style.endsWith('light')
                         ? Brightness.light
                         : Brightness.dark,
@@ -90,7 +90,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: mornye
-              ? MornyeTheme.build(
+              ? MosixTheme.build(
                   style.endsWith('light') ? Brightness.light : Brightness.dark,
                 )
               : ThemeData(),
@@ -136,7 +136,7 @@ void main() {
         ProviderScope(
           child: MaterialApp(
             theme: mornye
-                ? MornyeTheme.build(
+                ? MosixTheme.build(
                     style.endsWith('light')
                         ? Brightness.light
                         : Brightness.dark,

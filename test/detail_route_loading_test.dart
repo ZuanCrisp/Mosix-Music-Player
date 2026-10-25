@@ -6,12 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/screens/local_album_screen.dart';
-import 'package:mornye/screens/track_metadata_screen.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/animation_utils.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/screens/local_album_screen.dart';
+import 'package:mosix/screens/track_metadata_screen.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/animation_utils.dart';
 
 LocalLibraryItem _track(int number) => LocalLibraryItem(
   id: 'track-$number',
@@ -34,7 +34,7 @@ void main() {
       ProviderScope(
         child: MaterialApp(
           navigatorKey: navigator,
-          theme: MornyeTheme.build(Brightness.light),
+          theme: MosixTheme.build(Brightness.light),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const Scaffold(body: Text('Library')),
@@ -66,7 +66,7 @@ void main() {
         var statCalls = 0;
         var followUpCalls = 0;
         final delayedStat = Completer<String>();
-        const channel = MethodChannel('com.zarz.mornye/backend');
+        const channel = MethodChannel('com.zuancrisp.mosix/backend');
         final messenger =
             TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
         messenger.setMockMethodCallHandler(channel, (call) async {

@@ -3,17 +3,17 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:liquid_glass_easy/liquid_glass_easy.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mini_player.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mini_player.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 /// Deliberate vertical drags minimize the chrome until the page returns to its
 /// top. Horizontal rows, programmatic scrolling and bounce must not minimize it.
-class MornyeChromeController extends ValueNotifier<bool> {
-  MornyeChromeController() : super(false);
+class MosixChromeController extends ValueNotifier<bool> {
+  MosixChromeController() : super(false);
 
   double _distance = 0;
 
@@ -62,8 +62,8 @@ class MornyeChromeController extends ValueNotifier<bool> {
 
 /// A single mini-player survives the transition, preserving its artwork Hero,
 /// playback controls and track swipe gestures as the tabs fold away.
-class MornyeBottomBar extends ConsumerStatefulWidget {
-  const MornyeBottomBar({
+class MosixBottomBar extends ConsumerStatefulWidget {
+  const MosixBottomBar({
     super.key,
     required this.collapsed,
     required this.destinations,
@@ -83,10 +83,10 @@ class MornyeBottomBar extends ConsumerStatefulWidget {
   final bool blurEnabled;
 
   @override
-  ConsumerState<MornyeBottomBar> createState() => _MornyeBottomBarState();
+  ConsumerState<MosixBottomBar> createState() => _MosixBottomBarState();
 }
 
-class _MornyeBottomBarState extends ConsumerState<MornyeBottomBar>
+class _MosixBottomBarState extends ConsumerState<MosixBottomBar>
     with SingleTickerProviderStateMixin {
   late final _controller = AnimationController(
     vsync: this,
@@ -115,7 +115,7 @@ class _MornyeBottomBarState extends ConsumerState<MornyeBottomBar>
   }
 
   @override
-  void didUpdateWidget(MornyeBottomBar oldWidget) {
+  void didUpdateWidget(MosixBottomBar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.collapsed != widget.collapsed) _updateCollapse();
   }
@@ -141,7 +141,7 @@ class _MornyeBottomBarState extends ConsumerState<MornyeBottomBar>
     );
     final liquidGlass = ref.watch(mornyeLiquidGlassProvider);
     // Animated glass tabs already reserve 8px above their visible capsule.
-    final glassTabs = MornyeTabBar.usesLiquidGlass(
+    final glassTabs = MosixTabBar.usesLiquidGlass(
       context,
       blurEnabled: blurEnabled,
       liquidGlass: liquidGlass,
@@ -156,10 +156,10 @@ class _MornyeBottomBarState extends ConsumerState<MornyeBottomBar>
     Widget sideSurface() => ScaleTransition(
       scale: _collapse,
       child: RepaintBoundary(
-        child: MornyeGlass.navigation(
+        child: MosixGlass.navigation(
           blurEnabled: blurEnabled,
           strongTint: true,
-          tintOpacity: MornyeTheme.navigationOpacity(context),
+          tintOpacity: MosixTheme.navigationOpacity(context),
           radius: 26,
           child: const SizedBox.expand(),
         ),
@@ -175,7 +175,7 @@ class _MornyeBottomBarState extends ConsumerState<MornyeBottomBar>
     Widget tabs({required bool hideMovingIcons}) => TickerMode(
       enabled: !collapsed,
       child: RepaintBoundary(
-        child: MornyeTabBar(
+        child: MosixTabBar(
           destinations: destinations,
           selectedIndex: selectedIndex,
           onSelected: (index) =>

@@ -8,21 +8,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_ui/material_ui.dart' as material_ui;
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/widgets/app_choice_chip.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/widgets/app_switch.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/expressive_button_group.dart';
-import 'package:mornye/widgets/expressive_icon_button.dart';
-import 'package:mornye/widgets/expressive_navigation_bar.dart';
-import 'package:mornye/widgets/selection_action_button.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/track_card.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/widgets/app_choice_chip.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/widgets/app_switch.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/expressive_button_group.dart';
+import 'package:mosix/widgets/expressive_icon_button.dart';
+import 'package:mosix/widgets/expressive_navigation_bar.dart';
+import 'package:mosix/widgets/selection_action_button.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/track_card.dart';
 
 import 'support/app_icon_finder.dart';
 
@@ -425,7 +425,7 @@ void main() {
     expect(calls, 3);
   });
 
-  testWidgets('Mornye keeps Cupertino actions and its own surfaces', (
+  testWidgets('Mosix keeps Cupertino actions and its own surfaces', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -447,7 +447,7 @@ void main() {
             AppSwitch(value: true, onChanged: (_) {}),
           ],
         ),
-        theme: MornyeTheme.build(Brightness.dark),
+        theme: MosixTheme.build(Brightness.dark),
         reduceMotion: true,
       ),
     );
@@ -583,7 +583,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         segment(first: true, last: true),
-        theme: MornyeTheme.build(Brightness.dark),
+        theme: MosixTheme.build(Brightness.dark),
       ),
     );
     await tester.pumpAndSettle();

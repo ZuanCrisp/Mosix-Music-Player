@@ -7,13 +7,13 @@ import 'package:ffmpeg_kit_flutter_new_audio/ffprobe_kit.dart';
 import 'package:ffmpeg_kit_flutter_new_audio/media_information.dart';
 import 'package:ffmpeg_kit_flutter_new_audio/return_code.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/services/ffmpeg_desktop.dart';
-import 'package:mornye/services/ffmpeg_models.dart';
-import 'package:mornye/services/ffmpeg_probe.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/services/ffmpeg_desktop.dart';
+import 'package:mosix/services/ffmpeg_models.dart';
+import 'package:mosix/services/ffmpeg_probe.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/logger.dart';
 
-export 'package:mornye/services/ffmpeg_desktop.dart'
+export 'package:mosix/services/ffmpeg_desktop.dart'
     show FFmpegUnavailableException;
 
 final _log = AppLogger('FFmpeg');

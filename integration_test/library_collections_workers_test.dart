@@ -6,10 +6,10 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/models/library_collections.dart';
-import 'package:mornye/services/library_collections_database.dart';
-import 'package:mornye/services/library_collections_hydration.dart';
-import 'package:mornye/services/platform_bridge.dart';
+import 'package:mosix/models/library_collections.dart';
+import 'package:mosix/services/library_collections_database.dart';
+import 'package:mosix/services/library_collections_hydration.dart';
+import 'package:mosix/services/platform_bridge.dart';
 
 import '../test/support/library_collections_benchmark.dart';
 

@@ -30,7 +30,7 @@ extension _TrackMetadataCards on _TrackMetadataScreenState {
     if (_service == 'local')
       HeaderMetaItem(
         context.l10n.librarySourceLocal,
-        icon: context.isMornye ? CupertinoIcons.folder : Icons.folder,
+        icon: context.isMosix ? CupertinoIcons.folder : Icons.folder,
       )
     else if (_service.isNotEmpty)
       HeaderMetaItem(_service[0].toUpperCase() + _service.substring(1)),
@@ -119,7 +119,7 @@ extension _TrackMetadataCards on _TrackMetadataScreenState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (_fileAccessMessage(context) case final message?
-                    when !context.isMornye)
+                    when !context.isMosix)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Text(
@@ -141,7 +141,7 @@ extension _TrackMetadataCards on _TrackMetadataScreenState {
                 else
                   column([...details, const SizedBox(height: 16), ...media]),
 
-                if (!context.isMornye) ...[
+                if (!context.isMosix) ...[
                   const SizedBox(height: 24),
                   _buildActionButtons(context, ref, colorScheme, _fileExists),
                 ],
@@ -412,7 +412,7 @@ extension _TrackMetadataCards on _TrackMetadataScreenState {
                   } else {
                     buttonLabel = context.l10n.trackOpenInSpotify;
                   }
-                  if (context.isMornye) {
+                  if (context.isMosix) {
                     return HeaderFilledButton(
                       icon: CupertinoIcons.arrow_up_right_square,
                       label: buttonLabel,
@@ -638,8 +638,8 @@ extension _TrackMetadataCards on _TrackMetadataScreenState {
             metadata.label == 'Amazon ASIN' ||
             metadata.label == 'Tidal ID' ||
             metadata.label == 'Qobuz ID';
-        if (context.isMornye) {
-          return MornyeMetadataRow(
+        if (context.isMosix) {
+          return MosixMetadataRow(
             label: metadata.label,
             value: metadata.value,
             showDivider: metadata != items.last,
@@ -730,19 +730,19 @@ extension _TrackMetadataCards on _TrackMetadataScreenState {
             children: [
               SettingsItem(
                 icon: Icons.content_copy_rounded,
-                showIconInMornye: true,
+                showIconInMosix: true,
                 title: sheetContext.l10n.metadataCopyValue,
                 onTap: () => Navigator.pop(sheetContext, 'value'),
               ),
               SettingsItem(
                 icon: Icons.label_outline_rounded,
-                showIconInMornye: true,
+                showIconInMosix: true,
                 title: sheetContext.l10n.metadataCopyField,
                 onTap: () => Navigator.pop(sheetContext, 'field'),
               ),
               SettingsItem(
                 icon: Icons.copy_all_rounded,
-                showIconInMornye: true,
+                showIconInMosix: true,
                 title: sheetContext.l10n.metadataCopyAll,
                 showDivider: false,
                 onTap: () => Navigator.pop(sheetContext, 'all'),
@@ -918,10 +918,10 @@ extension _TrackMetadataCards on _TrackMetadataScreenState {
                 constraints: BoxConstraints(
                   minHeight: context.tokens.minTouchTarget,
                 ),
-                padding: context.isMornye
+                padding: context.isMosix
                     ? const EdgeInsets.all(12)
                     : const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                decoration: context.isMornye
+                decoration: context.isMosix
                     ? BoxDecoration(
                         color: colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
@@ -942,7 +942,7 @@ extension _TrackMetadataCards on _TrackMetadataScreenState {
                     ),
                     const SizedBox(width: 8),
                     Icon(
-                      context.isMornye ? CupertinoIcons.doc_on_doc : Icons.copy,
+                      context.isMosix ? CupertinoIcons.doc_on_doc : Icons.copy,
                       size: 18,
                       color: colorScheme.onSurfaceVariant,
                     ),

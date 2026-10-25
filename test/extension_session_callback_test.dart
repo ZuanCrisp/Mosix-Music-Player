@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/utils/extension_session_callback.dart';
+import 'package:mosix/utils/extension_session_callback.dart';
 
 void main() {
   test('parses a signed-session callback without treating state as an id', () {

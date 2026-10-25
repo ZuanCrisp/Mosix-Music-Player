@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/widgets/expressive_playback_transport.dart';
+import 'package:mosix/widgets/expressive_playback_transport.dart';
 
 void main() {
   Future<void> pumpTransport(

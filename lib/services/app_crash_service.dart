@@ -1,5 +1,5 @@
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/logger.dart';
 
 /// Saves context for a later confirmed process crash. A handled Flutter error
 /// alone must not produce a misleading "app crashed" message on the next launch.

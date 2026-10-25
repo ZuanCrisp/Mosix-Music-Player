@@ -3,8 +3,8 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/models/equalizer_settings.dart';
-import 'package:mornye/services/playback_equalizer.dart';
+import 'package:mosix/models/equalizer_settings.dart';
+import 'package:mosix/services/playback_equalizer.dart';
 
 class EqualizerState {
   const EqualizerState({

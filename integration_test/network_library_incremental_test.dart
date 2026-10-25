@@ -6,10 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/services/library_ingestion_store.dart';
-import 'package:mornye/services/library_native_adapter.dart';
-import 'package:mornye/services/network_library_scanner.dart';
-import 'package:mornye/services/network_storage_service.dart';
+import 'package:mosix/services/library_ingestion_store.dart';
+import 'package:mosix/services/library_native_adapter.dart';
+import 'package:mosix/services/network_library_scanner.dart';
+import 'package:mosix/services/network_storage_service.dart';
 
 import '../test/support/library_native_fixture.dart';
 

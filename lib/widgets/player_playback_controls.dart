@@ -2,24 +2,24 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/playback_seek_preview.dart';
-import 'package:mornye/utils/string_utils.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/audio_info_sheet.dart';
-import 'package:mornye/widgets/automix_status_badge.dart';
-import 'package:mornye/widgets/expressive_icon_button.dart';
-import 'package:mornye/widgets/expressive_playback_transport.dart';
-import 'package:mornye/widgets/mornye_playback_button.dart';
-import 'package:mornye/widgets/mornye_playback_time.dart';
-import 'package:mornye/widgets/mornye_player_slider.dart';
-import 'package:mornye/widgets/playback_seek_slider.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/playback_seek_preview.dart';
+import 'package:mosix/utils/string_utils.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/audio_info_sheet.dart';
+import 'package:mosix/widgets/automix_status_badge.dart';
+import 'package:mosix/widgets/expressive_icon_button.dart';
+import 'package:mosix/widgets/expressive_playback_transport.dart';
+import 'package:mosix/widgets/mornye_playback_button.dart';
+import 'package:mosix/widgets/mornye_playback_time.dart';
+import 'package:mosix/widgets/mornye_player_slider.dart';
+import 'package:mosix/widgets/playback_seek_slider.dart';
 
 const _mornyeTimelinePadding = 28.0;
 
@@ -52,7 +52,7 @@ class PlayerPlaybackControls extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(musicPlayerControllerProvider);
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final isPlaying = ref.watch(playbackPlayingProvider);
     final isLoading = ref.watch(playbackLoadingProvider);
     final playPauseSize = compact
@@ -123,13 +123,13 @@ class PlayerPlaybackControls extends ConsumerWidget {
                           horizontal: edgeAligned
                               ? 0
                               : mornye
-                              ? MornyePlayerSlider.horizontalInset
+                              ? MosixPlayerSlider.horizontalInset
                               : 12,
                         ),
                         child: Row(
                           children: [
                             if (mornye)
-                              MornyePlaybackTime(
+                              MosixPlaybackTime(
                                 key: ValueKey('elapsed:$mediaId'),
                                 seconds: elapsedSeconds,
                                 style: timeStyle,
@@ -141,7 +141,7 @@ class PlayerPlaybackControls extends ConsumerWidget {
                               ),
                             Expanded(child: Center(child: quality)),
                             if (mornye)
-                              MornyePlaybackTime(
+                              MosixPlaybackTime(
                                 key: ValueKey('remaining:$mediaId'),
                                 // Subtract whole seconds so both labels roll together,
                                 // even when the track duration includes milliseconds.
@@ -220,7 +220,7 @@ class PlayerPlaybackControls extends ConsumerWidget {
                       colorScheme: colorScheme,
                     ),
                   if (mornye)
-                    MornyePlaybackButton(
+                    MosixPlaybackButton(
                       icon: CupertinoIcons.backward_fill,
                       color: colorScheme.onSurface,
                       tooltip: context.l10n.nowPlayingPreviousTrack,
@@ -235,7 +235,7 @@ class PlayerPlaybackControls extends ConsumerWidget {
                       onPressed: controller.previous,
                     ),
                   if (mornye)
-                    MornyePlaybackButton(
+                    MosixPlaybackButton(
                       icon: isPlaying
                           ? CupertinoIcons.pause_fill
                           : CupertinoIcons.play_fill,
@@ -270,7 +270,7 @@ class PlayerPlaybackControls extends ConsumerWidget {
                           : () => controller.togglePlayPause(isPlaying),
                     ),
                   if (mornye)
-                    MornyePlaybackButton(
+                    MosixPlaybackButton(
                       icon: CupertinoIcons.forward_fill,
                       color: colorScheme.onSurface,
                       tooltip: context.l10n.nowPlayingNextTrack,
@@ -394,7 +394,7 @@ class _QualityBadge extends StatelessWidget {
   Widget _buildBadge(BuildContext context) {
     final text = metadata.qualityLabel;
     if (text == null || text.isEmpty) return const SizedBox.shrink();
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final radius = BorderRadius.circular(20);
     final badge = Container(
       padding: EdgeInsets.symmetric(

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:mornye/models/library_collections.dart';
-import 'package:mornye/services/library_search.dart';
+import 'package:mosix/models/library_collections.dart';
+import 'package:mosix/services/library_search.dart';
 
 typedef PlaylistSearchEntry = ({
   String id,

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/models/theme_settings.dart';
-import 'package:mornye/providers/theme_provider.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/dynamic_color_wrapper.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/desktop/context_menu.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/models/theme_settings.dart';
+import 'package:mosix/providers/theme_provider.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/dynamic_color_wrapper.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/desktop/context_menu.dart';
+import 'package:mosix/widgets/settings_group.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/app_icon_finder.dart';
@@ -72,8 +72,8 @@ void main() {
       }
     });
 
-    testWidgets('Mornye keeps its grouped surface', (tester) async {
-      final theme = MornyeTheme.build(Brightness.light);
+    testWidgets('Mosix keeps its grouped surface', (tester) async {
+      final theme = MosixTheme.build(Brightness.light);
       expect(
         await _groupColor(tester, theme),
         theme.colorScheme.surfaceContainer,
@@ -353,8 +353,8 @@ void main() {
       }
     });
 
-    testWidgets('Mornye info cards keep their soft fills', (tester) async {
-      final theme = MornyeTheme.build(Brightness.light);
+    testWidgets('Mosix info cards keep their soft fills', (tester) async {
+      final theme = MosixTheme.build(Brightness.light);
       final scheme = theme.colorScheme;
       await tester.pumpWidget(_host(fills(), theme: theme));
 

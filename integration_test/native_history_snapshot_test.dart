@@ -4,10 +4,10 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/models/download_history.dart';
-import 'package:mornye/services/backup_service.dart';
-import 'package:mornye/services/history_database.dart';
-import 'package:mornye/services/sqlite_native_snapshot.dart';
+import 'package:mosix/models/download_history.dart';
+import 'package:mosix/services/backup_service.dart';
+import 'package:mosix/services/history_database.dart';
+import 'package:mosix/services/sqlite_native_snapshot.dart';
 
 Map<String, dynamic> _track(int id) => DownloadHistoryItem(
   id: 'track-$id',

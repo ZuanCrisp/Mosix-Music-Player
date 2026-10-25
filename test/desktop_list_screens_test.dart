@@ -5,19 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/playback_provider.dart';
-import 'package:mornye/screens/local_album_screen.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/album_track_tile.dart';
-import 'package:mornye/widgets/desktop/desktop_selection.dart';
-import 'package:mornye/widgets/desktop/track_table.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
-import 'package:mornye/widgets/selection_bottom_bar.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/playback_provider.dart';
+import 'package:mosix/screens/local_album_screen.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/album_track_tile.dart';
+import 'package:mosix/widgets/desktop/desktop_selection.dart';
+import 'package:mosix/widgets/desktop/track_table.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/selection_bottom_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Player extends MusicPlayerController {
@@ -69,7 +69,7 @@ Future<_Playback> _pumpAlbum(WidgetTester tester, {bool mornye = false}) async {
         playbackProvider.overrideWith(() => playback),
       ],
       child: MaterialApp(
-        theme: mornye ? MornyeTheme.build(Brightness.light) : AppTheme.light(),
+        theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         navigatorKey: navigator,
@@ -125,7 +125,7 @@ void main() {
       await _click(tester, find.text('Charlie'), buttons: kSecondaryButton);
       await tester.pumpAndSettle();
       final menu = mornye
-          ? find.byType(MornyeContextMenu)
+          ? find.byType(MosixContextMenu)
           : find.ancestor(
               of: find.byType(MenuItemButton).first,
               matching: find.byType(MenuAnchor),
@@ -144,7 +144,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
       expect(
-        find.byType(mornye ? MornyeContextMenu : MenuItemButton),
+        find.byType(mornye ? MosixContextMenu : MenuItemButton),
         findsNothing,
       );
       expect(find.byType(SelectionBottomBar), findsNothing);
@@ -163,7 +163,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(
         find.descendant(
-          of: find.byType(mornye ? MornyeContextMenu : MenuItemButton),
+          of: find.byType(mornye ? MosixContextMenu : MenuItemButton),
           matching: find.text('Play'),
         ),
       );

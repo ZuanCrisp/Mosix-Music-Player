@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/services/platform_bridge.dart';
+import 'package:mosix/services/platform_bridge.dart';
 import 'package:xml/xml.dart';
 
 Uint8List _encodeLyricsInBackground(String raw) =>

@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:mornye/constants/app_info.dart';
-import 'package:mornye/services/native_log_source.dart';
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/services/native_log_source.dart';
 
 const int _maxLogMessageLength = 500;
 const int _maxBufferedLogMessageLength = 4000;

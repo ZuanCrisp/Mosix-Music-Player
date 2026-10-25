@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/settings/keyboard_shortcuts_page.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/desktop/desktop_commands.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/settings/keyboard_shortcuts_page.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/desktop/desktop_commands.dart';
 
 class _Settings extends SettingsNotifier {
   @override
@@ -17,7 +17,7 @@ class _Settings extends SettingsNotifier {
 void main() {
   for (final mornye in [false, true]) {
     for (final platform in [TargetPlatform.macOS, TargetPlatform.windows]) {
-      final style = mornye ? 'Mornye' : 'Material';
+      final style = mornye ? 'Mosix' : 'Material';
       testWidgets('$style lists every ${platform.name} shortcut', (
         tester,
       ) async {
@@ -29,7 +29,7 @@ void main() {
             overrides: [settingsProvider.overrideWith(_Settings.new)],
             child: MaterialApp(
               theme: mornye
-                  ? MornyeTheme.build(Brightness.light)
+                  ? MosixTheme.build(Brightness.light)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,

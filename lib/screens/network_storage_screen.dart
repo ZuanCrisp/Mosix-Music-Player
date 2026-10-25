@@ -1,26 +1,26 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/music_player_service.dart';
-import 'package:mornye/services/network_storage_service.dart';
-import 'package:mornye/services/network_storage_error.dart';
-import 'package:mornye/services/network_certificate.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/nav_bar_inset.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
-import 'package:mornye/widgets/app_search_field.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/app_progress_indicator.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/expressive_icon_button.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/music_player_service.dart';
+import 'package:mosix/services/network_storage_service.dart';
+import 'package:mosix/services/network_storage_error.dart';
+import 'package:mosix/services/network_certificate.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/app_search_field.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/app_progress_indicator.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/expressive_icon_button.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 class NetworkStorageScreen extends ConsumerStatefulWidget {
   const NetworkStorageScreen({
@@ -417,7 +417,7 @@ class _NetworkStorageScreenState extends ConsumerState<NetworkStorageScreen> {
                 if (_failed)
                   SliverToBoxAdapter(
                     child: _NetworkMessage(
-                      icon: context.isMornye
+                      icon: context.isMosix
                           ? CupertinoIcons.wifi_exclamationmark
                           : Icons.wifi_off_rounded,
                       message: _networkErrorMessage(context, _failure),
@@ -432,7 +432,7 @@ class _NetworkStorageScreenState extends ConsumerState<NetworkStorageScreen> {
                 if (!_loading && !_failed && connection == null) ...[
                   SliverToBoxAdapter(
                     child: _NetworkMessage(
-                      icon: context.isMornye
+                      icon: context.isMosix
                           ? CupertinoIcons.cloud
                           : Icons.dns_outlined,
                       message: context.l10n.networkStorageDescription,
@@ -456,10 +456,10 @@ class _NetworkStorageScreenState extends ConsumerState<NetworkStorageScreen> {
                       return SettingsGroup(
                         children: [
                           SettingsItem(
-                            icon: context.isMornye
+                            icon: context.isMosix
                                 ? CupertinoIcons.cloud
                                 : Icons.dns_outlined,
-                            showIconInMornye: true,
+                            showIconInMosix: true,
                             title: c.name,
                             subtitle:
                                 '${_protocolLabel(c.protocol)} · ${c.root.host}',
@@ -493,7 +493,7 @@ class _NetworkStorageScreenState extends ConsumerState<NetworkStorageScreen> {
                   if (visible.isEmpty)
                     SliverToBoxAdapter(
                       child: _NetworkMessage(
-                        icon: context.isMornye
+                        icon: context.isMosix
                             ? CupertinoIcons.folder
                             : Icons.folder_open_rounded,
                         message: context.l10n.networkNoFiles,
@@ -510,14 +510,14 @@ class _NetworkStorageScreenState extends ConsumerState<NetworkStorageScreen> {
                           borderRadius: BorderRadius.vertical(
                             top: Radius.circular(
                               index == 0
-                                  ? (context.isMornye
+                                  ? (context.isMosix
                                         ? 28
                                         : context.tokens.radiusCard)
                                   : 0,
                             ),
                             bottom: Radius.circular(
                               index == visible.length - 1
-                                  ? (context.isMornye
+                                  ? (context.isMosix
                                         ? 28
                                         : context.tokens.radiusCard)
                                   : 0,
@@ -528,7 +528,7 @@ class _NetworkStorageScreenState extends ConsumerState<NetworkStorageScreen> {
                             icon: entry.directory
                                 ? Icons.folder_outlined
                                 : Icons.music_note,
-                            showIconInMornye: true,
+                            showIconInMosix: true,
                             title: _entryName(entry),
                             subtitle: entry.directory
                                 ? null
@@ -700,7 +700,7 @@ class _NetworkConnectionFormState extends State<_NetworkConnectionForm> {
         required && (value == null || value.trim().isEmpty)
         ? context.l10n.extensionAccountRequiredValue
         : null;
-    if (context.isMornye) {
+    if (context.isMosix) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
         child: Column(
@@ -925,7 +925,7 @@ class _NetworkConnectionFormState extends State<_NetworkConnectionForm> {
                   ),
                   if (_failed)
                     _NetworkMessage(
-                      icon: context.isMornye
+                      icon: context.isMosix
                           ? CupertinoIcons.exclamationmark_circle
                           : Icons.error_outline,
                       message: switch (_pendingCertificate) {
@@ -964,7 +964,7 @@ class _NetworkConnectionFormState extends State<_NetworkConnectionForm> {
                   if (widget.connection != null)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                      child: context.isMornye
+                      child: context.isMosix
                           ? CupertinoButton(
                               onPressed: _busy ? null : _remove,
                               child: Text(
@@ -1000,7 +1000,7 @@ class _NetworkConnectionFormState extends State<_NetworkConnectionForm> {
 PageRoute<void> _networkRoute(
   BuildContext context, {
   required WidgetBuilder builder,
-}) => context.isMornye
+}) => context.isMosix
     ? CupertinoPageRoute<void>(builder: builder)
     : MaterialPageRoute<void>(builder: builder);
 
@@ -1041,7 +1041,7 @@ class _NetworkIconAction extends StatelessWidget {
   final VoidCallback? onPressed;
 
   @override
-  Widget build(BuildContext context) => context.isMornye
+  Widget build(BuildContext context) => context.isMosix
       ? Tooltip(
           message: tooltip,
           child: CupertinoButton(
@@ -1069,7 +1069,7 @@ class _NetworkProgress extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.all(16),
     child: Center(
-      child: context.isMornye
+      child: context.isMosix
           ? const CupertinoActivityIndicator()
           : const AppLoadingIndicator(),
     ),
@@ -1100,11 +1100,11 @@ class _NetworkMessage extends StatelessWidget {
                 alignment: AlignmentDirectional.centerStart,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: context.isMornye
-                        ? MornyeTheme.controlFill(context)
+                    color: context.isMosix
+                        ? MosixTheme.controlFill(context)
                         : scheme.secondaryContainer,
                     borderRadius: BorderRadius.circular(
-                      context.isMornye ? 16 : 24,
+                      context.isMosix ? 16 : 24,
                     ),
                   ),
                   child: Padding(
@@ -1112,7 +1112,7 @@ class _NetworkMessage extends StatelessWidget {
                     child: Icon(
                       icon,
                       size: 32,
-                      color: context.isMornye
+                      color: context.isMosix
                           ? scheme.primary
                           : scheme.onSecondaryContainer,
                     ),

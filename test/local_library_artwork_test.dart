@@ -7,21 +7,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/download_history_provider.dart';
-import 'package:mornye/providers/library_browse_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/local_album_screen.dart';
-import 'package:mornye/screens/mornye_library_screen.dart';
-import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
-import 'package:mornye/widgets/local_library_artwork_builder.dart';
-import 'package:mornye/widgets/mornye_artist_header.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/providers/library_browse_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/local_album_screen.dart';
+import 'package:mosix/screens/mornye_library_screen.dart';
+import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
+import 'package:mosix/widgets/local_library_artwork_builder.dart';
+import 'package:mosix/widgets/mornye_artist_header.dart';
 
 import 'support/fixed_settings.dart';
 
@@ -32,7 +32,7 @@ class _History extends DownloadHistoryNotifier {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   final png = base64Decode(
@@ -84,7 +84,7 @@ void main() {
       ),
     ],
     child: MaterialApp(
-      theme: mornye ? MornyeTheme.build(Brightness.light) : AppTheme.light(),
+      theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: home,
@@ -235,7 +235,7 @@ void main() {
       expect(
         mornye
             ? tester
-                  .widget<MornyeArtistSurface>(find.byType(MornyeArtistSurface))
+                  .widget<MosixArtistSurface>(find.byType(MosixArtistSurface))
                   .imageSource
             : tester
                   .widget<AlbumDetailHeader>(find.byType(AlbumDetailHeader))
@@ -284,8 +284,8 @@ void main() {
           tester,
           () => mornye
               ? tester
-                        .widget<MornyeArtistSurface>(
-                          find.byType(MornyeArtistSurface),
+                        .widget<MosixArtistSurface>(
+                          find.byType(MosixArtistSurface),
                         )
                         .imageSource ==
                     preview
@@ -302,7 +302,7 @@ void main() {
     }
   }
 
-  testWidgets('Mornye album grid replaces a stale scan path', (tester) async {
+  testWidgets('Mosix album grid replaces a stale scan path', (tester) async {
     final preview = await playerPreview(tester);
     await tester.runAsync(() async {
       await tester.pumpWidget(
@@ -329,12 +329,12 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: MornyeTheme.build(Brightness.light),
+            theme: MosixTheme.build(Brightness.light),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
-              body: MornyeLibraryScreen(
-                page: MornyeLibraryPage.albums,
+              body: MosixLibraryScreen(
+                page: MosixLibraryPage.albums,
                 onOpenSection: (_) {},
               ),
             ),

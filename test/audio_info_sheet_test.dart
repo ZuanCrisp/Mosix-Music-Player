@@ -4,12 +4,12 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/services/audio_route_info.dart';
-import 'package:mornye/widgets/audio_info_sheet.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/services/audio_route_info.dart';
+import 'package:mosix/widgets/audio_info_sheet.dart';
 
-const _route = MethodChannel('com.zarz.mornye/audio_route');
+const _route = MethodChannel('com.zuancrisp.mosix/audio_route');
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

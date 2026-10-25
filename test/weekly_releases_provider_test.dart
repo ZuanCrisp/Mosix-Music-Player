@@ -4,13 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/providers/weekly_releases_provider.dart';
-import 'package:mornye/services/platform_bridge.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/providers/weekly_releases_provider.dart';
+import 'package:mosix/services/platform_bridge.dart';
 
 class _Collections extends LibraryCollectionsNotifier {
   _Collections(this.initial);
@@ -102,7 +102,7 @@ _scope({bool loaded = true, bool initialized = true}) {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   var metadataCalls = 0;

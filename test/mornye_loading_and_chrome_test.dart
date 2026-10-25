@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/shell_navigation_service.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/widgets/mornye_artist_header.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/widgets/mornye_artist_header.dart';
 
 void main() {
   for (final brightness in Brightness.values) {
-    testWidgets('Mornye loading layouts fit a narrow screen in $brightness', (
+    testWidgets('Mosix loading layouts fit a narrow screen in $brightness', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(320, 640);
@@ -20,7 +20,7 @@ void main() {
       ]) {
         await tester.pumpWidget(
           MaterialApp(
-            theme: MornyeTheme.build(brightness),
+            theme: MosixTheme.build(brightness),
             home: Scaffold(body: skeleton),
           ),
         );
@@ -46,7 +46,7 @@ void main() {
       addTearDown(observer.detach);
       await tester.pumpWidget(
         MaterialApp(
-          theme: MornyeTheme.build(Brightness.light),
+          theme: MosixTheme.build(Brightness.light),
           home: Navigator(
             key: key,
             observers: [observer],
@@ -60,7 +60,7 @@ void main() {
       expect(ShellNavigationService.chromeBrightness.value, isNull);
       key.currentState!.push(
         MaterialPageRoute<void>(
-          builder: (_) => const MornyeArtistSurface(
+          builder: (_) => const MosixArtistSurface(
             imageSource: null,
             child: Scaffold(body: Text('Artist')),
           ),

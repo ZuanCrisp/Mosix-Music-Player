@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/services/library_search.dart';
-import 'package:mornye/utils/path_match_keys.dart';
+import 'package:mosix/services/library_search.dart';
+import 'package:mosix/utils/path_match_keys.dart';
 
 // Execute the production SQL, including bound parameters, against real SQLite.
 // Python is also used by the repository's native artifact checks in CI.

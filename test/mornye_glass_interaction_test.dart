@@ -5,10 +5,10 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_switch.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/mornye_selection_pill.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_switch.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mornye_selection_pill.dart';
 
 void _maskCullingTests() {
   for (final direction in TextDirection.values) {
@@ -29,7 +29,7 @@ void _maskCullingTests() {
                   child: StatefulBuilder(
                     builder: (_, setState) {
                       update = setState;
-                      return MornyeSelectionPill(
+                      return MosixSelectionPill(
                         labels: const ['A', 'B', 'C', 'D', 'E'],
                         selectedIndex: selected,
                         selectionColor: color,
@@ -37,7 +37,7 @@ void _maskCullingTests() {
                         padding: EdgeInsets.zero,
                         onChanged: (_) {},
                         itemBuilder: (_, _, _) => const Center(
-                          child: MornyeSelectionForeground(
+                          child: MosixSelectionForeground(
                             child: SizedBox(
                               width: 16,
                               height: 40,
@@ -99,7 +99,7 @@ void _maskCullingTests() {
           child: SizedBox(
             width: 300,
             height: 64,
-            child: MornyeSelectionPill(
+            child: MosixSelectionPill(
               labels: const ['A', 'B', 'C', 'D', 'E'],
               selectedIndex: 0,
               selectionColor: Colors.red,
@@ -107,7 +107,7 @@ void _maskCullingTests() {
               padding: EdgeInsets.zero,
               onChanged: (_) {},
               itemBuilder: (_, index, _) => Center(
-                child: MornyeSelectionForeground(
+                child: MosixSelectionForeground(
                   child: index == 4
                       ? const _OverflowForeground()
                       : const SizedBox(
@@ -159,7 +159,7 @@ void main() {
                 child: StatefulBuilder(
                   builder: (_, setState) {
                     update = setState;
-                    return MornyeSelectionPill(
+                    return MosixSelectionPill(
                       labels: const ['A', 'B', 'C'],
                       selectedIndex: selected,
                       selectionColor: Colors.red,
@@ -219,7 +219,7 @@ void main() {
             key: capture,
             child: SizedBox(
               width: 200,
-              child: MornyeSelectionPill(
+              child: MosixSelectionPill(
                 labels: const ['A', 'B'],
                 selectedIndex: 0,
                 onChanged: (_) {},
@@ -295,7 +295,7 @@ void main() {
       var selected = -1;
       final changes = <int>[];
       final capture = GlobalKey();
-      final theme = MornyeTheme.build(Brightness.dark);
+      final theme = MosixTheme.build(Brightness.dark);
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
@@ -309,14 +309,14 @@ void main() {
                     child: StatefulBuilder(
                       builder: (context, setState) => RepaintBoundary(
                         key: capture,
-                        child: MornyeTabBar(
+                        child: MosixTabBar(
                           destinations: const [
                             NavigationDestination(
                               icon: Icon(Icons.home),
                               label: 'Home',
                             ),
                             NavigationDestination(
-                              icon: MornyeNavigationIcon(
+                              icon: MosixNavigationIcon(
                                 icon: Icons.music_note,
                                 badgeCount: 7,
                               ),
@@ -351,7 +351,7 @@ void main() {
       final home = tester.getCenter(find.text('Home'));
       final library = tester.getCenter(find.text('Library'));
       final pill = find.descendant(
-        of: find.byType(MornyeSelectionPill),
+        of: find.byType(MosixSelectionPill),
         matching: find.byType(FractionallySizedBox),
       );
       final gesture = await tester.startGesture(home);
@@ -428,7 +428,7 @@ void main() {
       final changes = <bool>[];
       await tester.pumpWidget(
         MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           home: Directionality(
             textDirection: direction,
             child: Scaffold(
@@ -468,20 +468,20 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           home: MediaQuery(
             data: const MediaQueryData(textScaler: TextScaler.linear(3)),
             child: Scaffold(
               body: Column(
                 children: [
-                  MornyeGlassPanel(
-                    child: MornyeSegmentedControl(
+                  MosixGlassPanel(
+                    child: MosixSegmentedControl(
                       labels: const ['A', 'B'],
                       selectedIndex: 0,
                       onChanged: (_) {},
                     ),
                   ),
-                  MornyeTabBar(
+                  MosixTabBar(
                     destinations: const [
                       NavigationDestination(
                         icon: Icon(Icons.home),
@@ -502,12 +502,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       find.descendant(
-        of: find.byType(MornyeGlassPanel),
+        of: find.byType(MosixGlassPanel),
         matching: find.byType(BackdropFilter),
       ),
       findsOneWidget,
     );
-    expect(tester.getSize(find.byType(MornyeTabBar)).height, greaterThan(80));
+    expect(tester.getSize(find.byType(MosixTabBar)).height, greaterThan(80));
     expect(tester.takeException(), isNull);
   });
 }

@@ -3,14 +3,14 @@ import 'package:flutter/gestures.dart' show kPrimaryButton;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/desktop/desktop_selection.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/desktop/desktop_selection.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
 
-/// One row of a desktop context menu. Use `Icons.*`; Mornye swaps in the
+/// One row of a desktop context menu. Use `Icons.*`; Mosix swaps in the
 /// Cupertino glyph.
 class ContextMenuAction {
   const ContextMenuAction({
@@ -35,13 +35,13 @@ class ContextMenuAction {
   final bool checked;
 }
 
-/// Mornye menus are as wide as the iOS popover, minus its touch padding.
+/// Mosix menus are as wide as the iOS popover, minus its touch padding.
 const double _mornyeMenuWidth = 280;
 
 /// Shows [groups] as a context menu at [position], in global coordinates.
 ///
 /// Material opens a [MenuAnchor] with the M3 Expressive menu container;
-/// Mornye opens the dense [MornyeContextMenu]. Empty groups are dropped and
+/// Mosix opens the dense [MosixContextMenu]. Empty groups are dropped and
 /// the remaining ones are separated by dividers. The chosen action runs after
 /// the menu closes, so it can open its own dialog or sheet. The future
 /// completes after that action has started, with whether a row was chosen.
@@ -57,20 +57,20 @@ Future<bool> showContextMenu(
   if (visible.isEmpty) return false;
   final navigator = Navigator.of(context, rootNavigator: true);
   final themes = InheritedTheme.capture(from: context, to: navigator.context);
-  if (context.isMornye) {
-    final chosen = await showMornyeContextMenu<ContextMenuAction>(
+  if (context.isMosix) {
+    final chosen = await showMosixContextMenu<ContextMenuAction>(
       context: context,
       // The layout aligns the menu's trailing edge with the anchor's, so a
       // menu-wide anchor puts its leading edge at the pointer.
       anchor: Rect.fromLTWH(position.dx, position.dy - 8, _mornyeMenuWidth, 0),
       maxWidth: _mornyeMenuWidth,
-      builder: (menuContext) => MornyeContextMenu(
+      builder: (menuContext) => MosixContextMenu(
         dense: true,
         groups: [
           for (final group in visible)
             [
               for (final action in group)
-                MornyeMenuAction(
+                MosixMenuAction(
                   icon: mornyeIconFor(action.icon),
                   label: action.label,
                   selected: action.checked,

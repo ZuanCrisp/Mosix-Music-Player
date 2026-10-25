@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/material_expressive.dart';
+import 'package:mosix/theme/material_expressive.dart';
 
 class ExpressiveNavigationBar extends StatelessWidget {
   const ExpressiveNavigationBar({

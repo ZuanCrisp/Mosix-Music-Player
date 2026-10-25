@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Package the macOS release app into a compressed, read-only disk image.
 #
-# Usage: bash scripts/package_macos_dmg.sh <Mornye.app> <output.dmg>
+# Usage: bash scripts/package_macos_dmg.sh <Mosix.app> <output.dmg>
 #
 # The image holds the app and an Applications symlink (no background or
 # window layout). The app is re-signed inside out with the stable self-signed
@@ -12,13 +12,13 @@
 # and checks its contents, the universal binaries and the signature.
 #
 # Environment:
-#   MORNYE_DMG_VOLUME_NAME     volume name (default: Mornye)
-#   MORNYE_CODE_SIGN_IDENTITY  signing identity (default: - for ad hoc)
+#   MOSIX_DMG_VOLUME_NAME     volume name (default: Mosix)
+#   MOSIX_CODE_SIGN_IDENTITY  signing identity (default: - for ad hoc)
 
 set -euo pipefail
 
 if [[ $# -ne 2 ]]; then
-  echo "Usage: bash scripts/package_macos_dmg.sh <Mornye.app> <output.dmg>" >&2
+  echo "Usage: bash scripts/package_macos_dmg.sh <Mosix.app> <output.dmg>" >&2
   exit 1
 fi
 if [[ "$(uname -s)" != "Darwin" ]]; then
@@ -28,8 +28,8 @@ fi
 
 APP_SOURCE="${1%/}"
 OUTPUT="$2"
-VOLUME_NAME="${MORNYE_DMG_VOLUME_NAME:-Mornye}"
-SIGN_IDENTITY="${MORNYE_CODE_SIGN_IDENTITY:--}"
+VOLUME_NAME="${MOSIX_DMG_VOLUME_NAME:-Mosix}"
+SIGN_IDENTITY="${MOSIX_CODE_SIGN_IDENTITY:--}"
 APP_NAME="$(basename "$APP_SOURCE")"
 
 if [[ ! -f "$APP_SOURCE/Contents/Info.plist" ]]; then

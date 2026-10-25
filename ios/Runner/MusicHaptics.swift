@@ -8,7 +8,7 @@ final class MusicHapticsBridge {
     private let supported = CHHapticEngine.capabilitiesForHardware().supportsHaptics
 
     init(messenger: FlutterBinaryMessenger) {
-        channel = FlutterMethodChannel(name: "com.zarz.mornye/haptics", binaryMessenger: messenger)
+        channel = FlutterMethodChannel(name: "com.zuancrisp.mosix/haptics", binaryMessenger: messenger)
         channel.setMethodCallHandler { [weak self] call, result in
             guard call.method == "pulse" else {
                 result(FlutterMethodNotImplemented)

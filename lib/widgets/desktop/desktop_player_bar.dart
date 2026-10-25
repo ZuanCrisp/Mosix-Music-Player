@@ -5,29 +5,29 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/player_artwork_theme.dart';
-import 'package:mornye/utils/lyrics_parser.dart';
-import 'package:mornye/utils/string_utils.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/audio_quality_badges.dart';
-import 'package:mornye/widgets/desktop/desktop_commands.dart';
-import 'package:mornye/widgets/desktop/desktop_downloads_button.dart';
-import 'package:mornye/widgets/desktop/desktop_inspector.dart';
-import 'package:mornye/widgets/desktop/desktop_window.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/mornye_playback_button.dart';
-import 'package:mornye/widgets/mornye_player_background.dart';
-import 'package:mornye/widgets/player_artwork.dart';
-import 'package:mornye/widgets/player_lyrics.dart';
-import 'package:mornye/widgets/player_volume_control.dart';
-import 'package:mornye/widgets/playback_seek_slider.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/player_artwork_theme.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mosix/utils/string_utils.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/audio_quality_badges.dart';
+import 'package:mosix/widgets/desktop/desktop_commands.dart';
+import 'package:mosix/widgets/desktop/desktop_downloads_button.dart';
+import 'package:mosix/widgets/desktop/desktop_inspector.dart';
+import 'package:mosix/widgets/desktop/desktop_window.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mornye_playback_button.dart';
+import 'package:mosix/widgets/mornye_player_background.dart';
+import 'package:mosix/widgets/player_artwork.dart';
+import 'package:mosix/widgets/player_lyrics.dart';
+import 'package:mosix/widgets/player_volume_control.dart';
+import 'package:mosix/widgets/playback_seek_slider.dart';
 
 part 'desktop_mini_player.dart';
 
@@ -39,7 +39,7 @@ part 'desktop_mini_player.dart';
 ///
 /// Material docks an 80dp bar along the bottom of the window, on the
 /// `surfaceContainer` fill of the current artwork's scheme
-/// ([PlayerArtworkTheme]). Mornye draws a glass capsule that the shell
+/// ([PlayerArtworkTheme]). Mosix draws a glass capsule that the shell
 /// floats over the bottom of the content pane, laid out like the Music
 /// player: shuffle and the transport, a center "LCD" with the track and its
 /// progress, then lyrics, Up Next, downloads and volume.
@@ -48,17 +48,17 @@ class DesktopPlayerBar extends ConsumerWidget {
 
   static const double materialHeight = 80;
 
-  /// Height of the Mornye capsule.
+  /// Height of the Mosix capsule.
   static const double mornyeHeight = 48;
 
-  /// Space between the Mornye capsule and the bottom of the window.
+  /// Space between the Mosix capsule and the bottom of the window.
   static const double floatingMargin = 10;
 
   /// Bottom padding the content pane gives its pages, so their last rows
   /// scroll clear of the floating capsule with a margin above it.
   static const double floatingInset = mornyeHeight + floatingMargin + 12;
 
-  /// Width of the Mornye capsule in a content pane [paneWidth] wide: about
+  /// Width of the Mosix capsule in a content pane [paneWidth] wide: about
   /// 70% of it, as in Music, from 520 to 900 and never closer than 12 to
   /// the pane's sides.
   static double floatingWidth(double paneWidth) => math.min(
@@ -69,8 +69,8 @@ class DesktopPlayerBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mediaItem = ref.watch(currentMediaItemProvider).value;
-    return context.isMornye
-        ? _MornyePlayerBar(mediaItem: mediaItem)
+    return context.isMosix
+        ? _MosixPlayerBar(mediaItem: mediaItem)
         // The bar takes the track's artwork scheme; the downloads popover
         // it hosts keeps the app scheme.
         : PlayerArtworkTheme(
@@ -145,12 +145,12 @@ class _MaterialPlayerBar extends StatelessWidget {
   }
 }
 
-/// The Mornye capsule, laid out like the Music player: shuffle, the
+/// The Mosix capsule, laid out like the Music player: shuffle, the
 /// transport and repeat, the LCD, then downloads, lyrics, Up Next and a
 /// volume button whose slider opens in a popover. Its buttons take macOS
 /// toolbar sizes rather than touch sizes.
-class _MornyePlayerBar extends StatelessWidget {
-  const _MornyePlayerBar({required this.mediaItem});
+class _MosixPlayerBar extends StatelessWidget {
+  const _MosixPlayerBar({required this.mediaItem});
 
   final MediaItem? mediaItem;
 
@@ -159,7 +159,7 @@ class _MornyePlayerBar extends StatelessWidget {
     final loaded = mediaItem != null;
     return SizedBox(
       height: DesktopPlayerBar.mornyeHeight,
-      child: MornyeGlassPanel(
+      child: MosixGlassPanel(
         radius: DesktopPlayerBar.mornyeHeight / 2,
         highlightBorder: true,
         child: IconButtonTheme(
@@ -176,11 +176,11 @@ class _MornyePlayerBar extends StatelessWidget {
             padding: const EdgeInsetsDirectional.fromSTEB(8, 4, 8, 4),
             child: Row(
               children: [
-                _MornyeModeButton(mode: _MornyeMode.shuffle, enabled: loaded),
+                _MosixModeButton(mode: _MosixMode.shuffle, enabled: loaded),
                 _Transport(enabled: loaded),
-                _MornyeModeButton(mode: _MornyeMode.repeat, enabled: loaded),
+                _MosixModeButton(mode: _MosixMode.repeat, enabled: loaded),
                 const SizedBox(width: 8),
-                Expanded(child: _MornyeLcd(mediaItem: mediaItem)),
+                Expanded(child: _MosixLcd(mediaItem: mediaItem)),
                 const SizedBox(width: 8),
                 _TrailingControls(enabled: loaded),
               ],
@@ -192,14 +192,14 @@ class _MornyePlayerBar extends StatelessWidget {
   }
 }
 
-enum _MornyeMode { shuffle, repeat }
+enum _MosixMode { shuffle, repeat }
 
 /// Shuffle or repeat in the capsule: small secondary glyphs, accent while
 /// on, as in Music, and dimmed while nothing is loaded.
-class _MornyeModeButton extends ConsumerWidget {
-  const _MornyeModeButton({required this.mode, required this.enabled});
+class _MosixModeButton extends ConsumerWidget {
+  const _MosixModeButton({required this.mode, required this.enabled});
 
-  final _MornyeMode mode;
+  final _MosixMode mode;
   final bool enabled;
 
   @override
@@ -212,7 +212,7 @@ class _MornyeModeButton extends ConsumerWidget {
     late final String tooltip;
     late final VoidCallback onPressed;
     switch (mode) {
-      case _MornyeMode.shuffle:
+      case _MosixMode.shuffle:
         selected = ref.watch(
           playbackStateProvider.select(
             (state) => state.value?.shuffleMode == AudioServiceShuffleMode.all,
@@ -223,7 +223,7 @@ class _MornyeModeButton extends ConsumerWidget {
             ? l10n.nowPlayingShuffleOn
             : l10n.nowPlayingPlayInOrder;
         onPressed = () => controller.setShuffle(!selected);
-      case _MornyeMode.repeat:
+      case _MosixMode.repeat:
         final repeatMode = ref.watch(
           playbackStateProvider.select(
             (state) => state.value?.repeatMode ?? AudioServiceRepeatMode.none,
@@ -255,7 +255,7 @@ class _MornyeModeButton extends ConsumerWidget {
         // A fill marks the active mode by more than its color.
         style: selected
             ? IconButton.styleFrom(
-                backgroundColor: MornyeTheme.controlFill(context),
+                backgroundColor: MosixTheme.controlFill(context),
               )
             : null,
         icon: AppIcon(icon),
@@ -408,11 +408,11 @@ class _Transport extends ConsumerWidget {
         ? () => controller.togglePlayPause(isPlaying)
         : null;
 
-    if (context.isMornye) {
+    if (context.isMosix) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          MornyePlaybackButton(
+          MosixPlaybackButton(
             icon: CupertinoIcons.backward_fill,
             tooltip: previousTooltip,
             color: colorScheme.onSurface,
@@ -420,7 +420,7 @@ class _Transport extends ConsumerWidget {
             padding: const EdgeInsets.all(7),
             onPressed: enabled ? controller.previous : null,
           ),
-          MornyePlaybackButton(
+          MosixPlaybackButton(
             icon: isPlaying
                 ? CupertinoIcons.pause_fill
                 : CupertinoIcons.play_fill,
@@ -431,7 +431,7 @@ class _Transport extends ConsumerWidget {
             loading: isLoading,
             onPressed: onPlayPause,
           ),
-          MornyePlaybackButton(
+          MosixPlaybackButton(
             icon: CupertinoIcons.forward_fill,
             tooltip: nextTooltip,
             color: colorScheme.onSurface,
@@ -484,7 +484,7 @@ class _SeekRow extends ConsumerWidget {
 
   final MediaItem? mediaItem;
 
-  /// The Mornye LCD's thin bar with a small thumb.
+  /// The Mosix LCD's thin bar with a small thumb.
   final bool dense;
 
   // Time runs left to right in right-to-left layouts too.
@@ -497,7 +497,7 @@ class _SeekRow extends ConsumerWidget {
   Widget _buildRow(BuildContext context, WidgetRef ref) {
     final item = mediaItem;
     final colorScheme = Theme.of(context).colorScheme;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final duration = item?.duration ?? Duration.zero;
     final position = item == null
         ? Duration.zero
@@ -551,12 +551,12 @@ class _SeekRow extends ConsumerWidget {
   }
 }
 
-/// The Mornye center display: artwork, then the title and artist centered
+/// The Mosix center display: artwork, then the title and artist centered
 /// over a thin progress bar. Clicking the artwork or text opens Now
 /// Playing. With nothing loaded it shows a music glyph, like Music's idle
 /// display.
-class _MornyeLcd extends StatelessWidget {
-  const _MornyeLcd({required this.mediaItem});
+class _MosixLcd extends StatelessWidget {
+  const _MosixLcd({required this.mediaItem});
 
   static const double _artworkSize = 32;
 
@@ -606,7 +606,7 @@ class _MornyeLcd extends StatelessWidget {
                         alignment: AlignmentDirectional.centerStart,
                         child: SizedBox(
                           width: constraints.maxWidth,
-                          child: _MornyeLcdLines(mediaItem: item),
+                          child: _MosixLcdLines(mediaItem: item),
                         ),
                       ),
                     ),
@@ -629,8 +629,8 @@ class _MornyeLcd extends StatelessWidget {
 }
 
 /// The LCD's title and "artist · album" line, left-aligned like Music's.
-class _MornyeLcdLines extends StatelessWidget {
-  const _MornyeLcdLines({required this.mediaItem});
+class _MosixLcdLines extends StatelessWidget {
+  const _MosixLcdLines({required this.mediaItem});
 
   final MediaItem mediaItem;
 
@@ -668,7 +668,7 @@ class _MornyeLcdLines extends StatelessWidget {
 
 /// Lyrics and Up Next, which toggle the trailing inspector, downloads, and
 /// volume. Material fills its third of the bar, with downloads after Up
-/// Next and the volume slider last. The Mornye capsule leads with downloads
+/// Next and the volume slider last. The Mosix capsule leads with downloads
 /// and ends with a volume button whose slider opens in a popover, as Music
 /// does.
 class _TrailingControls extends StatelessWidget {
@@ -684,7 +684,7 @@ class _TrailingControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     return Row(
@@ -743,7 +743,7 @@ class _TrailingControls extends StatelessWidget {
             onPressed: toggleDesktopMiniPlayer,
           ),
         if (mornye)
-          const _MornyeVolumeButton()
+          const _MosixVolumeButton()
         else ...[
           Theme(
             data: appTheme ?? Theme.of(context),
@@ -770,17 +770,17 @@ class _TrailingControls extends StatelessWidget {
   }
 }
 
-/// The Mornye capsule's volume button. Its glyph follows the level, and a
+/// The Mosix capsule's volume button. Its glyph follows the level, and a
 /// click opens the slider in a popover above the capsule.
-class _MornyeVolumeButton extends ConsumerStatefulWidget {
-  const _MornyeVolumeButton();
+class _MosixVolumeButton extends ConsumerStatefulWidget {
+  const _MosixVolumeButton();
 
   @override
-  ConsumerState<_MornyeVolumeButton> createState() =>
-      _MornyeVolumeButtonState();
+  ConsumerState<_MosixVolumeButton> createState() =>
+      _MosixVolumeButtonState();
 }
 
-class _MornyeVolumeButtonState extends ConsumerState<_MornyeVolumeButton> {
+class _MosixVolumeButtonState extends ConsumerState<_MosixVolumeButton> {
   final _menu = MenuController();
 
   @override
@@ -826,7 +826,7 @@ class _MornyeVolumeButtonState extends ConsumerState<_MornyeVolumeButton> {
   }
 }
 
-/// A toggle for one inspector panel. Mornye marks the open panel with a
+/// A toggle for one inspector panel. Mosix marks the open panel with a
 /// fill as well as the accent color, so the state differs by more than
 /// color; Material uses the selected standard icon button.
 class _InspectorToggle extends StatelessWidget {
@@ -847,7 +847,7 @@ class _InspectorToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final colorScheme = Theme.of(context).colorScheme;
     return AppIconButton(
       tooltip: tooltip,
@@ -857,7 +857,7 @@ class _InspectorToggle extends StatelessWidget {
           : null,
       style: mornye && selected
           ? IconButton.styleFrom(
-              backgroundColor: MornyeTheme.controlFill(context),
+              backgroundColor: MosixTheme.controlFill(context),
             )
           : null,
       icon: AppIcon(icon),

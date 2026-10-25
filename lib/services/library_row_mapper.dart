@@ -1,6 +1,6 @@
-import 'package:mornye/services/library_database_models.dart';
-import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
-import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mosix/services/library_database_models.dart';
+import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
+import 'package:mosix/utils/audio_format_utils.dart';
 
 /// Maps scan/domain metadata to storage rows without opening a database.
 abstract final class LibraryRowMapper {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/widgets/app_icon.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/widgets/app_icon.dart';
 
 /// Expressive actions retain caller colors, disabled states and flexible labels.
 class ExpressiveButton extends StatelessWidget {

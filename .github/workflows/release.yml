@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: get-version
     env:
-      MORNYE_DISCORD_SDK: "1"
+      MOSIX_DISCORD_SDK: "1"
 
     steps:
       - name: Free disk space
@@ -175,7 +175,7 @@ jobs:
           for target in arm64-v8a:arm64 armeabi-v7a:arm32; do
             abi="${target%%:*}"
             label="${target##*:}"
-            apk="$apk_dir/Mornye-${VERSION}-${label}.apk"
+            apk="$apk_dir/Mosix-${VERSION}-${label}.apk"
             "$apksigner" sign \
               --ks "$signing_dir/release.jks" \
               --ks-key-alias "$KEY_ALIAS" \
@@ -218,15 +218,15 @@ jobs:
         run: |
           python3 -m unittest discover -s scripts -p 'test_check_backend_apk.py'
           apk_dir=build/app/outputs/flutter-apk
-          python3 scripts/check_backend_apk.py "$apk_dir/Mornye-${VERSION}-arm64.apk" \
+          python3 scripts/check_backend_apk.py "$apk_dir/Mosix-${VERSION}-arm64.apk" \
             --backend rust --abis arm64-v8a --discord-sdk
-          python3 scripts/check_backend_apk.py "$apk_dir/Mornye-${VERSION}-arm32.apk" \
+          python3 scripts/check_backend_apk.py "$apk_dir/Mosix-${VERSION}-arm32.apk" \
             --backend rust --abis armeabi-v7a --discord-sdk
           for abi in arm64 arm32; do
             "$ANDROID_HOME/build-tools/37.0.0/zipalign" -c -P 16 4 \
-              "$apk_dir/Mornye-${VERSION}-${abi}.apk"
+              "$apk_dir/Mosix-${VERSION}-${abi}.apk"
           done
-          (cd "$apk_dir" && sha256sum Mornye-*.apk > SHA256SUMS.txt)
+          (cd "$apk_dir" && sha256sum Mosix-*.apk > SHA256SUMS.txt)
 
       - name: Record Android symbol provenance
         run: |
@@ -234,7 +234,7 @@ jobs:
           test -s build/symbols/android/app.android-arm.symbols
           test -s build/app/outputs/mapping/release/mapping.txt
           git rev-parse HEAD > build/symbols/android/commit.txt
-          sha256sum build/app/outputs/flutter-apk/Mornye-*.apk > build/symbols/android/apk-sha256.txt
+          sha256sum build/app/outputs/flutter-apk/Mosix-*.apk > build/symbols/android/apk-sha256.txt
 
       - name: Retain Android debug symbols
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -252,15 +252,15 @@ jobs:
           name: android-apk
           if-no-files-found: error
           path: |
-            build/app/outputs/flutter-apk/Mornye-*.apk
-            build/app/outputs/flutter-apk/Mornye-*.apk.idsig
+            build/app/outputs/flutter-apk/Mosix-*.apk
+            build/app/outputs/flutter-apk/Mosix-*.apk.idsig
             build/app/outputs/flutter-apk/SHA256SUMS.txt
 
   build-ios:
     runs-on: macos-15
     needs: get-version # Only depends on version, NOT android build!
     env:
-      MORNYE_DISCORD_SDK: "1"
+      MOSIX_DISCORD_SDK: "1"
 
     steps:
       - name: Checkout repository
@@ -283,7 +283,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ios/Pods
-          key: pods-rust-${{ runner.os }}-${{ hashFiles('ios/Podfile', 'ios/Podfile.lock', 'rust_backend/MornyeBackend.podspec', 'rust_backend/Cargo.lock') }}
+          key: pods-rust-${{ runner.os }}-${{ hashFiles('ios/Podfile', 'ios/Podfile.lock', 'rust_backend/MosixBackend.podspec', 'rust_backend/Cargo.lock') }}
           restore-keys: pods-rust-${{ runner.os }}-
 
       - name: Setup Flutter
@@ -372,7 +372,7 @@ jobs:
           mkdir Payload
           cp -r Runner.app Payload/
           # Use absolute path to avoid relative path issues
-          zip -r "$GITHUB_WORKSPACE/build/ios/ipa/Mornye-${VERSION}-ios-unsigned.ipa" Payload
+          zip -r "$GITHUB_WORKSPACE/build/ios/ipa/Mosix-${VERSION}-ios-unsigned.ipa" Payload
           rm -rf Payload
 
       - name: Verify IPA created
@@ -380,7 +380,7 @@ jobs:
           VERSION: ${{ needs.get-version.outputs.version }}
         run: |
           ls -la build/ios/ipa/
-          if [ ! -f "build/ios/ipa/Mornye-${VERSION}-ios-unsigned.ipa" ]; then
+          if [ ! -f "build/ios/ipa/Mosix-${VERSION}-ios-unsigned.ipa" ]; then
             echo "ERROR: IPA not created!"
             exit 1
           fi
@@ -389,7 +389,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ios-ipa
-          path: build/ios/ipa/Mornye-*.ipa
+          path: build/ios/ipa/Mosix-*.ipa
 
   # Desktop builds mirror .github/workflows/desktop.yml without its Cargo
   # cache, then package: a universal dmg (ad hoc signed, not notarized),
@@ -457,14 +457,14 @@ jobs:
           MACOS_SIGNING_P12_PASSWORD: ${{ secrets.MACOS_SIGNING_P12_PASSWORD }}
         run: |
           identity="$(bash scripts/setup_macos_signing.sh)"
-          echo "MORNYE_CODE_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+          echo "MOSIX_CODE_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
 
       # The Xcode "Embed Rust Backend" and "Embed FFmpeg" phases embed the
       # library and the FFmpeg tools built above.
       - name: Build macOS app
         env:
-          MORNYE_SKIP_RUST_BUILD: "1"
-          MORNYE_REQUIRE_FFMPEG: "1"
+          MOSIX_SKIP_RUST_BUILD: "1"
+          MOSIX_REQUIRE_FFMPEG: "1"
         run: |
           flutter build macos --release --target lib/main.dart \
             --dart-define="GIT_COMMIT=$(git rev-parse --short=8 HEAD)"
@@ -473,7 +473,7 @@ jobs:
         env:
           VERSION: ${{ needs.get-version.outputs.version }}
         run: |
-          app="build/macos/Build/Products/Release/Mornye.app"
+          app="build/macos/Build/Products/Release/Mosix.app"
           test -s "$app/Contents/Frameworks/libmornye_desktop.dylib"
           for tool in ffmpeg ffprobe; do
             test -x "$app/Contents/Resources/ffmpeg/$tool"
@@ -481,8 +481,8 @@ jobs:
               lipo "$app/Contents/Resources/ffmpeg/$tool" -verify_arch "$arch"
             done
           done
-          bash scripts/package_macos_dmg.sh "$app" "build/desktop/Mornye-${VERSION}-macos-universal.dmg"
-          (cd build/desktop && shasum -a 256 Mornye-*.dmg > SHA256SUMS-macos.txt)
+          bash scripts/package_macos_dmg.sh "$app" "build/desktop/Mosix-${VERSION}-macos-universal.dmg"
+          (cd build/desktop && shasum -a 256 Mosix-*.dmg > SHA256SUMS-macos.txt)
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -490,7 +490,7 @@ jobs:
           name: desktop-release-macos
           if-no-files-found: error
           path: |
-            build/desktop/Mornye-*.dmg
+            build/desktop/Mosix-*.dmg
             build/desktop/SHA256SUMS-macos.txt
 
   build-linux:
@@ -588,8 +588,8 @@ jobs:
 
       - name: Validate desktop entry and AppStream metadata
         run: |
-          desktop-file-validate linux/packaging/com.zarz.mornye.desktop
-          appstreamcli validate --no-net --explain linux/packaging/com.zarz.mornye.metainfo.xml ||
+          desktop-file-validate linux/packaging/com.zuancrisp.mosix.desktop
+          appstreamcli validate --no-net --explain linux/packaging/com.zuancrisp.mosix.metainfo.xml ||
             echo "::warning::AppStream metadata has validation issues"
 
       - name: Package AppImage and deb
@@ -605,15 +605,15 @@ jobs:
           test -x "$bundle/lib/ffmpeg/ffmpeg"
           test -x "$bundle/lib/ffmpeg/ffprobe"
           test -s "$bundle/lib/ffmpeg/LICENSE.txt"
-          export MORNYE_PACKAGE_ARCH="$ARCH"
+          export MOSIX_PACKAGE_ARCH="$ARCH"
           bash scripts/package_linux.sh appimage "$bundle" "$VERSION" \
-            "build/desktop/Mornye-${VERSION}-linux-${ARCH}.AppImage"
+            "build/desktop/Mosix-${VERSION}-linux-${ARCH}.AppImage"
           bash scripts/package_linux.sh deb "$bundle" "$VERSION" \
-            "build/desktop/Mornye-${VERSION}-linux-${DEB_ARCH}.deb"
-          dpkg-deb --contents "build/desktop/Mornye-${VERSION}-linux-${DEB_ARCH}.deb" |
-            grep -E 'usr/share/applications/com.zarz.mornye.desktop|usr/lib/mornye/mornye$'
-          file "build/desktop/Mornye-${VERSION}-linux-${ARCH}.AppImage"
-          (cd build/desktop && sha256sum Mornye-* > "SHA256SUMS-linux-${ARCH}.txt")
+            "build/desktop/Mosix-${VERSION}-linux-${DEB_ARCH}.deb"
+          dpkg-deb --contents "build/desktop/Mosix-${VERSION}-linux-${DEB_ARCH}.deb" |
+            grep -E 'usr/share/applications/com.zuancrisp.mosix.desktop|usr/lib/mornye/mornye$'
+          file "build/desktop/Mosix-${VERSION}-linux-${ARCH}.AppImage"
+          (cd build/desktop && sha256sum Mosix-* > "SHA256SUMS-linux-${ARCH}.txt")
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -621,8 +621,8 @@ jobs:
           name: desktop-release-linux-${{ matrix.arch }}
           if-no-files-found: error
           path: |
-            build/desktop/Mornye-*.AppImage
-            build/desktop/Mornye-*.deb
+            build/desktop/Mosix-*.AppImage
+            build/desktop/Mosix-*.deb
             build/desktop/SHA256SUMS-linux-*.txt
 
   build-windows:
@@ -703,7 +703,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $bundle = 'build\windows\${{ matrix.arch }}\runner\Release'
           ./scripts/check_windows_bundle.ps1 -BundleDir $bundle -Arch ${{ matrix.arch }}
-          "MORNYE_WINDOWS_BUNDLE=$bundle" >> $env:GITHUB_ENV
+          "MOSIX_WINDOWS_BUNDLE=$bundle" >> $env:GITHUB_ENV
 
       - name: Upload unsigned app for signing
         id: unsigned-app
@@ -732,12 +732,12 @@ jobs:
         if: env.SIGNPATH_API_TOKEN != ''
         run: |
           if (-not (Test-Path 'build\windows-signed\mornye.exe')) { throw 'Signed app is missing' }
-          "MORNYE_WINDOWS_BUNDLE=build\windows-signed" >> $env:GITHUB_ENV
+          "MOSIX_WINDOWS_BUNDLE=build\windows-signed" >> $env:GITHUB_ENV
 
       - name: Package installer and portable zip
         env:
           VERSION: ${{ needs.get-version.outputs.version }}
-        run: ./scripts/package_windows.ps1 -Version $env:VERSION -Arch ${{ matrix.arch }} -BundleDir $env:MORNYE_WINDOWS_BUNDLE
+        run: ./scripts/package_windows.ps1 -Version $env:VERSION -Arch ${{ matrix.arch }} -BundleDir $env:MOSIX_WINDOWS_BUNDLE
 
       - name: Upload unsigned installer for signing
         id: unsigned-installer
@@ -747,7 +747,7 @@ jobs:
           name: windows-unsigned-installer-${{ matrix.arch }}
           if-no-files-found: error
           retention-days: 1
-          path: build/desktop/Mornye-*-setup.exe
+          path: build/desktop/Mosix-*-setup.exe
 
       - name: Sign installer
         if: env.SIGNPATH_API_TOKEN != ''
@@ -764,7 +764,7 @@ jobs:
 
       - name: Record checksums
         run: |
-          $lines = Get-ChildItem build\desktop -File -Filter 'Mornye-*' | Sort-Object Name | ForEach-Object {
+          $lines = Get-ChildItem build\desktop -File -Filter 'Mosix-*' | Sort-Object Name | ForEach-Object {
             '{0}  {1}' -f (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLowerInvariant(), $_.Name
           }
           if (-not $lines) { throw 'No Windows packages were created' }
@@ -777,12 +777,12 @@ jobs:
           name: desktop-release-windows-${{ matrix.arch }}
           if-no-files-found: error
           path: |
-            build/desktop/Mornye-*-setup.exe
-            build/desktop/Mornye-*-portable.zip
+            build/desktop/Mosix-*-setup.exe
+            build/desktop/Mosix-*-portable.zip
             build/desktop/SHA256SUMS-windows-${{ matrix.arch }}.txt
 
   # The phone release. Desktop packages are released separately in
-  # mornyeapp/Mornye-Desktop by create-desktop-release.
+  # ZuanCrisp/Mosix-Music-Player-Desktop by create-desktop-release.
   create-release:
     runs-on: ubuntu-latest
     needs: [get-version, build-android, build-ios]
@@ -833,7 +833,7 @@ jobs:
           cd release
           sha256sum --check SHA256SUMS.txt
           rm -f SHA256SUMS.txt
-          sha256sum Mornye-* > SHA256SUMS.txt
+          sha256sum Mosix-* > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Prepare release body
@@ -862,12 +862,12 @@ jobs:
           ### Downloads
 
           #### Android
-          - **arm64**: \`Mornye-${VERSION}-arm64.apk\` (recommended for modern devices)
-          - **arm32**: \`Mornye-${VERSION}-arm32.apk\` (older devices)
+          - **arm64**: \`Mosix-${VERSION}-arm64.apk\` (recommended for modern devices)
+          - **arm32**: \`Mosix-${VERSION}-arm32.apk\` (older devices)
           - \`*.apk.idsig\`: V4 signatures for \`adb install --incremental\` only; normal installs do not need them
 
           #### iOS
-          - **iOS**: \`Mornye-${VERSION}-ios-unsigned.ipa\` (sideload required)
+          - **iOS**: \`Mosix-${VERSION}-ios-unsigned.ipa\` (sideload required)
 
           \`SHA256SUMS.txt\` lists the SHA-256 of every file above.
 
@@ -883,7 +883,7 @@ jobs:
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           tag_name: ${{ needs.get-version.outputs.version }}
-          name: Mornye ${{ needs.get-version.outputs.version }}
+          name: Mosix ${{ needs.get-version.outputs.version }}
           body_path: /tmp/release_body.txt
           files: ./release/*
           draft: false
@@ -891,7 +891,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Desktop packages are released in mornyeapp/Mornye-Desktop, where the
+  # Desktop packages are released in ZuanCrisp/Mosix-Music-Player-Desktop, where the
   # desktop updater looks. Releases stay drafts until the repository variable
   # DESKTOP_RELEASES_PUBLIC is 'true', so nothing ships before testing ends.
   create-desktop-release:
@@ -934,7 +934,7 @@ jobs:
             sha256sum --check "$sums"
           done
           rm -f SHA256SUMS-*.txt
-          sha256sum Mornye-* > SHA256SUMS.txt
+          sha256sum Mosix-* > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Prepare release body
@@ -972,22 +972,22 @@ jobs:
               printf "| %s | \`%s\` | %s |\n" "$1" "$2" "$3" >> /tmp/release_body.txt
             fi
           }
-          desktop_row "macOS" "Mornye-${VERSION}-macos-universal.dmg" "Apple silicon and Intel, macOS 12 or later"
-          desktop_row "Windows" "Mornye-${VERSION}-windows-x64-setup.exe" "Installer (x64), no administrator rights needed"
-          desktop_row "Windows" "Mornye-${VERSION}-windows-x64-portable.zip" "Portable (x64): extract and run mornye.exe"
-          desktop_row "Linux" "Mornye-${VERSION}-linux-x86_64.AppImage" "AppImage (x86_64), updates itself"
-          desktop_row "Linux" "Mornye-${VERSION}-linux-aarch64.AppImage" "AppImage (aarch64), updates itself"
-          desktop_row "Linux" "Mornye-${VERSION}-linux-amd64.deb" "Debian/Ubuntu (amd64)"
-          desktop_row "Linux" "Mornye-${VERSION}-linux-arm64.deb" "Debian/Ubuntu (arm64)"
+          desktop_row "macOS" "Mosix-${VERSION}-macos-universal.dmg" "Apple silicon and Intel, macOS 12 or later"
+          desktop_row "Windows" "Mosix-${VERSION}-windows-x64-setup.exe" "Installer (x64), no administrator rights needed"
+          desktop_row "Windows" "Mosix-${VERSION}-windows-x64-portable.zip" "Portable (x64): extract and run mornye.exe"
+          desktop_row "Linux" "Mosix-${VERSION}-linux-x86_64.AppImage" "AppImage (x86_64), updates itself"
+          desktop_row "Linux" "Mosix-${VERSION}-linux-aarch64.AppImage" "AppImage (aarch64), updates itself"
+          desktop_row "Linux" "Mosix-${VERSION}-linux-amd64.deb" "Debian/Ubuntu (amd64)"
+          desktop_row "Linux" "Mosix-${VERSION}-linux-arm64.deb" "Debian/Ubuntu (arm64)"
 
           cat >> /tmp/release_body.txt << FOOTER
 
           \`SHA256SUMS.txt\` lists the SHA-256 of every file above.
 
           ### Installation
-          **macOS**: Open the dmg and drag Mornye to Applications. Mornye is not notarized yet, so macOS blocks the first launch: open System Settings > Privacy & Security, scroll to Security and click "Open Anyway" next to the Mornye message, then confirm with "Open". Later updates open the new dmg for you.
+          **macOS**: Open the dmg and drag Mosix to Applications. Mosix is not notarized yet, so macOS blocks the first launch: open System Settings > Privacy & Security, scroll to Security and click "Open Anyway" next to the Mosix message, then confirm with "Open". Later updates open the new dmg for you.
           **Windows**: Run the setup. The installer is not code signed yet, so SmartScreen may warn: click "More info", then "Run anyway".
-          **Linux**: AppImage: \`chmod +x\` the file and run it. deb: \`sudo apt install ./Mornye-${VERSION}-linux-amd64.deb\` (or the arm64 file); deb installs update through new releases.
+          **Linux**: AppImage: \`chmod +x\` the file and run it. deb: \`sudo apt install ./Mosix-${VERSION}-linux-amd64.deb\` (or the arm64 file); deb installs update through new releases.
           FOOTER
 
           echo "Release body:"
@@ -996,10 +996,10 @@ jobs:
       - name: Create desktop release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          repository: mornyeapp/Mornye-Desktop
-          token: ${{ secrets.MORNYE_DESKTOP_RELEASE_TOKEN }}
+          repository: ZuanCrisp/Mosix-Music-Player-Desktop
+          token: ${{ secrets.MOSIX_DESKTOP_RELEASE_TOKEN }}
           tag_name: ${{ needs.get-version.outputs.version }}
-          name: Mornye ${{ needs.get-version.outputs.version }}
+          name: Mosix ${{ needs.get-version.outputs.version }}
           body_path: /tmp/release_body.txt
           files: ./release/*
           draft: ${{ vars.DESKTOP_RELEASES_PUBLIC != 'true' }}
@@ -1063,7 +1063,7 @@ jobs:
           jq --arg ver "$VERSION_NUM" \
              --arg bundle "$BUNDLE_ID" \
              --arg date "$DATE" \
-             --arg url "https://github.com/${REPOSITORY}/releases/download/${VERSION}/Mornye-${VERSION}-ios-unsigned.ipa" \
+             --arg url "https://github.com/${REPOSITORY}/releases/download/${VERSION}/Mosix-${VERSION}-ios-unsigned.ipa" \
              --argjson size "$IPA_SIZE" \
              '.apps[0].bundleIdentifier = $bundle | .apps[0].version = $ver | .apps[0].versionDate = $date | .apps[0].downloadURL = $url | .apps[0].size = $size' \
              apps.json > apps.json.tmp && mv apps.json.tmp apps.json
@@ -1161,7 +1161,7 @@ jobs:
 
           # Prepare message with changelog (HTML format)
           printf '%s\n' \
-            "<b>Mornye ${VERSION} Released!</b>" \
+            "<b>Mosix ${VERSION} Released!</b>" \
             "" \
             "<b>What's New:</b>" \
             "${CHANGELOG}" \
@@ -1185,7 +1185,7 @@ jobs:
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
               -F chat_id="${TELEGRAM_CHANNEL_ID}" \
               -F document=@"${ARM64_APK}" \
-              -F caption="Mornye ${VERSION} - arm64 (recommended)"
+              -F caption="Mosix ${VERSION} - arm64 (recommended)"
           fi
 
           if [ -f "$ARM32_APK" ]; then
@@ -1193,7 +1193,7 @@ jobs:
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
               -F chat_id="${TELEGRAM_CHANNEL_ID}" \
               -F document=@"${ARM32_APK}" \
-              -F caption="Mornye ${VERSION} - arm32"
+              -F caption="Mosix ${VERSION} - arm32"
           fi
 
           IOS_IPA=$(find ./release -name "*ios*.ipa" | head -1)
@@ -1202,7 +1202,7 @@ jobs:
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
               -F chat_id="${TELEGRAM_CHANNEL_ID}" \
               -F document=@"${IOS_IPA}" \
-              -F caption="Mornye ${VERSION} - iOS (unsigned, sideload required)"
+              -F caption="Mosix ${VERSION} - iOS (unsigned, sideload required)"
           fi
 
           echo "Telegram notification sent!"

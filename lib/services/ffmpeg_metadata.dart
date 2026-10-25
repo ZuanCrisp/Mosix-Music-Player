@@ -4,13 +4,13 @@ import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
-import 'package:mornye/services/audio_metadata_mapper.dart';
-import 'package:mornye/services/ffmpeg_models.dart';
-import 'package:mornye/services/ffmpeg_support.dart';
-import 'package:mornye/services/id3v23_lyrics.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/artist_utils.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/services/audio_metadata_mapper.dart';
+import 'package:mosix/services/ffmpeg_models.dart';
+import 'package:mosix/services/ffmpeg_support.dart';
+import 'package:mosix/services/id3v23_lyrics.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/artist_utils.dart';
+import 'package:mosix/utils/logger.dart';
 
 final _log = AppLogger('FFmpeg');
 

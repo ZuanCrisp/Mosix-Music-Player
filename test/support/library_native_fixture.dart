@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/services/library_row_mapper.dart';
-import 'package:mornye/services/library_schema.dart';
-import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
+import 'package:mosix/services/library_row_mapper.dart';
+import 'package:mosix/services/library_schema.dart';
+import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
 
 Map<String, dynamic> nativeLibraryTrack(
   String id, {

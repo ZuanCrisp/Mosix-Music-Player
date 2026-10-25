@@ -1,10 +1,10 @@
 import 'dart:collection';
 
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/ffmpeg_models.dart';
-import 'package:mornye/utils/audio_format_utils.dart';
-import 'package:mornye/utils/download_error_type.dart';
-import 'package:mornye/utils/int_utils.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/ffmpeg_models.dart';
+import 'package:mosix/utils/audio_format_utils.dart';
+import 'package:mosix/utils/download_error_type.dart';
+import 'package:mosix/utils/int_utils.dart';
 
 /// Typed access to the download protocol, retaining extension-specific fields.
 /// Wraps the original map so metadata helpers and native reconciliation observe

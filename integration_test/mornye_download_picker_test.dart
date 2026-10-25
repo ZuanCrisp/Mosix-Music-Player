@@ -7,19 +7,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/mornye_glass_warmup.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
-import 'package:mornye/widgets/download_service_picker.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
-import 'package:mornye/widgets/mornye_glass_preparation.dart';
-import 'package:mornye/widgets/track_detail_actions.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/mornye_glass_warmup.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:mosix/widgets/download_service_picker.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/mornye_glass_preparation.dart';
+import 'package:mosix/widgets/track_detail_actions.dart';
 
 import 'performance_probe.dart';
 
@@ -111,17 +111,17 @@ void main() {
               extensionProvider.overrideWith(_Extensions.new),
               if (glassOverride.isNotEmpty)
                 mornyeGlassLevelProvider.overrideWithValue(
-                  MornyeGlassLevel.values.byName(glassOverride),
+                  MosixGlassLevel.values.byName(glassOverride),
                 ),
             ],
             child: MaterialApp(
-              theme: MornyeTheme.build(brightness),
+              theme: MosixTheme.build(brightness),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               builder: (_, child) => RepaintBoundary(
                 key: capture,
                 child: warmupGlass
-                    ? MornyeGlassPreparation(
+                    ? MosixGlassPreparation(
                         child: AppScaffoldMessenger(child: child!),
                       )
                     : AppScaffoldMessenger(child: child!),
@@ -155,7 +155,7 @@ void main() {
                             left: 12,
                             right: 12,
                             bottom: 24,
-                            child: MornyeTabBar(
+                            child: MosixTabBar(
                               destinations: const [
                                 NavigationDestination(
                                   icon: Icon(Icons.home),
@@ -195,12 +195,12 @@ void main() {
         await probe.wait(const Duration(milliseconds: 1500));
         if (warmupGlass &&
             (glassOverride.isEmpty || glassOverride == 'liquid')) {
-          expect(MornyeGlassWarmup.isReady, isTrue);
+          expect(MosixGlassWarmup.isReady, isTrue);
           final view = binding.platformDispatcher.views.first;
           expect(
             identical(
-              MornyeGlassWarmup.prepare(view),
-              MornyeGlassWarmup.prepare(view),
+              MosixGlassWarmup.prepare(view),
+              MosixGlassWarmup.prepare(view),
             ),
             isTrue,
             reason: 'Multiple callers must share one preparation',
@@ -248,7 +248,7 @@ void main() {
               'preload_glass': preloadGlass,
               'trace_first_open': traceFirstOpen,
               'warmup_glass': warmupGlass,
-              'warmup_ready': MornyeGlassWarmup.isReady,
+              'warmup_ready': MosixGlassWarmup.isReady,
               'shell_glass': shellGlass,
             },
           );
@@ -262,11 +262,11 @@ void main() {
         await probe.measure('context_menu_to_picker', () async {
           // The production flow pops the options menu and pushes the picker
           // immediately. Both glass routes overlap during their transitions.
-          showMornyeContextMenu<void>(
+          showMosixContextMenu<void>(
             context: homeContext,
-            builder: (menuContext) => MornyeContextMenu(
+            builder: (menuContext) => MosixContextMenu(
               quickActions: [
-                MornyeMenuAction(
+                MosixMenuAction(
                   icon: Icons.download,
                   label: 'Download',
                   onPressed: () {
@@ -281,12 +281,12 @@ void main() {
           await probe.wait(const Duration(milliseconds: 300));
           await tester.tap(find.text('Download'));
           await probe.wait(const Duration(milliseconds: 500));
-          expect(find.byType(MornyeContextMenu), findsNothing);
+          expect(find.byType(MosixContextMenu), findsNothing);
           expect(find.byType(DownloadServicePicker), findsOneWidget);
           await close();
         });
         await open();
-        expect(find.byType(MornyeGlassPanel), findsOneWidget);
+        expect(find.byType(MosixGlassPanel), findsOneWidget);
         Future<void> savePose(String pose) async {
           await tester.runAsync(() async {
             final boundary = tester.renderObject<RenderRepaintBoundary>(
@@ -369,7 +369,7 @@ void main() {
         await probe.wait(const Duration(milliseconds: 500));
         expect(selection, ('quality-1', 'source-0'));
         expect(find.byType(DownloadServicePicker), findsNothing);
-        expect(find.byType(MornyeGlassPanel), findsOneWidget);
+        expect(find.byType(MosixGlassPanel), findsOneWidget);
         await savePose('queue');
         await probe.finish(
           metadata: {
@@ -380,7 +380,7 @@ void main() {
             'preload_glass': preloadGlass,
             'trace_first_open': traceFirstOpen,
             'warmup_glass': warmupGlass,
-            'warmup_ready': MornyeGlassWarmup.isReady,
+            'warmup_ready': MosixGlassWarmup.isReady,
             'shell_glass': shellGlass,
             'pose_layers': poses,
             'glass_level_override': glassOverride,

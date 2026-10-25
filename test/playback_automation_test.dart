@@ -5,8 +5,8 @@ import 'dart:async';
 
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/services/playback_automation.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/services/playback_automation.dart';
 
 AudioDevice device(String id, AudioDeviceType type, {bool output = true}) =>
     AudioDevice(

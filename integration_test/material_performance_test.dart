@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/playback_seek_slider.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/playback_seek_slider.dart';
 
 import 'mornye_artwork_performance_test.dart' as artwork;
 import 'mornye_lyrics_performance_test.dart' as lyrics;
@@ -23,7 +23,7 @@ void main() {
       addTearDown(playing.dispose);
       await tester.pumpWidget(
         MaterialApp(
-          theme: mornye ? MornyeTheme.build(Brightness.dark) : AppTheme.dark(),
+          theme: mornye ? MosixTheme.build(Brightness.dark) : AppTheme.dark(),
           home: Scaffold(
             body: Center(
               child: ValueListenableBuilder<bool>(
@@ -42,7 +42,7 @@ void main() {
       await probe.measure(
         'playing_track_fixed_position',
         () => probe.wait(const Duration(milliseconds: 1500)),
-        // A fixed Mornye progress track has no decorative animation.
+        // A fixed Mosix progress track has no decorative animation.
         allowIdle: true,
       );
       await probe.measure('seek_drag', () async {

@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/music_player_service.dart';
+import 'package:mosix/services/music_player_service.dart';
 
 void main() {
   test(

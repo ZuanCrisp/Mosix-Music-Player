@@ -1,33 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/explore_provider.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/library_search_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/recent_access_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/providers/track_provider.dart';
-import 'package:mornye/screens/home_tab.dart';
-import 'package:mornye/services/library_search.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/widgets/app_search_field.dart';
-import 'package:mornye/widgets/lazy_tab_view.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/explore_provider.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/library_search_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/recent_access_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/providers/track_provider.dart';
+import 'package:mosix/screens/home_tab.dart';
+import 'package:mosix/services/library_search.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/widgets/app_search_field.dart';
+import 'package:mosix/widgets/lazy_tab_view.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
 
 void main() {
   for (final desktop in [false, true]) {
     for (final mornye in [false, true]) {
       testWidgets('Home keeps its feed layout through slow startup '
-          '(desktop: $desktop, Mornye: $mornye)', (tester) async {
+          '(desktop: $desktop, Mosix: $mornye)', (tester) async {
         debugDesktopPlatformOverride = desktop;
         addTearDown(() => debugDesktopPlatformOverride = null);
         tester.view.physicalSize = desktop
@@ -268,7 +268,7 @@ void main() {
               trackProvider.overrideWith(_Search.new),
             ],
             child: MaterialApp(
-              theme: MornyeTheme.build(Brightness.dark),
+              theme: MosixTheme.build(Brightness.dark),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: const HomeTab(mode: HomeTabMode.browse),
@@ -306,7 +306,7 @@ void main() {
 
           expect(find.text('Download'), findsOneWidget);
           expect(find.text('Go to Album'), findsOneWidget);
-          final menu = tester.getRect(find.byType(MornyeContextMenu));
+          final menu = tester.getRect(find.byType(MosixContextMenu));
           if (anchor.bottom + 8 + menu.height > size.height - 16 &&
               anchor.top - menu.height - 8 < 16) {
             // A tall featured card can leave no room on either side. The menu
@@ -327,7 +327,7 @@ void main() {
           expect(menu.bottom, lessThanOrEqualTo(size.height - 16));
           await tester.tapAt(const Offset(5, 5));
           await tester.pumpAndSettle();
-          expect(find.byType(MornyeContextMenu), findsNothing);
+          expect(find.byType(MosixContextMenu), findsNothing);
         }
         expect(tester.takeException(), isNull);
       },
@@ -352,7 +352,7 @@ void main() {
             trackProvider.overrideWith(() => search),
           ],
           child: MaterialApp(
-            theme: MornyeTheme.build(Brightness.dark),
+            theme: MosixTheme.build(Brightness.dark),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const _Tabs(),
@@ -421,7 +421,7 @@ void main() {
           trackProvider.overrideWith(() => search),
         ],
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const _Tabs(),
@@ -476,7 +476,7 @@ void main() {
               trackProvider.overrideWith(() => search),
             ],
             child: MaterialApp(
-              theme: MornyeTheme.build(brightness),
+              theme: MosixTheme.build(brightness),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: const HomeTab(mode: HomeTabMode.search),
@@ -500,7 +500,7 @@ void main() {
           find.descendant(
             of: find.ancestor(
               of: find.text('Found $itemType 0'),
-              matching: find.byType(MornyeGlassPanel),
+              matching: find.byType(MosixGlassPanel),
             ),
             matching: find.byType(BackdropFilter),
           ),
@@ -519,7 +519,7 @@ void main() {
           find.descendant(
             of: find.ancestor(
               of: find.text('Found $itemType 119'),
-              matching: find.byType(MornyeGlassPanel),
+              matching: find.byType(MosixGlassPanel),
             ),
             matching: find.byType(BackdropFilter),
           ),
@@ -547,7 +547,7 @@ void main() {
           trackProvider.overrideWith(_Search.new),
         ],
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const HomeTab(mode: HomeTabMode.search),
@@ -567,7 +567,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Mornye desktop Search centers the field over a row of recent '
+  testWidgets('Mosix desktop Search centers the field over a row of recent '
       'cards and can search the library instead', (tester) async {
     debugDesktopPlatformOverride = true;
     addTearDown(() => debugDesktopPlatformOverride = null);
@@ -620,7 +620,7 @@ void main() {
           }),
         ],
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const HomeTab(mode: HomeTabMode.search),
@@ -681,7 +681,7 @@ void main() {
   });
 
   for (final withSearchExtension in [false, true]) {
-    testWidgets('Mornye Home without a feed shows its sections '
+    testWidgets('Mosix Home without a feed shows its sections '
         '(search extension: $withSearchExtension)', (tester) async {
       tester.view.physicalSize = const Size(430, 932);
       tester.view.devicePixelRatio = 1;
@@ -699,7 +699,7 @@ void main() {
             trackProvider.overrideWith(_Search.new),
           ],
           child: MaterialApp(
-            theme: MornyeTheme.build(Brightness.dark),
+            theme: MosixTheme.build(Brightness.dark),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const HomeTab(mode: HomeTabMode.browse),
@@ -794,7 +794,7 @@ Future<void> _pumpStartupHome(
       trackProvider.overrideWith(_Search.new),
     ],
     child: MaterialApp(
-      theme: mornye ? MornyeTheme.build(Brightness.dark) : AppTheme.dark(),
+      theme: mornye ? MosixTheme.build(Brightness.dark) : AppTheme.dark(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: homeVisible == null

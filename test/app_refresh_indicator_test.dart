@@ -1,9 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/widgets/app_refresh_indicator.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/widgets/app_refresh_indicator.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
 
 void main() {
   final macOS = TargetPlatformVariant.only(TargetPlatform.macOS);

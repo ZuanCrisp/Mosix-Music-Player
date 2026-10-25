@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/cover_download_service.dart';
+import 'package:mosix/services/cover_download_service.dart';
 
 void main() {
   test('detects common cover formats from file headers', () async {

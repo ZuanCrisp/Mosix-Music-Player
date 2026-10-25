@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/media_kit_playback_deck.dart';
-import 'package:mornye/services/music_playback_deck.dart';
-import 'package:mornye/services/music_player_runtime.dart';
-import 'package:mornye/services/playback_deck.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/services/media_kit_playback_deck.dart';
+import 'package:mosix/services/music_playback_deck.dart';
+import 'package:mosix/services/music_player_runtime.dart';
+import 'package:mosix/services/playback_deck.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 import 'support/fake_mpv_engine.dart';
 

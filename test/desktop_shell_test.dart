@@ -7,25 +7,25 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/models/library_collections.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/system_volume_provider.dart';
-import 'package:mornye/services/shell_navigation_service.dart';
-import 'package:mornye/services/user_profile_store.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/desktop/desktop_commands.dart';
-import 'package:mornye/widgets/desktop/desktop_downloads_button.dart';
-import 'package:mornye/widgets/desktop/desktop_navigation.dart';
-import 'package:mornye/widgets/desktop/desktop_player_bar.dart';
-import 'package:mornye/widgets/desktop/desktop_shortcuts.dart';
-import 'package:mornye/widgets/desktop/desktop_window.dart';
-import 'package:mornye/widgets/expressive_navigation_bar.dart';
-import 'package:mornye/widgets/mini_player.dart';
-import 'package:mornye/widgets/mornye_bottom_bar.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/models/library_collections.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/system_volume_provider.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
+import 'package:mosix/services/user_profile_store.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/desktop/desktop_commands.dart';
+import 'package:mosix/widgets/desktop/desktop_downloads_button.dart';
+import 'package:mosix/widgets/desktop/desktop_navigation.dart';
+import 'package:mosix/widgets/desktop/desktop_player_bar.dart';
+import 'package:mosix/widgets/desktop/desktop_shortcuts.dart';
+import 'package:mosix/widgets/desktop/desktop_window.dart';
+import 'package:mosix/widgets/expressive_navigation_bar.dart';
+import 'package:mosix/widgets/mini_player.dart';
+import 'package:mosix/widgets/mornye_bottom_bar.dart';
 
 class _FakeController implements MusicPlayerController {
   final calls = <String>[];
@@ -141,7 +141,7 @@ void main() {
         overrides: overrides(item: item),
         child: MaterialApp(
           theme: mornye
-              ? MornyeTheme.build(Brightness.light)
+              ? MosixTheme.build(Brightness.light)
               : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -170,7 +170,7 @@ void main() {
   void expectNoTouchNavigation() {
     expect(find.byType(NavigationBar), findsNothing);
     expect(find.byType(ExpressiveNavigationBar), findsNothing);
-    expect(find.byType(MornyeBottomBar), findsNothing);
+    expect(find.byType(MosixBottomBar), findsNothing);
     expect(find.byType(MiniPlayer), findsNothing);
   }
 
@@ -312,7 +312,7 @@ void main() {
     });
   });
 
-  group('Mornye shell', () {
+  group('Mosix shell', () {
     for (final width in [900.0, 1400.0]) {
       testWidgets('shows the sidebar and player bar at $width', (tester) async {
         await pumpShell(tester, mornye: true, width: width);
@@ -322,7 +322,7 @@ void main() {
           tester.getSize(find.byType(DesktopSidebar)).width,
           DesktopSidebar.footprint,
         );
-        // The Material rail must not appear in the Mornye style.
+        // The Material rail must not appear in the Mosix style.
         expect(find.byType(DesktopNavigationRail), findsNothing);
         expect(find.byType(NavigationRail), findsNothing);
         expectNoTouchNavigation();

@@ -2,31 +2,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/constants/app_info.dart';
-import 'package:mornye/services/extension_storage_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/providers/extension_provider.dart';
+import 'package:mosix/services/extension_storage_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/providers/extension_provider.dart';
 
 final _log = AppLogger('StoreProvider');
-final RegExp _leadingVersionPrefix = RegExp(r'^v');
 const _registryUrlPrefKey = 'store_registry_url';
-
-int _compareVersions(String v1, String v2) {
-  final parts1 = v1.replaceAll(_leadingVersionPrefix, '').split('.');
-  final parts2 = v2.replaceAll(_leadingVersionPrefix, '').split('.');
-
-  final maxLen = parts1.length > parts2.length ? parts1.length : parts2.length;
-
-  for (var i = 0; i < maxLen; i++) {
-    final n1 = i < parts1.length ? (int.tryParse(parts1[i]) ?? 0) : 0;
-    final n2 = i < parts2.length ? (int.tryParse(parts2[i]) ?? 0) : 0;
-
-    if (n1 < n2) return -1;
-    if (n1 > n2) return 1;
-  }
-  return 0;
-}
+const _defaultRegistryUrl =
+    'https://raw.githubusercontent.com/ZuanCrisp/Mosix-Extension/main/registry.json';
 
 class RepoCategory {
   static const String metadata = 'metadata';
@@ -56,7 +40,6 @@ class RepoExtension {
   final List<String> tags;
   final int downloads;
   final String updatedAt;
-  final String? minAppVersion;
   final bool isInstalled;
   final String? installedVersion;
   final bool hasUpdate;
@@ -73,7 +56,6 @@ class RepoExtension {
     this.tags = const [],
     this.downloads = 0,
     required this.updatedAt,
-    this.minAppVersion,
     this.isInstalled = false,
     this.installedVersion,
     this.hasUpdate = false,
@@ -93,16 +75,10 @@ class RepoExtension {
       tags: (json['tags'] as List<dynamic>?)?.cast<String>() ?? [],
       downloads: json['downloads'] as int? ?? 0,
       updatedAt: json['updated_at'] as String? ?? '',
-      minAppVersion: json['min_app_version'] as String?,
       isInstalled: json['is_installed'] as bool? ?? false,
       installedVersion: json['installed_version'] as String?,
       hasUpdate: json['has_update'] as bool? ?? false,
     );
-  }
-
-  bool get requiresNewerApp {
-    if (minAppVersion == null || minAppVersion!.isEmpty) return false;
-    return _compareVersions(minAppVersion!, AppInfo.version) > 0;
   }
 }
 
@@ -224,7 +200,11 @@ class RepoNotifier extends Notifier<RepoState> {
 
   Future<void> _initialize(String cacheDir) async {
     final prefs = await SharedPreferences.getInstance();
-    final savedUrl = prefs.getString(_registryUrlPrefKey) ?? '';
+    final storedUrl = prefs.getString(_registryUrlPrefKey);
+    final savedUrl = storedUrl ?? _defaultRegistryUrl;
+    if (storedUrl == null) {
+      await prefs.setString(_registryUrlPrefKey, _defaultRegistryUrl);
+    }
 
     state = state.copyWith(
       isLoading: true,
@@ -316,7 +296,7 @@ class RepoNotifier extends Notifier<RepoState> {
   Future<void> removeRegistryUrl() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_registryUrlPrefKey);
+      await prefs.setString(_registryUrlPrefKey, '');
 
       await PlatformBridge.clearRepoRegistryUrl();
 

@@ -7,8 +7,8 @@ import 'dart:typed_data';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/audio_analysis_jobs.dart';
-import 'package:mornye/services/music_haptics.dart';
+import 'package:mosix/services/audio_analysis_jobs.dart';
+import 'package:mosix/services/music_haptics.dart';
 
 Uint8List _pcm(double seconds, double Function(double time) sample) {
   final count = (seconds * musicHapticsSampleRate).round();
@@ -245,7 +245,7 @@ void main() {
   );
 
   group('document analysis', () {
-    const channel = MethodChannel('com.zarz.mornye/backend');
+    const channel = MethodChannel('com.zuancrisp.mosix/backend');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     late Directory temporary;

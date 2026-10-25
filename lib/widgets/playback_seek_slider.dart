@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/playback_seek_preview.dart';
-import 'package:mornye/widgets/expressive_seek_track.dart';
-import 'package:mornye/widgets/mornye_player_slider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/playback_seek_preview.dart';
+import 'package:mosix/widgets/expressive_seek_track.dart';
+import 'package:mosix/widgets/mornye_player_slider.dart';
 
 /// Previews scrubbing locally and seeks once when the gesture ends.
 class PlaybackSeekSlider extends StatefulWidget {
@@ -12,7 +12,7 @@ class PlaybackSeekSlider extends StatefulWidget {
   final PlaybackSeekPreview? preview;
   final bool playing;
 
-  /// Mornye only: a hairline track with no side inset, for the desktop
+  /// Mosix only: a hairline track with no side inset, for the desktop
   /// player capsule.
   final bool hairline;
 
@@ -90,7 +90,7 @@ class _PlaybackSeekSliderState extends State<PlaybackSeekSlider> {
     final durationMs = widget.duration.inMilliseconds;
     final enabled = durationMs > 0;
     final maxMs = enabled ? durationMs.toDouble() : 1.0;
-    if (context.isMornye) {
+    if (context.isMosix) {
       final currentMs = (_previewMs ?? widget.position.inMilliseconds)
           .clamp(0, maxMs)
           .toDouble();
@@ -116,7 +116,7 @@ class _PlaybackSeekSliderState extends State<PlaybackSeekSlider> {
               : null,
           child: IgnorePointer(
             ignoring: !enabled,
-            child: MornyePlayerSlider(
+            child: MosixPlayerSlider(
               activeColor:
                   SliderTheme.of(context).activeTrackColor ?? Colors.white,
               inactiveColor:
@@ -127,7 +127,7 @@ class _PlaybackSeekSliderState extends State<PlaybackSeekSlider> {
               height: widget.hairline ? 10 : 44,
               inset: widget.hairline || widget.edgeAligned
                   ? 0
-                  : MornyePlayerSlider.horizontalInset,
+                  : MosixPlayerSlider.horizontalInset,
               onChangeStart: _start,
               onChanged: _preview,
               onChangeEnd: _commit,

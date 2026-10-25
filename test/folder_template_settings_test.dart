@@ -6,16 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/settings/files_settings_page.dart';
-import 'package:mornye/services/backend/native_backend_transport.dart';
-import 'package:mornye/services/backend/rust_ffi_backend.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/settings/files_settings_page.dart';
+import 'package:mosix/services/backend/native_backend_transport.dart';
+import 'package:mosix/services/backend/rust_ffi_backend.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/fixed_settings.dart';
@@ -105,7 +105,7 @@ void main() {
 
   for (final mornye in [false, true]) {
     testWidgets(
-      '${mornye ? 'Mornye' : 'Material'} edits, validates and previews folder templates',
+      '${mornye ? 'Mosix' : 'Material'} edits, validates and previews folder templates',
       (tester) async {
         final desktop = const {
           TargetPlatform.windows,
@@ -118,7 +118,7 @@ void main() {
             : const Size(430, 932);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.reset);
-        const channel = MethodChannel('com.zarz.mornye/backend');
+        const channel = MethodChannel('com.zuancrisp.mosix/backend');
         final messenger = tester.binding.defaultBinaryMessenger;
         messenger.setMockMethodCallHandler(
           channel,
@@ -142,7 +142,7 @@ void main() {
             container: container,
             child: MaterialApp(
               theme: mornye
-                  ? MornyeTheme.build(Brightness.light)
+                  ? MosixTheme.build(Brightness.light)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,

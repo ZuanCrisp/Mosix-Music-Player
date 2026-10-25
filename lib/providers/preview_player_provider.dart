@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/services/playback_deck.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/services/playback_deck.dart';
+import 'package:mosix/utils/logger.dart';
 
 final _log = AppLogger('PreviewPlayer');
 

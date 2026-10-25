@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/utils/lyrics_parser.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
 
 MediaItem _item(
   String id, {

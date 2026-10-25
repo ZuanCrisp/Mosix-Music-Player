@@ -4,7 +4,7 @@ class ConcertCalendarService {
   ConcertCalendarService._();
 
   static const MethodChannel _channel = MethodChannel(
-    'com.zarz.mornye/concert_calendar',
+    'com.zuancrisp.mosix/concert_calendar',
   );
 
   /// Opens the platform calendar editor for a concert. Returns true when the

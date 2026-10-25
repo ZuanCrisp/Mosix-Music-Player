@@ -31,7 +31,7 @@ extension _ArtistScreenDiscography on _ArtistScreenState {
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
               child: Row(
                 children: [
-                  if (!context.isMornye) ...[
+                  if (!context.isMosix) ...[
                     Icon(Icons.download, color: colorScheme.primary),
                     const SizedBox(width: 12),
                   ],
@@ -39,7 +39,7 @@ extension _ArtistScreenDiscography on _ArtistScreenState {
                     child: Text(
                       context.l10n.discographyDownload,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: context.isMornye
+                        fontWeight: context.isMosix
                             ? FontWeight.w600
                             : FontWeight.bold,
                       ),
@@ -48,8 +48,8 @@ extension _ArtistScreenDiscography on _ArtistScreenState {
                 ],
               ),
             ),
-            // Material sheets separate the header by space; dividers are Mornye's.
-            if (context.isMornye) const Divider(height: 1),
+            // Material sheets separate the header by space; dividers are Mosix's.
+            if (context.isMosix) const Divider(height: 1),
             if (albums.isNotEmpty)
               _DiscographyOptionTile(
                 icon: Icons.library_music,
@@ -111,13 +111,13 @@ extension _ArtistScreenDiscography on _ArtistScreenState {
       isScrollControlled: true,
       // The sheet forces the dark theme on its own glass.
       mornyeGlass: false,
-      builder: (sheetContext) => sheetContext.isMornye
+      builder: (sheetContext) => sheetContext.isMosix
           ? Theme(
-              data: MornyeTheme.fromContext(
+              data: MosixTheme.fromContext(
                 sheetContext,
                 brightness: Brightness.dark,
               ),
-              child: MornyeGlassPanel(
+              child: MosixGlassPanel(
                 tintOpacity: 0.78,
                 child: Builder(builder: buildSheet),
               ),
@@ -359,7 +359,7 @@ class _DiscographyOptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    if (context.isMornye) {
+    if (context.isMosix) {
       final textTheme = Theme.of(context).textTheme;
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),

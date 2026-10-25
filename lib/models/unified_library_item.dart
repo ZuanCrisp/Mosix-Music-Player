@@ -1,9 +1,9 @@
-import 'package:mornye/models/library_collections.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/models/download_history.dart';
-import 'package:mornye/models/library_database_models.dart';
-import 'package:mornye/utils/audio_quality_badge_policy.dart';
-import 'package:mornye/utils/string_utils.dart';
+import 'package:mosix/models/library_collections.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/models/download_history.dart';
+import 'package:mosix/models/library_database_models.dart';
+import 'package:mosix/utils/audio_quality_badge_policy.dart';
+import 'package:mosix/utils/string_utils.dart';
 
 enum LibraryItemSource { downloaded, local }
 

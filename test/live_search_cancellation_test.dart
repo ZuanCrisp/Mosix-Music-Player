@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/providers/track_provider.dart';
+import 'package:mosix/providers/track_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -10,7 +10,7 @@ void main() {
   test(
     'latest search wins and A-B-A never reuses a cancelled request',
     () async {
-      const channel = MethodChannel('com.zarz.mornye/backend');
+      const channel = MethodChannel('com.zuancrisp.mosix/backend');
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       final requests = <(String, String, Completer<String>)>[];
@@ -67,7 +67,7 @@ void main() {
     test(
       'clear rejects a pending search ${fails ? 'error' : 'result'}',
       () async {
-        const channel = MethodChannel('com.zarz.mornye/backend');
+        const channel = MethodChannel('com.zuancrisp.mosix/backend');
         final messenger =
             TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
         final response = Completer<String>();
@@ -100,7 +100,7 @@ void main() {
 
   for (final handler in [null, 'clear-url-provider']) {
     test('clear rejects URL preflight completion ($handler)', () async {
-      const channel = MethodChannel('com.zarz.mornye/backend');
+      const channel = MethodChannel('com.zuancrisp.mosix/backend');
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       final response = Completer<String?>();

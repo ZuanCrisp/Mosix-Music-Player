@@ -4,25 +4,25 @@ import 'dart:math' as math;
 import 'package:flutter/cupertino.dart' show CupertinoButton;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/equalizer_settings.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/services/audio_route_info.dart';
-import 'package:mornye/services/music_playback_deck.dart';
-import 'package:mornye/services/music_player_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/services/playback_equalizer.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/int_utils.dart';
-import 'package:mornye/utils/string_utils.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/audio_analysis_widget.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/hires_check_card.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/equalizer_settings.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/services/audio_route_info.dart';
+import 'package:mosix/services/music_playback_deck.dart';
+import 'package:mosix/services/music_player_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/services/playback_equalizer.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/int_utils.dart';
+import 'package:mosix/utils/string_utils.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/audio_analysis_widget.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/hires_check_card.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 /// Technical details of the playing track, from the file through the
 /// processing chain to the output device.
@@ -161,7 +161,7 @@ class _AudioInfoSheetState extends State<_AudioInfoSheet> {
               ),
             ],
             SizedBox(height: context.tokens.gapLg),
-            if (context.isMornye)
+            if (context.isMosix)
               _FactGroup(
                 children: [
                   CupertinoButton(
@@ -210,7 +210,7 @@ class _AudioInfoSheetState extends State<_AudioInfoSheet> {
   }
 }
 
-/// Mornye sheets are glass, so a settings cell color would vanish into them;
+/// Mosix sheets are glass, so a settings cell color would vanish into them;
 /// rows use the translucent control fill, like the track details page.
 class _FactGroup extends StatelessWidget {
   const _FactGroup({required this.children});
@@ -219,13 +219,13 @@ class _FactGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!context.isMornye) {
+    if (!context.isMosix) {
       return SettingsGroup(connected: true, children: children);
     }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Material(
-        color: MornyeTheme.controlFill(context),
+        color: MosixTheme.controlFill(context),
         borderRadius: BorderRadius.circular(28),
         clipBehavior: Clip.antiAlias,
         child: Column(mainAxisSize: MainAxisSize.min, children: children),
@@ -245,8 +245,8 @@ class _FactRow extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final tokens = context.tokens;
-    final mornye = context.isMornye;
-    // Mornye rows line up with the section header, as in iOS inset lists.
+    final mornye = context.isMosix;
+    // Mosix rows line up with the section header, as in iOS inset lists.
     final inset = mornye ? 16.0 : tokens.rowPaddingH;
     final valueStyle =
         (mornye ? theme.textTheme.bodyLarge : theme.textTheme.bodyMedium)
@@ -296,7 +296,7 @@ class _FactRow extends StatelessWidget {
               indent: inset,
               endIndent: mornye ? 0 : inset,
               color: mornye
-                  ? MornyeTheme.metadataDividerColor(context)
+                  ? MosixTheme.metadataDividerColor(context)
                   : colors.outlineVariant.withValues(alpha: 0.3),
             ),
         ],

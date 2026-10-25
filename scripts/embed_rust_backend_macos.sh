@@ -5,7 +5,7 @@
 #
 # The library is built with `bash scripts/build_rust_backend.sh desktop` when
 # the staged copy is missing or older than the Rust sources. Set
-# MORNYE_SKIP_RUST_BUILD=1 to embed a prebuilt staged library as is (CI builds
+# MOSIX_SKIP_RUST_BUILD=1 to embed a prebuilt staged library as is (CI builds
 # it in an earlier step); the app build then fails if none is staged.
 
 set -euo pipefail
@@ -33,13 +33,13 @@ library_is_stale() {
   [[ -n "$newer" ]]
 }
 
-if [[ "${MORNYE_SKIP_RUST_BUILD:-0}" == "1" ]]; then
+if [[ "${MOSIX_SKIP_RUST_BUILD:-0}" == "1" ]]; then
   if [[ ! -f "$STAGED_LIBRARY" ]]; then
-    echo "error: MORNYE_SKIP_RUST_BUILD=1 but $STAGED_LIBRARY is missing. Run: bash scripts/build_rust_backend.sh desktop" >&2
+    echo "error: MOSIX_SKIP_RUST_BUILD=1 but $STAGED_LIBRARY is missing. Run: bash scripts/build_rust_backend.sh desktop" >&2
     exit 1
   fi
 elif library_is_stale; then
-  echo "Building the Rust desktop backend (set MORNYE_SKIP_RUST_BUILD=1 to use a prebuilt library)."
+  echo "Building the Rust desktop backend (set MOSIX_SKIP_RUST_BUILD=1 to use a prebuilt library)."
   # Xcode's environment does not include rustup's default location.
   if ! command -v cargo >/dev/null 2>&1; then
     export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"

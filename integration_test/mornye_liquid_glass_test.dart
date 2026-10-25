@@ -8,11 +8,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/widgets/mornye_liquid_backdrop.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/mornye_selection_pill.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
+import 'package:mosix/widgets/mornye_liquid_backdrop.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mornye_selection_pill.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -22,13 +22,13 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         // Measure the foreground mask independently of the rim's lighting.
-        theme: MornyeTheme.build(Brightness.dark, glassOutlines: false),
+        theme: MosixTheme.build(Brightness.dark, glassOutlines: false),
         home: Center(
           child: RepaintBoundary(
             key: capture,
             child: SizedBox(
               width: 360,
-              child: MornyeSelectionPill(
+              child: MosixSelectionPill(
                 labels: const ['Home', 'Library', 'Repo', 'Search'],
                 selectedIndex: 0,
                 onChanged: (_) {},
@@ -52,14 +52,14 @@ void main() {
       );
     });
     await tester.pumpAndSettle();
-    final row = tester.getRect(find.byType(MornyeSelectionPill));
+    final row = tester.getRect(find.byType(MosixSelectionPill));
     final gesture = await tester.startGesture(
       row.topLeft + const Offset(45, 32),
     );
     await gesture.moveTo(row.topLeft + const Offset(90, 32));
     await tester.pump();
     final lens = find.byWidgetPredicate(
-      (widget) => widget is MornyeLiquidBackdrop && widget.interaction,
+      (widget) => widget is MosixLiquidBackdrop && widget.interaction,
     );
     for (final duration in [
       const Duration(milliseconds: 60),
@@ -155,7 +155,7 @@ void main() {
                         child: RepaintBoundary(
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(40),
-                            child: MornyeLiquidBackdrop(
+                            child: MosixLiquidBackdrop(
                               borderRadius: BorderRadius.circular(40),
                               clarity: 1,
                               blurSigma: 2,
@@ -229,9 +229,9 @@ void main() {
   ) async {
     var selected = 0;
     final changes = <int>[];
-    final theme = MornyeTheme.build(Brightness.dark, glassClarity: 1);
+    final theme = MosixTheme.build(Brightness.dark, glassClarity: 1);
     final lens = find.byWidgetPredicate(
-      (widget) => widget is MornyeLiquidBackdrop && widget.interaction,
+      (widget) => widget is MosixLiquidBackdrop && widget.interaction,
     );
     await tester.pumpWidget(
       ProviderScope(
@@ -273,7 +273,7 @@ void main() {
                   right: 16,
                   bottom: 40,
                   child: StatefulBuilder(
-                    builder: (context, setState) => MornyeTabBar(
+                    builder: (context, setState) => MosixTabBar(
                       destinations: const [
                         NavigationDestination(
                           icon: Icon(Icons.home),
@@ -311,7 +311,7 @@ void main() {
     final pill = find.descendant(
       of: find
           .descendant(
-            of: find.byType(MornyeSelectionPill),
+            of: find.byType(MosixSelectionPill),
             matching: find.byType(AnimatedAlign),
           )
           .first,
@@ -322,7 +322,7 @@ void main() {
       matching: find.byType(DecoratedBox),
     );
     final icons = find.descendant(
-      of: find.byType(MornyeSelectionPill),
+      of: find.byType(MosixSelectionPill),
       matching: find.byType(Icon),
     );
     final iconSizes = [for (final icon in icons.evaluate()) icon.size];
@@ -340,7 +340,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 60));
     expectSingleContour();
     await tester.pumpAndSettle();
-    expect(tester.widget<MornyeLiquidBackdrop>(lens).progress, 1);
+    expect(tester.widget<MosixLiquidBackdrop>(lens).progress, 1);
     expect(find.byType(LiquidGlassLens), findsNWidgets(2));
     expectSingleContour();
     final heldRestingDecoration =
@@ -354,7 +354,7 @@ void main() {
         tester.getBottomRight(lens).dx - tester.getTopLeft(lens).dx;
     expect(heldWidth, greaterThan(tester.getSize(pill).width * 1.2));
     await tester.pump(const Duration(seconds: 1));
-    expect(tester.widget<MornyeLiquidBackdrop>(lens).progress, 1);
+    expect(tester.widget<MosixLiquidBackdrop>(lens).progress, 1);
     expect(changes, isEmpty);
     for (final fraction in [0.35, 0.45, 0.85, 1.2, 1.1, 0.9, 1.5]) {
       final position = Offset(
@@ -387,7 +387,7 @@ void main() {
     expectSingleContour();
     await tester.pumpAndSettle();
     expect(changes, [2]);
-    expect(tester.widget<MornyeLiquidBackdrop>(lens).progress, 0);
+    expect(tester.widget<MosixLiquidBackdrop>(lens).progress, 0);
     expectSingleContour();
     expect(find.byType(LiquidGlassLens), findsOneWidget);
     final cancel = await tester.startGesture(

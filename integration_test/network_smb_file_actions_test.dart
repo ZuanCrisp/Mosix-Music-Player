@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mornye/services/network_storage_service.dart';
-import 'package:mornye/utils/file_access.dart';
+import 'package:mosix/services/network_storage_service.dart';
+import 'package:mosix/utils/file_access.dart';
 
 // Run scripts/smb2_fixture_server.py --deletion first. Only fixture files
 // are deleted; Android emulators use 10.0.2.2 instead of 127.0.0.1.

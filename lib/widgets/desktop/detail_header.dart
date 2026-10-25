@@ -1,17 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/cover_palette.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/player_artwork_theme.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/desktop/context_menu.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/cover_palette.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/player_artwork_theme.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/desktop/context_menu.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 /// Space below a desktop detail page, so its last rows clear the floating
 /// player.
@@ -31,7 +31,7 @@ double desktopDetailArtworkSize(double contentWidth) =>
 /// a Material header takes the accent of its artwork scheme.
 TextStyle desktopDetailSubtitleStyle(BuildContext context) {
   final scheme = Theme.of(context).colorScheme;
-  return context.isMornye
+  return context.isMosix
       ? TextStyle(
           color: scheme.primary,
           fontSize: 24,
@@ -48,7 +48,7 @@ TextStyle desktopDetailSubtitleStyle(BuildContext context) {
 ///
 /// The artwork sits on the left edge of the list below, with the title,
 /// [subtitle] and [meta] centered beside it and [actions] along its bottom
-/// edge. The page background stays plain. Mornye floats a glass back button
+/// edge. The page background stays plain. Mosix floats a glass back button
 /// and a capsule of [appBarActions] over the pane; Material keeps a toolbar
 /// that shows the title once the header scrolls away. [moreMenu] adds a
 /// "More" button that opens those groups as a menu.
@@ -72,7 +72,7 @@ List<Widget> desktopDetailHeaderSlivers(
   Color? backgroundColor,
 }) {
   final theme = Theme.of(context);
-  final mornye = context.isMornye;
+  final mornye = context.isMosix;
   // Lines the artwork up with the description and track table below.
   final inset = wideListInset(context) + 20;
   final more = moreMenu == null ? null : _MoreButton(groups: moreMenu);
@@ -86,7 +86,7 @@ List<Widget> desktopDetailHeaderSlivers(
       double.infinity,
     );
     final radius = circularArtwork ? side / 2 : (mornye ? 12.0 : 20.0);
-    // Mornye draws Apple's continuous corner, as Music does on its covers.
+    // Mosix draws Apple's continuous corner, as Music does on its covers.
     final continuous = mornye && !circularArtwork;
     final corners = BorderRadius.circular(radius);
     final shadows = [
@@ -204,7 +204,7 @@ List<Widget> desktopDetailHeaderSlivers(
           pinned: true,
           automaticallyImplyLeading: false,
           toolbarHeight: _toolbarHeight,
-          // Mornye controls float over the pane, as in Apple Music.
+          // Mosix controls float over the pane, as in Apple Music.
           backgroundColor: mornye
               ? Colors.transparent
               : backgroundColor ?? theme.colorScheme.surface,
@@ -260,7 +260,7 @@ List<Widget> desktopDetailHeaderSlivers(
   ];
 }
 
-/// Mornye page actions grouped in one glass capsule.
+/// Mosix page actions grouped in one glass capsule.
 class _ActionCapsule extends ConsumerWidget {
   const _ActionCapsule({required this.children});
 
@@ -271,7 +271,7 @@ class _ActionCapsule extends ConsumerWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       widthFactor: 1,
-      child: MornyeGlass.navigation(
+      child: MosixGlass.navigation(
         radius: 18,
         tintColor: dark ? Colors.black : Colors.white,
         tintOpacity: dark ? 0.45 : 0.55,
@@ -294,7 +294,7 @@ class _MoreButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => HeaderCircleButton(
-    icon: context.isMornye ? CupertinoIcons.ellipsis : Icons.more_horiz,
+    icon: context.isMosix ? CupertinoIcons.ellipsis : Icons.more_horiz,
     tooltip: MaterialLocalizations.of(context).showMenuTooltip,
     onPressed: () => showContextMenu(
       context,

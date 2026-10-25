@@ -4,10 +4,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/ffmpeg_desktop.dart';
-import 'package:mornye/services/ffmpeg_probe.dart';
-import 'package:mornye/services/ffmpeg_support.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/services/ffmpeg_desktop.dart';
+import 'package:mosix/services/ffmpeg_probe.dart';
+import 'package:mosix/services/ffmpeg_support.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 class _DiscardingConsumer implements StreamConsumer<List<int>> {
   @override
@@ -127,13 +127,13 @@ void main() {
       expect(
         DesktopFFmpegTools.searchDirectories(
           operatingSystem: 'macos',
-          executablePath: '/Applications/Mornye.app/Contents/MacOS/Mornye',
-          environment: {'MORNYE_FFMPEG_DIR': '/opt/ff', 'PATH': '/a:/b'},
+          executablePath: '/Applications/Mosix.app/Contents/MacOS/Mosix',
+          environment: {'MOSIX_FFMPEG_DIR': '/opt/ff', 'PATH': '/a:/b'},
         ),
         [
           '/opt/ff',
-          '/Applications/Mornye.app/Contents/Resources/ffmpeg',
-          '/Applications/Mornye.app/Contents/MacOS',
+          '/Applications/Mosix.app/Contents/Resources/ffmpeg',
+          '/Applications/Mosix.app/Contents/MacOS',
           '/a',
           '/b',
         ],
@@ -149,10 +149,10 @@ void main() {
       expect(
         DesktopFFmpegTools.searchDirectories(
           operatingSystem: 'windows',
-          executablePath: r'C:\Program Files\Mornye\mornye.exe',
+          executablePath: r'C:\Program Files\Mosix\mornye.exe',
           environment: {'PATH': r'C:\tools;;C:\bin'},
         ),
-        [r'C:\Program Files\Mornye\ffmpeg', r'C:\tools', r'C:\bin'],
+        [r'C:\Program Files\Mosix\ffmpeg', r'C:\tools', r'C:\bin'],
       );
     });
 
@@ -166,7 +166,7 @@ void main() {
         operatingSystem: 'linux',
         executablePath: '/opt/mornye/mornye',
         environment: {
-          'MORNYE_FFMPEG_DIR': '/usr/local/bin',
+          'MOSIX_FFMPEG_DIR': '/usr/local/bin',
           'PATH': '/usr/bin',
         },
         isFile: (path) async => existing.contains(path),
@@ -178,11 +178,11 @@ void main() {
     test('appends .exe on Windows and leaves missing tools null', () async {
       final tools = await DesktopFFmpegTools.locate(
         operatingSystem: 'windows',
-        executablePath: r'C:\Mornye\mornye.exe',
+        executablePath: r'C:\Mosix\mornye.exe',
         environment: const {},
-        isFile: (path) async => path == r'C:\Mornye\ffmpeg\ffmpeg.exe',
+        isFile: (path) async => path == r'C:\Mosix\ffmpeg\ffmpeg.exe',
       );
-      expect(tools.ffmpegPath, r'C:\Mornye\ffmpeg\ffmpeg.exe');
+      expect(tools.ffmpegPath, r'C:\Mosix\ffmpeg\ffmpeg.exe');
       expect(tools.ffprobePath, isNull);
     });
   });
@@ -252,7 +252,7 @@ void main() {
           isA<FFmpegUnavailableException>().having(
             (e) => e.message,
             'message',
-            contains('MORNYE_FFMPEG_DIR'),
+            contains('MOSIX_FFMPEG_DIR'),
           ),
         ),
       );

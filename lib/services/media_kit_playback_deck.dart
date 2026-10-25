@@ -4,13 +4,13 @@ import 'dart:math' as math;
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart';
-import 'package:mornye/models/equalizer_settings.dart';
-import 'package:mornye/services/media_kit_audio_filters.dart';
-import 'package:mornye/services/music_playback_deck.dart'
+import 'package:mosix/models/equalizer_settings.dart';
+import 'package:mosix/services/media_kit_audio_filters.dart';
+import 'package:mosix/services/music_playback_deck.dart'
     show UsbDsdUnavailable;
-import 'package:mornye/services/playback_deck.dart';
-import 'package:mornye/services/playback_equalizer.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/services/playback_deck.dart';
+import 'package:mosix/services/playback_equalizer.dart';
+import 'package:mosix/utils/logger.dart';
 
 final _log = AppLogger('MediaKitDeck');
 
@@ -47,12 +47,12 @@ abstract interface class MpvEngine {
 class MediaKitEngine implements MpvEngine {
   MediaKitEngine()
     : _player = NativePlayer(
-        configuration: const PlayerConfiguration(title: 'Mornye'),
+        configuration: const PlayerConfiguration(title: 'Mosix'),
       ) {
     _configured = Future.wait([
       // Names the PulseAudio and PipeWire stream. The app applies ReplayGain
       // itself, so mpv's stays at its default (off).
-      setProperty('audio-client-name', 'Mornye'),
+      setProperty('audio-client-name', 'Mosix'),
       // media_kit caches streams on disk, which fails where the cache folder
       // is not writable and reports a load error. Memory is enough for audio.
       setProperty('cache-on-disk', 'no'),

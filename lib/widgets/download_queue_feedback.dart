@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
 
 /// Presents live queue effects while the application shell is mounted.
 class DownloadQueueFeedback extends ConsumerWidget {

@@ -8,23 +8,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/unified_library_item.dart';
-import 'package:mornye/providers/download_history_provider.dart';
-import 'package:mornye/screens/track_metadata_screen.dart';
-import 'package:mornye/services/batch_metadata_re_enrich.dart';
-import 'package:mornye/services/batch_track_actions.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_switch.dart';
-import 'package:mornye/widgets/batch_convert_sheet.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/re_enrich_field_dialog.dart';
-import 'package:mornye/widgets/selection_action_button.dart';
-import 'package:mornye/widgets/selection_bottom_bar.dart';
-import 'package:mornye/widgets/destructive_selection_button.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/unified_library_item.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/screens/track_metadata_screen.dart';
+import 'package:mosix/services/batch_metadata_re_enrich.dart';
+import 'package:mosix/services/batch_track_actions.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_switch.dart';
+import 'package:mosix/widgets/batch_convert_sheet.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/re_enrich_field_dialog.dart';
+import 'package:mosix/widgets/selection_action_button.dart';
+import 'package:mosix/widgets/selection_bottom_bar.dart';
+import 'package:mosix/widgets/destructive_selection_button.dart';
 
 Widget _app(
   Widget child, {
@@ -32,7 +32,7 @@ Widget _app(
   TargetPlatform? platform,
 }) => ProviderScope(
   child: MaterialApp(
-    theme: MornyeTheme.build(brightness).copyWith(platform: platform),
+    theme: MosixTheme.build(brightness).copyWith(platform: platform),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(body: child),
@@ -47,7 +47,7 @@ Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
 }
 
 void _mockMetadataFile(WidgetTester tester) {
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   final messenger = tester.binding.defaultBinaryMessenger;
   messenger.setMockMethodCallHandler(
     channel,
@@ -78,7 +78,7 @@ void main() {
     FlutterSecureStorage.setMockInitialValues({});
   });
 
-  testWidgets('Mornye selection actions remain accessible on narrow screens', (
+  testWidgets('Mosix selection actions remain accessible on narrow screens', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(320, 780));
@@ -127,7 +127,7 @@ void main() {
   });
 
   for (final brightness in Brightness.values) {
-    testWidgets('Mornye conversion preserves selected options ($brightness)', (
+    testWidgets('Mosix conversion preserves selected options ($brightness)', (
       tester,
     ) async {
       await tester.binding.setSurfaceSize(const Size(390, 844));
@@ -167,7 +167,7 @@ void main() {
   }
 
   testWidgets(
-    'Mornye Re-enrich retains field choices and disables empty review',
+    'Mosix Re-enrich retains field choices and disables empty review',
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(390, 844));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -201,7 +201,7 @@ void main() {
   );
 
   testWidgets(
-    'Mornye ReplayGain cancellation restores selection without analysis',
+    'Mosix ReplayGain cancellation restores selection without analysis',
     (tester) async {
       bool? confirmed;
       var exitedSelection = false;
@@ -269,7 +269,7 @@ void main() {
       expect(find.text('Edit Metadata'), findsOneWidget);
       final lastAction = find.text('Remove from device');
       expect(lastAction.hitTestable(), findsNothing);
-      expect(find.byType(MornyeContextMenu), findsOneWidget);
+      expect(find.byType(MosixContextMenu), findsOneWidget);
       expect(find.byType(BottomSheet), findsNothing);
       for (var drag = 0; drag < 4; drag++) {
         await tester.dragFrom(const Offset(195, 400), const Offset(0, -320));
@@ -298,7 +298,7 @@ void main() {
     });
   }
 
-  testWidgets('Mornye metadata editor keeps edited text and Save available', (
+  testWidgets('Mosix metadata editor keeps edited text and Save available', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(390, 844));
@@ -361,7 +361,7 @@ void main() {
     expect(tester.widget<AppActionButton>(search).onPressed, isNotNull);
     expect(
       tester
-          .widgetList<MornyeFilterChip>(find.byType(MornyeFilterChip))
+          .widgetList<MosixFilterChip>(find.byType(MosixFilterChip))
           .every((chip) => chip.selected),
       isTrue,
     );

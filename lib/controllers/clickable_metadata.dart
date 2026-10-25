@@ -1,20 +1,20 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/artist_screen.dart';
-import 'package:mornye/screens/album_screen.dart';
-import 'package:mornye/screens/extension_collection_screens.dart'
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/artist_screen.dart';
+import 'package:mosix/screens/album_screen.dart';
+import 'package:mosix/screens/extension_collection_screens.dart'
     show ExtensionArtistScreen, ExtensionAlbumScreen;
-import 'package:mornye/services/shell_navigation_service.dart';
-import 'package:mornye/utils/artist_utils.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
+import 'package:mosix/utils/artist_utils.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
 
 final _log = AppLogger('ClickableMetadata');
 

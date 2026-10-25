@@ -131,7 +131,7 @@ extension _TrackMetadataMenu on _TrackMetadataScreenState {
     ColorScheme colorScheme, {
     Rect? anchor,
   }) {
-    if (isDesktopPlatform && !screenContext.isMornye) {
+    if (isDesktopPlatform && !screenContext.isMosix) {
       _showDesktopOptionsMenu(screenContext, ref, colorScheme, anchor: anchor);
       return;
     }
@@ -139,8 +139,8 @@ extension _TrackMetadataMenu on _TrackMetadataScreenState {
       final l10n = sheetContext.l10n;
       final options = _menuOptions(screenContext, ref, colorScheme, l10n);
 
-      if (sheetContext.isMornye) {
-        final groups = <List<MornyeMenuAction>>[];
+      if (sheetContext.isMosix) {
+        final groups = <List<MosixMenuAction>>[];
         for (final option in options) {
           if (option.icon == Icons.share_outlined) {
             continue;
@@ -149,7 +149,7 @@ extension _TrackMetadataMenu on _TrackMetadataScreenState {
             groups.add([]);
           }
           groups.last.add(
-            MornyeMenuAction(
+            MosixMenuAction(
               icon: mornyeIconFor(option.icon),
               label: option.label,
               destructive: option.destructive,
@@ -158,10 +158,10 @@ extension _TrackMetadataMenu on _TrackMetadataScreenState {
             ),
           );
         }
-        return MornyeContextMenu(
+        return MosixContextMenu(
           quickActions: [
             if (_fileExists) ...[
-              MornyeMenuAction(
+              MosixMenuAction(
                 icon: CupertinoIcons.play_fill,
                 label: l10n.trackMetadataPlay,
                 onPressed: () => _closeOptionsMenuAndRun(
@@ -171,7 +171,7 @@ extension _TrackMetadataMenu on _TrackMetadataScreenState {
               ),
             ],
             if (!_isNetworkItem)
-              MornyeMenuAction(
+              MosixMenuAction(
                 icon: CupertinoIcons.share_solid,
                 label: l10n.trackMetadataShare,
                 onPressed: () => _closeOptionsMenuAndRun(
@@ -270,8 +270,8 @@ extension _TrackMetadataMenu on _TrackMetadataScreenState {
       );
     }
 
-    if (screenContext.isMornye) {
-      showMornyeContextMenu<void>(
+    if (screenContext.isMosix) {
+      showMosixContextMenu<void>(
         context: screenContext,
         anchor: anchor,
         builder: buildMenu,

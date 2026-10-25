@@ -29,7 +29,7 @@
   "networkErrorTimeout": "Server tidak merespons tepat waktu. Periksa koneksi lalu coba lagi.",
   "networkErrorAuthentication": "Server menolak login. Periksa nama pengguna, kata sandi, dan domain. Kosongkan domain kecuali server memerlukannya.",
   "networkErrorPermission": "Akun ini tidak diizinkan membuka share atau folder tersebut. Periksa izin bacanya di server.",
-  "networkErrorLocalPermission": "Akses jaringan lokal belum diizinkan. Izinkan Perangkat di sekitar untuk Mornye di pengaturan aplikasi Android, lalu coba lagi.",
+  "networkErrorLocalPermission": "Akses jaringan lokal belum diizinkan. Izinkan Perangkat di sekitar untuk Mosix di pengaturan aplikasi Android, lalu coba lagi.",
   "networkErrorShare": "Share atau folder tidak ditemukan. Untuk SMB, gunakan nama folder yang dibagikan server setelah alamatnya, misalnya smb://server/Music/.",
   "networkErrorProtocol": "Server dan klien SMB ini tidak menemukan protokol yang cocok. Aktifkan SMB2 atau SMB3 di server. SMB1 tidak didukung.",
   "networkErrorAddress": "Periksa alamat server. Gunakan smb://server/share/ untuk SMB, atau alamat http:// maupun https:// untuk WebDAV dan HTTP.",
@@ -211,7 +211,7 @@
   "usbBitPerfectDescription": "Pertahankan kualitas audio di perangkat output yang didukung. Pilih Direct USB atau AAudio Exclusive di bawah; juga, output USB Android butuh Android 14+. Berlaku di lagu selanjutnya, tanpa AutoMix & normalisasi. Mungkin Anda tidak dapat mengatur volume.",
   "usbHardwareVolume": "Volume hardware DAC",
   "usbVolumeWarningTitle": "Periksa volume Anda",
-  "usbVolumeWarning": "Memutar dengan Direct USB akan membuat suara lebih keras dari biasanya, dan tombol volume mungkin tidak akan berfungsi. Pelankan volume DAC atau amplifier Anda sebelum mendengar. Bila mendukung, Mornye mengatur volume DAC pada -40dB saat terhubung; tapi ini tidak menjamin suara akan berada di batas aman.",
+  "usbVolumeWarning": "Memutar dengan Direct USB akan membuat suara lebih keras dari biasanya, dan tombol volume mungkin tidak akan berfungsi. Pelankan volume DAC atau amplifier Anda sebelum mendengar. Bila mendukung, Mosix mengatur volume DAC pada -40dB saat terhubung; tapi ini tidak menjamin suara akan berada di batas aman.",
   "usbVolumeAccept": "Saya paham",
   "usbVolumeUnavailable": "Pemutaran dijeda karena kontrol volume pada hardware DAC tidak dapat diverifikasi. Turunkan volume DAC atau Amplifier, lalu hidupkan volume output tetap bila dibutuhkan lalu putar lagi.",
   "usbFixedVolume": "Izinkan volume tetap output USB",
@@ -235,7 +235,7 @@
   "cacheMotionArtworkDesc": "Video album yang didownload. Menghapusnya tidak akan menghapus file musik dan cover biasa.",
   "nowPlayingVolume": "Volume",
   "@nowPlayingVolume": {
-    "description": "System volume control label in the Mornye player"
+    "description": "System volume control label in the Mosix player"
   },
   "appearanceStyle": "Gaya Aplikasi",
   "appearanceAccentRed": "Merah (default)",
@@ -247,13 +247,13 @@
   "appearanceAccentPink": "Merah muda",
   "appearanceGlassClarity": "Kebeningan kaca",
   "appearanceGlassOutlines": "Garis tepi kaca",
-  "appearanceGlassOutlinesSubtitle": "Tampilkan garis dekoratif di tepi kaca Mornye. Mematikannya tetap mempertahankan blur dan pembiasan.",
-  "appearanceGlassClaritySubtitle": "Atur kebeningan kaca menu dan navigasi Mornye. Kontras teks tetap terjaga.",
+  "appearanceGlassOutlinesSubtitle": "Tampilkan garis dekoratif di tepi kaca Mosix. Mematikannya tetap mempertahankan blur dan pembiasan.",
+  "appearanceGlassClaritySubtitle": "Atur kebeningan kaca menu dan navigasi Mosix. Kontras teks tetap terjaga.",
   "appearanceGlassTinted": "Berwarna",
   "appearanceGlassClear": "Bening",
   "appearanceGlassClarityBlurOff": "Efek kaca mati di perangkat ini. Hidupkan \"{setting}\" untuk atur kebeningan kaca.",
   "@appearanceGlassClarityBlurOff": {
-    "description": "Shown under the disabled glass clarity slider when the device renders Mornye glass without blur. The placeholder is the name of the force-blur toggle.",
+    "description": "Shown under the disabled glass clarity slider when the device renders Mosix glass without blur. The placeholder is the name of the force-blur toggle.",
     "placeholders": {
       "setting": {
         "type": "String"
@@ -271,7 +271,7 @@
   },
   "@@locale": "id",
   "@@last_modified": "2026-04-28",
-  "appName": "Mornye",
+  "appName": "Mosix",
   "@appName": {
     "description": "App name - DO NOT TRANSLATE"
   },
@@ -931,7 +931,7 @@
   "@setupStorageRequired": {
     "description": "Title when storage permission needed"
   },
-  "setupStorageDescription": "Mornye butuh akses penyimpanan untuk menyimpan hasil download Anda.",
+  "setupStorageDescription": "Mosix butuh akses penyimpanan untuk menyimpan hasil download Anda.",
   "@setupStorageDescription": {
     "description": "Explanation for storage permission"
   },
@@ -1555,19 +1555,6 @@
   "updateNewVersionReady": "Versi baru tersedia",
   "@updateNewVersionReady": {
     "description": "Update subtitle"
-  },
-  "updateRequiredTitle": "Harus update",
-  "@updateRequiredTitle": {
-    "description": "Title of the mandatory update dialog shown when the installed version is too old"
-  },
-  "updateRequiredNotice": "Versi yang Anda gunakan, {count} sudah tidak didukung. Update untuk terus menggunakan aplikasi.",
-  "@updateRequiredNotice": {
-    "description": "Subtitle of the mandatory update dialog; explains why the dialog cannot be dismissed",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "updateCurrent": "Saat ini",
   "@updateCurrent": {
@@ -2859,7 +2846,7 @@
   "@libraryRemoveFolder": {
     "description": "Action to remove one indexed library source"
   },
-  "libraryRemoveFolderMessage": "Hapus folder ini dan lagu di dalamnya dari Mornye? File audio di perangkat tidak akan dihapus.",
+  "libraryRemoveFolderMessage": "Hapus folder ini dan lagu di dalamnya dari Mosix? File audio di perangkat tidak akan dihapus.",
   "@libraryRemoveFolderMessage": {
     "description": "Confirmation shown before removing a library source"
   },
@@ -3049,13 +3036,13 @@
   "@libraryStorageAccessRequired": {
     "description": "Dialog title for storage permission"
   },
-  "libraryStorageAccessMessage": "Mornye butuh akses penyimpanan untuk memindai Koleksi musik Anda. Mohon berikan perizinan di Setelan.",
+  "libraryStorageAccessMessage": "Mosix butuh akses penyimpanan untuk memindai Koleksi musik Anda. Mohon berikan perizinan di Setelan.",
   "@libraryStorageAccessMessage": {
     "description": "Dialog message for storage permission"
   },
   "librarySourceDownloaded": "Didownload",
   "@librarySourceDownloaded": {
-    "description": "Badge for tracks downloaded via Mornye"
+    "description": "Badge for tracks downloaded via Mosix"
   },
   "librarySourceLocal": "Lokal",
   "@librarySourceLocal": {
@@ -3191,11 +3178,11 @@
       }
     }
   },
-  "tutorialWelcomeTitle": "Selamat datang di Mornye!",
+  "tutorialWelcomeTitle": "Selamat datang di Mosix!",
   "@tutorialWelcomeTitle": {
     "description": "Tutorial welcome page title"
   },
-  "tutorialWelcomeDesc": "Pelajari cara menemukan musik dengan ekstensi, pilih kualitas yang Anda inginkan, dan atur download-nya di Mornye.",
+  "tutorialWelcomeDesc": "Pelajari cara menemukan musik dengan ekstensi, pilih kualitas yang Anda inginkan, dan atur download-nya di Mosix.",
   "@tutorialWelcomeDesc": {
     "description": "Tutorial welcome page description"
   },
@@ -4324,7 +4311,7 @@
   "@safMigrationTitle": {
     "description": "Title of SAF migration dialog"
   },
-  "safMigrationMessage1": "Mornye kini menggunakan Android Storage Access (SAF) untuk mendownload. Ini memperbaiki eror \"izin ditolak\" di Android 10+.",
+  "safMigrationMessage1": "Mosix kini menggunakan Android Storage Access (SAF) untuk mendownload. Ini memperbaiki eror \"izin ditolak\" di Android 10+.",
   "@safMigrationMessage1": {
     "description": "First paragraph of SAF migration dialog"
   },
@@ -4404,7 +4391,7 @@
   "@backupRestoreFailed": {
     "description": "Snackbar when restore fails"
   },
-  "backupInvalidFile": "File ini bukan cadangan Mornye yang valid",
+  "backupInvalidFile": "File ini bukan cadangan Mosix yang valid",
   "@backupInvalidFile": {
     "description": "Snackbar when the chosen file is not a valid backup"
   },
@@ -4588,9 +4575,9 @@
     "description": "Subtitle shown in the download location picker sheet"
   },
   "storageAutomaticFolder": "Folder bawaan",
-  "storageAutomaticDownloadFolder": "Menyimpan di folder Download/Mornye, atau di data aplikasi",
+  "storageAutomaticDownloadFolder": "Menyimpan di folder Download/Mosix, atau di data aplikasi",
   "storageSafRecommended": "Pilih folder (Disarankan)",
-  "storageDownloadFolderHint": "Begitu pemilih folder Android terbuka, buka folder Download dan pilih Mornye. Jika belum ada, buat folder baru, lalu ketuk Gunakan folder ini untuk memberi akses.",
+  "storageDownloadFolderHint": "Begitu pemilih folder Android terbuka, buka folder Download dan pilih Mosix. Jika belum ada, buat folder baru, lalu ketuk Gunakan folder ini untuk memberi akses.",
   "downloadFolderAccessLostTitle": "Akses folder download hilang",
   "@downloadFolderAccessLostTitle": {
     "description": "Title of the warning banner shown in Files settings when the saved SAF folder grant is no longer valid"
@@ -5552,7 +5539,7 @@
       }
     }
   },
-  "notifDownloadingUpdate": "Mendownload Mornye v{version}",
+  "notifDownloadingUpdate": "Mendownload Mosix v{version}",
   "@notifDownloadingUpdate": {
     "description": "Notification title while downloading an app update",
     "placeholders": {
@@ -5580,7 +5567,7 @@
   "@notifUpdateReady": {
     "description": "Notification title when app update download is complete"
   },
-  "notifUpdateReadyBody": "Mornye v{version} didownload. Ketuk untuk instal.",
+  "notifUpdateReadyBody": "Mosix v{version} didownload. Ketuk untuk instal.",
   "@notifUpdateReadyBody": {
     "description": "Notification body when app update is ready to install",
     "placeholders": {
@@ -6348,7 +6335,7 @@
   "@extensionCustomUrlHandlingSubtitle": {
     "description": "Extension detail subtitle for custom URL handling"
   },
-  "extensionCustomUrlHandlingShareHint": "Bagikan link dari situs ini ke Mornye dan ekstensi ini akan menanganinya.",
+  "extensionCustomUrlHandlingShareHint": "Bagikan link dari situs ini ke Mosix dan ekstensi ini akan menanganinya.",
   "@extensionCustomUrlHandlingShareHint": {
     "description": "Extension detail hint explaining share-to-app URL handling"
   },
@@ -6558,7 +6545,7 @@
   "@libraryBuiltInPreviewPlayer": {
     "description": "Setting option to use the built-in preview player"
   },
-  "libraryBuiltInPreviewPlayerSubtitle": "Putar musik langsung di Mornye",
+  "libraryBuiltInPreviewPlayerSubtitle": "Putar musik langsung di Mosix",
   "@libraryBuiltInPreviewPlayerSubtitle": {
     "description": "Subtitle for built-in preview player option"
   },
@@ -7035,11 +7022,11 @@
   "@extensionVerificationHelpTitleWaiting": {
     "description": "Dialog title when verification is taking longer than expected"
   },
-  "extensionVerificationHelpMessageManual": "Mornye tidak dapat membuka browser secara otomatis. Buka link ini di browser Anda, atau salin manual.",
+  "extensionVerificationHelpMessageManual": "Mosix tidak dapat membuka browser secara otomatis. Buka link ini di browser Anda, atau salin manual.",
   "@extensionVerificationHelpMessageManual": {
     "description": "Dialog message when automatic browser launch for verification fails"
   },
-  "extensionVerificationHelpMessageWaiting": "Jika browser tidak terbuka, atau verifikasi berhasil tapi tidak langsung kembali ke Mornye, buka link ini lagu atau salin manual.",
+  "extensionVerificationHelpMessageWaiting": "Jika browser tidak terbuka, atau verifikasi berhasil tapi tidak langsung kembali ke Mosix, buka link ini lagu atau salin manual.",
   "@extensionVerificationHelpMessageWaiting": {
     "description": "Dialog message when verification may need manual browser help"
   },
@@ -7148,7 +7135,7 @@
   "@playerCoverStyleFullScreen": {
     "description": "Cover art style: artwork fills the top of the player"
   },
-  "playerCoverStyleFullScreenDescription": "Artwork memenuhi bagian atas player lalu memudar menjadi blur. Artwork bergerak di Mornye selalu layar penuh",
+  "playerCoverStyleFullScreenDescription": "Artwork memenuhi bagian atas player lalu memudar menjadi blur. Artwork bergerak di Mosix selalu layar penuh",
   "@playerCoverStyleFullScreenDescription": {
     "description": "Subtitle of the full screen cover art style"
   },
@@ -7242,7 +7229,7 @@
   "equalizerPresetName": "Nama preset",
   "equalizerImport": "Impor preset",
   "equalizerExport": "Bagikan preset",
-  "equalizerImportInvalid": "Pilih preset equalizer Mornye yang valid (JSON, maksimal 64 KB).",
+  "equalizerImportInvalid": "Pilih preset equalizer Mosix yang valid (JSON, maksimal 64 KB).",
   "equalizerSaved": "Preset disimpan",
   "equalizerResetTitle": "Reset equalizer?",
   "equalizerResetDescription": "Kembalikan kurva datar serta pengaturan nada dan dinamika bawaan. Preset tersimpan tetap disimpan.",
@@ -7302,7 +7289,7 @@
   "audioInfoOff": "Nonaktif",
   "audioInfoBypassed": "Dilewati oleh output langsung",
   "audioInfoPlayer": "Pemutar",
-  "audioInfoPlayerValue": "Pemutar bawaan Mornye",
+  "audioInfoPlayerValue": "Pemutar bawaan Mosix",
   "audioInfoSignalPath": "Jalur sinyal",
   "audioInfoPathSystem": "Mixer sistem",
   "audioInfoPathDirect": "USB langsung, melewati mixer sistem",

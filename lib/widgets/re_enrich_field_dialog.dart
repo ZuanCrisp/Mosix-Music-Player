@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/widgets/app_checkbox.dart';
-import 'package:mornye/widgets/app_text_field.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/widgets/app_checkbox.dart';
+import 'package:mosix/widgets/app_text_field.dart';
 import '../l10n/app_localizations.dart';
-import 'package:mornye/services/batch_metadata_re_enrich.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/services/batch_metadata_re_enrich.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 Future<ReEnrichFieldSelection?> showReEnrichFieldDialog(
   BuildContext context, {
@@ -259,7 +259,7 @@ class _ReEnrichFieldSheetState extends State<_ReEnrichFieldSheet> {
                     if (index > 0) const Divider(height: 1),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-                      child: context.isMornye
+                      child: context.isMosix
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -284,7 +284,7 @@ class _ReEnrichFieldSheetState extends State<_ReEnrichFieldSheet> {
                                     vertical: 12,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: MornyeTheme.controlFill(context),
+                                    color: MosixTheme.controlFill(context),
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                 ),
@@ -345,7 +345,7 @@ class _ReEnrichFieldSheetState extends State<_ReEnrichFieldSheet> {
   }
 
   Widget _options({required List<Widget> children, bool grouped = true}) {
-    if (!context.isMornye) {
+    if (!context.isMosix) {
       return SettingsGroup(
         connected: true,
         children: [
@@ -359,7 +359,7 @@ class _ReEnrichFieldSheetState extends State<_ReEnrichFieldSheet> {
       padding: EdgeInsets.symmetric(horizontal: grouped ? 16 : 4, vertical: 4),
       child: grouped
           ? Material(
-              color: MornyeTheme.controlFill(context),
+              color: MosixTheme.controlFill(context),
               borderRadius: BorderRadius.circular(28),
               clipBehavior: Clip.antiAlias,
               child: content,
@@ -376,7 +376,7 @@ class _ReEnrichFieldSheetState extends State<_ReEnrichFieldSheet> {
   }) {
     void select() => setState(() => _mode = mode);
     final scheme = Theme.of(context).colorScheme;
-    if (!context.isMornye) {
+    if (!context.isMosix) {
       return ListTile(
         leading: Icon(icon),
         title: Text(title),
@@ -436,7 +436,7 @@ class _ReEnrichFieldSheetState extends State<_ReEnrichFieldSheet> {
     required ValueChanged<bool?> onChanged,
     IconData? icon,
   }) {
-    if (!context.isMornye) {
+    if (!context.isMosix) {
       return AppCheckboxListTile(
         title: Text(title),
         value: value,

@@ -1,12 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/services/shell_navigation_service.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/desktop/desktop_inspector.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/desktop/desktop_inspector.dart';
 
-export 'package:mornye/widgets/desktop/desktop_inspector.dart'
+export 'package:mosix/widgets/desktop/desktop_inspector.dart'
     show DesktopInspectorPanel, toggleDesktopInspector;
 
 /// App-wide desktop commands. Each one has one keyboard shortcut, mirrored in
@@ -219,7 +219,7 @@ String desktopDestinationTooltip(
 }
 
 /// Desktop destinations in rail or sidebar order. Cmd/Ctrl+1..5 select them
-/// by position. Mornye reaches Search from the sidebar search field.
+/// by position. Mosix reaches Search from the sidebar search field.
 List<ShellTab> desktopDestinationTabs({
   required bool mornye,
   required bool showStore,

@@ -10,15 +10,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/app_state_database.dart';
-import 'package:mornye/services/ffmpeg_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/app_state_database.dart';
+import 'package:mosix/services/ffmpeg_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
 
 class _Paths extends PathProviderPlatform {
   _Paths(this._path);

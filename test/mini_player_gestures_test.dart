@@ -4,12 +4,12 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mini_player.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mini_player.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Controller implements MusicPlayerController {
@@ -37,8 +37,8 @@ void main() {
 
   for (final configuration in [
     (name: 'Material', mornye: false, compact: false),
-    (name: 'Mornye', mornye: true, compact: false),
-    (name: 'Mornye compact', mornye: true, compact: true),
+    (name: 'Mosix', mornye: true, compact: false),
+    (name: 'Mosix compact', mornye: true, compact: true),
   ]) {
     Future<_Controller> pumpPlayer(
       WidgetTester tester, {
@@ -67,7 +67,7 @@ void main() {
           ],
           child: MaterialApp(
             theme: configuration.mornye
-                ? MornyeTheme.build(Brightness.light)
+                ? MosixTheme.build(Brightness.light)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

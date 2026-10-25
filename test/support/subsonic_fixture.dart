@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:mornye/services/network_storage_service.dart';
+import 'package:mosix/services/network_storage_service.dart';
 
 class SubsonicFixture {
   SubsonicFixture._(this.server, this.secure) {

@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/providers/weekly_releases_provider.dart';
-import 'package:mornye/screens/listening_statistics_screen.dart';
-import 'package:mornye/screens/weekly_releases_screen.dart';
-import 'package:mornye/services/listening_statistics.dart';
-import 'package:mornye/services/weekly_releases.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/player_artwork.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/providers/weekly_releases_provider.dart';
+import 'package:mosix/screens/listening_statistics_screen.dart';
+import 'package:mosix/screens/weekly_releases_screen.dart';
+import 'package:mosix/services/listening_statistics.dart';
+import 'package:mosix/services/weekly_releases.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/player_artwork.dart';
 
 import 'support/fixed_settings.dart';
 
 void main() {
   for (final mornye in [false, true]) {
     Widget app(Widget page) => MaterialApp(
-      theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+      theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: page,

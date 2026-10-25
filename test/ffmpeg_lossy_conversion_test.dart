@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/ffmpeg_desktop.dart';
-import 'package:mornye/services/ffmpeg_service.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/services/ffmpeg_desktop.dart';
+import 'package:mosix/services/ffmpeg_service.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 Map<String, Uint8List> _itunesAtoms(Uint8List file) {
   var start = 0;

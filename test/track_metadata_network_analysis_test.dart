@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/screens/track_metadata_screen.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/services/network_storage_service.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/audio_analysis_widget.dart';
-import 'package:mornye/widgets/hires_check_card.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/screens/track_metadata_screen.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/services/network_storage_service.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/audio_analysis_widget.dart';
+import 'package:mosix/widgets/hires_check_card.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +38,7 @@ void main() {
   });
   for (final mornye in [false, true]) {
     for (final protocol in NetworkProtocol.values) {
-      testWidgets('network delete capability: $protocol (Mornye=$mornye)', (
+      testWidgets('network delete capability: $protocol (Mosix=$mornye)', (
         tester,
       ) async {
         final item = LocalLibraryItem(
@@ -53,7 +53,7 @@ void main() {
           ProviderScope(
             child: MaterialApp(
               theme: mornye
-                  ? MornyeTheme.build(Brightness.dark)
+                  ? MosixTheme.build(Brightness.dark)
                   : ThemeData.dark(useMaterial3: true),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
@@ -99,7 +99,7 @@ void main() {
     }
     for (final format in ['flac', 'wav', 'mp3']) {
       testWidgets(
-        'network $format exposes supported analysers (Mornye=$mornye)',
+        'network $format exposes supported analysers (Mosix=$mornye)',
         (tester) async {
           final item = LocalLibraryItem(
             id: 'network://fixture/track.$format',
@@ -113,7 +113,7 @@ void main() {
             ProviderScope(
               child: MaterialApp(
                 theme: mornye
-                    ? MornyeTheme.build(Brightness.dark)
+                    ? MosixTheme.build(Brightness.dark)
                     : ThemeData.dark(useMaterial3: true),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,

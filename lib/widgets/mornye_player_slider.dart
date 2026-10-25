@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 /// A continuous player track with no thumb in either gesture state.
-class MornyePlayerSlider extends StatelessWidget {
+class MosixPlayerSlider extends StatelessWidget {
   static const horizontalInset = 8.0;
 
-  const MornyePlayerSlider({
+  const MosixPlayerSlider({
     super.key,
     required this.value,
     required this.onChanged,

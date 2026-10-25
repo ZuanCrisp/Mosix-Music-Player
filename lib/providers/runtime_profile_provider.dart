@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/providers/settings_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
 
 /// True on low-end hardware (arm32-only or low-RAM, resolved at startup in
 /// main.dart via a ProviderScope override). UI uses it to skip expensive
@@ -31,8 +31,8 @@ final mornyeGlassContrastBlockedProvider = Provider.family<bool, bool>(
       !ref.watch(settingsProvider.select((s) => s.forceBackdropBlur)),
 );
 
-/// How much of Mornye's glass the device renders.
-enum MornyeGlassLevel {
+/// How much of Mosix's glass the device renders.
+enum MosixGlassLevel {
   /// Opaque surfaces; no backdrop sampling.
   flat,
 
@@ -43,22 +43,22 @@ enum MornyeGlassLevel {
   liquid,
 }
 
-final mornyeGlassLevelProvider = Provider<MornyeGlassLevel>((ref) {
+final mornyeGlassLevelProvider = Provider<MosixGlassLevel>((ref) {
   final lowEnd = ref.watch(lowEndDeviceProvider);
   if (!lowEnd && ref.watch(deviceSupportsLiquidGlassProvider)) {
-    return MornyeGlassLevel.liquid;
+    return MosixGlassLevel.liquid;
   }
   // The user's "always use blur effects" override restores the full material.
-  if (ref.watch(backdropBlurEnabledProvider)) return MornyeGlassLevel.liquid;
-  return lowEnd ? MornyeGlassLevel.flat : MornyeGlassLevel.frosted;
+  if (ref.watch(backdropBlurEnabledProvider)) return MosixGlassLevel.liquid;
+  return lowEnd ? MosixGlassLevel.flat : MosixGlassLevel.frosted;
 });
 
-/// Backdrop blur for Mornye surfaces (frosted or liquid).
+/// Backdrop blur for Mosix surfaces (frosted or liquid).
 final mornyeBlurEnabledProvider = Provider<bool>(
-  (ref) => ref.watch(mornyeGlassLevelProvider) != MornyeGlassLevel.flat,
+  (ref) => ref.watch(mornyeGlassLevelProvider) != MosixGlassLevel.flat,
 );
 
 /// Higher-quality glass and continuously filtered artwork / lyric effects.
 final mornyeLiquidGlassProvider = Provider<bool>(
-  (ref) => ref.watch(mornyeGlassLevelProvider) == MornyeGlassLevel.liquid,
+  (ref) => ref.watch(mornyeGlassLevelProvider) == MosixGlassLevel.liquid,
 );

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/utils/duplicate_cleanup_policy.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/utils/duplicate_cleanup_policy.dart';
 
 IsrcDuplicateEntry _entry(String id) {
   return IsrcDuplicateEntry(

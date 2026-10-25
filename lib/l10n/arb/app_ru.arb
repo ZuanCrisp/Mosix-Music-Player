@@ -7,7 +7,7 @@
   "usbBitPerfectDescription": "Сохранение исходной точности для поддерживаемых выходов. Ниже выберите прямой USB-выход или эксклюзивный режим AAudio; в противном случае для вывода USB требуется Android 14 или новее. Параметр применяется со следующего трека без учета AutoMix и нормализации. Системная громкость может не регулировать прямой вывод USB.",
   "usbHardwareVolume": "Аппаратная громкость ЦАПа",
   "usbVolumeWarningTitle": "Проверьте уровень громкости",
-  "usbVolumeWarning": "Прямое воспроизведение через USB-аудио может быть намного громче стандартного, а аппаратные кнопки громкости могут его не регулировать. Снизьте громкость на вашем ЦАП или усилителе до начала воспроизведения. Когда устройство поддерживается, Mornye при подключении выставляет на ЦАП уровень не выше −40 дБ, но это не гарантирует безопасную громкость на каждом усилителе или наушниках.",
+  "usbVolumeWarning": "Прямое воспроизведение через USB-аудио может быть намного громче стандартного, а аппаратные кнопки громкости могут его не регулировать. Снизьте громкость на вашем ЦАП или усилителе до начала воспроизведения. Когда устройство поддерживается, Mosix при подключении выставляет на ЦАП уровень не выше −40 дБ, но это не гарантирует безопасную громкость на каждом усилителе или наушниках.",
   "usbVolumeAccept": "Я понимаю",
   "usbVolumeUnavailable": "Воспроизведение приостановлено, так как у данного ЦАП не обнаружено проверенного аппаратного управления громкостью. Уменьшите громкость на ЦАП или усилителе, при необходимости включите вывод с фиксированной громкостью и выберите трек заново.",
   "usbFixedVolume": "Разрешить вывод по USB с фиксированной громкостью",
@@ -31,7 +31,7 @@
   "cacheMotionArtworkDesc": "Видео из альбомов сохраняются вместе с загруженными файлами. При их удалении музыкальные файлы и статичные обложки остаются.",
   "nowPlayingVolume": "Громкость",
   "@nowPlayingVolume": {
-    "description": "System volume control label in the Mornye player"
+    "description": "System volume control label in the Mosix player"
   },
   "appearanceStyle": "Стиль приложения",
   "appearanceAccentRed": "Красный (по умолчанию)",
@@ -42,12 +42,12 @@
   "appearanceAccentPurple": "Фиолетовый",
   "appearanceAccentPink": "Розовый",
   "appearanceGlassClarity": "Glass clarity",
-  "appearanceGlassClaritySubtitle": "Adjust transparency in Mornye menus and navigation. Text contrast is preserved.",
+  "appearanceGlassClaritySubtitle": "Adjust transparency in Mosix menus and navigation. Text contrast is preserved.",
   "appearanceGlassTinted": "Tinted",
   "appearanceGlassClear": "Clear",
   "appearanceGlassClarityBlurOff": "Glass is opaque on this device. Turn on “{setting}” to adjust clarity.",
   "@appearanceGlassClarityBlurOff": {
-    "description": "Shown under the disabled glass clarity slider when the device renders Mornye glass without blur. The placeholder is the name of the force-blur toggle.",
+    "description": "Shown under the disabled glass clarity slider when the device renders Mosix glass without blur. The placeholder is the name of the force-blur toggle.",
     "placeholders": {
       "setting": {
         "type": "String"
@@ -65,7 +65,7 @@
   },
   "@@locale": "ru",
   "@@last_modified": "2026-04-28",
-  "appName": "Mornye",
+  "appName": "Mosix",
   "@appName": {
     "description": "App name - DO NOT TRANSLATE"
   },
@@ -708,7 +708,7 @@
   "@setupStorageRequired": {
     "description": "Title when storage permission needed"
   },
-  "setupStorageDescription": "Mornye требуется разрешение на хранение для сохранения скачанных файлов.",
+  "setupStorageDescription": "Mosix требуется разрешение на хранение для сохранения скачанных файлов.",
   "@setupStorageDescription": {
     "description": "Explanation for storage permission"
   },
@@ -1332,19 +1332,6 @@
   "updateNewVersionReady": "Доступна новая версия",
   "@updateNewVersionReady": {
     "description": "Update subtitle"
-  },
-  "updateRequiredTitle": "Требуется обновление",
-  "@updateRequiredTitle": {
-    "description": "Title of the mandatory update dialog shown when the installed version is too old"
-  },
-  "updateRequiredNotice": "Эта версия {count} больше не поддерживается. Обновите, чтобы продолжить использовать приложение.",
-  "@updateRequiredNotice": {
-    "description": "Subtitle of the mandatory update dialog; explains why the dialog cannot be dismissed",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "updateCurrent": "Текущая",
   "@updateCurrent": {
@@ -2627,7 +2614,7 @@
   "@libraryRemoveFolder": {
     "description": "Action to remove one indexed library source"
   },
-  "libraryRemoveFolderMessage": "Удалить эту папку и проиндексированные треки из Mornye? Аудио файлы на накопителе не будут удалены.",
+  "libraryRemoveFolderMessage": "Удалить эту папку и проиндексированные треки из Mosix? Аудио файлы на накопителе не будут удалены.",
   "@libraryRemoveFolderMessage": {
     "description": "Confirmation shown before removing a library source"
   },
@@ -2787,13 +2774,13 @@
   "@libraryStorageAccessRequired": {
     "description": "Dialog title for storage permission"
   },
-  "libraryStorageAccessMessage": "Mornye требуется доступ к хранилищу для сканирования вашей медиатеки. Пожалуйста, предоставьте разрешение в настройках.",
+  "libraryStorageAccessMessage": "Mosix требуется доступ к хранилищу для сканирования вашей медиатеки. Пожалуйста, предоставьте разрешение в настройках.",
   "@libraryStorageAccessMessage": {
     "description": "Dialog message for storage permission"
   },
   "librarySourceDownloaded": "Скачанные",
   "@librarySourceDownloaded": {
-    "description": "Badge for tracks downloaded via Mornye"
+    "description": "Badge for tracks downloaded via Mosix"
   },
   "librarySourceLocal": "Локальные",
   "@librarySourceLocal": {
@@ -2921,11 +2908,11 @@
       }
     }
   },
-  "tutorialWelcomeTitle": "Добро пожаловать в Mornye!",
+  "tutorialWelcomeTitle": "Добро пожаловать в Mosix!",
   "@tutorialWelcomeTitle": {
     "description": "Tutorial welcome page title"
   },
-  "tutorialWelcomeDesc": "Узнайте, как находить музыку с помощью расширений, выбирать желаемое качество и управлять загрузками в Mornye.",
+  "tutorialWelcomeDesc": "Узнайте, как находить музыку с помощью расширений, выбирать желаемое качество и управлять загрузками в Mosix.",
   "@tutorialWelcomeDesc": {
     "description": "Tutorial welcome page description"
   },
@@ -4007,7 +3994,7 @@
   "@safMigrationTitle": {
     "description": "Title of SAF migration dialog"
   },
-  "safMigrationMessage1": "Теперь Mornye использует Android Storage Access Framework (SAF) для загрузки файлов. Это устраняет ошибки «доступ запрещен» на устройствах с Android 10 и выше.",
+  "safMigrationMessage1": "Теперь Mosix использует Android Storage Access Framework (SAF) для загрузки файлов. Это устраняет ошибки «доступ запрещен» на устройствах с Android 10 и выше.",
   "@safMigrationMessage1": {
     "description": "First paragraph of SAF migration dialog"
   },
@@ -4087,7 +4074,7 @@
   "@backupRestoreFailed": {
     "description": "Snackbar when restore fails"
   },
-  "backupInvalidFile": "Этот файл не является резервной копией Mornye",
+  "backupInvalidFile": "Этот файл не является резервной копией Mosix",
   "@backupInvalidFile": {
     "description": "Snackbar when the chosen file is not a valid backup"
   },
@@ -4271,9 +4258,9 @@
     "description": "Subtitle shown in the download location picker sheet"
   },
   "storageAutomaticFolder": "Автоматическая папка",
-  "storageAutomaticDownloadFolder": "Использует папку «Download/Mornye», если она доступна для записи, в противном случае используется хранилище приложения",
+  "storageAutomaticDownloadFolder": "Использует папку «Download/Mosix», если она доступна для записи, в противном случае используется хранилище приложения",
   "storageSafRecommended": "Выбрать папку (Рекомендуется)",
-  "storageDownloadFolderHint": "В окне выбора папок Android откройте папку «Загрузки» и выберите Mornye. Если этой папки нет, создайте её, нажав «Новая папка», а затем нажмите «Использовать эту папку», чтобы предоставить доступ.",
+  "storageDownloadFolderHint": "В окне выбора папок Android откройте папку «Загрузки» и выберите Mosix. Если этой папки нет, создайте её, нажав «Новая папка», а затем нажмите «Использовать эту папку», чтобы предоставить доступ.",
   "downloadFolderAccessLostTitle": "Доступ к папке загрузок потерян",
   "@downloadFolderAccessLostTitle": {
     "description": "Title of the warning banner shown in Files settings when the saved SAF folder grant is no longer valid"
@@ -5216,7 +5203,7 @@
       }
     }
   },
-  "notifDownloadingUpdate": "Скачивание Mornye v{version}",
+  "notifDownloadingUpdate": "Скачивание Mosix v{version}",
   "@notifDownloadingUpdate": {
     "description": "Notification title while downloading an app update",
     "placeholders": {
@@ -5244,7 +5231,7 @@
   "@notifUpdateReady": {
     "description": "Notification title when app update download is complete"
   },
-  "notifUpdateReadyBody": "Mornye v{version} скачана. Нажмите, чтобы установить.",
+  "notifUpdateReadyBody": "Mosix v{version} скачана. Нажмите, чтобы установить.",
   "@notifUpdateReadyBody": {
     "description": "Notification body when app update is ready to install",
     "placeholders": {
@@ -6012,7 +5999,7 @@
   "@extensionCustomUrlHandlingSubtitle": {
     "description": "Extension detail subtitle for custom URL handling"
   },
-  "extensionCustomUrlHandlingShareHint": "Отправляйте ссылки с этих сайтов в Mornye, и это расширение обработает их.",
+  "extensionCustomUrlHandlingShareHint": "Отправляйте ссылки с этих сайтов в Mosix, и это расширение обработает их.",
   "@extensionCustomUrlHandlingShareHint": {
     "description": "Extension detail hint explaining share-to-app URL handling"
   },
@@ -6222,7 +6209,7 @@
   "@libraryBuiltInPreviewPlayer": {
     "description": "Setting option to use the built-in preview player"
   },
-  "libraryBuiltInPreviewPlayerSubtitle": "Слушайте музыку прямо в Mornye",
+  "libraryBuiltInPreviewPlayerSubtitle": "Слушайте музыку прямо в Mosix",
   "@libraryBuiltInPreviewPlayerSubtitle": {
     "description": "Subtitle for built-in preview player option"
   },
@@ -6690,11 +6677,11 @@
   "@extensionVerificationHelpTitleWaiting": {
     "description": "Dialog title when verification is taking longer than expected"
   },
-  "extensionVerificationHelpMessageManual": "Mornye не смог автоматически открыть браузер. Откройте эту ссылку в браузере или скопируйте её вручную.",
+  "extensionVerificationHelpMessageManual": "Mosix не смог автоматически открыть браузер. Откройте эту ссылку в браузере или скопируйте её вручную.",
   "@extensionVerificationHelpMessageManual": {
     "description": "Dialog message when automatic browser launch for verification fails"
   },
-  "extensionVerificationHelpMessageWaiting": "Если окно браузера не открылось либо проверка завершилась, но приложение Mornye не открылось автоматически, перейдите по ссылке повторно или скопируйте её вручную.",
+  "extensionVerificationHelpMessageWaiting": "Если окно браузера не открылось либо проверка завершилась, но приложение Mosix не открылось автоматически, перейдите по ссылке повторно или скопируйте её вручную.",
   "@extensionVerificationHelpMessageWaiting": {
     "description": "Dialog message when verification may need manual browser help"
   },

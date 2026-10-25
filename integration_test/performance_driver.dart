@@ -9,13 +9,13 @@ import 'package:integration_test/integration_test_driver.dart';
 /// Use --profile on Android and macOS, and --debug on iOS simulators.
 /// Keep the macOS window visible: hiding or fully covering it can suspend
 /// animation clocks and frame delivery, invalidating active measurements.
-/// MORNYE_PERFORMANCE_REPORT selects the host JSON output;
+/// MOSIX_PERFORMANCE_REPORT selects the host JSON output;
 /// screenshots are PNGs beside that report. The aggregate target is
 /// integration_test/mornye_performance_test.dart.
 Future<void> main() => integrationDriver(
   responseDataCallback: (data) async {
     final output = File(
-      Platform.environment['MORNYE_PERFORMANCE_REPORT'] ??
+      Platform.environment['MOSIX_PERFORMANCE_REPORT'] ??
           '/tmp/mornye-performance.json',
     );
     await output.parent.create(recursive: true);

@@ -117,7 +117,7 @@ class ShellNavigationService {
   }
 
   /// Opens a Library sidebar link (`downloads`, `songs`, ...) where the
-  /// shell has them, the Mornye desktop sidebar. Returns false elsewhere, so
+  /// shell has them, the Mosix desktop sidebar. Returns false elsewhere, so
   /// callers fall back to [requestTab].
   static bool requestLibraryLink(String id) =>
       _libraryLinkHandler?.call(id) ?? false;

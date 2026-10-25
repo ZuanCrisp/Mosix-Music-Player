@@ -6,9 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/providers/download_history_provider.dart';
-import 'package:mornye/services/history_database.dart';
-import 'package:mornye/services/history_maintenance.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/services/history_database.dart';
+import 'package:mosix/services/history_maintenance.dart';
 
 import 'support/sqlite_process_database.dart';
 

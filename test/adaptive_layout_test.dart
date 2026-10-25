@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
 
 void main() {
   group('adaptive navigation', () {

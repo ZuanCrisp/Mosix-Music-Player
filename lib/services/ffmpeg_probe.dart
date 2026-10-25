@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:mornye/services/ffmpeg_support.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/utils/audio_format_utils.dart' as audio;
+import 'package:mosix/services/ffmpeg_support.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/utils/audio_format_utils.dart' as audio;
 
 final _log = AppLogger('FFmpeg');
 

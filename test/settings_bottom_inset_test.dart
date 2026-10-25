@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/settings/files_settings_page.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/settings/files_settings_page.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/settings_group.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/fixed_settings.dart';
@@ -29,7 +29,7 @@ void main() {
           overrides: [settingsProvider.overrideWith(FixedSettingsNotifier.new)],
           child: MaterialApp(
             theme: mornye
-                ? MornyeTheme.build(Brightness.dark)
+                ? MosixTheme.build(Brightness.dark)
                 : AppTheme.dark(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -41,7 +41,7 @@ void main() {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    const MornyeSettingsTheme(child: FilesSettingsPage()),
+                    const MosixSettingsTheme(child: FilesSettingsPage()),
                     const Positioned(
                       left: 0,
                       right: 0,

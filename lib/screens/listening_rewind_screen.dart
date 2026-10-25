@@ -10,24 +10,24 @@ import 'package:intl/intl.dart';
 import 'package:material_3_expressive/material_3_expressive.dart'
     show M3EShapeKind;
 import 'package:share_plus/share_plus.dart' show ShareParams, SharePlus, XFile;
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/listening_rewind_provider.dart';
-import 'package:mornye/services/listening_rewind.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/widget_capture.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/app_shape.dart';
-import 'package:mornye/widgets/player_artwork.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/listening_rewind_provider.dart';
+import 'package:mosix/services/listening_rewind.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/widget_capture.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/app_shape.dart';
+import 'package:mosix/widgets/player_artwork.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
-export 'package:mornye/providers/listening_rewind_provider.dart';
+export 'package:mosix/providers/listening_rewind_provider.dart';
 
 part 'listening_rewind_story.dart';
 part 'listening_rewind_slides.dart';
@@ -66,7 +66,7 @@ Future<void> showListeningRewind(BuildContext context) async {
           for (final period in ListeningRewindPeriod.values)
             SettingsItem(
               icon: icons[period],
-              showIconInMornye: true,
+              showIconInMosix: true,
               title: listeningRewindPeriodLabel(sheetContext, period),
               showDivider: period != ListeningRewindPeriod.values.last,
               onTap: () => Navigator.pop(sheetContext, period),
@@ -100,7 +100,7 @@ class ListeningRewindEntry extends StatelessWidget {
     children: [
       SettingsItem(
         icon: Icons.auto_awesome,
-        showIconInMornye: true,
+        showIconInMosix: true,
         title: context.l10n.listeningRewind,
         subtitle: context.l10n.listeningRewindDescription,
         showDivider: false,
@@ -149,8 +149,8 @@ class _MonthlyRewindBanner extends StatelessWidget {
     final l10n = context.l10n;
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final mornye = context.isMornye;
-    // Mornye keeps its neutral control fill and accent tint. Material keeps
+    final mornye = context.isMosix;
+    // Mosix keeps its neutral control fill and accent tint. Material keeps
     // the card neutral too: the statistics hero is the strong container.
     final foreground = colors.onSurface;
     final accent = mornye ? colors.primary : colors.tertiary;
@@ -216,7 +216,7 @@ class _YearlyRewindBanner extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final year = '${DateTime.now().year}';
     final foreground = colors.onPrimary;
-    final radius = context.isMornye
+    final radius = context.isMosix
         ? BorderRadius.circular(28)
         : context.tokens.borderRadiusCard;
     return Padding(
@@ -344,7 +344,7 @@ class ListeningRewindScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rewind = ref.watch(listeningRewindProvider(period));
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final colors = Theme.of(context).colorScheme;
     final background = mornye ? Colors.black : colors.surface;
     final foreground = mornye ? Colors.white : colors.onSurface;

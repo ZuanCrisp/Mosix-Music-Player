@@ -215,7 +215,7 @@ class _Artwork extends StatelessWidget {
             ),
     );
     if (artist) return AppShapeClip(kind: AppShapes.artist, child: image);
-    final radius = context.isMornye
+    final radius = context.isMosix
         ? size * 0.06
         : size >= 120
         ? 28.0

@@ -7,11 +7,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/services/custom_font_service.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
-import 'package:mornye/widgets/mornye_glass_preparation.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/services/custom_font_service.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/mornye_glass_preparation.dart';
 
 import 'performance_probe.dart';
 
@@ -42,18 +42,18 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            mornyeGlassLevelProvider.overrideWithValue(MornyeGlassLevel.liquid),
+            mornyeGlassLevelProvider.overrideWithValue(MosixGlassLevel.liquid),
             mornyeBlurEnabledProvider.overrideWithValue(true),
           ],
           child: MaterialApp(
-            theme: MornyeTheme.build(
+            theme: MosixTheme.build(
               brightness,
               glassClarity: 1,
               fontFamily: family,
             ),
             builder: (_, child) => RepaintBoundary(
               key: capture,
-              child: MornyeGlassPreparation(child: child!),
+              child: MosixGlassPreparation(child: child!),
             ),
             home: Scaffold(
               body: Stack(
@@ -89,17 +89,17 @@ void main() {
                       builder: (context) => IconButton(
                         key: button,
                         icon: const Icon(Icons.more_horiz),
-                        onPressed: () => showMornyeContextMenu<void>(
+                        onPressed: () => showMosixContextMenu<void>(
                           context: context,
                           anchor: mornyeMenuAnchor(button.currentContext!),
-                          builder: (menuContext) => MornyeContextMenu(
+                          builder: (menuContext) => MosixContextMenu(
                             quickActions: [
-                              MornyeMenuAction(
+                              MosixMenuAction(
                                 icon: Icons.favorite_border,
                                 label: 'Favorite',
                                 onPressed: () {},
                               ),
-                              MornyeMenuAction(
+                              MosixMenuAction(
                                 icon: Icons.share_outlined,
                                 label: 'Share',
                                 onPressed: () {},
@@ -107,25 +107,25 @@ void main() {
                             ],
                             groups: [
                               [
-                                MornyeMenuAction(
+                                MosixMenuAction(
                                   icon: Icons.queue_music,
                                   label: 'Add to playlist',
                                   onPressed: () {},
                                 ),
-                                MornyeMenuAction(
+                                MosixMenuAction(
                                   icon: Icons.album_outlined,
                                   label: 'Go to album',
                                   subtitle: 'Example album',
                                   onPressed: () {},
                                 ),
-                                MornyeMenuAction(
+                                MosixMenuAction(
                                   icon: Icons.person_outline,
                                   label: 'Go to artist',
                                   onPressed: () {},
                                 ),
                               ],
                               [
-                                MornyeMenuAction(
+                                MosixMenuAction(
                                   icon: Icons.close,
                                   label: 'Close',
                                   onPressed: () => Navigator.pop(menuContext),
@@ -147,13 +147,13 @@ void main() {
       Future<void> open() async {
         await tester.tap(find.byKey(button));
         await probe.wait(const Duration(milliseconds: 450));
-        expect(find.byType(MornyeContextMenu), findsOneWidget);
+        expect(find.byType(MosixContextMenu), findsOneWidget);
       }
 
       Future<void> close() async {
         await tester.tap(find.text('Close'));
         await probe.wait(const Duration(milliseconds: 450));
-        expect(find.byType(MornyeContextMenu), findsNothing);
+        expect(find.byType(MosixContextMenu), findsNothing);
       }
 
       await probe.measure('open_close', () async {
@@ -161,7 +161,7 @@ void main() {
         await close();
       });
       await open();
-      final menuContext = tester.element(find.byType(MornyeContextMenu));
+      final menuContext = tester.element(find.byType(MosixContextMenu));
       expect(Theme.of(menuContext).textTheme.bodyLarge?.fontFamily, family);
       await tester.runAsync(() async {
         final boundary = tester.renderObject<RenderRepaintBoundary>(

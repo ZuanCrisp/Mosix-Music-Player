@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/app_remote_config_service.dart';
+import 'package:mosix/services/app_remote_config_service.dart';
 
 void main() {
   group('AppRemoteConfig', () {
@@ -20,7 +20,7 @@ void main() {
         },
         'donate': {
           'enabled': true,
-          'title': 'Support Mornye',
+          'title': 'Support Mosix',
           'message': 'Help cover infrastructure.',
           'methods': [
             {
@@ -54,7 +54,7 @@ void main() {
         ),
         isTrue,
       );
-      expect(config.donate.title, 'Support Mornye');
+      expect(config.donate.title, 'Support Mosix');
       expect(config.donate.methods, hasLength(2));
       expect(config.donate.methods.first.color, 0xFFFF5E5B);
       expect(config.donate.methods.last.isWallet, isTrue);

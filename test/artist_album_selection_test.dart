@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/track_provider.dart';
-import 'package:mornye/screens/artist_screen.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/widgets/desktop/desktop_scroll_arrows.dart';
-import 'package:mornye/widgets/selection_bottom_bar.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/track_provider.dart';
+import 'package:mosix/screens/artist_screen.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/widgets/desktop/desktop_scroll_arrows.dart';
+import 'package:mosix/widgets/selection_bottom_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final _albums = [
@@ -36,7 +36,7 @@ Future<void> _pumpArtist(
   SharedPreferences.setMockInitialValues({});
   await tester.binding.setSurfaceSize(const Size(1200, 1800));
   addTearDown(() => tester.binding.setSurfaceSize(null));
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   messenger.setMockMethodCallHandler(channel, (_) async => null);
@@ -44,7 +44,7 @@ Future<void> _pumpArtist(
   await tester.pumpWidget(
     ProviderScope(
       child: MaterialApp(
-        theme: mornye ? MornyeTheme.build(Brightness.light) : AppTheme.light(),
+        theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: ArtistScreen(
@@ -114,7 +114,7 @@ void main() {
   });
 
   for (final mornye in [false, true]) {
-    final style = mornye ? 'Mornye' : 'Material';
+    final style = mornye ? 'Mosix' : 'Material';
     for (final platform in [TargetPlatform.windows, TargetPlatform.macOS]) {
       testWidgets(
         '$style $platform: modifier clicks select albums and keyboard clears them',

@@ -3,19 +3,19 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_text_field.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_text_field.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 final _log = AppLogger('PlaylistPicker');
 
@@ -41,7 +41,7 @@ Future<void> showAddTracksToPlaylistSheet(
   await showAppModalBottomSheet<void>(
     context: context,
     useRootNavigator: true,
-    showDragHandle: !context.isMornye,
+    showDragHandle: !context.isMosix,
     isScrollControlled: true,
     // The picker keeps its lighter glass tint.
     mornyeGlass: false,
@@ -51,8 +51,8 @@ Future<void> showAddTracksToPlaylistSheet(
         playlistNamePrefill: playlistNamePrefill,
         preserveOccurrences: preserveOccurrences,
       );
-      return sheetContext.isMornye
-          ? MornyeGlassPanel(tintOpacity: 0.78, child: content)
+      return sheetContext.isMosix
+          ? MosixGlassPanel(tintOpacity: 0.78, child: content)
           : content;
     },
   );
@@ -180,7 +180,7 @@ class _PlaylistPickerSheetContentState
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (context.isMornye) ...[
+          if (context.isMosix) ...[
             const AppSheetHandle(),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -212,10 +212,10 @@ class _PlaylistPickerSheetContentState
               title: Text(context.l10n.collectionAddToPlaylist),
               subtitle: Text(subtitle),
             ),
-          if (context.isMornye) const Divider(height: 1),
+          if (context.isMosix) const Divider(height: 1),
           _PlaylistPickerRow(
             leading: Icon(
-              context.isMornye
+              context.isMosix
                   ? CupertinoIcons.add_circled
                   : Icons.add_circle_outline,
               color: Theme.of(context).colorScheme.primary,
@@ -286,7 +286,7 @@ class _PlaylistPickerSheetContentState
                       return _PlaylistPickerRow(
                         leading: _PlaylistPickerThumbnail(
                           playlist: playlist,
-                          isSelected: !context.isMornye && isSelected,
+                          isSelected: !context.isMosix && isSelected,
                         ),
                         title: Text(playlist.name),
                         subtitle: Text(
@@ -334,7 +334,7 @@ class _PlaylistPickerSheetContentState
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: SizedBox(
               width: double.infinity,
-              child: context.isMornye
+              child: context.isMosix
                   ? AppActionButton(
                       onPressed: _isSubmitting ? null : onDone,
                       icon: const Icon(CupertinoIcons.checkmark),
@@ -466,7 +466,7 @@ class _PlaylistPickerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!context.isMornye) {
+    if (!context.isMosix) {
       return ListTile(
         leading: leading,
         title: title,
@@ -634,7 +634,7 @@ class _PlaylistPickerThumbnail extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
-        context.isMornye ? CupertinoIcons.music_note_list : Icons.queue_music,
+        context.isMosix ? CupertinoIcons.music_note_list : Icons.queue_music,
         color: colorScheme.onSurfaceVariant,
       ),
     );

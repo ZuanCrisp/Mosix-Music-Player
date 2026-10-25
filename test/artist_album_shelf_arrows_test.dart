@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/track_provider.dart';
-import 'package:mornye/screens/artist_screen.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/track_provider.dart';
+import 'package:mosix/screens/artist_screen.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -20,7 +20,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await tester.binding.setSurfaceSize(const Size(1200, 1600));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    const channel = MethodChannel('com.zarz.mornye/backend');
+    const channel = MethodChannel('com.zuancrisp.mosix/backend');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(channel, (_) async => null);

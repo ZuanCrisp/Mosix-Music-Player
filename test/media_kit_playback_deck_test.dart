@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/equalizer_settings.dart';
-import 'package:mornye/services/media_kit_playback_deck.dart';
-import 'package:mornye/services/music_playback_deck.dart';
-import 'package:mornye/services/playback_deck.dart';
-import 'package:mornye/services/playback_equalizer.dart';
+import 'package:mosix/models/equalizer_settings.dart';
+import 'package:mosix/services/media_kit_playback_deck.dart';
+import 'package:mosix/services/music_playback_deck.dart';
+import 'package:mosix/services/playback_deck.dart';
+import 'package:mosix/services/playback_equalizer.dart';
 
 import 'support/fake_mpv_engine.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/activity_attachment.dart';
+import 'package:mosix/services/activity_attachment.dart';
 
 void main() {
   testWidgets('startup waits until an Activity reports its lifecycle', (

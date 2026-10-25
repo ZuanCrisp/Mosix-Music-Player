@@ -4,10 +4,10 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/material_expressive.dart';
+import 'package:mosix/theme/material_expressive.dart';
 
 /// Pull-to-refresh with the expressive shape-morphing indicator on Material.
-/// Mornye and reduced motion keep Flutter's [RefreshIndicator].
+/// Mosix and reduced motion keep Flutter's [RefreshIndicator].
 ///
 /// The page on screen also refreshes through [refreshVisible], which the
 /// desktop Refresh command (Cmd/Ctrl+R) runs.

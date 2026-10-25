@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart'
     show CupertinoButton, CupertinoDynamicColor, kCupertinoModalBarrierColor;
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/theme/mornye_icons.dart';
 
 /// The drag handle shown at the top of every modal sheet.
 ///
@@ -85,7 +85,7 @@ class AppBottomSheet extends StatelessWidget {
     // Material desktop dialogs end their header with a close button for the
     // pointer; Esc and a click outside close them too.
     final closes =
-        titleTrailing == null && isDesktopPlatform && !context.isMornye;
+        titleTrailing == null && isDesktopPlatform && !context.isMosix;
     final trailing = closes ? const _SheetDialogCloseButton() : titleTrailing;
 
     Widget content = Column(
@@ -339,7 +339,7 @@ Future<T?> showAppScrollableBottomSheet<T>({
 ///
 /// Desktop windows present the sheet as a centered dialog instead
 /// ([showAppSheetDialog]) of [dialogSize]; there is no edge to slide from or
-/// drag to. Mornye draws the sheet on overlay glass unless [mornyeGlass] is
+/// drag to. Mosix draws the sheet on overlay glass unless [mornyeGlass] is
 /// false for content that brings its own.
 Future<T?> showAppModalBottomSheet<T>({
   required BuildContext context,
@@ -367,7 +367,7 @@ Future<T?> showAppModalBottomSheet<T>({
       dialogSize: dialogSize,
     );
   }
-  final mornye = context.isMornye;
+  final mornye = context.isMosix;
   return showModalBottomSheet<T>(
     context: context,
     sheetAnimationStyle: AppMotion.surfaceEntrance(context),
@@ -384,7 +384,7 @@ Future<T?> showAppModalBottomSheet<T>({
         : null,
     elevation: mornye ? 0 : null,
     builder: (context) => mornye && mornyeGlass
-        ? MornyeGlassPanel.overlay(child: Builder(builder: builder))
+        ? MosixGlassPanel.overlay(child: Builder(builder: builder))
         : builder(context),
   );
 }
@@ -416,7 +416,7 @@ enum AppDialogSize {
 /// [DraggableScrollableSheet], lays out unchanged: its header stays put and
 /// its body scrolls.
 ///
-/// Mornye draws the dialog on overlay glass unless [mornyeGlass] is false
+/// Mosix draws the dialog on overlay glass unless [mornyeGlass] is false
 /// for content that brings its own; Material uses `surfaceContainerHigh`.
 /// [topInset] replaces the space of a drag handle the sheet would show.
 Future<T?> showAppSheetDialog<T>({
@@ -429,7 +429,7 @@ Future<T?> showAppSheetDialog<T>({
   Color? backgroundColor,
   AppDialogSize dialogSize = AppDialogSize.medium,
 }) {
-  final mornye = context.isMornye;
+  final mornye = context.isMosix;
   return showDialog<T>(
     context: context,
     barrierDismissible: isDismissible,
@@ -466,14 +466,14 @@ class AppSheetDialog extends StatelessWidget {
   final Color? backgroundColor;
   final AppDialogSize dialogSize;
 
-  /// Mornye's sheet token is the 32pt iOS sheet corner; its dialogs keep
+  /// Mosix's sheet token is the 32pt iOS sheet corner; its dialogs keep
   /// the corner they have always had.
   static const double _mornyeRadius = 28;
   static const double _margin = 24;
 
   @override
   Widget build(BuildContext context) {
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final radius = mornye ? _mornyeRadius : context.tokens.radiusSheet;
     final window = MediaQuery.sizeOf(context);
     final width = (window.width - _margin * 2).clamp(0.0, dialogSize.width);
@@ -489,7 +489,7 @@ class AppSheetDialog extends StatelessWidget {
       ),
     );
     if (mornye && mornyeGlass) {
-      content = MornyeGlassPanel.overlay(radius: radius, child: content);
+      content = MosixGlassPanel.overlay(radius: radius, child: content);
     } else if (!mornye) {
       // Desktop scrollbars normally fade out when idle. In a dialog the
       // body's bar stays visible, so a cut-off list reads as scrollable.
@@ -573,7 +573,7 @@ class AppSheetOption extends StatelessWidget {
               ? AppIcon(Icons.check, color: scheme.primary)
               : null
         : this.trailing;
-    if (!context.isMornye) {
+    if (!context.isMosix) {
       return ListTile(
         title: this.title,
         subtitle: subtitle,

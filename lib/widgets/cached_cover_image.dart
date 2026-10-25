@@ -4,8 +4,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:mornye/services/cover_cache_manager.dart';
-import 'package:mornye/utils/image_cache_utils.dart';
+import 'package:mosix/services/cover_cache_manager.dart';
+import 'package:mosix/utils/image_cache_utils.dart';
 
 class CachedCoverImage extends StatelessWidget {
   static const int _defaultMinCacheExtent = 64;

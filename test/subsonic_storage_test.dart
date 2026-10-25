@@ -3,12 +3,12 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/network_certificate.dart';
-import 'package:mornye/services/network_library_scanner.dart';
-import 'package:mornye/services/network_metadata_service.dart';
-import 'package:mornye/services/network_storage_error.dart';
-import 'package:mornye/services/network_storage_service.dart';
-import 'package:mornye/services/playable_media.dart';
+import 'package:mosix/services/network_certificate.dart';
+import 'package:mosix/services/network_library_scanner.dart';
+import 'package:mosix/services/network_metadata_service.dart';
+import 'package:mosix/services/network_storage_error.dart';
+import 'package:mosix/services/network_storage_service.dart';
+import 'package:mosix/services/playable_media.dart';
 
 import 'support/subsonic_fixture.dart';
 import 'support/network_scan_output.dart';

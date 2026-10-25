@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/utils/logger.dart';
 
 final _log = AppLogger('AutoplayLearning');
 const _modelKey = 'autoplay_learning_model_v1';

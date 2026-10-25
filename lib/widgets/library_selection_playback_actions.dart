@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/unified_library_item.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/playlist_picker_sheet.dart';
-import 'package:mornye/widgets/selection_action_button.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/unified_library_item.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/playlist_picker_sheet.dart';
+import 'package:mosix/widgets/selection_action_button.dart';
 
 /// Collection actions stay separate from actions that modify audio files.
 class LibrarySelectionPlaybackActions extends ConsumerWidget {

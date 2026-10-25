@@ -4,7 +4,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 /// Overrides [desktopTitleBarInContent] in tests.
 bool? debugDesktopTitleBarInContentOverride;
@@ -38,7 +38,7 @@ const double desktopTitleBarHeight = 52;
 /// Width the traffic lights take at the leading edge of the title bar row.
 const double desktopWindowControlsWidth = 78;
 
-const _windowChannel = MethodChannel('com.zarz.mornye/window');
+const _windowChannel = MethodChannel('com.zuancrisp.mosix/window');
 
 enum DesktopWindowMode { windowed, fullscreen, borderless }
 

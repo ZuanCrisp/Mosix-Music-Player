@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mornye/services/platform_bridge.dart';
+import 'package:mosix/services/platform_bridge.dart';
 
 const _lyrics = '[00:01.00]First line\n[00:02.00]Second line';
 final _audioPayload = [0xff, 0xf8, ...utf8.encode('unchanged audio payload')];

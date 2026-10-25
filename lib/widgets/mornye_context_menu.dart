@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 /// Bounds of the tapped control or row, in the root overlay's coordinates.
 Rect? mornyeMenuAnchor(BuildContext context) {
@@ -13,7 +13,7 @@ Rect? mornyeMenuAnchor(BuildContext context) {
   return box.localToGlobal(Offset.zero) & box.size;
 }
 
-Future<T?> showMornyeContextMenu<T>({
+Future<T?> showMosixContextMenu<T>({
   required BuildContext context,
   required WidgetBuilder builder,
   Rect? anchor,
@@ -195,27 +195,27 @@ class _MenuSurface extends StatelessWidget {
             .dependOnInheritedWidgetOfExactType<_MenuGlassReveal>()
             ?.progress ??
         1;
-    return MornyeGlassPanel.overlay(
+    return MosixGlassPanel.overlay(
       radius: 28,
       smoothCorners: true,
       highlightBorder: true,
       highlightIntensity: 0.4,
       glassProgress: progress,
-      tintColor: theme.extension<MornyeTheme>()?.chromeSurface != null
+      tintColor: theme.extension<MosixTheme>()?.chromeSurface != null
           ? null
           : dark
           ? const Color(0xff414141)
           : Colors.white,
       tintOpacity: dark
-          ? 0.80 - 0.20 * (theme.extension<MornyeTheme>()?.glassClarity ?? 0)
+          ? 0.80 - 0.20 * (theme.extension<MosixTheme>()?.glassClarity ?? 0)
           : 0.80,
       child: child,
     );
   }
 }
 
-class MornyeMenuAction {
-  const MornyeMenuAction({
+class MosixMenuAction {
+  const MosixMenuAction({
     required this.icon,
     required this.label,
     required this.onPressed,
@@ -233,8 +233,8 @@ class MornyeMenuAction {
 }
 
 /// One frosted popover, with compact shortcuts and separated action groups.
-class MornyeContextMenu extends StatelessWidget {
-  const MornyeContextMenu({
+class MosixContextMenu extends StatelessWidget {
+  const MosixContextMenu({
     super.key,
     this.quickActions = const [],
     required this.groups,
@@ -242,8 +242,8 @@ class MornyeContextMenu extends StatelessWidget {
     this.dense = false,
   });
 
-  final List<MornyeMenuAction> quickActions;
-  final List<List<MornyeMenuAction>> groups;
+  final List<MosixMenuAction> quickActions;
+  final List<List<MosixMenuAction>> groups;
   final bool inheritSurface;
   final bool dense;
 
@@ -251,7 +251,7 @@ class MornyeContextMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = inheritSurface
         ? Theme.of(context)
-        : MornyeTheme.fromContext(context);
+        : MosixTheme.fromContext(context);
     final dark = theme.brightness == Brightness.dark;
     final visibleGroups = groups.where((group) => group.isNotEmpty).toList();
     final shortcuts = quickActions.isEmpty
@@ -327,7 +327,7 @@ class MornyeContextMenu extends StatelessWidget {
 
   Widget _action(
     ThemeData theme,
-    MornyeMenuAction action, {
+    MosixMenuAction action, {
     bool compact = false,
   }) {
     final color = action.onPressed == null

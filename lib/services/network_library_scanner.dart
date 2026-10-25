@@ -6,12 +6,12 @@ import 'dart:isolate';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/services/library_database_models.dart';
-import 'package:mornye/services/network_metadata_service.dart';
-import 'package:mornye/services/network_storage_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/lyrics_metadata_helper.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/services/library_database_models.dart';
+import 'package:mosix/services/network_metadata_service.dart';
+import 'package:mosix/services/network_storage_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/lyrics_metadata_helper.dart';
+import 'package:mosix/utils/logger.dart';
 
 part 'network_library_scanner_subsonic.dart';
 

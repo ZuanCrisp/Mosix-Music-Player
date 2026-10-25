@@ -5,28 +5,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/providers/player_motion_artwork_provider.dart';
-import 'package:mornye/providers/player_artwork_video_provider.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/player_artwork_theme.dart';
-import 'package:mornye/screens/now_playing_screen.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/string_utils.dart';
-import 'package:mornye/widgets/audio_quality_badges.dart';
-import 'package:mornye/widgets/overflow_marquee.dart';
-import 'package:mornye/widgets/player_artwork.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/providers/player_motion_artwork_provider.dart';
+import 'package:mosix/providers/player_artwork_video_provider.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/player_artwork_theme.dart';
+import 'package:mosix/screens/now_playing_screen.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/string_utils.dart';
+import 'package:mosix/widgets/audio_quality_badges.dart';
+import 'package:mosix/widgets/overflow_marquee.dart';
+import 'package:mosix/widgets/player_artwork.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 class MiniPlayer extends ConsumerStatefulWidget {
   const MiniPlayer({super.key, this.compact = false, this.bottomPadding = 8});
@@ -45,7 +45,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
       compact: widget.compact,
       bottomPadding: widget.bottomPadding,
     );
-    if (context.isMornye) return body;
+    if (context.isMosix) return body;
     // Material takes the track's artwork scheme, like the full player.
     final artUri = ref.watch(
       currentMediaItemProvider.select((item) => item.value?.artUri),
@@ -90,7 +90,7 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
     Navigator.of(context, rootNavigator: true).push(
       NowPlayingRoute(
         child: const NowPlayingScreen(),
-        miniPlayerGeometry: context.isMornye
+        miniPlayerGeometry: context.isMosix
             ? () {
                 if (!mounted) return null;
                 final surface = _bounds(_surfaceKey);
@@ -138,7 +138,7 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
 
     final controller = ref.read(musicPlayerControllerProvider);
     final colorScheme = Theme.of(context).colorScheme;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final expressive = materialExpressiveEnabled(context);
     final compact = mornye && widget.compact;
     // Frosted and flat glass levels run on constrained Android hardware. They
@@ -358,9 +358,9 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
     return mornye
         ? Padding(
             padding: EdgeInsets.only(bottom: widget.bottomPadding),
-            child: MornyeGlass.navigation(
+            child: MosixGlass.navigation(
               strongTint: true,
-              tintOpacity: MornyeTheme.chromeOpacity(context),
+              tintOpacity: MosixTheme.chromeOpacity(context),
               blurEnabled: ref.watch(mornyeBlurEnabledProvider),
               child: swipeable,
             ),

@@ -1,1 +1,1 @@
-export 'package:mornye/models/library_database_models.dart';
+export 'package:mosix/models/library_database_models.dart';

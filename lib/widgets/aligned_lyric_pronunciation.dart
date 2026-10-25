@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:mornye/widgets/lyric_supplement_transition.dart';
-import 'package:mornye/utils/lyrics_parser.dart';
+import 'package:mosix/widgets/lyric_supplement_transition.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
 
 /// Keeps each pronunciation phrase under the lyric with the same start time.
 /// Only shared word boundaries are used; line-only timing cannot identify

@@ -1,4 +1,4 @@
-import 'package:mornye/utils/file_access.dart';
+import 'package:mosix/utils/file_access.dart';
 
 sealed class FileAccessCheck {
   const FileAccessCheck();

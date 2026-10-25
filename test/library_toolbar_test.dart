@@ -5,22 +5,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:material_3_expressive/material_3_expressive.dart'
     show M3EButton, M3EButtonGroup, M3EButtonGroupType;
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/library_tracks_folder_screen.dart';
-import 'package:mornye/screens/queue_tab.dart';
-import 'package:mornye/services/history_database.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/app_search_field.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/library_tracks_folder_screen.dart';
+import 'package:mosix/screens/queue_tab.dart';
+import 'package:mosix/services/history_database.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/app_search_field.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -172,7 +172,7 @@ void main() {
         ],
         child: MaterialApp(
           theme: mornye
-              ? MornyeTheme.build(Brightness.light)
+              ? MosixTheme.build(Brightness.light)
               : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -182,7 +182,7 @@ void main() {
             ).copyWith(disableAnimations: reduceMotion),
             child: child!,
           ),
-          // Mornye opens Songs as a section page from its Library root.
+          // Mosix opens Songs as a section page from its Library root.
           home: Scaffold(body: QueueTab(librarySection: mornye ? 'all' : null)),
         ),
       ),
@@ -340,7 +340,7 @@ void main() {
   for (final desktop in [false, true]) {
     for (final mornye in [false, true]) {
       testWidgets('size sort applies from the Library menu '
-          '(desktop: $desktop, Mornye: $mornye)', (tester) async {
+          '(desktop: $desktop, Mosix: $mornye)', (tester) async {
         await pumpLibrary(tester, desktop: desktop, mornye: mornye);
         final l10n = l10nOf(tester);
         await tester.tap(
@@ -399,7 +399,7 @@ void main() {
     expect(find.text(l10n.libraryFilterTitle), findsOneWidget);
   });
 
-  testWidgets('Mornye keeps its filter button', (tester) async {
+  testWidgets('Mosix keeps its filter button', (tester) async {
     await pumpLibrary(tester, mornye: true);
     final l10n = l10nOf(tester);
 

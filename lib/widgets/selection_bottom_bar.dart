@@ -3,17 +3,17 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/desktop/detail_header.dart'
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/desktop/detail_header.dart'
     show desktopDetailBottomInset;
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/expressive_icon_button.dart';
-import 'package:mornye/l10n/l10n.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/expressive_icon_button.dart';
+import 'package:mosix/l10n/l10n.dart';
 
 /// Hosts selection bars above the shell navigation while keeping modal routes
 /// above the bar. A raw entry in the root [Overlay] stays above routes pushed
@@ -265,11 +265,11 @@ class SelectionBottomBar extends StatelessWidget {
     final header = LayoutBuilder(
       builder: (context, constraints) => Row(
         children: [
-          if (context.isMornye)
+          if (context.isMosix)
             Tooltip(
               message: MaterialLocalizations.of(context).closeButtonTooltip,
               child: CupertinoButton(
-                color: MornyeTheme.controlFill(context),
+                color: MosixTheme.controlFill(context),
                 borderRadius: BorderRadius.circular(28),
                 padding: const EdgeInsets.all(12),
                 onPressed: onClose,
@@ -318,7 +318,7 @@ class SelectionBottomBar extends StatelessWidget {
 
           ConstrainedBox(
             constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.4),
-            child: context.isMornye
+            child: context.isMosix
                 ? CupertinoButton(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     onPressed: onToggleSelectAll,
@@ -353,8 +353,8 @@ class SelectionBottomBar extends StatelessWidget {
     );
     const floatingMargin = 12.0;
     Widget surface(Widget content) {
-      if (context.isMornye) {
-        return MornyeGlassPanel.overlay(child: content);
+      if (context.isMosix) {
+        return MosixGlassPanel.overlay(child: content);
       }
       final toolbar = Material(
         color: colorScheme.surfaceContainerHigh,
@@ -412,12 +412,12 @@ class SelectionBottomBar extends StatelessWidget {
         onClose: onClose,
         header: header,
         bottomPadding: bottomPadding,
-        floatingMargin: context.isMornye ? 0 : floatingMargin,
+        floatingMargin: context.isMosix ? 0 : floatingMargin,
         surfaceBuilder: surface,
         children: children,
       );
     }
-    // Desktop: a bounded toolbar over the page, clear of Mornye's floating
+    // Desktop: a bounded toolbar over the page, clear of Mosix's floating
     // player, rather than a sheet across the whole pane. There is no drag
     // handle, since pointer input has no gesture to tuck the actions away;
     // the close button ends the selection.
@@ -428,7 +428,7 @@ class SelectionBottomBar extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 640),
         child: Padding(
           padding: EdgeInsets.only(
-            bottom: context.isMornye ? desktopDetailBottomInset : 0,
+            bottom: context.isMosix ? desktopDetailBottomInset : 0,
           ),
           child: surface(
             ConstrainedBox(

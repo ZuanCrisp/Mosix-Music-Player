@@ -4,18 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/download_history_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/track_metadata_screen.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/services/music_player_service.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/track_metadata_screen.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/services/music_player_service.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Settings extends SettingsNotifier {
@@ -37,7 +37,7 @@ class _Player extends MusicPlayerController {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
 
@@ -61,7 +61,7 @@ void main() {
       for (final format in ['flac', 'opus']) {
         for (final menu in [false, if (mornye) true]) {
           testWidgets('metadata Play carries $format file information '
-              '(Mornye=$mornye, local=$local, menu=$menu)', (tester) async {
+              '(Mosix=$mornye, local=$local, menu=$menu)', (tester) async {
             await tester.binding.setSurfaceSize(const Size(393, 852));
             addTearDown(() => tester.binding.setSurfaceSize(null));
             final player = _Player();
@@ -114,7 +114,7 @@ void main() {
                 ],
                 child: MaterialApp(
                   theme: mornye
-                      ? MornyeTheme.build(Brightness.dark)
+                      ? MosixTheme.build(Brightness.dark)
                       : AppTheme.dark(),
                   localizationsDelegates:
                       AppLocalizations.localizationsDelegates,
@@ -129,7 +129,7 @@ void main() {
               await tester.pumpAndSettle();
               await tester.tap(
                 find.descendant(
-                  of: find.byType(MornyeContextMenu),
+                  of: find.byType(MosixContextMenu),
                   matching: find.text('Play'),
                 ),
               );

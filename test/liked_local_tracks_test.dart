@@ -5,20 +5,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/unified_library_item.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/library_tracks_folder_screen.dart';
-import 'package:mornye/services/library_collections_database.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/track_card.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/unified_library_item.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/library_tracks_folder_screen.dart';
+import 'package:mosix/services/library_collections_database.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/track_card.dart';
 
 import 'support/fixed_settings.dart';
 
@@ -64,7 +64,7 @@ class _History extends DownloadHistoryNotifier {
 
 void main() {
   for (final mornye in [false, true]) {
-    testWidgets('Liked Songs reopens with local artwork (Mornye: $mornye)', (
+    testWidgets('Liked Songs reopens with local artwork (Mosix: $mornye)', (
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({});
@@ -136,7 +136,7 @@ void main() {
             container: container,
             child: MaterialApp(
               theme: mornye
-                  ? MornyeTheme.build(Brightness.light)
+                  ? MosixTheme.build(Brightness.light)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,

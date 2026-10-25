@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_slider.dart';
-import 'package:mornye/widgets/slider_value_header.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_slider.dart';
+import 'package:mosix/widgets/slider_value_header.dart';
 
 /// Sensitivity and strength sliders shown under the music haptics switch.
 class MusicHapticsSettings extends ConsumerStatefulWidget {
@@ -38,7 +38,7 @@ class _MusicHapticsSettingsState extends ConsumerState<MusicHapticsSettings> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (context.isMornye)
+            if (context.isMosix)
               Text('$label: $percent')
             else
               SliderValueHeader(

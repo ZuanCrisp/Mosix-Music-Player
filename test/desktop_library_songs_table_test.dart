@@ -3,26 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/playback_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/queue_tab.dart';
-import 'package:mornye/services/history_database.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/services/playable_media.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/desktop/track_table.dart';
-import 'package:mornye/widgets/library_track_selection_bar.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
-import 'package:mornye/widgets/track_card.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/playback_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/queue_tab.dart';
+import 'package:mosix/services/history_database.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/services/playable_media.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/desktop/track_table.dart';
+import 'package:mosix/widgets/library_track_selection_bar.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/track_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -191,11 +191,11 @@ void main() {
         ],
         child: MaterialApp(
           theme: mornye
-              ? MornyeTheme.build(Brightness.light)
+              ? MosixTheme.build(Brightness.light)
               : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          // Mornye opens Songs as a section page from its Library root.
+          // Mosix opens Songs as a section page from its Library root.
           home: Scaffold(body: QueueTab(librarySection: mornye ? 'all' : null)),
         ),
       ),
@@ -227,7 +227,7 @@ void main() {
       );
       final toolbar = find.byType(LibraryTrackSelectionBar);
       Finder menuRow(String label) => find.descendant(
-        of: find.byType(mornye ? MornyeContextMenu : MenuItemButton),
+        of: find.byType(mornye ? MosixContextMenu : MenuItemButton),
         matching: find.text(label),
       );
 

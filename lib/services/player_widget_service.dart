@@ -6,8 +6,8 @@ import 'dart:ui' as ui;
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/services/cover_cache_manager.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/services/cover_cache_manager.dart';
+import 'package:mosix/utils/logger.dart';
 
 class PlayerWidgetArtwork {
   const PlayerWidgetArtwork(this.png, this.background);
@@ -21,7 +21,7 @@ class PlayerWidgetArtwork {
 class PlayerWidgetService {
   PlayerWidgetService({
     MethodChannel channel = const MethodChannel(
-      'com.zarz.mornye/player_widget',
+      'com.zuancrisp.mosix/player_widget',
     ),
     Future<PlayerWidgetArtwork?> Function(Uri?)? loadArtwork,
   }) : _channel = channel,

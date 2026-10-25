@@ -1,7 +1,7 @@
-import 'package:mornye/models/track.dart';
-import 'package:mornye/controllers/track_history_snapshot.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/services/history_database.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/controllers/track_history_snapshot.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/services/history_database.dart';
 
 /// Collection providers replace their track list when its contents change.
 /// Keep derived data across selection/layout rebuilds of the same snapshot.

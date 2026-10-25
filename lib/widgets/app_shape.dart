@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 /// Expressive shapes used across the Material theme.
 abstract final class AppShapes {
@@ -14,7 +14,7 @@ abstract final class AppShapes {
 
 /// Clips [child] to an expressive [kind] on the Material theme.
 ///
-/// Mornye keeps its own geometry: [fallbackRadius], or an oval when null.
+/// Mosix keeps its own geometry: [fallbackRadius], or an oval when null.
 class AppShapeClip extends StatelessWidget {
   const AppShapeClip({
     super.key,
@@ -29,7 +29,7 @@ class AppShapeClip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!context.isMornye) {
+    if (!context.isMosix) {
       return ClipPath(clipper: M3EShapeClipper(kind), child: child);
     }
     final fallbackRadius = this.fallbackRadius;
@@ -41,7 +41,7 @@ class AppShapeClip extends StatelessWidget {
 
 /// A filled expressive [kind] behind a centered icon or logo.
 ///
-/// Mornye draws the same fill as a circle.
+/// Mosix draws the same fill as a circle.
 class AppShapeBadge extends StatelessWidget {
   const AppShapeBadge({
     super.key,

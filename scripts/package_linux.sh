@@ -7,7 +7,7 @@
 #
 # <bundle-dir> is build/linux/<x64|arm64>/release/bundle. <version> is the
 # release tag (for example v5.3.0 or v5.3.0-beta.1). The package architecture
-# follows the host (`uname -m`); set MORNYE_PACKAGE_ARCH to x86_64 or aarch64
+# follows the host (`uname -m`); set MOSIX_PACKAGE_ARCH to x86_64 or aarch64
 # to override it.
 #
 # Both formats install the bundle under usr/lib/mornye with usr/bin/mornye
@@ -24,7 +24,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 PACKAGING_DIR="$PROJECT_DIR/linux/packaging"
-APP_ID="com.zarz.mornye"
+APP_ID="com.zuancrisp.mosix"
 BINARY_NAME="mornye"
 
 # Pinned packaging tools (AppImage/appimagetool 1.9.1, type2-runtime 20251108).
@@ -59,7 +59,7 @@ case "$FORMAT" in
   *) usage ;;
 esac
 
-ARCH="${MORNYE_PACKAGE_ARCH:-$(uname -m)}"
+ARCH="${MOSIX_PACKAGE_ARCH:-$(uname -m)}"
 case "$ARCH" in
   x86_64|amd64) ARCH="x86_64"; DEB_ARCH="amd64" ;;
   aarch64|arm64) ARCH="aarch64"; DEB_ARCH="arm64" ;;
@@ -151,7 +151,7 @@ APPRUN
   cp "$appdir/usr/share/icons/hicolor/256x256/apps/$APP_ID.png" "$appdir/$APP_ID.png"
   ln -s "$APP_ID.png" "$appdir/.DirIcon"
 
-  local tool_dir="${MORNYE_PACKAGING_TOOLS_DIR:-$PROJECT_DIR/build/packaging-tools}"
+  local tool_dir="${MOSIX_PACKAGING_TOOLS_DIR:-$PROJECT_DIR/build/packaging-tools}"
   local host_arch
   host_arch="$(uname -m)"
   case "$host_arch" in
@@ -222,9 +222,9 @@ Depends: $depends
 Recommends: gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, xdg-utils, xdg-desktop-portal
 Section: sound
 Priority: optional
-Homepage: https://github.com/mornyeapp/Mornye
+Homepage: https://github.com/ZuanCrisp/Mosix-Music-Player
 Description: Music player and library manager
- Mornye plays local and network music, edits metadata, and fetches tracks
+ Mosix plays local and network music, edits metadata, and fetches tracks
  and lyrics through extensions you install.
 CONTROL
   chmod 644 "$root/DEBIAN/control"

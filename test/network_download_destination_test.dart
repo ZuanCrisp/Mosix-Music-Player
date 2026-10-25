@@ -2,16 +2,16 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/network_storage_screen.dart';
-import 'package:mornye/services/network_storage_service.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_action_button.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/network_storage_screen.dart';
+import 'package:mosix/services/network_storage_service.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_action_button.dart';
 
 class _Storage extends NetworkStorageService {
   _Storage(this._events, this._fail);
@@ -100,7 +100,7 @@ void main() {
               ],
               child: MaterialApp(
                 theme: mornye
-                    ? MornyeTheme.build(Brightness.dark)
+                    ? MosixTheme.build(Brightness.dark)
                     : ThemeData(),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,

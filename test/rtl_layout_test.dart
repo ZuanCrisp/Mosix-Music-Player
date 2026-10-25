@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/theme/mornye_icons.dart';
+import 'package:mosix/theme/mornye_icons.dart';
 
 void main() {
-  test('Mornye directional icons mirror in right-to-left layouts', () {
+  test('Mosix directional icons mirror in right-to-left layouts', () {
     for (final icon in [
       mornyeIconFor(Icons.arrow_back),
       mornyeIconFor(Icons.chevron_left),

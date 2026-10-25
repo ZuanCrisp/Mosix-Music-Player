@@ -5,9 +5,9 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/download_request_payload.dart';
-import 'package:mornye/services/history_database.dart';
-import 'package:mornye/utils/audio_format_utils.dart';
+import 'package:mosix/services/download_request_payload.dart';
+import 'package:mosix/services/history_database.dart';
+import 'package:mosix/utils/audio_format_utils.dart';
 
 void main() {
   group('app state database migrations', () {
@@ -84,22 +84,22 @@ void main() {
 
   group('native worker contracts', () {
     final finalizerSource = File(
-      'android/app/src/main/kotlin/com/zarz/mornye/'
+      'android/app/src/main/kotlin/com/zuancrisp/mosix/'
       'NativeDownloadFinalizer.kt',
     ).readAsStringSync();
     final finalizerHistorySource = File(
-      'android/app/src/main/kotlin/com/zarz/mornye/'
+      'android/app/src/main/kotlin/com/zuancrisp/mosix/'
       'NativeFinalizerHistory.kt',
     ).readAsStringSync();
     final historyStoreSource = File(
-      'android/app/src/main/kotlin/com/zarz/mornye/'
+      'android/app/src/main/kotlin/com/zuancrisp/mosix/'
       'NativeHistoryStore.kt',
     ).readAsStringSync();
     final historyDatabaseSource = File(
       'lib/services/history_schema.dart',
     ).readAsStringSync();
     final workerSnapshotSource = File(
-      'android/app/src/main/kotlin/com/zarz/mornye/'
+      'android/app/src/main/kotlin/com/zuancrisp/mosix/'
       'DownloadServiceSnapshot.kt',
     ).readAsStringSync();
     final nativeWorkerProviderSource = File(

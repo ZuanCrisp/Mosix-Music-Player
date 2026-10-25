@@ -1,6 +1,6 @@
 import 'dart:io' show Platform;
 
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 /// Platform label sent with native data jobs: `android`, `ios`, or the
 /// desktop OS (`macos`, `windows`, `linux`). The native backend applies

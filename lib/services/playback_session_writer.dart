@@ -1,4 +1,4 @@
-import 'package:mornye/services/app_state_database.dart';
+import 'package:mosix/services/app_state_database.dart';
 
 /// Owns ordered session writes and the revision of the persisted queue.
 /// Position updates serialize the queue only when it changed or the stored

@@ -102,7 +102,7 @@ extension _HomeTabCsvImport on _HomeTabState {
                   children: [
                     Text(l10n.dialogImportPlaylistMessage(tracks.length)),
                     const SizedBox(height: 12),
-                    if (dialogCtx.isMornye)
+                    if (dialogCtx.isMosix)
                       AppSwitchListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text(l10n.homeSkipAlreadyDownloaded),

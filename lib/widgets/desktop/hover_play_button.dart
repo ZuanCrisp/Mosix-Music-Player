@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/models/album_track_order.dart';
-import 'package:mornye/models/download_history.dart';
-import 'package:mornye/providers/playback_provider.dart';
-import 'package:mornye/services/history_database.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/models/album_track_order.dart';
+import 'package:mosix/models/download_history.dart';
+import 'package:mosix/providers/playback_provider.dart';
+import 'package:mosix/services/history_database.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 /// A play button that appears over artwork while the pointer is on it, on
 /// desktop. Place it in the artwork's [Stack]; it fills the stack to track
@@ -41,9 +41,9 @@ class _DesktopHoverPlayButtonState extends State<DesktopHoverPlayButton> {
       return const SizedBox.shrink();
     }
     final colorScheme = Theme.of(context).colorScheme;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final visible = _hovered || _focused;
-    // Mornye follows Apple Music's light disc; Material uses its primary FAB
+    // Mosix follows Apple Music's light disc; Material uses its primary FAB
     // colors.
     final background = mornye
         ? Colors.white.withValues(alpha: 0.92)

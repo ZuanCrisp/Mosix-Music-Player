@@ -225,7 +225,7 @@ extension _QueueTabFilterWidgets on _QueueTabState {
 
     final leadCount = activeDownloadIds.length + bridgeIds.length;
     // The tab-root Library keeps Songs to songs: collections live on the
-    // Playlists page. Section pages opened from Mornye keep them inline.
+    // Playlists page. Section pages opened from Mosix keep them inline.
     final rootLibrary = widget.librarySection == null;
     final collectionEntries = filterMode == 'all' && !rootLibrary
         ? _getVisibleCollectionEntries(collectionState)
@@ -237,7 +237,7 @@ extension _QueueTabFilterWidgets on _QueueTabState {
               .toList(growable: false)
         : const <_CollectionEntry>[];
     // Material lists group rows under pinned sections.
-    final sectioned = rootLibrary && !context.isMornye;
+    final sectioned = rootLibrary && !context.isMosix;
 
     // Indexes into collectionState.playlists, name-filtered by the search
     // query, for the 'playlists' view.
@@ -295,7 +295,7 @@ extension _QueueTabFilterWidgets on _QueueTabState {
     Widget leadListCell(int index) {
       // Sectioned lists and desktop tables keep the active downloads as
       // their own run.
-      final runLength = isDesktopPlatform || (rootLibrary && !context.isMornye)
+      final runLength = isDesktopPlatform || (rootLibrary && !context.isMosix)
           ? leadCount
           : leadCount + filteredUnifiedItems.length;
       if (index < activeDownloadIds.length) {
@@ -336,7 +336,7 @@ extension _QueueTabFilterWidgets on _QueueTabState {
         if (rootLibrary &&
             filterMode == 'all' &&
             _searchQuery.isEmpty &&
-            !context.isMornye &&
+            !context.isMosix &&
             !_isSelectionMode &&
             ref.watch(
               settingsProvider.select((s) => s.listeningStatisticsEnabled),
@@ -1049,7 +1049,7 @@ extension _QueueTabFilterWidgets on _QueueTabState {
         icon = Icons.history;
     }
 
-    if (context.isMornye) {
+    if (context.isMosix) {
       return EmptyState(
         icon: icon,
         title: message,

@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/utils/lyrics_metadata_helper.dart';
+import 'package:mosix/utils/lyrics_metadata_helper.dart';
 
 import 'support/lyrics_usability_benchmark.dart';
 
@@ -63,7 +63,7 @@ void main() {
     test(
       'failed requested SAF write propagates and is not silently ignored',
       () async {
-        const channel = MethodChannel('com.zarz.mornye/backend');
+        const channel = MethodChannel('com.zuancrisp.mosix/backend');
         final messenger =
             TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
         var succeeds = false;

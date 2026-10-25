@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon.dart';
 
 /// Finds [icon] whether it is drawn by a plain [Icon] or by an [AppIcon],
 /// which may render a Material Symbol in its place.

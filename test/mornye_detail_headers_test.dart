@@ -6,12 +6,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/cover_palette.dart';
-import 'package:mornye/services/cover_cache_manager.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/collection_scaffold.dart';
-import 'package:mornye/widgets/mornye_artist_header.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/cover_palette.dart';
+import 'package:mosix/services/cover_cache_manager.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/collection_scaffold.dart';
+import 'package:mosix/widgets/mornye_artist_header.dart';
 
 void main() {
   testWidgets('artist logo uses a bounded aspect-preserving shared decode', (
@@ -24,7 +24,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           builder: (context, child) => MediaQuery(
             data: MediaQuery.of(
               context,
@@ -34,7 +34,7 @@ void main() {
           home: const Scaffold(
             body: CustomScrollView(
               slivers: [
-                MornyeArtistHeader(
+                MosixArtistHeader(
                   name: name,
                   logoUrl: 'https://example.invalid/large-logo.png',
                   artwork: ColoredBox(color: Colors.orange),
@@ -110,8 +110,8 @@ void main() {
       ]) {
         await tester.pumpWidget(
           MaterialApp(
-            theme: MornyeTheme.build(brightness),
-            home: MornyeArtistSurface(
+            theme: MosixTheme.build(brightness),
+            home: MosixArtistSurface(
               imageSource: cover.path,
               logoSource: logo?.path,
               child: const Text('Artist action'),
@@ -164,8 +164,8 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: MornyeTheme.build(Brightness.light),
-              home: MornyeArtistSurface(
+              theme: MosixTheme.build(Brightness.light),
+              home: MosixArtistSurface(
                 imageSource: cover.path,
                 neutralActions: true,
                 child: CollectionScaffold(
@@ -238,11 +238,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           home: Scaffold(
             body: CustomScrollView(
               slivers: const [
-                MornyeArtistHeader(
+                MosixArtistHeader(
                   name: 'Example Artist',
                   logoUrl: 'https://example.invalid/unavailable-logo.png',
                   artwork: ColoredBox(color: Colors.orange),
@@ -289,12 +289,12 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           home: Scaffold(
             body: CustomScrollView(
               controller: controller,
               slivers: const [
-                MornyeArtistHeader(
+                MosixArtistHeader(
                   name: 'Artist',
                   artwork: ColoredBox(key: artworkKey, color: Colors.orange),
                   actions: [Text('Artist action')],
@@ -356,14 +356,14 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           home: Scaffold(
             body: CustomScrollView(
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
               ),
               slivers: const [
-                MornyeArtistHeader(
+                MosixArtistHeader(
                   name: 'Artist',
                   artwork: ColoredBox(key: artworkKey, color: Colors.orange),
                   actions: [Text('Artist action')],
@@ -422,7 +422,7 @@ void main() {
           await tester.pumpWidget(
             ProviderScope(
               child: MaterialApp(
-                theme: MornyeTheme.build(Brightness.dark),
+                theme: MosixTheme.build(Brightness.dark),
                 scrollBehavior: const MaterialScrollBehavior().copyWith(
                   physics: const BouncingScrollPhysics(
                     parent: AlwaysScrollableScrollPhysics(),
@@ -523,7 +523,7 @@ void main() {
           await tester.pumpWidget(
             ProviderScope(
               child: MaterialApp(
-                theme: MornyeTheme.build(brightness),
+                theme: MosixTheme.build(brightness),
                 builder: (context, child) => MediaQuery(
                   data: MediaQuery.of(
                     context,
@@ -614,7 +614,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           home: CollectionScaffold(
             scrollController: controller,
             isSelectionMode: false,
@@ -674,7 +674,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: MornyeTheme.build(Brightness.dark),
+            theme: MosixTheme.build(Brightness.dark),
             builder: (context, child) => MediaQuery(
               data: MediaQuery.of(
                 context,
@@ -686,7 +686,7 @@ void main() {
                 body: CustomScrollView(
                   controller: controller,
                   slivers: [
-                    ...MornyeArtistHeader(
+                    ...MosixArtistHeader(
                       name: 'An artist with a name spanning several lines',
                       showTitle: true,
                       artwork: const ColoredBox(color: Colors.orange),

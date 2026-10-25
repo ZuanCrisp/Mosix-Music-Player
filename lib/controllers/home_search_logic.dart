@@ -1,5 +1,5 @@
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/extension_provider.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/extension_provider.dart';
 
 bool looksLikeUrlOrSpotifyUri(String text) =>
     text.startsWith('http') || text.startsWith('spotify:');

@@ -27,13 +27,13 @@ report on the host, run the suite through
 `integration_test/performance_driver.dart`:
 
 ```bash
-MORNYE_PERFORMANCE_REPORT=build/perf/mornye.json \
+MOSIX_PERFORMANCE_REPORT=build/perf/mornye.json \
   flutter drive --profile --keep-app-running -d emulator-5554 \
   --driver=integration_test/performance_driver.dart \
   --target=integration_test/mornye_performance_test.dart
 ```
 
-- `MORNYE_PERFORMANCE_REPORT` (host environment variable) selects the
+- `MOSIX_PERFORMANCE_REPORT` (host environment variable) selects the
   JSON output; the default is `/tmp/mornye-performance.json`.
   Screenshots are written as PNG files beside it.
 - Use `--profile` on Android and `--debug` on iOS simulators.
@@ -45,7 +45,7 @@ MORNYE_PERFORMANCE_REPORT=build/perf/mornye.json \
   to each budget; they do not claim the display actually ran at all those rates.
 - Run `material_performance_test.dart` through the same driver for Material
   lyrics and artwork transitions with the same fixtures and gestures as the
-  Mornye suites, plus seek playback, dragging and paused idle in both styles.
+  Mosix suites, plus seek playback, dragging and paused idle in both styles.
 - Use `player_performance_test.dart` to compare lyrics, artwork and seek in
   both styles in a single build.
 
@@ -70,8 +70,8 @@ MORNYE_PERFORMANCE_REPORT=build/perf/mornye.json \
 | `TEST_SMB_ADDRESS` | `network_smb_file_actions_test.dart` | SMB address of `smb2_fixture_server.py --deletion`; skipped when empty |
 | `REPLAYGAIN_COMPLETION_BASELINE` | `album_replaygain_completion_test.dart` | Records a baseline run and skips the album-gain assertions |
 | `GLASS_PREVIEW` | `mornye_liquid_glass_test.dart` | Holds the Home screen for 25 s for manual viewing |
-| `MORNYE_GLASS_FOCUS` | `mornye_rendering_performance_test.dart` | Measures only clarity 0.6 and 1.0 |
-| `MORNYE_GLASS_FLAT_BACKDROP` | `mornye_glass_visual_test.dart` | Flat surfaces instead of the generated stripes and grid |
+| `MOSIX_GLASS_FOCUS` | `mornye_rendering_performance_test.dart` | Measures only clarity 0.6 and 1.0 |
+| `MOSIX_GLASS_FLAT_BACKDROP` | `mornye_glass_visual_test.dart` | Flat surfaces instead of the generated stripes and grid |
 | `DOWNLOAD_GLASS_LEVEL` | `mornye_download_picker_test.dart` | Forces `flat`, `frosted` or `liquid` |
 | `DOWNLOAD_BRIGHTNESS` | `mornye_download_picker_test.dart` | Runs only `light` or `dark` |
 | `DOWNLOAD_QUALITY_COUNT` | `mornye_download_picker_test.dart` | Number of fixture quality options (default 16) |
@@ -85,9 +85,9 @@ Aggregates (each runs other suites as groups):
 | File | Runs |
 | --- | --- |
 | `collection_batch_write_test.dart` | `playlist_batch_write_test.dart`, `loved_batch_write_test.dart` |
-| `mornye_performance_test.dart` | The rendering, screens, artwork and lyrics Mornye performance suites; driver target |
+| `mornye_performance_test.dart` | The rendering, screens, artwork and lyrics Mosix performance suites; driver target |
 | `material_performance_test.dart` | Material lyrics/artwork and shared seek scenarios in both styles; driver target |
-| `player_performance_test.dart` | Shared lyrics, artwork and seek scenarios for Material and Mornye; driver target |
+| `player_performance_test.dart` | Shared lyrics, artwork and seek scenarios for Material and Mosix; driver target |
 | `remaining_optimization_test.dart` | Collection restore, history staging, library staging, cache maintenance, collection workers, queue workers, backup archive |
 
 Support files (not tests): `performance_driver.dart` (host driver) and
@@ -119,14 +119,14 @@ Suites:
 | `loved_batch_write_test.dart` | Love All add and remove on real SQLite |
 | `lyrics_file_access_test.dart` | Embedding, sidecar and export of lyrics outside Downloads |
 | `lyrics_timing_test.dart` | Native lyrics parser timing cases |
-| `mornye_artwork_performance_test.dart` | Mornye player panel transitions and artwork cache (performance) |
-| `mornye_download_picker_test.dart` | Mornye download picker glass and queue feedback (performance) |
-| `mornye_glass_visual_test.dart` | Native Mornye glass poses and layers, with screenshots |
+| `mornye_artwork_performance_test.dart` | Mosix player panel transitions and artwork cache (performance) |
+| `mornye_download_picker_test.dart` | Mosix download picker glass and queue feedback (performance) |
+| `mornye_glass_visual_test.dart` | Native Mosix glass poses and layers, with screenshots |
 | `mornye_liquid_glass_test.dart` | Liquid glass lens and drag behavior |
 | `mornye_lyrics_performance_test.dart` | Word-synced lyrics and manual scrolling (performance) |
 | `mornye_menu_presentation_test.dart` | Anchored glass menu presentation (performance) |
-| `mornye_rendering_performance_test.dart` | Mornye rendering at several glass clarities (performance) |
-| `mornye_screens_performance_test.dart` | Mornye screens with 2000-track data (performance) |
+| `mornye_rendering_performance_test.dart` | Mosix rendering at several glass clarities (performance) |
+| `mornye_screens_performance_test.dart` | Mosix screens with 2000-track data (performance) |
 | `native_backup_archive_test.dart` | Native ZIP backup routes, old archive formats, compression parity |
 | `native_cache_maintenance_test.dart` | Native cover cache budget, pruning and sweep |
 | `native_collection_restore_test.dart` | Native collection restore, exact rows, atomic rejection |

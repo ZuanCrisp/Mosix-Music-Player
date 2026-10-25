@@ -1,37 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
-import 'package:mornye/screens/track_history_snapshot.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/expressive_button_group.dart';
-import 'package:mornye/screens/selection_mode_mixin.dart';
-import 'package:mornye/widgets/collection_scaffold.dart';
-import 'package:mornye/widgets/selection_bottom_bar.dart';
-import 'package:mornye/widgets/selection_action_button.dart';
+import 'package:mosix/screens/track_history_snapshot.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/expressive_button_group.dart';
+import 'package:mosix/screens/selection_mode_mixin.dart';
+import 'package:mosix/widgets/collection_scaffold.dart';
+import 'package:mosix/widgets/selection_bottom_bar.dart';
+import 'package:mosix/widgets/selection_action_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/utils/image_cache_utils.dart';
-import 'package:mornye/utils/cover_art_utils.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/provider_resource_ids.dart';
-import 'package:mornye/widgets/playlist_picker_sheet.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
-import 'package:mornye/widgets/motion_header_banner.dart';
-import 'package:mornye/widgets/track_list_tile.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/desktop/desktop_selection.dart';
-import 'package:mornye/widgets/desktop/track_list_table.dart';
-import 'package:mornye/widgets/track_detail_actions.dart';
-import 'package:mornye/screens/collapsing_header_scroll_mixin.dart';
-import 'package:mornye/widgets/error_card.dart';
-import 'package:mornye/widgets/downloadable_cover.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mornye_artist_header.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/utils/image_cache_utils.dart';
+import 'package:mosix/utils/cover_art_utils.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/provider_resource_ids.dart';
+import 'package:mosix/widgets/playlist_picker_sheet.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
+import 'package:mosix/widgets/motion_header_banner.dart';
+import 'package:mosix/widgets/track_list_tile.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/desktop/desktop_selection.dart';
+import 'package:mosix/widgets/desktop/track_list_table.dart';
+import 'package:mosix/widgets/track_detail_actions.dart';
+import 'package:mosix/screens/collapsing_header_scroll_mixin.dart';
+import 'package:mosix/widgets/error_card.dart';
+import 'package:mosix/widgets/downloadable_cover.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_artist_header.dart';
 
 class PlaylistScreen extends ConsumerStatefulWidget {
   final String playlistName;
@@ -262,8 +262,8 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
 
   @override
   Widget build(BuildContext context) {
-    if (context.isMornye) {
-      return MornyeArtistSurface(
+    if (context.isMosix) {
+      return MosixArtistSurface(
         imageSource: _coverUrl,
         neutralActions: true,
         child: Builder(builder: _buildPage),
@@ -341,7 +341,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
 
     return AlbumDetailHeader(
       title: _playlistName,
-      immersive: context.isMornye,
+      immersive: context.isMosix,
       squareArtwork: !hasMotion,
       expandedHeight: expandedHeight,
       showTitleInAppBar: showTitleInAppBar,
@@ -383,7 +383,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
                 _buildAddToPlaylistButton(context),
               ],
             )
-          : context.isMornye
+          : context.isMosix
           ? Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -596,11 +596,11 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
 
   Widget _buildDownloadAllCenterButton(BuildContext context) {
     return HeaderFilledButton(
-      icon: context.isMornye
+      icon: context.isMosix
           ? CupertinoIcons.arrow_down_circle_fill
           : Icons.download_rounded,
       tonal: true,
-      label: context.isMornye
+      label: context.isMosix
           ? context.l10n.dialogDownload
           : context.l10n.downloadAllCount(_tracks.length),
       onPressed: _tracks.isEmpty ? null : () => _confirmDownloadAll(context),

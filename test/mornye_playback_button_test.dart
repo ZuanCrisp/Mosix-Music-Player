@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/widgets/mornye_playback_button.dart';
+import 'package:mosix/widgets/mornye_playback_button.dart';
 
 void main() {
   Future<void> pumpButton(
@@ -15,7 +15,7 @@ void main() {
         data: MediaQueryData(disableAnimations: reduceMotion),
         child: Scaffold(
           body: Center(
-            child: MornyePlaybackButton(
+            child: MosixPlaybackButton(
               icon: icon,
               tooltip: 'Playback action',
               color: Colors.white,

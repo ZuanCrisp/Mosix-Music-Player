@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/constants/app_info.dart';
+import 'package:mosix/constants/app_info.dart';
 
 void main() {
   test('desktop release builds mark the version as beta', () {

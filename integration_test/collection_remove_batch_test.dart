@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/services/library_collections_database.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/services/library_collections_database.dart';
 
 import '../test/support/library_collections_benchmark.dart';
 import '../test/support/playlist_batch_benchmark.dart';

@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:mornye/theme/material_symbols.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mosix/theme/material_symbols.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
 
 Widget _host(Widget child, {bool mornye = false, bool reduceMotion = false}) {
   return MaterialApp(
-    theme: ThemeData(extensions: [if (mornye) const MornyeTheme()]),
+    theme: ThemeData(extensions: [if (mornye) const MosixTheme()]),
     home: MediaQuery(
       data: MediaQueryData(disableAnimations: reduceMotion),
       child: Scaffold(body: Center(child: child)),
@@ -57,7 +57,7 @@ void main() {
     expect(filled.opticalSize, 20);
   });
 
-  testWidgets('Mornye keeps the original glyph or its Cupertino mapping', (
+  testWidgets('Mosix keeps the original glyph or its Cupertino mapping', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -100,7 +100,7 @@ void main() {
     expect(taps, 1);
   });
 
-  testWidgets('AppIconButton keeps IconButton for dense, Mornye and reduced '
+  testWidgets('AppIconButton keeps IconButton for dense, Mosix and reduced '
       'motion layouts', (tester) async {
     Widget button({EdgeInsets? padding}) => AppIconButton(
       tooltip: 'Close',

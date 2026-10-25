@@ -10,8 +10,8 @@ import 'dart:typed_data';
 import 'package:dart_smb2/src/ffi/native_lib.dart';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/network_storage_service.dart';
-import 'package:mornye/services/network_storage_error.dart';
+import 'package:mosix/services/network_storage_service.dart';
+import 'package:mosix/services/network_storage_error.dart';
 
 NetworkConnection connection(
   String url, {

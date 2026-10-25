@@ -8,7 +8,7 @@ void main() {
   testWidgets('native Discord SDK can initialize, stop, and restart', (
     tester,
   ) async {
-    const channel = MethodChannel('com.zarz.mornye/discord');
+    const channel = MethodChannel('com.zuancrisp.mosix/discord');
     // Staging the official SDK is a prerequisite for this device-only test.
     // No account is linked and no listening activity is published.
     for (var i = 0; i < 2; i++) {

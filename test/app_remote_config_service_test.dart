@@ -6,11 +6,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/screens/settings/donate_page.dart';
-import 'package:mornye/services/app_remote_config_service.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_progress_indicator.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/screens/settings/donate_page.dart';
+import 'package:mosix/services/app_remote_config_service.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_progress_indicator.dart';
 
 class _TrackedClient extends MockClient {
   _TrackedClient(super.handler);
@@ -109,7 +109,7 @@ void main() {
       final service = AppRemoteConfigService(
         client: MockClient((request) async {
           expect(request.headers['Accept'], 'application/json');
-          expect(request.headers['User-Agent'], startsWith('Mornye/'));
+          expect(request.headers['User-Agent'], startsWith('Mosix/'));
           return http.Response(
             jsonEncode({
               'donate': {'monthly_goal': _monthlyGoalPayload()},
@@ -120,7 +120,7 @@ void main() {
       );
       await tester.pumpWidget(
         MaterialApp(
-          theme: MornyeTheme.build(brightness),
+          theme: MosixTheme.build(brightness),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: const Locale('id'),

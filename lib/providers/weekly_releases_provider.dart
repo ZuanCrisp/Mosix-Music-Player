@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/services/weekly_releases.dart';
-import 'package:mornye/utils/provider_resource_ids.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/services/weekly_releases.dart';
+import 'package:mosix/utils/provider_resource_ids.dart';
 
 final weeklyReleasesProvider = FutureProvider.autoDispose
     .family<WeeklyReleaseFeed, bool>((ref, refresh) async {

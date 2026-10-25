@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
 
 DownloadHistoryItem _historyItem({
   required String id,

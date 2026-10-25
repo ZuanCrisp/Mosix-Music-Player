@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/sqlite_helpers.dart';
-import 'package:mornye/utils/file_access.dart';
-import 'package:mornye/utils/path_match_keys.dart';
+import 'package:mosix/services/sqlite_helpers.dart';
+import 'package:mosix/utils/file_access.dart';
+import 'package:mosix/utils/path_match_keys.dart';
 import 'package:sqflite/sqflite.dart';
 
 class _SqliteRows implements DatabaseExecutor {

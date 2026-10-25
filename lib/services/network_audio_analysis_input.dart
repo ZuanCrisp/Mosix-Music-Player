@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/services/audio_analysis_jobs.dart';
-import 'package:mornye/services/network_storage_service.dart';
+import 'package:mosix/services/audio_analysis_jobs.dart';
+import 'package:mosix/services/network_storage_service.dart';
 
 /// Supplies seekable, unmodified audio to the existing analysers. Credentials
 /// stay in the storage proxy; only an owned temporary file reaches the decoder.

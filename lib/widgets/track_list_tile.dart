@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/clickable_metadata.dart';
-import 'package:mornye/controllers/local_playback.dart';
-import 'package:mornye/widgets/audio_quality_badges.dart';
-import 'package:mornye/widgets/track_card.dart';
-import 'package:mornye/widgets/in_library_badge.dart';
-import 'package:mornye/widgets/preview_button.dart';
-import 'package:mornye/widgets/track_collection_quick_actions.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/clickable_metadata.dart';
+import 'package:mosix/controllers/local_playback.dart';
+import 'package:mosix/widgets/audio_quality_badges.dart';
+import 'package:mosix/widgets/track_card.dart';
+import 'package:mosix/widgets/in_library_badge.dart';
+import 'package:mosix/widgets/preview_button.dart';
+import 'package:mosix/widgets/track_collection_quick_actions.dart';
 
 /// Track row shared by the album and playlist screens. Tap offers another
 /// download when quality variants are enabled, otherwise it plays the local
@@ -52,9 +52,9 @@ class TrackListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    // Material rows mark the current track; Mornye rows show no
+    // Material rows mark the current track; Mosix rows show no
     // current-track state.
-    final playback = context.isMornye
+    final playback = context.isMosix
         ? null
         : ref.watch(catalogTrackPlaybackUiProvider(catalogTrackKey(track)));
 

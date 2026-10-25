@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/providers/recent_access_provider.dart';
+import 'package:mosix/providers/recent_access_provider.dart';
 
 void main() {
   group('Recent download clear boundary', () {

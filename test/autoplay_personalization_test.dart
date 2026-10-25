@@ -4,9 +4,9 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/foundation.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/services/autoplay_personalization.dart';
-import 'package:mornye/services/music_player_service.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/services/autoplay_personalization.dart';
+import 'package:mosix/services/music_player_service.dart';
 
 final _at = DateTime(2026, 10, 11, 9);
 const _rock = AutoplayLearningTrack(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
 
 String trackDeletionResultMessage(
   AppLocalizations l10n, {

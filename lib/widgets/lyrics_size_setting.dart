@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/theme_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_slider.dart';
-import 'package:mornye/widgets/lyrics_text_scale.dart';
-import 'package:mornye/widgets/slider_value_header.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/theme_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_slider.dart';
+import 'package:mosix/widgets/lyrics_text_scale.dart';
+import 'package:mosix/widgets/slider_value_header.dart';
 
 class LyricsSizeSetting extends ConsumerWidget {
   const LyricsSizeSetting({super.key});
@@ -28,7 +28,7 @@ class LyricsSizeSetting extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (context.isMornye)
+          if (context.isMosix)
             Row(
               children: [
                 Expanded(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/theme_settings.dart';
-import 'package:mornye/utils/artist_utils.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/theme_settings.dart';
+import 'package:mosix/utils/artist_utils.dart';
 
 void main() {
   test(
@@ -180,7 +180,7 @@ void main() {
         seedColorValue: 0xff123456,
         useAmoled: true,
         style: AppThemeStyle.mornye,
-        mornyeAccent: MornyeAccent.blue,
+        mornyeAccent: MosixAccent.blue,
         useSystemFont: true,
       );
 
@@ -193,15 +193,15 @@ void main() {
       expect(copied.themeMode, ThemeMode.light);
       expect(copied.useAmoled, isTrue);
       expect(decoded.style, AppThemeStyle.mornye);
-      expect(decoded.mornyeAccent, MornyeAccent.blue);
-      expect(copied.mornyeAccent, MornyeAccent.blue);
+      expect(decoded.mornyeAccent, MosixAccent.blue);
+      expect(copied.mornyeAccent, MosixAccent.blue);
       expect(decoded.useSystemFont, isTrue);
       expect(copied.useSystemFont, isTrue);
       expect(ThemeSettings.fromJson({}).useSystemFont, isFalse);
-      expect(ThemeSettings.fromJson({}).mornyeAccent, MornyeAccent.red);
+      expect(ThemeSettings.fromJson({}).mornyeAccent, MosixAccent.red);
       expect(
-        ThemeSettings.fromJson({kMornyeAccentKey: 'unknown'}).mornyeAccent,
-        MornyeAccent.red,
+        ThemeSettings.fromJson({kMosixAccentKey: 'unknown'}).mornyeAccent,
+        MosixAccent.red,
       );
       expect(
         ThemeSettings.fromJson({'theme_mode': 'invalid'}).themeMode,

@@ -4,22 +4,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/constants/app_info.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/providers/system_volume_provider.dart';
-import 'package:mornye/services/app_navigation_service.dart';
-import 'package:mornye/services/music_playback_deck.dart'
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/providers/system_volume_provider.dart';
+import 'package:mosix/services/app_navigation_service.dart';
+import 'package:mosix/services/music_playback_deck.dart'
     show usbHardwareVolume;
-import 'package:mornye/services/shell_navigation_service.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_refresh_indicator.dart';
-import 'package:mornye/widgets/desktop/desktop_commands.dart';
-import 'package:mornye/widgets/desktop/desktop_inspector.dart';
-import 'package:mornye/widgets/desktop/desktop_player_bar.dart';
-import 'package:mornye/widgets/desktop/desktop_window.dart';
-import 'package:mornye/widgets/desktop/desktop_window_controls.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_refresh_indicator.dart';
+import 'package:mosix/widgets/desktop/desktop_commands.dart';
+import 'package:mosix/widgets/desktop/desktop_inspector.dart';
+import 'package:mosix/widgets/desktop/desktop_player_bar.dart';
+import 'package:mosix/widgets/desktop/desktop_window.dart';
+import 'package:mosix/widgets/desktop/desktop_window_controls.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Keyboard shortcuts for desktop builds, plus the macOS menu bar that
@@ -151,7 +151,7 @@ class _DesktopShortcutsState extends ConsumerState<DesktopShortcuts> {
   void _selectDestination(int position) {
     final context = _rootNavigator?.context ?? this.context;
     final tabs = desktopDestinationTabs(
-      mornye: context.isMornye,
+      mornye: context.isMosix,
       showStore: ref.read(settingsProvider).showExtensionStore,
     );
     if (position < 1 || position > tabs.length) return;
@@ -299,7 +299,7 @@ class _DesktopMenuBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final material = MaterialLocalizations.of(context);
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     return Consumer(
       builder: (context, ref, child) {
         final showStore = ref.watch(

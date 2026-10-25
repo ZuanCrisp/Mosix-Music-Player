@@ -2,37 +2,37 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/theme/cover_palette.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/theme/cover_palette.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
 
 /// Navigation for the title/artist, separate from playback and file actions.
-class MornyePlayerNavigationMenu extends StatelessWidget {
-  const MornyePlayerNavigationMenu({super.key, required this.mediaItem});
+class MosixPlayerNavigationMenu extends StatelessWidget {
+  const MosixPlayerNavigationMenu({super.key, required this.mediaItem});
 
   final MediaItem mediaItem;
 
   @override
   Widget build(BuildContext context) {
-    return _MornyePlayerMenuSurface(
+    return _MosixPlayerMenuSurface(
       mediaItem: mediaItem,
-      child: MornyeContextMenu(
+      child: MosixContextMenu(
         inheritSurface: true,
         dense: true,
         groups: [
           [
             if ((mediaItem.artist ?? '').trim().isNotEmpty)
-              MornyeMenuAction(
+              MosixMenuAction(
                 icon: CupertinoIcons.mic,
                 label: context.l10n.mornyeGoToArtist,
                 subtitle: mediaItem.artist,
                 onPressed: () => Navigator.of(context).pop('artist'),
               ),
             if ((mediaItem.album ?? '').trim().isNotEmpty)
-              MornyeMenuAction(
+              MosixMenuAction(
                 icon: CupertinoIcons.square_stack,
                 label: context.l10n.homeGoToAlbum,
                 subtitle: mediaItem.album,
@@ -46,8 +46,8 @@ class MornyePlayerNavigationMenu extends StatelessWidget {
 }
 
 /// A floating menu that inherits the player's dark appearance.
-class MornyePlayerActionsSheet extends ConsumerWidget {
-  const MornyePlayerActionsSheet({
+class MosixPlayerActionsSheet extends ConsumerWidget {
+  const MosixPlayerActionsSheet({
     super.key,
     required this.mediaItem,
     this.sleepTimerSubtitle,
@@ -64,9 +64,9 @@ class MornyePlayerActionsSheet extends ConsumerWidget {
         (state) => track != null && state.isLoved(track),
       ),
     );
-    return _MornyePlayerMenuSurface(
+    return _MosixPlayerMenuSurface(
       mediaItem: mediaItem,
-      child: MornyeContextMenu(
+      child: MosixContextMenu(
         inheritSurface: true,
         dense: true,
         quickActions: [
@@ -149,14 +149,14 @@ class MornyePlayerActionsSheet extends ConsumerWidget {
     );
   }
 
-  MornyeMenuAction _action(
+  MosixMenuAction _action(
     BuildContext context,
     String value,
     String label,
     IconData icon, {
     String? subtitle,
     bool selected = false,
-  }) => MornyeMenuAction(
+  }) => MosixMenuAction(
     icon: icon,
     label: label,
     subtitle: subtitle,
@@ -166,8 +166,8 @@ class MornyePlayerActionsSheet extends ConsumerWidget {
 }
 
 /// Reuse the cached cover palette; no per-frame background capture is needed.
-class _MornyePlayerMenuSurface extends StatelessWidget {
-  const _MornyePlayerMenuSurface({
+class _MosixPlayerMenuSurface extends StatelessWidget {
+  const _MosixPlayerMenuSurface({
     required this.mediaItem,
     required this.child,
   });
@@ -193,7 +193,7 @@ class _MornyePlayerMenuSurface extends StatelessWidget {
             .withLightness(0.28)
             .toColor();
         return Theme(
-          data: MornyeTheme.fromContext(
+          data: MosixTheme.fromContext(
             context,
             brightness: Brightness.dark,
             chromeSurface: surface,

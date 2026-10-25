@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/shell_navigation_service.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
-import 'package:mornye/widgets/desktop/desktop_commands.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/widgets/desktop/desktop_commands.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 /// Lists the desktop keyboard shortcuts, read from the same bindings the app
 /// registers, so the page cannot drift from what the keys do.
@@ -23,7 +23,7 @@ class KeyboardShortcutsPage extends ConsumerWidget {
       settingsProvider.select((s) => s.showExtensionStore),
     );
     final tabs = desktopDestinationTabs(
-      mornye: context.isMornye,
+      mornye: context.isMosix,
       showStore: showStore,
     );
 

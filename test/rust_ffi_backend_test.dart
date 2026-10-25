@@ -3,10 +3,10 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/constants/app_info.dart';
-import 'package:mornye/services/backend/ffi_backend_transport.dart';
-import 'package:mornye/services/backend/native_backend_transport.dart';
-import 'package:mornye/services/backend/rust_ffi_backend.dart';
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/services/backend/ffi_backend_transport.dart';
+import 'package:mosix/services/backend/native_backend_transport.dart';
+import 'package:mosix/services/backend/rust_ffi_backend.dart';
 
 class _Call {
   _Call(this.id, this.method, this.args, this.bytes);
@@ -376,13 +376,13 @@ void main() {
     test('prefers the environment override', () {
       expect(
         desktopBackendLibraryCandidates(
-          environment: {'MORNYE_DESKTOP_LIB': '/dev/libmornye_desktop.dylib'},
+          environment: {'MOSIX_DESKTOP_LIB': '/dev/libmornye_desktop.dylib'},
           operatingSystem: 'macos',
-          executable: '/Applications/Mornye.app/Contents/MacOS/Mornye',
+          executable: '/Applications/Mosix.app/Contents/MacOS/Mosix',
         ),
         [
           '/dev/libmornye_desktop.dylib',
-          '/Applications/Mornye.app/Contents/Frameworks/libmornye_desktop.dylib',
+          '/Applications/Mosix.app/Contents/Frameworks/libmornye_desktop.dylib',
         ],
       );
     });
@@ -392,9 +392,9 @@ void main() {
         desktopBackendLibraryCandidates(
           environment: const {},
           operatingSystem: 'windows',
-          executable: r'C:\Program Files\Mornye\mornye.exe',
+          executable: r'C:\Program Files\Mosix\mornye.exe',
         ),
-        [r'C:\Program Files\Mornye\mornye_desktop.dll'],
+        [r'C:\Program Files\Mosix\mornye_desktop.dll'],
       );
       expect(
         desktopBackendLibraryCandidates(

@@ -3,10 +3,10 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/providers/download_history_provider.dart';
-import 'package:mornye/providers/library_browse_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/providers/library_browse_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
 
 import 'support/fixed_settings.dart';
 import 'support/vm_service_probe.dart';

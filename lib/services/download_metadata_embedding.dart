@@ -2,18 +2,18 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/metadata_separators.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/models/extension.dart';
-import 'package:mornye/services/download_metadata_resolver.dart';
-import 'package:mornye/services/ffmpeg_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/services/replaygain_service.dart';
-import 'package:mornye/utils/artist_utils.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/utils/lyrics_metadata_helper.dart';
-import 'package:mornye/utils/string_utils.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/metadata_separators.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/models/extension.dart';
+import 'package:mosix/services/download_metadata_resolver.dart';
+import 'package:mosix/services/ffmpeg_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/services/replaygain_service.dart';
+import 'package:mosix/utils/artist_utils.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/utils/lyrics_metadata_helper.dart';
+import 'package:mosix/utils/string_utils.dart';
 
 /// Embeds tags into a local working file; the queue owns publication and state.
 class DownloadMetadataEmbedding {

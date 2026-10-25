@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/library_ingestion_store.dart';
-import 'package:mornye/services/network_library_scanner.dart';
-import 'package:mornye/services/network_storage_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
+import 'package:mosix/services/library_ingestion_store.dart';
+import 'package:mosix/services/network_library_scanner.dart';
+import 'package:mosix/services/network_storage_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
 
 import 'support/library_native_fixture.dart';
 import 'support/sqlite_process_database.dart';

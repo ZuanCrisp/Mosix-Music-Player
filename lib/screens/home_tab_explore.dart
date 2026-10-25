@@ -7,7 +7,7 @@ extension _HomeTabExploreUI on _HomeTabState {
     ColorScheme colorScheme,
   ) {
     final hasGreeting =
-        !context.isMornye && greeting != null && greeting.isNotEmpty;
+        !context.isMosix && greeting != null && greeting.isNotEmpty;
     final isTablet = MediaQuery.sizeOf(context).shortestSide >= 600;
     final sectionOffset = hasGreeting ? 1 : 0;
     final totalCount = sections.length + sectionOffset + 1;
@@ -396,19 +396,19 @@ extension _HomeTabExploreUI on _HomeTabState {
   }
 
   void _showTrackBottomSheet(ExploreItem item, BuildContext itemContext) {
-    if (context.isMornye) {
+    if (context.isMosix) {
       final box = itemContext.findRenderObject();
       final anchor = box is RenderBox && box.hasSize
           ? box.localToGlobal(Offset.zero) & box.size
           : null;
-      showMornyeContextMenu<void>(
+      showMosixContextMenu<void>(
         context: itemContext,
         // Featured cards can exceed the menu helper's page-size heuristic.
         anchor: anchor,
-        builder: (menuContext) => MornyeContextMenu(
+        builder: (menuContext) => MosixContextMenu(
           groups: [
             [
-              MornyeMenuAction(
+              MosixMenuAction(
                 icon: mornyeIconFor(Icons.download),
                 label: menuContext.l10n.downloadTitle,
                 onPressed: () {
@@ -416,7 +416,7 @@ extension _HomeTabExploreUI on _HomeTabState {
                   _handleExploreTrackPrimaryAction(item);
                 },
               ),
-              MornyeMenuAction(
+              MosixMenuAction(
                 icon: mornyeIconFor(Icons.album),
                 label: menuContext.l10n.homeGoToAlbum,
                 onPressed: () {
@@ -498,7 +498,7 @@ extension _HomeTabExploreUI on _HomeTabState {
               ),
             ),
             // Material sheets separate the header by space alone.
-            if (context.isMornye) const Divider(height: 1),
+            if (context.isMosix) const Divider(height: 1),
             ListTile(
               leading: Icon(Icons.download, color: colorScheme.primary),
               title: Text(context.l10n.downloadTitle),
@@ -572,7 +572,7 @@ extension _HomeTabExploreUI on _HomeTabState {
     }
   }
 
-  /// Music's Search page closes with Browse Categories. Mornye has no genre
+  /// Music's Search page closes with Browse Categories. Mosix has no genre
   /// catalog, so each section of the home feed stands in as one tile.
   Widget _buildBrowseSliver() {
     return Consumer(

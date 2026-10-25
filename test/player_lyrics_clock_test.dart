@@ -5,12 +5,12 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/lyrics_parser.dart';
-import 'package:mornye/widgets/player_lyrics.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mosix/widgets/player_lyrics.dart';
 
 void main() {
   for (final mornye in [false, true]) {
@@ -25,7 +25,7 @@ void main() {
           addTearDown(playback.close);
           addTearDown(preview.dispose);
           final theme = mornye
-              ? MornyeTheme.build(Brightness.dark)
+              ? MosixTheme.build(Brightness.dark)
               : AppTheme.dark();
           final lyrics = LyricsParser.parse('''
 [00:13.161]First phrase

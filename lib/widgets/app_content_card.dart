@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 /// One inline surface, matching the metadata groups and dialog controls.
 class AppContentCard extends StatelessWidget {
@@ -26,21 +26,21 @@ class AppContentCard extends StatelessWidget {
   final Clip clipBehavior;
   final bool preserveColor;
 
-  /// Outer margin; Material defaults to its card theme, Mornye to zero.
+  /// Outer margin; Material defaults to its card theme, Mosix to zero.
   final EdgeInsetsGeometry? margin;
 
   /// Makes the whole card pressable, with the expressive press feedback.
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
-  /// False keeps a plain [Card] under Mornye for surfaces that carry their
-  /// own tinted color (errors, notices) rather than the Mornye control fill.
+  /// False keeps a plain [Card] under Mosix for surfaces that carry their
+  /// own tinted color (errors, notices) rather than the Mosix control fill.
   final bool mornyeSurface;
 
   @override
   Widget build(BuildContext context) {
-    if (!context.isMornye || !mornyeSurface) {
-      if (!context.isMornye &&
+    if (!context.isMosix || !mornyeSurface) {
+      if (!context.isMosix &&
           materialExpressiveEnabled(context) &&
           (shape == null || shape is RoundedRectangleBorder)) {
         final radius = shape is RoundedRectangleBorder
@@ -90,11 +90,11 @@ class AppContentCard extends StatelessWidget {
     final content = DividerTheme(
       data: DividerTheme.of(
         context,
-      ).copyWith(color: MornyeTheme.metadataDividerColor(context)),
+      ).copyWith(color: MosixTheme.metadataDividerColor(context)),
       child: child,
     );
     final surface = Material(
-      color: preserveColor ? color : MornyeTheme.controlFill(context),
+      color: preserveColor ? color : MosixTheme.controlFill(context),
       borderRadius: BorderRadius.circular(28),
       clipBehavior: Clip.antiAlias,
       child: onTap != null || onLongPress != null

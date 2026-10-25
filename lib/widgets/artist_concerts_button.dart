@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/artist_concert.dart';
-import 'package:mornye/screens/artist_concerts_screen.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/animation_utils.dart';
-import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/artist_concert.dart';
+import 'package:mosix/screens/artist_concerts_screen.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/animation_utils.dart';
+import 'package:mosix/widgets/expressive_button.dart';
 
 class ArtistConcertsButton extends StatelessWidget {
   const ArtistConcertsButton({
@@ -38,7 +38,7 @@ class ArtistConcertsButton extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );
-    if (!context.isMornye) {
+    if (!context.isMosix) {
       return ExpressiveButton(
         tonal: true,
         onPressed: open,

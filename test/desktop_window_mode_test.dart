@@ -6,19 +6,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/system_volume_provider.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/desktop/desktop_commands.dart';
-import 'package:mornye/widgets/desktop/desktop_player_bar.dart';
-import 'package:mornye/widgets/desktop/desktop_shortcuts.dart';
-import 'package:mornye/widgets/desktop/desktop_window.dart';
-import 'package:mornye/widgets/desktop/desktop_window_controls.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/system_volume_provider.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/desktop/desktop_commands.dart';
+import 'package:mosix/widgets/desktop/desktop_player_bar.dart';
+import 'package:mosix/widgets/desktop/desktop_shortcuts.dart';
+import 'package:mosix/widgets/desktop/desktop_window.dart';
+import 'package:mosix/widgets/desktop/desktop_window_controls.dart';
 
-const _channel = MethodChannel('com.zarz.mornye/window');
+const _channel = MethodChannel('com.zuancrisp.mosix/window');
 
 class _Player implements MusicPlayerController {
   @override
@@ -234,7 +234,7 @@ void main() {
         child: MaterialApp(
           navigatorKey: navigatorKey,
           theme: mornye
-              ? MornyeTheme.build(Brightness.light)
+              ? MosixTheme.build(Brightness.light)
               : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -250,7 +250,7 @@ void main() {
 
   for (final mornye in [false, true]) {
     testWidgets(
-      'window mode changes preserve mounted content and text (Mornye: $mornye)',
+      'window mode changes preserve mounted content and text (Mosix: $mornye)',
       (tester) async {
         var mounts = 0;
         await pumpApp(
@@ -274,7 +274,7 @@ void main() {
     );
 
     testWidgets(
-      'borderless controls invoke native window actions (Mornye: $mornye)',
+      'borderless controls invoke native window actions (Mosix: $mornye)',
       (tester) async {
         await emitMode(DesktopWindowMode.borderless);
         await pumpApp(
@@ -309,7 +309,7 @@ void main() {
     );
 
     testWidgets(
-      'appearance choice applies fullscreen and offers an exit (Mornye: $mornye)',
+      'appearance choice applies fullscreen and offers an exit (Mosix: $mornye)',
       (tester) async {
         await pumpApp(
           tester,

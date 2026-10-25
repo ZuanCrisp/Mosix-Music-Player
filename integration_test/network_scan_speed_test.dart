@@ -5,8 +5,8 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/services/network_library_scanner.dart';
-import 'package:mornye/services/network_storage_service.dart';
+import 'package:mosix/services/network_library_scanner.dart';
+import 'package:mosix/services/network_storage_service.dart';
 
 Uint8List _track(int index) {
   final comments = BytesBuilder();

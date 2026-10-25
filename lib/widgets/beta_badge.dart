@@ -16,7 +16,7 @@ class BetaBadge extends StatelessWidget {
       child: Text(
         'Beta',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          // onSurfaceVariant falls under 4.5:1 on Mornye's container tones.
+          // onSurfaceVariant falls under 4.5:1 on Mosix's container tones.
           color: colors.onSurface,
           fontWeight: FontWeight.w600,
         ),

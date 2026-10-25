@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/constants/app_info.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/utils/logger.dart';
 
 final _log = AppLogger('AppRemoteConfig');
 

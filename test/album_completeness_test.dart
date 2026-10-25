@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/album_completeness.dart';
+import 'package:mosix/services/album_completeness.dart';
 
 String _tableDefinition(String path, String table) => RegExp(
   'CREATE TABLE $table\\s*\\([\\s\\S]*?\\n\\s*\\)',

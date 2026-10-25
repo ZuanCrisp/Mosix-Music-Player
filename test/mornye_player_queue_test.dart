@@ -3,12 +3,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mornye_player_queue.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_player_queue.dart';
 
 class _Player extends MusicPlayerController {
   int? jumpedTo;
@@ -48,7 +48,7 @@ void main() {
         for (final name in ['Previous', 'Current', 'Next', 'Last'])
           MediaItem(id: name, title: name, artist: 'Artist'),
       ];
-      final theme = MornyeTheme.build(Brightness.dark);
+      final theme = MosixTheme.build(Brightness.dark);
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -67,7 +67,7 @@ void main() {
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
-              body: MornyePlayerQueue(colorScheme: theme.colorScheme),
+              body: MosixPlayerQueue(colorScheme: theme.colorScheme),
             ),
           ),
         ),
@@ -106,7 +106,7 @@ void main() {
       expect(player.repeat, AudioServiceRepeatMode.all);
       expect(find.byIcon(CupertinoIcons.ellipsis), findsNothing);
       final shuffleLibrary = AppLocalizations.of(
-        tester.element(find.byType(MornyePlayerQueue)),
+        tester.element(find.byType(MosixPlayerQueue)),
       ).nowPlayingShuffleLibrary;
       expect(find.text(shuffleLibrary), findsNothing);
       expect(find.text('Next'), findsOneWidget);

@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/models/library_collections.dart';
-import 'package:mornye/utils/string_utils.dart';
+import 'package:mosix/models/library_collections.dart';
+import 'package:mosix/utils/string_utils.dart';
 
 class WeeklyRelease {
   const WeeklyRelease({

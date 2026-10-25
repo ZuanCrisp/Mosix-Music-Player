@@ -6,12 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/settings/extension_detail_page.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/settings/extension_detail_page.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 import 'support/fixed_settings.dart';
 
@@ -54,7 +54,7 @@ class _Extensions extends ExtensionNotifier {
 }
 
 void main() {
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   setUp(() => SharedPreferences.setMockInitialValues({}));
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -109,7 +109,7 @@ void main() {
               extensionProvider.overrideWith(_Extensions.new),
             ],
             child: MaterialApp(
-              theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+              theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               builder: (context, child) => MediaQuery(

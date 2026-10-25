@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/utils/string_utils.dart';
+import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/utils/string_utils.dart';
 import 'package:sqflite/sqflite.dart';
 
 final _log = AppLogger('ListeningStatistics');

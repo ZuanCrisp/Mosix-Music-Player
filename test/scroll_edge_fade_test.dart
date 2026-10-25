@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/widgets/scroll_edge_fade.dart';
+import 'package:mosix/widgets/scroll_edge_fade.dart';
 
 void main() {
   Future<void> pumpFade(WidgetTester tester, {required bool fadeContent}) =>

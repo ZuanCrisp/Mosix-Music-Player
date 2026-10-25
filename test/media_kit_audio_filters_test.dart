@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/equalizer_settings.dart';
-import 'package:mornye/services/media_kit_audio_filters.dart';
+import 'package:mosix/models/equalizer_settings.dart';
+import 'package:mosix/services/media_kit_audio_filters.dart';
 
 void main() {
   test('a disabled equalizer clears the chain', () {

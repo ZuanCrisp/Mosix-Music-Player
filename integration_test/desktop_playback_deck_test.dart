@@ -5,12 +5,12 @@ import 'dart:typed_data';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mornye/models/equalizer_settings.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/services/music_player_runtime.dart';
-import 'package:mornye/services/playback_deck.dart';
-import 'package:mornye/services/playback_equalizer.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/models/equalizer_settings.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/services/music_player_runtime.dart';
+import 'package:mosix/services/playback_deck.dart';
+import 'package:mosix/services/playback_equalizer.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 /// Plays a generated tone through the runtime's default deck on macOS:
 /// `fvm flutter test integration_test/desktop_playback_deck_test.dart -d macos`

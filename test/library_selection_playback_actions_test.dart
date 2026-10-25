@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/unified_library_item.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/library_selection_playback_actions.dart';
-import 'package:mornye/widgets/library_track_selection_bar.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/unified_library_item.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/library_selection_playback_actions.dart';
+import 'package:mosix/widgets/library_track_selection_bar.dart';
 
 class _Controller extends MusicPlayerController {
   List<String> enqueued = [];
@@ -53,7 +53,7 @@ void main() {
               musicPlayerControllerProvider.overrideWithValue(controller),
             ],
             child: MaterialApp(
-              theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+              theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(

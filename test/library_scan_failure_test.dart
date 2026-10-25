@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/library_scan_failure.dart';
-import 'package:mornye/utils/local_library_scan_prefs.dart';
+import 'package:mosix/models/library_scan_failure.dart';
+import 'package:mosix/utils/local_library_scan_prefs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

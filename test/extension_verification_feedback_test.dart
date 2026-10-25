@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/services/app_navigation_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/extension_auth_launcher.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/services/app_navigation_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/extension_auth_launcher.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
 
 void main() {
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   const browser = MethodChannel('plugins.flutter.io/url_launcher');
 
   tearDown(() {

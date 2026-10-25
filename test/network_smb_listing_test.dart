@@ -1,6 +1,6 @@
 import 'package:dart_smb2/dart_smb2.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/network_storage_service.dart';
+import 'package:mosix/services/network_storage_service.dart';
 
 import 'support/smb_listing_benchmark.dart';
 

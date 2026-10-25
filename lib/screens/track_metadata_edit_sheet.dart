@@ -7,31 +7,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:mornye/controllers/metadata_editor_controller.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/metadata_cover_resources.dart';
-import 'package:mornye/services/metadata_autofill_service.dart';
-import 'package:mornye/services/metadata_persistence_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/utils/artist_utils.dart';
-import 'package:mornye/utils/extension_auth_launcher.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_choice_chip.dart';
-import 'package:mornye/widgets/app_progress_indicator.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
-import 'package:mornye/widgets/lyrics_provider_picker.dart';
-import 'package:mornye/widgets/metadata_candidate_tile.dart';
-import 'package:mornye/widgets/metadata_editor_fields.dart';
-import 'package:mornye/widgets/metadata_text_field.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/controllers/metadata_editor_controller.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/metadata_cover_resources.dart';
+import 'package:mosix/services/metadata_autofill_service.dart';
+import 'package:mosix/services/metadata_persistence_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/utils/artist_utils.dart';
+import 'package:mosix/utils/extension_auth_launcher.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_choice_chip.dart';
+import 'package:mosix/widgets/app_progress_indicator.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:mosix/widgets/lyrics_provider_picker.dart';
+import 'package:mosix/widgets/metadata_candidate_tile.dart';
+import 'package:mosix/widgets/metadata_editor_fields.dart';
+import 'package:mosix/widgets/metadata_text_field.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 part 'track_metadata_edit_autofill.dart';
 part 'track_metadata_edit_cover.dart';
@@ -103,7 +103,7 @@ class _EditMetadataSheetState extends State<EditMetadataSheet> {
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
-      showDragHandle: !context.isMornye,
+      showDragHandle: !context.isMosix,
       builder: (sheetContext) {
         final cs = Theme.of(sheetContext).colorScheme;
         final items = options(sheetContext);
@@ -119,7 +119,7 @@ class _EditMetadataSheetState extends State<EditMetadataSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // The glass carries the handle that Material's sheet draws.
-                if (sheetContext.isMornye) const AppSheetHandle(),
+                if (sheetContext.isMosix) const AppSheetHandle(),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
                   child: Text(
@@ -162,7 +162,7 @@ class _EditMetadataSheetState extends State<EditMetadataSheet> {
                                         (checkInSheetTheme
                                                     ? sheetContext
                                                     : context)
-                                                .isMornye
+                                                .isMosix
                                             ? CupertinoIcons.checkmark
                                             : Icons.check_rounded,
                                       )
@@ -361,7 +361,7 @@ class _EditMetadataSheetState extends State<EditMetadataSheet> {
                           child: SizedBox(
                             width: 22,
                             height: 22,
-                            child: context.isMornye
+                            child: context.isMosix
                                 ? const CupertinoActivityIndicator()
                                 : const AppLoadingIndicator(
                                     size: 22,

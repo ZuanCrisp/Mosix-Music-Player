@@ -3,22 +3,22 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/playback_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/library_tracks_folder_screen.dart';
-import 'package:mornye/services/music_player_service.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/track_card.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/playback_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/library_tracks_folder_screen.dart';
+import 'package:mosix/services/music_player_service.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/track_card.dart';
 
 import 'support/app_icon_finder.dart';
 
@@ -248,7 +248,7 @@ void main() {
           ],
           child: MaterialApp(
             theme: mornye
-                ? MornyeTheme.build(Brightness.dark)
+                ? MosixTheme.build(Brightness.dark)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -271,7 +271,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Wishlist enqueues one selection (Mornye: $mornye)', (
+    testWidgets('Wishlist enqueues one selection (Mosix: $mornye)', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(800, 1100);
@@ -307,7 +307,7 @@ void main() {
           ],
           child: MaterialApp(
             theme: mornye
-                ? MornyeTheme.build(Brightness.dark)
+                ? MosixTheme.build(Brightness.dark)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -343,7 +343,7 @@ void main() {
   for (final mode in LibraryTracksFolderMode.values) {
     for (final mornye in [false, true]) {
       testWidgets(
-        'selection dispatches one ${mode.name} removal (Mornye: $mornye)',
+        'selection dispatches one ${mode.name} removal (Mosix: $mornye)',
         (tester) async {
           final calls = <(String, List<String>)>[];
           await tester.pumpWidget(
@@ -371,7 +371,7 @@ void main() {
               ],
               child: MaterialApp(
                 theme: mornye
-                    ? MornyeTheme.build(Brightness.dark)
+                    ? MosixTheme.build(Brightness.dark)
                     : AppTheme.light(),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
@@ -410,7 +410,7 @@ void main() {
   }
 
   for (final mornye in [false, true]) {
-    testWidgets('playlist row queues its neighbors (Mornye: $mornye)', (
+    testWidgets('playlist row queues its neighbors (Mosix: $mornye)', (
       tester,
     ) async {
       final player = _Player();
@@ -438,7 +438,7 @@ void main() {
           ],
           child: MaterialApp(
             theme: mornye
-                ? MornyeTheme.build(Brightness.dark)
+                ? MosixTheme.build(Brightness.dark)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -469,7 +469,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('playlist header shuffles every song (Mornye: $mornye)', (
+    testWidgets('playlist header shuffles every song (Mosix: $mornye)', (
       tester,
     ) async {
       // A narrow phone, so Play, Shuffle and Download all must share it.
@@ -495,7 +495,7 @@ void main() {
           ],
           child: MaterialApp(
             theme: mornye
-                ? MornyeTheme.build(Brightness.dark)
+                ? MosixTheme.build(Brightness.dark)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -521,7 +521,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('playlist header mirrors in Arabic (Mornye: $mornye)', (
+    testWidgets('playlist header mirrors in Arabic (Mosix: $mornye)', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(360, 780);
@@ -546,7 +546,7 @@ void main() {
           child: MaterialApp(
             locale: const Locale('ar'),
             theme: mornye
-                ? MornyeTheme.build(Brightness.dark)
+                ? MosixTheme.build(Brightness.dark)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -670,7 +670,7 @@ void main() {
   test('external mode opens only the selected available file', () async {
     container.read(settingsProvider.notifier).setPlayerMode('external');
     final calls = <MethodCall>[];
-    const channel = MethodChannel('com.zarz.mornye/backend');
+    const channel = MethodChannel('com.zuancrisp.mosix/backend');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(channel, (call) async {
@@ -696,7 +696,7 @@ void main() {
   test('external mode skips unavailable and CUE candidates lazily', () async {
     container.read(settingsProvider.notifier).setPlayerMode('external');
     playback.paths['Selected'] = '/album.cue#track02';
-    const channel = MethodChannel('com.zarz.mornye/backend');
+    const channel = MethodChannel('com.zuancrisp.mosix/backend');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     final calls = <MethodCall>[];

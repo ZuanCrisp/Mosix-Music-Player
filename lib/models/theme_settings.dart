@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 const String kThemeModeKey = 'theme_mode';
 const String kUseDynamicColorKey = 'use_dynamic_color';
 const String kSeedColorKey = 'seed_color';
 const String kUseAmoledKey = 'use_amoled';
 const String kThemeStyleKey = 'theme_style';
-const String kMornyeAccentKey = 'mornye_accent';
+const String kMosixAccentKey = 'mornye_accent';
 const String kUseSystemFontKey = 'use_system_font';
 const String kCustomFontIdKey = 'custom_font_id';
 const String kCustomFontNameKey = 'custom_font_name';
@@ -15,26 +15,26 @@ const String kLyricsTextScaleKey = 'lyrics_text_scale';
 
 double normalizeLyricsTextScale(num? value) =>
     value != null && value.isFinite ? value.toDouble().clamp(0.8, 1.4) : 1.0;
-const String kMornyeGlassClarityKey = 'mornye_glass_clarity';
-const String kMornyeGlassOutlinesKey = 'mornye_glass_outlines';
-const double kDefaultMornyeGlassClarity = 0.75;
+const String kMosixGlassClarityKey = 'mornye_glass_clarity';
+const String kMosixGlassOutlinesKey = 'mornye_glass_outlines';
+const double kDefaultMosixGlassClarity = 0.75;
 
-double normalizeMornyeGlassClarity(num? value) =>
+double normalizeMosixGlassClarity(num? value) =>
     value != null && value.isFinite
     ? value.toDouble().clamp(0.0, 1.0)
-    : kDefaultMornyeGlassClarity;
+    : kDefaultMosixGlassClarity;
 
 enum AppThemeStyle { material, mornye }
 
-enum MornyeAccent { red, orange, green, teal, blue, purple, pink }
+enum MosixAccent { red, orange, green, teal, blue, purple, pink }
 
-MornyeAccent mornyeAccentFromString(String? value) =>
-    MornyeAccent.values.firstWhere(
+MosixAccent mornyeAccentFromString(String? value) =>
+    MosixAccent.values.firstWhere(
       (accent) => accent.name == value,
-      orElse: () => MornyeAccent.red,
+      orElse: () => MosixAccent.red,
     );
 
-/// Style used until the person picks one: Mornye on macOS, Material on
+/// Style used until the person picks one: Mosix on macOS, Material on
 /// Windows, Linux and mobile.
 AppThemeStyle defaultAppThemeStyle() =>
     isDesktopPlatform && defaultTargetPlatform == TargetPlatform.macOS
@@ -53,7 +53,7 @@ class ThemeSettings {
   final int seedColorValue;
   final bool useAmoled;
   final AppThemeStyle style;
-  final MornyeAccent mornyeAccent;
+  final MosixAccent mornyeAccent;
   final bool useSystemFont;
   final String customFontId;
   final String customFontName;
@@ -67,12 +67,12 @@ class ThemeSettings {
     this.seedColorValue = kDefaultSeedColor,
     this.useAmoled = false,
     this.style = AppThemeStyle.material,
-    this.mornyeAccent = MornyeAccent.red,
+    this.mornyeAccent = MosixAccent.red,
     this.useSystemFont = false,
     this.customFontId = '',
     this.customFontName = '',
     this.lyricsTextScale = 1,
-    this.mornyeGlassClarity = kDefaultMornyeGlassClarity,
+    this.mornyeGlassClarity = kDefaultMosixGlassClarity,
     this.mornyeGlassOutlines = true,
   });
 
@@ -84,7 +84,7 @@ class ThemeSettings {
     int? seedColorValue,
     bool? useAmoled,
     AppThemeStyle? style,
-    MornyeAccent? mornyeAccent,
+    MosixAccent? mornyeAccent,
     bool? useSystemFont,
     String? customFontId,
     String? customFontName,
@@ -105,7 +105,7 @@ class ThemeSettings {
       lyricsTextScale: normalizeLyricsTextScale(
         lyricsTextScale ?? this.lyricsTextScale,
       ),
-      mornyeGlassClarity: normalizeMornyeGlassClarity(
+      mornyeGlassClarity: normalizeMosixGlassClarity(
         mornyeGlassClarity ?? this.mornyeGlassClarity,
       ),
       mornyeGlassOutlines: mornyeGlassOutlines ?? this.mornyeGlassOutlines,
@@ -118,13 +118,13 @@ class ThemeSettings {
     kSeedColorKey: seedColorValue,
     kUseAmoledKey: useAmoled,
     kThemeStyleKey: style.name,
-    kMornyeAccentKey: mornyeAccent.name,
+    kMosixAccentKey: mornyeAccent.name,
     kUseSystemFontKey: useSystemFont,
     kCustomFontIdKey: customFontId,
     kCustomFontNameKey: customFontName,
     kLyricsTextScaleKey: lyricsTextScale,
-    kMornyeGlassClarityKey: mornyeGlassClarity,
-    kMornyeGlassOutlinesKey: mornyeGlassOutlines,
+    kMosixGlassClarityKey: mornyeGlassClarity,
+    kMosixGlassOutlinesKey: mornyeGlassOutlines,
   };
 
   factory ThemeSettings.fromJson(Map<String, dynamic> json) {
@@ -134,17 +134,17 @@ class ThemeSettings {
       seedColorValue: json[kSeedColorKey] as int? ?? kDefaultSeedColor,
       useAmoled: json[kUseAmoledKey] as bool? ?? false,
       style: themeStyleFromString(json[kThemeStyleKey] as String?),
-      mornyeAccent: mornyeAccentFromString(json[kMornyeAccentKey] as String?),
+      mornyeAccent: mornyeAccentFromString(json[kMosixAccentKey] as String?),
       useSystemFont: json[kUseSystemFontKey] as bool? ?? false,
       customFontId: json[kCustomFontIdKey] as String? ?? '',
       customFontName: json[kCustomFontNameKey] as String? ?? '',
       lyricsTextScale: normalizeLyricsTextScale(
         json[kLyricsTextScaleKey] as num?,
       ),
-      mornyeGlassClarity: normalizeMornyeGlassClarity(
-        json[kMornyeGlassClarityKey] as num?,
+      mornyeGlassClarity: normalizeMosixGlassClarity(
+        json[kMosixGlassClarityKey] as num?,
       ),
-      mornyeGlassOutlines: json[kMornyeGlassOutlinesKey] as bool? ?? true,
+      mornyeGlassOutlines: json[kMosixGlassOutlinesKey] as bool? ?? true,
     );
   }
 

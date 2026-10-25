@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/utils/lyrics_parser.dart';
-import 'package:mornye/widgets/aligned_lyric_pronunciation.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mosix/widgets/aligned_lyric_pronunciation.dart';
 
 const _primaryStyle = TextStyle(fontSize: 34, height: 1.3);
 const _pronunciationStyle = TextStyle(fontSize: 22, height: 1.35);

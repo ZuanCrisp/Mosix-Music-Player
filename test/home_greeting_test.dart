@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/utils/home_greeting.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/utils/home_greeting.dart';
 
 void main() {
   late AppLocalizations l10n;

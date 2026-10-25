@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/playable_media.dart';
-import 'package:mornye/services/playback_session_restore.dart';
+import 'package:mosix/services/playable_media.dart';
+import 'package:mosix/services/playback_session_restore.dart';
 
 Map<String, dynamic> _media(int index, {String? artwork, String? source}) =>
     PlayableMedia(

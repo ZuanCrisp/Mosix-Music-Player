@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/app_crash_report.dart';
-import 'package:mornye/services/desktop_diagnostics.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/models/app_crash_report.dart';
+import 'package:mosix/services/desktop_diagnostics.dart';
+import 'package:mosix/utils/logger.dart';
 import 'package:path/path.dart' as p;
 
 void main() {

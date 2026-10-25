@@ -5,16 +5,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/download_history_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/downloaded_album_screen.dart';
-import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/album_track_tile.dart';
-import 'package:mornye/widgets/now_playing_indicator.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/downloaded_album_screen.dart';
+import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/album_track_tile.dart';
+import 'package:mosix/widgets/now_playing_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/app_icon_finder.dart';
@@ -86,7 +86,7 @@ void main() {
           ],
           child: MaterialApp(
             theme: mornye
-                ? MornyeTheme.build(Brightness.light)
+                ? MosixTheme.build(Brightness.light)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

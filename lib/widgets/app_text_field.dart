@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/material_expressive.dart';
+import 'package:mosix/theme/material_expressive.dart';
 
 /// Text input for Material dialogs, sheets and settings. Expressive builds use
-/// the M3E text field; Mornye and reduced motion keep the plain field with
+/// the M3E text field; Mosix and reduced motion keep the plain field with
 /// [decoration], so their existing look is unchanged.
 ///
 /// Inputs that disable autocorrect stay on plain fields because the M3E field

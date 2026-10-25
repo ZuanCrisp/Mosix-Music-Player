@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/models/theme_settings.dart';
+import 'package:mosix/models/theme_settings.dart';
 
 final initialThemeSettingsProvider = Provider<ThemeSettings>(
   (ref) => ThemeSettings(style: defaultAppThemeStyle()),
@@ -14,17 +14,17 @@ ThemeSettings loadBootstrapThemeSettings(SharedPreferences prefs) {
     seedColorValue: prefs.getInt(kSeedColorKey) ?? kDefaultSeedColor,
     useAmoled: prefs.getBool(kUseAmoledKey) ?? false,
     style: themeStyleFromString(prefs.getString(kThemeStyleKey)),
-    mornyeAccent: mornyeAccentFromString(prefs.getString(kMornyeAccentKey)),
+    mornyeAccent: mornyeAccentFromString(prefs.getString(kMosixAccentKey)),
     useSystemFont: prefs.getBool(kUseSystemFontKey) ?? false,
     customFontId: prefs.getString(kCustomFontIdKey) ?? '',
     customFontName: prefs.getString(kCustomFontNameKey) ?? '',
     lyricsTextScale: normalizeLyricsTextScale(
       prefs.getDouble(kLyricsTextScaleKey),
     ),
-    mornyeGlassClarity: normalizeMornyeGlassClarity(
-      prefs.getDouble(kMornyeGlassClarityKey),
+    mornyeGlassClarity: normalizeMosixGlassClarity(
+      prefs.getDouble(kMosixGlassClarityKey),
     ),
-    mornyeGlassOutlines: prefs.getBool(kMornyeGlassOutlinesKey) ?? true,
+    mornyeGlassOutlines: prefs.getBool(kMosixGlassOutlinesKey) ?? true,
   );
 }
 
@@ -80,17 +80,17 @@ class ThemeNotifier extends Notifier<ThemeSettings> {
       await prefs.setInt(kSeedColorKey, snapshot.seedColorValue);
       await prefs.setBool(kUseAmoledKey, snapshot.useAmoled);
       await prefs.setString(kThemeStyleKey, snapshot.style.name);
-      await prefs.setString(kMornyeAccentKey, snapshot.mornyeAccent.name);
+      await prefs.setString(kMosixAccentKey, snapshot.mornyeAccent.name);
       await prefs.setBool(kUseSystemFontKey, snapshot.useSystemFont);
       await prefs.setString(kCustomFontIdKey, snapshot.customFontId);
       await prefs.setString(kCustomFontNameKey, snapshot.customFontName);
       await prefs.setDouble(kLyricsTextScaleKey, snapshot.lyricsTextScale);
       await prefs.setDouble(
-        kMornyeGlassClarityKey,
+        kMosixGlassClarityKey,
         snapshot.mornyeGlassClarity,
       );
       await prefs.setBool(
-        kMornyeGlassOutlinesKey,
+        kMosixGlassOutlinesKey,
         snapshot.mornyeGlassOutlines,
       );
     } catch (e) {
@@ -123,7 +123,7 @@ class ThemeNotifier extends Notifier<ThemeSettings> {
     await _saveToStorage();
   }
 
-  Future<void> setMornyeAccent(MornyeAccent accent) async {
+  Future<void> setMosixAccent(MosixAccent accent) async {
     _editState((current) => current.copyWith(mornyeAccent: accent));
     await _saveToStorage();
   }
@@ -145,7 +145,7 @@ class ThemeNotifier extends Notifier<ThemeSettings> {
     if (persist) await _saveToStorage();
   }
 
-  Future<void> setMornyeGlassClarity(
+  Future<void> setMosixGlassClarity(
     double value, {
     bool persist = true,
   }) async {
@@ -153,7 +153,7 @@ class ThemeNotifier extends Notifier<ThemeSettings> {
     if (persist) await _saveToStorage();
   }
 
-  Future<void> setMornyeGlassOutlines(bool value) async {
+  Future<void> setMosixGlassOutlines(bool value) async {
     _editState((current) => current.copyWith(mornyeGlassOutlines: value));
     await _saveToStorage();
   }

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/utils/file_access.dart';
+import 'package:mosix/utils/file_access.dart';
 
 void main() {
   group('validateIosPath', () {
@@ -38,7 +38,7 @@ void main() {
           isIOS: true,
           isSafMode: false,
           outputDir:
-              '/private/var/mobile/Containers/Data/Application/ABC/Documents/Mornye',
+              '/private/var/mobile/Containers/Data/Application/ABC/Documents/Mosix',
           downloadDirectoryBookmark: '',
         ),
         isTrue,
@@ -71,7 +71,7 @@ void main() {
         shouldValidateIosOutputDir(
           isIOS: false,
           isSafMode: false,
-          outputDir: '/data/user/0/com.zarz.mornye/files/Mornye',
+          outputDir: '/data/user/0/com.zuancrisp.mosix/files/Mosix',
           downloadDirectoryBookmark: '',
         ),
         isFalse,

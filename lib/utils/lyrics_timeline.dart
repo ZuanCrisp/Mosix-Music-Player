@@ -1,4 +1,4 @@
-import 'package:mornye/utils/lyrics_parser.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
 
 /// Visual order is separate from the chronological timeline: a backing part
 /// stays directly under its lead, including when another singer starts first.

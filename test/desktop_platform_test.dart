@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/app.dart';
-import 'package:mornye/models/theme_settings.dart';
-import 'package:mornye/providers/theme_provider.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/app.dart';
+import 'package:mosix/models/theme_settings.dart';
+import 'package:mosix/providers/theme_provider.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -34,7 +34,7 @@ void main() {
       }
     });
 
-    test('is Mornye on macOS and Material on Windows and Linux', () {
+    test('is Mosix on macOS and Material on Windows and Linux', () {
       simulateDesktop(TargetPlatform.macOS);
       expect(themeStyleFromString(null), AppThemeStyle.mornye);
       simulateDesktop(TargetPlatform.windows);

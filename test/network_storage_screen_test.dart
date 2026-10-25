@@ -5,13 +5,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/screens/network_storage_screen.dart';
-import 'package:mornye/services/local_network_access.dart';
-import 'package:mornye/services/network_certificate.dart';
-import 'package:mornye/services/network_storage_service.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_action_button.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/screens/network_storage_screen.dart';
+import 'package:mosix/services/local_network_access.dart';
+import 'package:mosix/services/network_certificate.dart';
+import 'package:mosix/services/network_storage_service.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_action_button.dart';
 
 void main() {
   for (final olderFails in [false, true]) {
@@ -102,7 +102,7 @@ void main() {
     expect(await service.connections(), isEmpty);
   });
   for (final mornye in [false, true]) {
-    testWidgets('local permission denial can be retried (Mornye: $mornye)', (
+    testWidgets('local permission denial can be retried (Mosix: $mornye)', (
       tester,
     ) async {
       final service = _NetworkFixture()
@@ -111,7 +111,7 @@ void main() {
         ProviderScope(
           child: MaterialApp(
             theme: mornye
-                ? MornyeTheme.build(Brightness.dark)
+                ? MosixTheme.build(Brightness.dark)
                 : ThemeData(useMaterial3: true),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -141,7 +141,7 @@ void main() {
     });
 
     testWidgets(
-      'certificate trust requires a tap and stays on its server (Mornye: $mornye)',
+      'certificate trust requires a tap and stays on its server (Mosix: $mornye)',
       (tester) async {
         const certificate = NetworkCertificateException(
           origin: 'https://nas.test:6008',
@@ -152,7 +152,7 @@ void main() {
           ProviderScope(
             child: MaterialApp(
               theme: mornye
-                  ? MornyeTheme.build(Brightness.dark)
+                  ? MosixTheme.build(Brightness.dark)
                   : ThemeData(useMaterial3: true),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
@@ -207,7 +207,7 @@ void main() {
       },
     );
     testWidgets(
-      'saved networks open their own browser and retry (Mornye: $mornye)',
+      'saved networks open their own browser and retry (Mosix: $mornye)',
       (tester) async {
         final service = _NetworkFixture();
         await service.save(
@@ -222,7 +222,7 @@ void main() {
           ProviderScope(
             child: MaterialApp(
               theme: mornye
-                  ? MornyeTheme.build(Brightness.dark)
+                  ? MosixTheme.build(Brightness.dark)
                   : ThemeData(useMaterial3: true),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
@@ -254,7 +254,7 @@ void main() {
       },
     );
     testWidgets(
-      'connection form saves in the selected theme (Mornye: $mornye)',
+      'connection form saves in the selected theme (Mosix: $mornye)',
       (tester) async {
         tester.view.physicalSize = const Size(390, 844);
         tester.view.devicePixelRatio = 1;
@@ -265,7 +265,7 @@ void main() {
           ProviderScope(
             child: MaterialApp(
               theme: mornye
-                  ? MornyeTheme.build(Brightness.light)
+                  ? MosixTheme.build(Brightness.light)
                   : ThemeData(useMaterial3: true),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,

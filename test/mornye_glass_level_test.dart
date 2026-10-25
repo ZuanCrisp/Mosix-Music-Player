@@ -3,15 +3,15 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/theme_settings.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_switch.dart';
-import 'package:mornye/widgets/extension_repo_card.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/mornye_selection_pill.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/theme_settings.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_switch.dart';
+import 'package:mosix/widgets/extension_repo_card.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mornye_selection_pill.dart';
 
 class _Settings extends SettingsNotifier {
   @override
@@ -23,7 +23,7 @@ class _Settings extends SettingsNotifier {
   }
 }
 
-MornyeGlassLevel _levelFor({
+MosixGlassLevel _levelFor({
   required bool lowEnd,
   required bool blur,
   required bool liquidCapable,
@@ -62,20 +62,20 @@ void main() {
                 deviceSupportsBackdropBlurProvider.overrideWithValue(true),
               ],
               child: MaterialApp(
-                theme: MornyeTheme.build(brightness, glassClarity: 1),
+                theme: MosixTheme.build(brightness, glassClarity: 1),
                 home: Scaffold(
                   body: Column(
                     children: [
-                      const MornyeGlass.navigation(
+                      const MosixGlass.navigation(
                         blurEnabled: true,
                         child: SizedBox(width: 200, height: 50),
                       ),
-                      MornyeSegmentedControl(
+                      MosixSegmentedControl(
                         labels: const ['One', 'Two'],
                         selectedIndex: 0,
                         onChanged: (_) {},
                       ),
-                      MornyeTabBar(
+                      MosixTabBar(
                         destinations: const [
                           NavigationDestination(
                             icon: Icon(Icons.home),
@@ -96,7 +96,7 @@ void main() {
               ),
             ),
           );
-          final context = tester.element(find.byType(MornyeTabBar));
+          final context = tester.element(find.byType(MosixTabBar));
           final container = ProviderScope.containerOf(context);
           // Turn the override on and off while the system request stays on.
           for (final forceBlur in [false, true, false]) {
@@ -108,8 +108,8 @@ void main() {
               find.byType(BackdropFilter),
               findsNWidgets(forceBlur ? 3 : 0),
             );
-            final pills = tester.widgetList<MornyeSelectionPill>(
-              find.byType(MornyeSelectionPill),
+            final pills = tester.widgetList<MosixSelectionPill>(
+              find.byType(MosixSelectionPill),
             );
             expect(
               pills.every((pill) => pill.contrastBlocked == !forceBlur),
@@ -119,7 +119,7 @@ void main() {
             expect(MediaQuery.highContrastOf(context), isTrue);
             expect(MediaQuery.disableAnimationsOf(context), reduceMotion);
             expect(
-              MornyeTabBar.usesLiquidGlass(
+              MosixTabBar.usesLiquidGlass(
                 context,
                 blurEnabled: true,
                 liquidGlass: true,
@@ -141,32 +141,32 @@ void main() {
     }
   }
 
-  test('runtime tiers map to Mornye glass levels', () {
+  test('runtime tiers map to Mosix glass levels', () {
     // Low tier: arm32-only or low-RAM Android.
     expect(
       _levelFor(lowEnd: true, blur: false, liquidCapable: false),
-      MornyeGlassLevel.flat,
+      MosixGlassLevel.flat,
     );
     // Standard Android: frosted blur without shader passes.
     expect(
       _levelFor(lowEnd: false, blur: false, liquidCapable: false),
-      MornyeGlassLevel.frosted,
+      MosixGlassLevel.frosted,
     );
     // iOS runs the standard tier but keeps the full material.
     expect(
       _levelFor(lowEnd: false, blur: false, liquidCapable: true),
-      MornyeGlassLevel.liquid,
+      MosixGlassLevel.liquid,
     );
     // High-tier Android.
     expect(
       _levelFor(lowEnd: false, blur: true, liquidCapable: true),
-      MornyeGlassLevel.liquid,
+      MosixGlassLevel.liquid,
     );
     // "Always use blur effects" restores the full material on any tier.
     for (final lowEnd in [true, false]) {
       expect(
         _levelFor(lowEnd: lowEnd, blur: true, liquidCapable: false),
-        MornyeGlassLevel.liquid,
+        MosixGlassLevel.liquid,
       );
     }
   });
@@ -181,22 +181,22 @@ void main() {
           backdropBlurEnabledProvider.overrideWithValue(false),
         ],
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           home: Scaffold(
             body: Column(
               children: [
-                const MornyeGlass(
+                const MosixGlass(
                   blurEnabled: true,
                   child: SizedBox(width: 200, height: 50),
                 ),
-                MornyeSegmentedControl(
+                MosixSegmentedControl(
                   labels: const ['One', 'Two'],
                   selectedIndex: 0,
                   onChanged: (_) {},
                 ),
                 AppSwitch(value: true, onChanged: (_) {}),
                 Consumer(
-                  builder: (context, ref, _) => MornyeTabBar(
+                  builder: (context, ref, _) => MosixTabBar(
                     destinations: const [
                       NavigationDestination(
                         icon: Icon(Icons.home),
@@ -221,7 +221,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.byType(MornyeSelectionPill), findsNWidgets(2));
+    expect(find.byType(MosixSelectionPill), findsNWidgets(2));
     expect(find.byType(ImageFiltered), findsNothing);
     // The frosted material still samples the page behind it.
     expect(find.byType(BackdropFilter), findsWidgets);
@@ -238,12 +238,12 @@ void main() {
           key: UniqueKey(),
           overrides: [
             mornyeGlassLevelProvider.overrideWithValue(
-              liquid ? MornyeGlassLevel.liquid : MornyeGlassLevel.frosted,
+              liquid ? MosixGlassLevel.liquid : MosixGlassLevel.frosted,
             ),
           ],
           child: MaterialApp(
-            theme: MornyeTheme.build(Brightness.light, glassClarity: clarity),
-            home: const MornyeGlass.navigation(
+            theme: MosixTheme.build(Brightness.light, glassClarity: clarity),
+            home: const MosixGlass.navigation(
               blurEnabled: true,
               child: SizedBox(width: 200, height: 50),
             ),
@@ -267,7 +267,7 @@ void main() {
       ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
     );
     expect(
-      await filterFor(kDefaultMornyeGlassClarity, true),
+      await filterFor(kDefaultMosixGlassClarity, true),
       ui.ImageFilter.blur(sigmaX: 6, sigmaY: 6),
     );
     expect(
@@ -285,19 +285,19 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: MornyeTheme.build(Brightness.dark, glassClarity: clarity),
+            theme: MosixTheme.build(Brightness.dark, glassClarity: clarity),
             home: Scaffold(
               body: Builder(
                 builder: (builderContext) {
                   context = builderContext;
                   return Column(
                     children: [
-                      MornyeSegmentedControl(
+                      MosixSegmentedControl(
                         labels: const ['One', 'Two'],
                         selectedIndex: 0,
                         onChanged: (_) {},
                       ),
-                      MornyeTabBar(
+                      MosixTabBar(
                         destinations: const [
                           NavigationDestination(
                             icon: Icon(Icons.home),
@@ -325,7 +325,7 @@ void main() {
       final liquid = clarity > 0;
       // Overlays aligned with the bar share this decision.
       expect(
-        MornyeTabBar.usesLiquidGlass(
+        MosixTabBar.usesLiquidGlass(
           context,
           blurEnabled: true,
           liquidGlass: true,
@@ -334,7 +334,7 @@ void main() {
         liquid,
       );
       // Every tier draws just one copy of each label and a painted pill.
-      expect(find.byType(MornyeSelectionPill), findsNWidgets(2));
+      expect(find.byType(MosixSelectionPill), findsNWidgets(2));
       expect(find.byType(BackdropFilter), findsNWidgets(liquid ? 2 : 0));
       expect(find.text('Two'), findsOneWidget);
       expect(find.text('Library'), findsOneWidget);
@@ -359,16 +359,16 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           home: const Scaffold(
             body: Column(
               children: [
-                MornyeGlass.navigation(
+                MosixGlass.navigation(
                   key: ValueKey('sampled'),
                   blurEnabled: true,
                   child: SizedBox(width: 200, height: 40),
                 ),
-                MornyeGlass.navigation(
+                MosixGlass.navigation(
                   key: ValueKey('plain-page'),
                   blurEnabled: true,
                   samplesBackdrop: false,
@@ -412,11 +412,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark),
+          theme: MosixTheme.build(Brightness.dark),
           home: Scaffold(
             body: Column(
               children: [
-                const MornyeGlass(
+                const MosixGlass(
                   blurEnabled: true,
                   child: SizedBox(width: 200, height: 50),
                 ),

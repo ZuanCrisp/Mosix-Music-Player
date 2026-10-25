@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
 
 /// Uses the system's real audio routes and keeps native discovery in native UI.
 class AudioOutputButton extends StatefulWidget {
@@ -18,7 +18,7 @@ class AudioOutputButton extends StatefulWidget {
 }
 
 class _AudioOutputButtonState extends State<AudioOutputButton> {
-  static const _androidChannel = MethodChannel('com.zarz.mornye/audio_output');
+  static const _androidChannel = MethodChannel('com.zuancrisp.mosix/audio_output');
   MethodChannel? _viewChannel;
   bool _opening = false;
 
@@ -49,7 +49,7 @@ class _AudioOutputButtonState extends State<AudioOutputButton> {
 
   void _attachView(int id) {
     _viewChannel?.setMethodCallHandler(null);
-    _viewChannel = MethodChannel('com.zarz.mornye/audio_output/$id')
+    _viewChannel = MethodChannel('com.zuancrisp.mosix/audio_output/$id')
       ..setMethodCallHandler((call) async {
         if (mounted && call.method == 'pickerChanged') {
           widget.onPickerChanged?.call(call.arguments == true);
@@ -94,7 +94,7 @@ class _AudioOutputButtonState extends State<AudioOutputButton> {
         return SizedBox.square(
           dimension: 48,
           child: UiKitView(
-            viewType: 'com.zarz.mornye/audio_output',
+            viewType: 'com.zuancrisp.mosix/audio_output',
             creationParams: _appearance,
             creationParamsCodec: const StandardMessageCodec(),
             onPlatformViewCreated: _attachView,

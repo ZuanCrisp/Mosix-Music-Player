@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/widgets/audio_output_button.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/widgets/audio_output_button.dart';
 
 /// Landscape opens on the player. Lyrics can hide their bottom actions until
 /// the user touches the player, while the cover and header stay in place.
-class MornyeLandscapePlayer extends StatefulWidget {
-  const MornyeLandscapePlayer({
+class MosixLandscapePlayer extends StatefulWidget {
+  const MosixLandscapePlayer({
     super.key,
     required this.artwork,
     required this.header,
@@ -37,10 +37,10 @@ class MornyeLandscapePlayer extends StatefulWidget {
   final Widget? lyricsOptions;
 
   @override
-  State<MornyeLandscapePlayer> createState() => _MornyeLandscapePlayerState();
+  State<MosixLandscapePlayer> createState() => _MosixLandscapePlayerState();
 }
 
-class _MornyeLandscapePlayerState extends State<MornyeLandscapePlayer> {
+class _MosixLandscapePlayerState extends State<MosixLandscapePlayer> {
   Timer? _hideTimer;
   bool _actionsVisible = true;
   bool _audioOutputOpen = false;
@@ -57,7 +57,7 @@ class _MornyeLandscapePlayerState extends State<MornyeLandscapePlayer> {
   }
 
   @override
-  void didUpdateWidget(MornyeLandscapePlayer oldWidget) {
+  void didUpdateWidget(MosixLandscapePlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.page != widget.page ||
         oldWidget.isPlaying != widget.isPlaying) {

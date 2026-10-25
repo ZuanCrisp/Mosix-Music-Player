@@ -6,8 +6,8 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/services/network_storage_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
+import 'package:mosix/services/network_storage_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
 
 typedef NetworkTagReader =
     Future<Map<String, dynamic>> Function(String url, String name);

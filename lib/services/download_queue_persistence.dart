@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/services/app_state_database.dart';
-import 'package:mornye/services/download_queue_codec.dart';
-import 'package:mornye/utils/chunked_list.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/services/app_state_database.dart';
+import 'package:mosix/services/download_queue_codec.dart';
+import 'package:mosix/utils/chunked_list.dart';
 
-export 'package:mornye/services/download_queue_codec.dart'
+export 'package:mosix/services/download_queue_codec.dart'
     show downloadQueuePersistenceStatus, encodeDownloadQueueItemForPersistence;
 
 /// Owns durable queue snapshots, including corrupt-row cleanup and write order.

@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/playback_seek_preview.dart';
-import 'package:mornye/widgets/playback_seek_slider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/playback_seek_preview.dart';
+import 'package:mosix/widgets/playback_seek_slider.dart';
 
 void main() {
   testWidgets('scrubbing previews locally and commits only the final target', (
@@ -105,7 +105,7 @@ void main() {
     expect(sharedPreview.value, isNull);
   });
 
-  testWidgets('removing a Mornye slider releases its pending preview safely', (
+  testWidgets('removing a Mosix slider releases its pending preview safely', (
     tester,
   ) async {
     final preview = PlaybackSeekPreview();
@@ -113,7 +113,7 @@ void main() {
     final completion = Completer<void>();
     await tester.pumpWidget(
       MaterialApp(
-        theme: MornyeTheme.build(Brightness.dark),
+        theme: MosixTheme.build(Brightness.dark),
         home: Scaffold(
           body: PlaybackSeekSlider(
             preview: preview,

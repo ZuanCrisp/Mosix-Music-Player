@@ -3,15 +3,15 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 class DownloadServicePicker extends ConsumerStatefulWidget {
   final String? trackName;
@@ -41,7 +41,7 @@ class DownloadServicePicker extends ConsumerStatefulWidget {
     String? recommendedService,
     required void Function(String quality, String service) onSelect,
   }) {
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
 
     showAppModalBottomSheet<void>(
       context: context,
@@ -64,7 +64,7 @@ class DownloadServicePicker extends ConsumerStatefulWidget {
           onSelect: onSelect,
           recommendedService: recommendedService,
         );
-        if (!context.isMornye) return picker;
+        if (!context.isMosix) return picker;
         final content = Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -75,7 +75,7 @@ class DownloadServicePicker extends ConsumerStatefulWidget {
         if (isDesktopPlatform) return content;
         return Padding(
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-          child: MornyeGlassPanel.overlay(child: content),
+          child: MosixGlassPanel.overlay(child: content),
         );
       },
     );
@@ -183,7 +183,7 @@ class _DownloadServicePickerState extends ConsumerState<DownloadServicePicker> {
                 artistName: widget.artistName,
                 coverUrl: widget.coverUrl,
               ),
-              if (context.isMornye)
+              if (context.isMosix)
                 Divider(
                   height: 1,
                   color: colorScheme.outlineVariant.withValues(alpha: 0.5),
@@ -230,9 +230,9 @@ class _DownloadServicePickerState extends ConsumerState<DownloadServicePicker> {
               Padding(
                 padding: EdgeInsets.fromLTRB(
                   24,
-                  context.isMornye ? 24 : 16,
+                  context.isMosix ? 24 : 16,
                   24,
-                  context.isMornye ? 12 : 8,
+                  context.isMosix ? 12 : 8,
                 ),
                 child: Text(
                   context.l10n.downloadSelectQuality,
@@ -241,7 +241,7 @@ class _DownloadServicePickerState extends ConsumerState<DownloadServicePicker> {
                   ),
                 ),
               ),
-              if (context.isMornye)
+              if (context.isMosix)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: RepaintBoundary(
@@ -254,7 +254,7 @@ class _DownloadServicePickerState extends ConsumerState<DownloadServicePicker> {
                               height: 0.5,
                               indent: 52,
                               endIndent: 16,
-                              color: MornyeTheme.metadataDividerColor(context),
+                              color: MosixTheme.metadataDividerColor(context),
                             ),
                           qualityRows[i],
                         ],
@@ -340,7 +340,7 @@ class _QualityOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    if (context.isMornye) {
+    if (context.isMosix) {
       return CupertinoButton(
         padding: const EdgeInsets.all(16),
         onPressed: onTap,
@@ -431,7 +431,7 @@ class _ServiceChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final accessibleLabel = isRecommended ? '$label (Recommended)' : label;
-    if (context.isMornye) {
+    if (context.isMosix) {
       final foreground = isSelected
           ? colorScheme.primary
           : colorScheme.onSurface;

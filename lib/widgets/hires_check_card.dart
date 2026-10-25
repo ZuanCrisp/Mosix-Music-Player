@@ -1,17 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/services/hires_check_service.dart';
-import 'package:mornye/services/audio_analysis_jobs.dart';
-import 'package:mornye/services/network_audio_analysis_input.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/expressive_button.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/services/hires_check_service.dart';
+import 'package:mosix/services/audio_analysis_jobs.dart';
+import 'package:mosix/services/network_audio_analysis_input.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/expressive_button.dart';
 
 /// On-demand sampled spectrum and bit-depth analysis for one FLAC/WAV file.
 class HiResCheckCard extends StatefulWidget {
@@ -94,7 +94,7 @@ class _HiResCheckCardState extends State<HiResCheckCard> {
     final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final result = _result;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
 
     return AppContentCard(
       elevation: 0,

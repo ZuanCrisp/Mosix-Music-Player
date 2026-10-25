@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_switch.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_switch.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/widgets/discard_changes_dialog.dart';
-import 'package:mornye/widgets/priority_settings_scaffold.dart';
-import 'package:mornye/widgets/reorderable_priority_item.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/constants/music_services.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/widgets/discard_changes_dialog.dart';
+import 'package:mosix/widgets/priority_settings_scaffold.dart';
+import 'package:mosix/widgets/reorderable_priority_item.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/constants/music_services.dart';
 
 class LyricsProviderPriorityPage extends ConsumerStatefulWidget {
   const LyricsProviderPriorityPage({super.key});

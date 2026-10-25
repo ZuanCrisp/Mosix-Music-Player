@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_slider.dart';
-import 'package:mornye/widgets/automix_settings.dart';
-import 'package:mornye/widgets/music_haptics_settings.dart';
-import 'package:mornye/widgets/playback_normalization_settings.dart';
-import 'package:mornye/widgets/slider_value_header.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_slider.dart';
+import 'package:mosix/widgets/automix_settings.dart';
+import 'package:mosix/widgets/music_haptics_settings.dart';
+import 'package:mosix/widgets/playback_normalization_settings.dart';
+import 'package:mosix/widgets/slider_value_header.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -39,7 +39,7 @@ void main() {
         container: container,
         child: MaterialApp(
           theme: mornye
-              ? MornyeTheme.build(Brightness.light)
+              ? MosixTheme.build(Brightness.light)
               : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -88,7 +88,7 @@ void main() {
     );
   });
 
-  testWidgets('Mornye shows the value as detail text', (tester) async {
+  testWidgets('Mosix shows the value as detail text', (tester) async {
     await pump(
       tester,
       const SliderValueHeader(title: 'Strength', value: '40%'),
@@ -121,7 +121,7 @@ void main() {
     },
   );
 
-  testWidgets('Mornye settings sliders keep their inline labels', (
+  testWidgets('Mosix settings sliders keep their inline labels', (
     tester,
   ) async {
     await pump(

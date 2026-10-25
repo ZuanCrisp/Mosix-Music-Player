@@ -4,8 +4,8 @@ import 'dart:io';
 
 import 'package:ffmpeg_kit_flutter_new_audio/media_information.dart';
 import 'package:flutter/foundation.dart';
-import 'package:mornye/models/ffmpeg_models.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/models/ffmpeg_models.dart';
+import 'package:mosix/utils/logger.dart';
 import 'package:path/path.dart' as p;
 
 final _log = AppLogger('FFmpeg');
@@ -19,7 +19,7 @@ class FFmpegUnavailableException implements Exception {
   final String tool;
 
   String get message =>
-      '$tool is not available. Reinstall Mornye, or set '
+      '$tool is not available. Reinstall Mosix, or set '
       '${DesktopFFmpegTools.directoryVariable} to a folder that contains '
       'ffmpeg and ffprobe.';
 
@@ -30,7 +30,7 @@ class FFmpegUnavailableException implements Exception {
 /// Locations of the standalone FFmpeg executables shipped with desktop builds.
 ///
 /// Lookup order for each tool:
-/// 1. the folder named by `MORNYE_FFMPEG_DIR`;
+/// 1. the folder named by `MOSIX_FFMPEG_DIR`;
 /// 2. the app bundle: `Contents/Resources/ffmpeg/` then `Contents/MacOS/` on
 ///    macOS, `ffmpeg\` next to the executable on Windows, and `lib/ffmpeg/`
 ///    next to the executable on Linux (see scripts/fetch_desktop_ffmpeg.sh);
@@ -39,7 +39,7 @@ class FFmpegUnavailableException implements Exception {
 class DesktopFFmpegTools {
   const DesktopFFmpegTools({this.ffmpegPath, this.ffprobePath});
 
-  static const directoryVariable = 'MORNYE_FFMPEG_DIR';
+  static const directoryVariable = 'MOSIX_FFMPEG_DIR';
 
   final String? ffmpegPath;
   final String? ffprobePath;

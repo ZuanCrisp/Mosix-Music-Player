@@ -9,12 +9,12 @@ final class PlayerWidgetBridge {
     private var channel: FlutterMethodChannel?
     private var ready = false
     private var pending: [(UUID, String, CheckedContinuation<Bool, Never>)] = []
-    private let writer = DispatchQueue(label: "com.zarz.mornye.player-widget", qos: .utility)
+    private let writer = DispatchQueue(label: "com.zuancrisp.mosix.player-widget", qos: .utility)
     private var installedWidgetCount: Int?
     private var foregroundObserver: NSObjectProtocol?
 
     func attach(_ messenger: FlutterBinaryMessenger) {
-        let channel = FlutterMethodChannel(name: "com.zarz.mornye/player_widget", binaryMessenger: messenger)
+        let channel = FlutterMethodChannel(name: "com.zuancrisp.mosix/player_widget", binaryMessenger: messenger)
         self.channel = channel
         if foregroundObserver == nil {
             foregroundObserver = NotificationCenter.default.addObserver(

@@ -4,7 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/theme/cover_palette.dart';
+import 'package:mosix/theme/cover_palette.dart';
 
 void main() {
   ByteData pixels(List<(Color, int)> runs) {

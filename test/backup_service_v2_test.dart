@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:archive/archive_io.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
-import 'package:mornye/services/backup_service.dart';
+import 'package:mosix/services/backup_service.dart';
 
 class _UnreadableArchiveFile extends ArchiveFile {
   _UnreadableArchiveFile(this.failure) : super('history.ndjson', 0, <int>[]);

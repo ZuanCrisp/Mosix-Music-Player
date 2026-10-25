@@ -5,20 +5,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/providers/system_volume_provider.dart';
-import 'package:mornye/screens/now_playing_screen.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/player_artwork_theme.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/desktop/desktop_downloads_button.dart';
-import 'package:mornye/widgets/desktop/desktop_player_bar.dart';
-import 'package:mornye/widgets/mini_player.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/providers/system_volume_provider.dart';
+import 'package:mosix/screens/now_playing_screen.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/player_artwork_theme.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/desktop/desktop_downloads_button.dart';
+import 'package:mosix/widgets/desktop/desktop_player_bar.dart';
+import 'package:mosix/widgets/mini_player.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Hands out cover schemes without decoding images: [cached] answers a peek
@@ -237,7 +237,7 @@ void main() {
         playQueueProvider.overrideWith((ref) => Stream.value(const [])),
       ],
       child: MaterialApp(
-        theme: mornye ? MornyeTheme.build(Brightness.light) : AppTheme.light(),
+        theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: home,
@@ -299,13 +299,13 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-            const MethodChannel('com.zarz.mornye/backend'),
+            const MethodChannel('com.zuancrisp.mosix/backend'),
             (_) async => null,
           );
       addTearDown(
         () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMethodCallHandler(
-              const MethodChannel('com.zarz.mornye/backend'),
+              const MethodChannel('com.zuancrisp.mosix/backend'),
               null,
             ),
       );
@@ -330,7 +330,7 @@ void main() {
       ('player bar', const Scaffold(bottomNavigationBar: DesktopPlayerBar())),
       ('mini player', const Scaffold(bottomNavigationBar: MiniPlayer())),
     ]) {
-      testWidgets('the Mornye $name keeps its own theme', (tester) async {
+      testWidgets('the Mosix $name keeps its own theme', (tester) async {
         palette.cached[_coverA] = cover;
         await tester.pumpWidget(app(home, mornye: true));
         await tester.pumpAndSettle();

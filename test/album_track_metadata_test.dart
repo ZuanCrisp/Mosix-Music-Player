@@ -5,21 +5,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/screens/album_screen.dart';
-import 'package:mornye/screens/home_tab.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/album_description.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/audio_quality_badges.dart';
-import 'package:mornye/widgets/disc_separator_chip.dart';
-import 'package:mornye/widgets/track_list_tile.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/screens/album_screen.dart';
+import 'package:mosix/screens/home_tab.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/album_description.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/audio_quality_badges.dart';
+import 'package:mosix/widgets/disc_separator_chip.dart';
+import 'package:mosix/widgets/track_list_tile.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const backendChannel = MethodChannel('com.zarz.mornye/backend');
+  const backendChannel = MethodChannel('com.zuancrisp.mosix/backend');
   final backendMessenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   setUp(() async {
@@ -47,7 +47,7 @@ void main() {
           SharedPreferences.setMockInitialValues({});
           await tester.binding.setSurfaceSize(const Size(430, 1200));
           addTearDown(() => tester.binding.setSurfaceSize(null));
-          const channel = MethodChannel('com.zarz.mornye/backend');
+          const channel = MethodChannel('com.zuancrisp.mosix/backend');
           final messenger = tester.binding.defaultBinaryMessenger;
           var requests = 0;
           messenger.setMockMethodCallHandler(channel, (call) async {
@@ -81,7 +81,7 @@ void main() {
           await tester.pumpWidget(
             ProviderScope(
               child: MaterialApp(
-                theme: MornyeTheme.build(Brightness.light),
+                theme: MosixTheme.build(Brightness.light),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
                 home: const ExtensionAlbumScreen(
@@ -113,7 +113,7 @@ void main() {
 
   for (final mornye in [false, true]) {
     for (final discs in [1, 2]) {
-      testWidgets('online album disc groups (Mornye: $mornye, discs: $discs)', (
+      testWidgets('online album disc groups (Mosix: $mornye, discs: $discs)', (
         tester,
       ) async {
         await tester.binding.setSurfaceSize(const Size(430, 1200));
@@ -138,7 +138,7 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+              theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: ExtensionAlbumScreen(
@@ -339,7 +339,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await tester.binding.setSurfaceSize(const Size(430, 1200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    const channel = MethodChannel('com.zarz.mornye/backend');
+    const channel = MethodChannel('com.zuancrisp.mosix/backend');
     const payload = <String, dynamic>{
       'id': 'song-1',
       'spotify_id': 'song-1',
@@ -392,7 +392,7 @@ void main() {
 
     final page = ProviderScope(
       child: MaterialApp(
-        theme: MornyeTheme.build(Brightness.light),
+        theme: MosixTheme.build(Brightness.light),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const AlbumScreen(

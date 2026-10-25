@@ -32,7 +32,7 @@ extension _DownloadQueuePaths on DownloadQueueNotifier {
     return downloadDir;
   }
 
-  /// `<Music>/Mornye` on desktop; null when the OS gives no Music folder.
+  /// `<Music>/Mosix` on desktop; null when the OS gives no Music folder.
   Future<Directory?> _ensureDefaultDesktopOutputDir() async {
     final path = await resolveDesktopDefaultOutputDirectory();
     if (path == null) return null;

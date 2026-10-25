@@ -1,8 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/models/download_history.dart';
-import 'package:mornye/services/sqlite_helpers.dart' as sqlite;
-import 'package:mornye/utils/ios_container_paths.dart';
+import 'package:mosix/models/download_history.dart';
+import 'package:mosix/services/sqlite_helpers.dart' as sqlite;
+import 'package:mosix/utils/ios_container_paths.dart';
 
 /// Restored history can contain an older container even after this install's
 /// startup migration ran. Update stored paths and their match keys together.

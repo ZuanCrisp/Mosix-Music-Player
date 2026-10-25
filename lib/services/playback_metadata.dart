@@ -1,8 +1,8 @@
 import 'package:audio_service/audio_service.dart';
-import 'package:mornye/services/network_metadata_service.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/int_utils.dart';
-import 'package:mornye/utils/string_utils.dart';
+import 'package:mosix/services/network_metadata_service.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/int_utils.dart';
+import 'package:mosix/utils/string_utils.dart';
 
 /// Technical audio metadata carried with a queue item. This is available
 /// immediately when tracks change, before a fresh file probe completes.

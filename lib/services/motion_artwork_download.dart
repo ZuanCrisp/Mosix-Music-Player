@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:mornye/utils/string_utils.dart';
+import 'package:mosix/utils/string_utils.dart';
 
 /// Fetch a single-file HLS cover as one complete HTTP response. Passing its
 /// byte-range playlist straight to FFmpeg can splice truncated segments into

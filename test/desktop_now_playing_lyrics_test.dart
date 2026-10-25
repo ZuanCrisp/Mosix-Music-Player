@@ -6,19 +6,19 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/system_volume_provider.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/lyrics_parser.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/desktop/desktop_inspector.dart';
-import 'package:mornye/widgets/desktop/desktop_now_playing.dart';
-import 'package:mornye/widgets/player_artwork.dart';
-import 'package:mornye/widgets/player_lyrics.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/system_volume_provider.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/desktop/desktop_inspector.dart';
+import 'package:mosix/widgets/desktop/desktop_now_playing.dart';
+import 'package:mosix/widgets/player_artwork.dart';
+import 'package:mosix/widgets/player_lyrics.dart';
 
 const _track = MediaItem(
   id: 'track',
@@ -56,7 +56,7 @@ void main() {
 
   for (final mornye in [false, true]) {
     testWidgets(
-      '${mornye ? 'Mornye' : 'Material'} hidden lyrics stop word sweep frames',
+      '${mornye ? 'Mosix' : 'Material'} hidden lyrics stop word sweep frames',
       (tester) async {
         tester.view.physicalSize = const Size(1520, 1000);
         tester.view.devicePixelRatio = 1;
@@ -87,7 +87,7 @@ void main() {
             ],
             child: MaterialApp(
               theme: mornye
-                  ? MornyeTheme.build(Brightness.dark)
+                  ? MosixTheme.build(Brightness.dark)
                   : AppTheme.dark(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,

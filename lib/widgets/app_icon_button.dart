@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/widgets/app_icon.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/widgets/app_icon.dart';
 
 enum _AppIconButtonVariant { standard, filled, tonal, outlined }
 
 /// Drop-in [IconButton] with the Material 3 Expressive shape and press motion.
 ///
-/// Mornye, reduced motion and dense buttons ([padding], [constraints],
+/// Mosix, reduced motion and dense buttons ([padding], [constraints],
 /// [visualDensity] or a sizing [style]) keep the exact [IconButton] layout.
 class AppIconButton extends StatelessWidget {
   const AppIconButton({

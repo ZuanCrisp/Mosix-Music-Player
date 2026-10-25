@@ -79,7 +79,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
 
   /// Material on desktop. Pointer input needs less row height than touch, so
   /// rows, row artwork and the page header tighten (M3 density -2) while
-  /// radii, motion and the 48dp control target stay the same. Mornye registers
+  /// radii, motion and the 48dp control target stay the same. Mosix registers
   /// its own copy of the tokens and is unaffected.
   static final AppTokens desktop = standard.copyWith(
     coverCompact: 40,

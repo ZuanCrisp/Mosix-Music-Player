@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/providers/local_library_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
 
 class _ScanningLibrary extends LocalLibraryNotifier {
   _ScanningLibrary({this.finalizing = false});
@@ -20,7 +20,7 @@ class _ScanningLibrary extends LocalLibraryNotifier {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const backend = MethodChannel('com.zarz.mornye/backend');
+  const backend = MethodChannel('com.zuancrisp.mosix/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late List<String> calls;

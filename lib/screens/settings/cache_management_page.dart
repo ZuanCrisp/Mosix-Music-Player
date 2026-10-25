@@ -1,32 +1,32 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/audio_analysis_cache.dart';
-import 'package:mornye/services/cache_maintenance_service.dart';
-import 'package:mornye/services/cover_cache_manager.dart';
-import 'package:mornye/providers/player_motion_artwork_provider.dart';
-import 'package:mornye/services/motion_artwork_store.dart';
-import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mornye/services/explore_cache_store.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/string_utils.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/audio_analysis_cache.dart';
+import 'package:mosix/services/cache_maintenance_service.dart';
+import 'package:mosix/services/cover_cache_manager.dart';
+import 'package:mosix/providers/player_motion_artwork_provider.dart';
+import 'package:mosix/services/motion_artwork_store.dart';
+import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mosix/services/explore_cache_store.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/string_utils.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
 
 class CacheManagementPage extends ConsumerStatefulWidget {
   const CacheManagementPage({super.key});
@@ -341,7 +341,7 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
 
   Widget _overviewSurface({required Widget child}) {
     final scheme = Theme.of(context).colorScheme;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final content = Padding(padding: const EdgeInsets.all(16), child: child);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
@@ -360,7 +360,7 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final overview = _overview;
 
     return Scaffold(

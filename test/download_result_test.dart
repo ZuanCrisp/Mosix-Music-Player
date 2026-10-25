@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/download_result.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/download_result.dart';
 
 void main() {
   test('typed updates retain unknown extension fields in the original map', () {

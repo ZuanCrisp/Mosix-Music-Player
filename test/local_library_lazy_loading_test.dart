@@ -4,23 +4,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/library_browse_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/library_search_provider.dart';
-import 'package:mornye/providers/local_library_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/queue_tab.dart';
-import 'package:mornye/services/history_database.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/services/library_search.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/library_browse_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/library_search_provider.dart';
+import 'package:mosix/providers/local_library_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/queue_tab.dart';
+import 'package:mosix/services/history_database.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/services/library_search.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 class _Settings extends SettingsNotifier {
   @override
@@ -215,7 +215,7 @@ void main() {
 
   for (final mornye in [false, true]) {
     testWidgets(
-      'playlist download confirms one grouped enqueue (Mornye: $mornye)',
+      'playlist download confirms one grouped enqueue (Mosix: $mornye)',
       (tester) async {
         tester.view.physicalSize = const Size(800, 1200);
         tester.view.devicePixelRatio = 1;
@@ -242,7 +242,7 @@ void main() {
             ],
             child: MaterialApp(
               theme: mornye
-                  ? MornyeTheme.build(Brightness.dark)
+                  ? MosixTheme.build(Brightness.dark)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
@@ -292,7 +292,7 @@ void main() {
       },
     );
 
-    testWidgets('playlist selection confirms one deletion (Mornye: $mornye)', (
+    testWidgets('playlist selection confirms one deletion (Mosix: $mornye)', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(800, 1200);
@@ -312,7 +312,7 @@ void main() {
           ],
           child: MaterialApp(
             theme: mornye
-                ? MornyeTheme.build(Brightness.dark)
+                ? MosixTheme.build(Brightness.dark)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

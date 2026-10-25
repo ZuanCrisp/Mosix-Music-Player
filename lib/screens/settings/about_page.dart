@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:mornye/services/cover_cache_manager.dart';
-import 'package:mornye/constants/app_info.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/nav_bar_inset.dart';
-import 'package:mornye/widgets/settings_group.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mosix/services/cover_cache_manager.dart';
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/widgets/settings_group.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -279,7 +279,7 @@ class _AppHeaderCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Material sits on the settings group tier beside the groups below.
-    final cardColor = !context.isMornye
+    final cardColor = !context.isMosix
         ? settingsGroupColor(context)
         : isDark
         ? Color.alphaBlend(
@@ -585,7 +585,7 @@ class _TranslatorsSection extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final cardColor = !context.isMornye
+    final cardColor = !context.isMosix
         ? settingsGroupColor(context)
         : isDark
         ? Color.alphaBlend(
@@ -703,7 +703,7 @@ class _AboutSettingsItem extends StatelessWidget {
                   height: 40,
                   child: AppIcon(
                     context.adaptiveIcon(icon),
-                    color: context.isMornye
+                    color: context.isMosix
                         ? colorScheme.primary
                         : colorScheme.onSurfaceVariant,
                     size: 24,

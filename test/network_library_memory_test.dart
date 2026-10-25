@@ -2,8 +2,8 @@ import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/network_library_scanner.dart';
-import 'package:mornye/services/network_storage_service.dart';
+import 'package:mosix/services/network_library_scanner.dart';
+import 'package:mosix/services/network_storage_service.dart';
 
 import 'support/vm_service_probe.dart';
 

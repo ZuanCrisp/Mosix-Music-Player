@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/recent_access_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/album_screen.dart';
-import 'package:mornye/screens/playlist_screen.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/track_list_tile.dart';
-import 'package:mornye/widgets/track_detail_actions.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/recent_access_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/album_screen.dart';
+import 'package:mosix/screens/playlist_screen.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/track_list_tile.dart';
+import 'package:mosix/widgets/track_detail_actions.dart';
 
 import 'support/fixed_settings.dart';
 
@@ -70,7 +70,7 @@ Widget _app(ProviderContainer container, Widget child, {bool mornye = false}) =>
     UncontrolledProviderScope(
       container: container,
       child: MaterialApp(
-        theme: mornye ? MornyeTheme.build(Brightness.light) : AppTheme.light(),
+        theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(body: child),
@@ -151,7 +151,7 @@ void main() {
 
   for (final mornye in [false, true]) {
     testWidgets(
-      'Love All action keeps its add/remove feedback in Mornye=$mornye',
+      'Love All action keeps its add/remove feedback in Mosix=$mornye',
       (tester) async {
         final collections = _Collections();
         final container = ProviderContainer(
@@ -193,7 +193,7 @@ void main() {
     );
 
     for (final album in [false, true]) {
-      testWidgets('Love All isolates the $album page in Mornye=$mornye', (
+      testWidgets('Love All isolates the $album page in Mosix=$mornye', (
         tester,
       ) async {
         tester.view.physicalSize = const Size(430, 1000);

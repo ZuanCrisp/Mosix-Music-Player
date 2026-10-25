@@ -3,15 +3,15 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/queue_tab.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_alert_dialog.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/queue_tab.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_alert_dialog.dart';
 
 import 'support/fixed_settings.dart';
 
@@ -80,7 +80,7 @@ void main() {
         reselect: false,
       ),
     ]) {
-      testWidgets('${failure.name} (Mornye: $mornye)', (tester) async {
+      testWidgets('${failure.name} (Mosix: $mornye)', (tester) async {
         tester.view.physicalSize = const Size(430, 1000);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.reset);
@@ -116,7 +116,7 @@ void main() {
             child: MaterialApp(
               locale: const Locale('es', 'ES'),
               theme: mornye
-                  ? MornyeTheme.build(Brightness.dark)
+                  ? MosixTheme.build(Brightness.dark)
                   : AppTheme.dark(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,

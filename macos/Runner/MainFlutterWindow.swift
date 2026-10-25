@@ -27,7 +27,7 @@ class MainFlutterWindow: NSWindow {
   private var miniPlayerRestore: (frame: NSRect, minSize: NSSize)?
 
   /// Where the mini player last sat, by its top-left corner.
-  private static let miniPlayerOriginKey = "MornyeMiniPlayerTopLeft"
+  private static let miniPlayerOriginKey = "MosixMiniPlayerTopLeft"
 
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
@@ -231,7 +231,7 @@ class MainFlutterWindow: NSWindow {
   /// Window actions for the Flutter drag areas in the title bar row.
   private func registerWindowChannel(_ messenger: FlutterBinaryMessenger) {
     let channel = FlutterMethodChannel(
-      name: "com.zarz.mornye/window",
+      name: "com.zuancrisp.mosix/window",
       binaryMessenger: messenger
     )
     channel.setMethodCallHandler { [weak self] call, result in

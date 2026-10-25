@@ -253,7 +253,7 @@ class _WordHighlightedLyricLineState
 
   void _updateVisualEnd() {
     final decorativeMotion =
-        context.isMornye && !MediaQuery.disableAnimationsOf(context);
+        context.isMosix && !MediaQuery.disableAnimationsOf(context);
     var end = Duration.zero;
     for (final words in [widget.line.words, widget.line.romanizationWords]) {
       for (var index = 0; index < words.length; index++) {
@@ -333,7 +333,7 @@ class _WordHighlightedLyricLineState
     bool lift = true,
   }) {
     final highlightedColor = widget.colorScheme.onSurface;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final pendingColor = mornye
         ? Colors.white.withValues(alpha: 0.4)
         : widget.colorScheme.onSurfaceVariant.withValues(alpha: 0.6);

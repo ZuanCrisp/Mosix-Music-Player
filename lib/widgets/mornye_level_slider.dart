@@ -8,8 +8,8 @@ import 'package:flutter/services.dart';
 /// inside the range (gain, balance) and the slider can stand [vertical], with
 /// [min] at the bottom. A vertical slider only claims vertical drags, so a
 /// row of them still scrolls sideways.
-class MornyeLevelSlider extends StatelessWidget {
-  const MornyeLevelSlider({
+class MosixLevelSlider extends StatelessWidget {
+  const MosixLevelSlider({
     super.key,
     required this.value,
     required this.onChanged,
@@ -138,7 +138,7 @@ class _LevelPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final r = knobRadius;
-    const t = MornyeLevelSlider._trackThickness;
+    const t = MosixLevelSlider._trackThickness;
     final length = (vertical ? size.height : size.width) - r * 2;
     Offset at(double f) => vertical
         ? Offset(size.width / 2, r + (1 - f) * length)

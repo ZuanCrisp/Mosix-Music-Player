@@ -1,5 +1,5 @@
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/providers/settings_provider.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/providers/settings_provider.dart';
 
 class ReEnrichTestSettings extends SettingsNotifier {
   @override

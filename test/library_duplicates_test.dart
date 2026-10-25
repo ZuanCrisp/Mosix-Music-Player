@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/library_database_models.dart';
-import 'package:mornye/services/library_duplicates.dart';
-import 'package:mornye/services/library_schema.dart';
-import 'package:mornye/services/network_storage_service.dart';
+import 'package:mosix/services/library_database_models.dart';
+import 'package:mosix/services/library_duplicates.dart';
+import 'package:mosix/services/library_schema.dart';
+import 'package:mosix/services/network_storage_service.dart';
 
 import 'support/sqlite_process_database.dart';
 

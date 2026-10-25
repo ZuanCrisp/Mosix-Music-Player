@@ -4,9 +4,9 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mornye/services/ffmpeg_desktop.dart';
-import 'package:mornye/services/ffmpeg_support.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/services/ffmpeg_desktop.dart';
+import 'package:mosix/services/ffmpeg_support.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 import 'package:path/path.dart' as p;
 
 /// Converts a generated tone with the FFmpeg bundled in the desktop app:

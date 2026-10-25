@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:mornye/models/equalizer_settings.dart';
+import 'package:mosix/models/equalizer_settings.dart';
 
 /// Shared by every playback deck, including AutoMix's incoming/outgoing decks.
 final playbackEqualizer = ValueNotifier<EqualizerSettings>(

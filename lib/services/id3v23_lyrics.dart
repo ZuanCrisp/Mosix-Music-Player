@@ -4,7 +4,7 @@ import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
-import 'package:mornye/services/platform_bridge.dart';
+import 'package:mosix/services/platform_bridge.dart';
 
 /// Minimal ID3v2.3 USLT writer used after FFmpeg metadata embedding.
 ///

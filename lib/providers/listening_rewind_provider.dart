@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/services/listening_rewind.dart';
-import 'package:mornye/services/listening_statistics.dart';
+import 'package:mosix/services/listening_rewind.dart';
+import 'package:mosix/services/listening_statistics.dart';
 
 final listeningRewindProvider = FutureProvider.autoDispose
     .family<ListeningRewind, ListeningRewindPeriod>((ref, period) async {

@@ -4,12 +4,12 @@ import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/lyrics_parser.dart';
-import 'package:mornye/widgets/player_lyrics.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mosix/widgets/player_lyrics.dart';
 
 const _text = 'AAAA BBBB CCCC';
 
@@ -28,7 +28,7 @@ void main() {
     for (final mornye in [false, true]) {
       for (final timed in [false, true]) {
         final platform = desktop ? 'desktop' : 'mobile';
-        final style = mornye ? 'Mornye' : 'Material';
+        final style = mornye ? 'Mosix' : 'Material';
         final format = timed ? 'TTML' : 'LRC';
         testWidgets('$platform $style $format preserves active line wrapping', (
           tester,
@@ -41,7 +41,7 @@ void main() {
           final preview = ValueNotifier<Duration?>(const Duration(seconds: 1));
           addTearDown(preview.dispose);
           final theme = mornye
-              ? MornyeTheme.build(Brightness.dark)
+              ? MosixTheme.build(Brightness.dark)
               : AppTheme.dark();
           final lyrics = ParsedLyrics(
             synced: true,

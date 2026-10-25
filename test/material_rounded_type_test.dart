@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 const _rounded = [FontVariation('ROND', AppTheme.brandRoundness)];
 
@@ -108,10 +108,10 @@ void main() {
     });
   });
 
-  test('Mornye type does not change', () {
+  test('Mosix type does not change', () {
     for (final brightness in Brightness.values) {
       for (final style in _roles(
-        MornyeTheme.build(brightness).textTheme,
+        MosixTheme.build(brightness).textTheme,
       ).values) {
         expect(style!.fontVariations, isNull);
         expect(style.fontFamily, isNot(AppTheme.bundledFontFamily));

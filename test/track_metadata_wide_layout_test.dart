@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/screens/track_metadata_screen.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/screens/track_metadata_screen.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 void main() {
   for (final mornye in [false, true]) {
     for (final (width, twoColumns) in [(1400.0, true), (800.0, false)]) {
       testWidgets('metadata cards at ${width.toInt()} wide use '
-          '${twoColumns ? 'two columns' : 'one column'} (Mornye=$mornye)', (
+          '${twoColumns ? 'two columns' : 'one column'} (Mosix=$mornye)', (
         tester,
       ) async {
         tester.view.physicalSize = Size(width, 1000);
@@ -28,7 +28,7 @@ void main() {
           ProviderScope(
             child: MaterialApp(
               theme: mornye
-                  ? MornyeTheme.build(Brightness.dark)
+                  ? MosixTheme.build(Brightness.dark)
                   : ThemeData.dark(useMaterial3: true),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
@@ -39,7 +39,7 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
 
-        // Mornye also names the page "Metadata" in its navigation bar.
+        // Mosix also names the page "Metadata" in its navigation bar.
         final metadata = tester.getTopLeft(find.text('Metadata').last);
         final lyrics = tester.getTopLeft(find.text('Lyrics').last);
         if (twoColumns) {

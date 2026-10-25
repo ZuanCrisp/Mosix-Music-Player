@@ -4,8 +4,8 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/widgets/material_player_backdrop.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/widgets/material_player_backdrop.dart';
 
 void main() {
   test('cover style and music haptics keep their defaults', () {

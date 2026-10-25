@@ -57,8 +57,8 @@ extension _ArtistScreenSections on _ArtistScreenState {
       ),
     );
 
-    // Mornye keeps its Apple Music hero on desktop, filling the pane.
-    if (isDesktopPlatform && !context.isMornye) {
+    // Mosix keeps its Apple Music hero on desktop, filling the pane.
+    if (isDesktopPlatform && !context.isMosix) {
       return _buildDesktopHeader(
         context,
         colorScheme,
@@ -70,7 +70,7 @@ extension _ArtistScreenSections on _ArtistScreenState {
       );
     }
 
-    if (context.isMornye) {
+    if (context.isMosix) {
       final artwork = hasValidImage
           ? DownloadableCover(
               coverUrl: imageUrl,
@@ -86,7 +86,7 @@ extension _ArtistScreenSections on _ArtistScreenState {
               ),
             )
           : const Center(child: Icon(CupertinoIcons.person, size: 80));
-      return MornyeArtistHeader(
+      return MosixArtistHeader(
         name: widget.artistName,
         logoUrl: _headerLogoUrl ?? widget.headerLogoUrl,
         badge: _concerts.isEmpty || isSelectionMode ? null : _concertsButton(),
@@ -179,7 +179,7 @@ extension _ArtistScreenSections on _ArtistScreenState {
     required String? listenersText,
     required bool isFavoriteArtist,
   }) {
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final placeholder = ColoredBox(
       color: colorScheme.surfaceContainerHighest,
       child: Center(
@@ -577,7 +577,7 @@ extension _ArtistScreenSections on _ArtistScreenState {
     );
   }
 
-  Widget _buildMornyeFeaturedAlbum(BuildContext context, ArtistAlbum album) {
+  Widget _buildMosixFeaturedAlbum(BuildContext context, ArtistAlbum album) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
       child: Material(
@@ -797,14 +797,14 @@ extension _ArtistScreenSections on _ArtistScreenState {
                 ),
             child: Padding(
               padding: EdgeInsetsDirectional.fromSTEB(
-                context.isMornye ? 20 : 16,
+                context.isMosix ? 20 : 16,
                 8,
                 10,
                 8,
               ),
               child: Row(
                 children: [
-                  if (!context.isMornye) ...[
+                  if (!context.isMosix) ...[
                     SizedBox(
                       width: 24,
                       child: Text(
@@ -864,8 +864,8 @@ extension _ArtistScreenSections on _ArtistScreenState {
                           track.name,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
-                                fontSize: context.isMornye ? 17 : null,
-                                fontWeight: context.isMornye
+                                fontSize: context.isMosix ? 17 : null,
+                                fontWeight: context.isMosix
                                     ? FontWeight.w400
                                     : FontWeight.w500,
                               ),
@@ -888,7 +888,7 @@ extension _ArtistScreenSections on _ArtistScreenState {
                                     style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(
                                           color: colorScheme.onSurfaceVariant,
-                                          fontSize: context.isMornye
+                                          fontSize: context.isMosix
                                               ? 15
                                               : null,
                                         ),
@@ -915,7 +915,7 @@ extension _ArtistScreenSections on _ArtistScreenState {
             ),
           ),
         );
-        if (!context.isMornye) return row;
+        if (!context.isMosix) return row;
         return Stack(
           children: [
             row,

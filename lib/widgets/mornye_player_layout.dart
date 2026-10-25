@@ -3,31 +3,31 @@ import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/routes/now_playing_route.dart';
-import 'package:mornye/utils/playback_seek_preview.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
-import 'package:mornye/widgets/mornye_landscape_player.dart';
-import 'package:mornye/widgets/mornye_player_favorite_button.dart';
-import 'package:mornye/widgets/mornye_player_queue.dart';
-import 'package:mornye/widgets/player_volume_control.dart';
-import 'package:mornye/widgets/overflow_marquee.dart';
-import 'package:mornye/widgets/player_artwork.dart';
-import 'package:mornye/widgets/player_gesture_regions.dart';
-import 'package:mornye/widgets/player_lyrics.dart';
-import 'package:mornye/widgets/player_lyrics_controls.dart';
-import 'package:mornye/widgets/player_metadata_title.dart';
-import 'package:mornye/widgets/player_playback_controls.dart';
-import 'package:mornye/widgets/player_track_swipe.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/routes/now_playing_route.dart';
+import 'package:mosix/utils/playback_seek_preview.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/mornye_landscape_player.dart';
+import 'package:mosix/widgets/mornye_player_favorite_button.dart';
+import 'package:mosix/widgets/mornye_player_queue.dart';
+import 'package:mosix/widgets/player_volume_control.dart';
+import 'package:mosix/widgets/overflow_marquee.dart';
+import 'package:mosix/widgets/player_artwork.dart';
+import 'package:mosix/widgets/player_gesture_regions.dart';
+import 'package:mosix/widgets/player_lyrics.dart';
+import 'package:mosix/widgets/player_lyrics_controls.dart';
+import 'package:mosix/widgets/player_metadata_title.dart';
+import 'package:mosix/widgets/player_playback_controls.dart';
+import 'package:mosix/widgets/player_track_swipe.dart';
 
 const _mornyeContentInset = mornyeLyricsContentInset;
 const _mornyeHeaderButtonSize = 48.0;
 const _mornyeCompactIconSize = 28.0;
 
 /// Keys stay owned by the surface that measures contrast and route dismissal.
-typedef MornyePlayerArtworkKeys = ({
+typedef MosixPlayerArtworkKeys = ({
   GlobalKey header,
   GlobalKey controls,
   GlobalKey volume,
@@ -35,8 +35,8 @@ typedef MornyePlayerArtworkKeys = ({
   GlobalKey compact,
 });
 
-class MornyePlayerLayout extends ConsumerWidget {
-  const MornyePlayerLayout({
+class MosixPlayerLayout extends ConsumerWidget {
+  const MosixPlayerLayout({
     super.key,
     required this.mediaItem,
     required this.metadata,
@@ -67,7 +67,7 @@ class MornyePlayerLayout extends ConsumerWidget {
   final double? artworkAspectRatio;
   final bool insetArtwork;
   final double artworkTopInset;
-  final MornyePlayerArtworkKeys artworkKeys;
+  final MosixPlayerArtworkKeys artworkKeys;
   final ValueListenable<Map<String, Color>> artworkForeground;
   final bool lyricsControlsHidden;
   final bool lyricsOptionsOpen;
@@ -206,7 +206,7 @@ class MornyePlayerLayout extends ConsumerWidget {
                             ? KeyedSubtree(
                                 key: ValueKey(page),
                                 child: showQueue
-                                    ? MornyePlayerQueue(
+                                    ? MosixPlayerQueue(
                                         colorScheme: colorScheme,
                                       )
                                     : _mornyeLyricsViewport(
@@ -378,7 +378,7 @@ class MornyePlayerLayout extends ConsumerWidget {
         );
 
         if (landscape) {
-          return MornyeLandscapePlayer(
+          return MosixLandscapePlayer(
             page: page,
             isPlaying: ref.watch(playbackPlayingProvider),
             controlsHeldOpen: lyricsOptionsOpen,
@@ -387,7 +387,7 @@ class MornyePlayerLayout extends ConsumerWidget {
             header: _trackHeader(context, colorScheme, compact: true),
             lyrics: lyricsBuilder(true),
             lyricsOptions: showLyrics ? lyricsOptions : null,
-            queue: MornyePlayerQueue(colorScheme: colorScheme),
+            queue: MosixPlayerQueue(colorScheme: colorScheme),
             controls: controls(),
             volume: const PlayerVolumeControl(),
           );
@@ -538,7 +538,7 @@ class MornyePlayerLayout extends ConsumerWidget {
               ),
             ),
           ),
-          MornyePlayerFavoriteButton(
+          MosixPlayerFavoriteButton(
             key: ValueKey(mediaItem.id),
             mediaItem: mediaItem,
             compact: page != 0,

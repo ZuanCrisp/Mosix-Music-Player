@@ -7,14 +7,14 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/constants/app_info.dart';
-import 'package:mornye/services/history_database.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/services/sqlite_native_snapshot.dart';
-import 'package:mornye/services/user_profile_store.dart';
-import 'package:mornye/utils/file_access.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/utils/native_platform_name.dart';
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/services/history_database.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/services/sqlite_native_snapshot.dart';
+import 'package:mosix/services/user_profile_store.dart';
+import 'package:mosix/utils/file_access.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/utils/native_platform_name.dart';
 
 typedef BackupHistoryPageLoader =
     Future<List<Map<String, dynamic>>> Function(int limit, int offset);

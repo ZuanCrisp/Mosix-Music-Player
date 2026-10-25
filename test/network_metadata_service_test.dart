@@ -4,8 +4,8 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/network_storage_service.dart';
-import 'package:mornye/services/network_metadata_service.dart';
+import 'package:mosix/services/network_storage_service.dart';
+import 'package:mosix/services/network_metadata_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -29,7 +29,7 @@ void main() {
   tearDown(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-          const MethodChannel('com.zarz.mornye/backend'),
+          const MethodChannel('com.zuancrisp.mosix/backend'),
           null,
         );
     await storage.dispose();
@@ -42,7 +42,7 @@ void main() {
       var calls = 0;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-            const MethodChannel('com.zarz.mornye/backend'),
+            const MethodChannel('com.zuancrisp.mosix/backend'),
             (call) async {
               expect(call.method, 'runNativeDataJob');
               final args = call.arguments as Map;
@@ -84,7 +84,7 @@ void main() {
       final cancelled = <String>[];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-            const MethodChannel('com.zarz.mornye/backend'),
+            const MethodChannel('com.zuancrisp.mosix/backend'),
             (call) async {
               final args = call.arguments as Map;
               final id = args['request_id'] as String;

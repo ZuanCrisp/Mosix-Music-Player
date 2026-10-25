@@ -3,20 +3,20 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/material_expressive.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_switch.dart';
-import 'package:mornye/theme/app_tokens.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/material_expressive.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_switch.dart';
+import 'package:mosix/theme/app_tokens.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
 
 /// The neutral grouped fill used in Settings, including AMOLED themes.
 Color settingsGroupColor(BuildContext context) {
   final colorScheme = Theme.of(context).colorScheme;
-  if (context.isMornye) return colorScheme.surfaceContainer;
+  if (context.isMosix) return colorScheme.surfaceContainer;
   final isDark = Theme.of(context).brightness == Brightness.dark;
   return isDark
       ? Color.alphaBlend(
@@ -251,9 +251,9 @@ class SettingsGroup extends StatelessWidget {
     final decoration = BoxDecoration(
       color: cardColor,
       borderRadius: BorderRadius.circular(
-        context.isMornye ? 28 : context.tokens.radiusCard,
+        context.isMosix ? 28 : context.tokens.radiusCard,
       ),
-      border: context.isMornye
+      border: context.isMosix
           ? null
           : Border.all(
               color: colorScheme.outlineVariant.withValues(alpha: 0.5),
@@ -264,7 +264,7 @@ class SettingsGroup extends StatelessWidget {
       child: Column(mainAxisSize: MainAxisSize.min, children: children),
     );
 
-    if (glass && context.isMornye) {
+    if (glass && context.isMosix) {
       return LayoutBuilder(
         builder: (context, constraints) => Padding(
           padding:
@@ -277,7 +277,7 @@ class SettingsGroup extends StatelessWidget {
                         : 0),
                 vertical: 4,
               ),
-          child: MornyeGlassPanel(child: child),
+          child: MosixGlassPanel(child: child),
         ),
       );
     }
@@ -295,7 +295,7 @@ class SettingsGroup extends StatelessWidget {
                   child is ListTile,
             ));
     // Connected surfaces are static layout, so reduced motion keeps the gaps.
-    if (!context.isMornye && standardRows) {
+    if (!context.isMosix && standardRows) {
       // Expressive connected list: every row is its own surface separated by
       // a 2dp gap. The group's ends keep the card radius, inner corners stay
       // tight, and the gaps replace row dividers.
@@ -414,7 +414,7 @@ class SliverSettingsGroup extends StatelessWidget {
       itemBuilder: (context, index) {
         final first = index == 0;
         final last = index == itemCount - 1;
-        final mornye = context.isMornye;
+        final mornye = context.isMosix;
         final radius = mornye
             ? BorderRadius.vertical(
                 top: first ? const Radius.circular(28) : Radius.zero,
@@ -442,8 +442,8 @@ class SettingsItem extends StatelessWidget {
   final IconData? icon;
   final Color? iconColor;
 
-  /// Show category icons in Mornye's top-level settings and search results.
-  final bool showIconInMornye;
+  /// Show category icons in Mosix's top-level settings and search results.
+  final bool showIconInMosix;
   final String title;
   final Widget? titleTrailing;
   final String? subtitle;
@@ -460,7 +460,7 @@ class SettingsItem extends StatelessWidget {
     super.key,
     this.icon,
     this.iconColor,
-    this.showIconInMornye = false,
+    this.showIconInMosix = false,
     required this.title,
     this.titleTrailing,
     this.subtitle,
@@ -474,7 +474,7 @@ class SettingsItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final showIcon = icon != null && (!context.isMornye || showIconInMornye);
+    final showIcon = icon != null && (!context.isMosix || showIconInMosix);
 
     final content = Column(
       mainAxisSize: MainAxisSize.min,
@@ -529,7 +529,7 @@ class SettingsItem extends StatelessWidget {
                             Text(
                               subtitle!,
                               style:
-                                  (context.isMornye
+                                  (context.isMosix
                                           ? Theme.of(
                                               context,
                                             ).textTheme.bodySmall
@@ -554,7 +554,7 @@ class SettingsItem extends StatelessWidget {
                     ] else if (onTap != null) ...[
                       const SizedBox(width: 8),
                       AppIcon(
-                        context.isMornye
+                        context.isMosix
                             ? CupertinoIcons.forward
                             : Icons.chevron_right,
                         size: context.tokens.rowChevronSize,
@@ -574,7 +574,7 @@ class SettingsItem extends StatelessWidget {
                 ? context.tokens.rowIconDividerIndent
                 : context.tokens.rowPaddingH,
             endIndent: context.tokens.rowPaddingH,
-            color: context.isMornye
+            color: context.isMosix
                 ? colorScheme.outlineVariant
                 : colorScheme.outlineVariant.withValues(alpha: 0.3),
           ),
@@ -610,7 +610,7 @@ class SettingsSwitchItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDisabled = !enabled || onChanged == null;
-    final showIcon = icon != null && !context.isMornye;
+    final showIcon = icon != null && !context.isMosix;
 
     final content = Column(
       mainAxisSize: MainAxisSize.min,
@@ -697,7 +697,7 @@ class SettingsSwitchItem extends StatelessWidget {
                 ? context.tokens.rowIconDividerIndent
                 : context.tokens.rowPaddingH,
             endIndent: context.tokens.rowPaddingH,
-            color: context.isMornye
+            color: context.isMosix
                 ? colorScheme.outlineVariant
                 : colorScheme.outlineVariant.withValues(alpha: 0.3),
           ),
@@ -717,11 +717,11 @@ class SettingsSectionHeader extends StatelessWidget {
     final label = Text(
       title,
       style:
-          (context.isMornye
+          (context.isMosix
                   ? Theme.of(context).textTheme.bodyLarge
                   : Theme.of(context).textTheme.titleSmall)
               ?.copyWith(
-                color: context.isMornye
+                color: context.isMosix
                     ? Theme.of(context).colorScheme.onSurfaceVariant
                     : Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.w600,
@@ -779,10 +779,10 @@ class SettingsChoiceChip extends StatelessWidget {
     final borderRadius = BorderRadius.circular(tokens.radiusCover);
 
     // One solid tier above a settings group in light, dark and AMOLED.
-    final unselectedColor = context.isMornye
+    final unselectedColor = context.isMosix
         ? Colors.transparent
         : colorScheme.surfaceContainerHigh;
-    final foreground = context.isMornye && isSelected
+    final foreground = context.isMosix && isSelected
         ? colorScheme.primary
         : isSelected
         ? colorScheme.onPrimaryContainer
@@ -796,8 +796,8 @@ class SettingsChoiceChip extends StatelessWidget {
       style: theme.textTheme.bodyMedium?.copyWith(
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         // Like an iOS segment, the filled chip marks the choice; accent text
-        // on Mornye's grey fill falls below readable contrast.
-        color: context.isMornye && isSelected
+        // on Mosix's grey fill falls below readable contrast.
+        color: context.isMosix && isSelected
             ? colorScheme.onSurface
             : foreground,
       ),
@@ -828,7 +828,7 @@ class SettingsChoiceChip extends StatelessWidget {
 
     final chip = Material(
       color: isSelected
-          ? (context.isMornye
+          ? (context.isMosix
                 ? colorScheme.surfaceContainerHighest
                 : colorScheme.primaryContainer)
           : unselectedColor,
@@ -876,7 +876,7 @@ class SettingsSegmentOption<T> {
 ///
 /// Material 3 Expressive replaces the segmented button with a connected
 /// button group spanning the row; reduced motion keeps the static
-/// [SegmentedButton]. Mornye keeps its equal-width chips. Option sets that
+/// [SegmentedButton]. Mosix keeps its equal-width chips. Option sets that
 /// wrap belong in a [SettingsChoiceGrid] instead.
 class SettingsSegmentedChoice<T> extends StatelessWidget {
   const SettingsSegmentedChoice({
@@ -924,7 +924,7 @@ class SettingsSegmentedChoice<T> extends StatelessWidget {
         ),
       );
     }
-    if (!context.isMornye) {
+    if (!context.isMosix) {
       return SegmentedButton<T>(
         showSelectedIcon: false,
         expandedInsets: EdgeInsets.zero,
@@ -1011,7 +1011,7 @@ class SettingsInfoCard extends StatelessWidget {
 
   final EdgeInsetsGeometry? margin;
 
-  /// Uses the shared glass surface in Mornye without changing Material cards.
+  /// Uses the shared glass surface in Mosix without changing Material cards.
   final bool glass;
 
   @override
@@ -1021,8 +1021,8 @@ class SettingsInfoCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     // Material uses the solid container with its paired on-color, so the
-    // text keeps its contrast; Mornye keeps its softer fills.
-    final mornye = context.isMornye;
+    // text keeps its contrast; Mosix keeps its softer fills.
+    final mornye = context.isMosix;
     final (background, foreground) = switch (tone) {
       SettingsInfoTone.neutral => (
         mornye
@@ -1092,7 +1092,7 @@ class SettingsInfoCard extends StatelessWidget {
       ),
     );
     final card = useGlass
-        ? MornyeGlassPanel.overlay(child: content)
+        ? MosixGlassPanel.overlay(child: content)
         : DecoratedBox(
             decoration: BoxDecoration(
               color: background,

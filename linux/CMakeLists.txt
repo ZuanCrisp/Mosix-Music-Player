@@ -6,7 +6,7 @@ project(runner LANGUAGES CXX)
 set(BINARY_NAME "mornye")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
-set(APPLICATION_ID "com.zarz.mornye")
+set(APPLICATION_ID "com.zuancrisp.mosix")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
@@ -107,15 +107,15 @@ endforeach(bundled_library)
 
 # Rust desktop backend, loaded by dart:ffi from the bundle's lib/ directory.
 # It is prebuilt by `bash scripts/build_rust_backend.sh desktop`.
-set(MORNYE_DESKTOP_LIBRARY
+set(MOSIX_DESKTOP_LIBRARY
   "${CMAKE_CURRENT_SOURCE_DIR}/../rust_backend/target/desktop/linux/libmornye_desktop.so")
-if(NOT EXISTS "${MORNYE_DESKTOP_LIBRARY}")
+if(NOT EXISTS "${MOSIX_DESKTOP_LIBRARY}")
   message(FATAL_ERROR
-    "The Rust desktop backend was not built: ${MORNYE_DESKTOP_LIBRARY} "
+    "The Rust desktop backend was not built: ${MOSIX_DESKTOP_LIBRARY} "
     "is missing. Run `bash scripts/build_rust_backend.sh desktop` from the "
     "repository root, then build again.")
 endif()
-install(FILES "${MORNYE_DESKTOP_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+install(FILES "${MOSIX_DESKTOP_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
 
 # LGPL ffmpeg and ffprobe, found by lib/services/ffmpeg_desktop.dart in the
@@ -123,24 +123,24 @@ install(FILES "${MORNYE_DESKTOP_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}
 # `bash scripts/fetch_desktop_ffmpeg.sh linux-<arch>`; without them the app
 # falls back to an ffmpeg on PATH, so a missing stage is only a warning.
 if(DEFINED FLUTTER_TARGET_PLATFORM)
-  set(MORNYE_FFMPEG_TARGET "${FLUTTER_TARGET_PLATFORM}")
+  set(MOSIX_FFMPEG_TARGET "${FLUTTER_TARGET_PLATFORM}")
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
-  set(MORNYE_FFMPEG_TARGET "linux-arm64")
+  set(MOSIX_FFMPEG_TARGET "linux-arm64")
 else()
-  set(MORNYE_FFMPEG_TARGET "linux-x64")
+  set(MOSIX_FFMPEG_TARGET "linux-x64")
 endif()
-set(MORNYE_FFMPEG_DIR
-  "${CMAKE_CURRENT_SOURCE_DIR}/../build/ffmpeg/${MORNYE_FFMPEG_TARGET}")
-if(EXISTS "${MORNYE_FFMPEG_DIR}/ffmpeg" AND EXISTS "${MORNYE_FFMPEG_DIR}/ffprobe")
-  install(PROGRAMS "${MORNYE_FFMPEG_DIR}/ffmpeg" "${MORNYE_FFMPEG_DIR}/ffprobe"
+set(MOSIX_FFMPEG_DIR
+  "${CMAKE_CURRENT_SOURCE_DIR}/../build/ffmpeg/${MOSIX_FFMPEG_TARGET}")
+if(EXISTS "${MOSIX_FFMPEG_DIR}/ffmpeg" AND EXISTS "${MOSIX_FFMPEG_DIR}/ffprobe")
+  install(PROGRAMS "${MOSIX_FFMPEG_DIR}/ffmpeg" "${MOSIX_FFMPEG_DIR}/ffprobe"
     DESTINATION "${INSTALL_BUNDLE_LIB_DIR}/ffmpeg" COMPONENT Runtime)
-  install(FILES "${MORNYE_FFMPEG_DIR}/LICENSE.txt" "${MORNYE_FFMPEG_DIR}/SOURCE.txt"
+  install(FILES "${MOSIX_FFMPEG_DIR}/LICENSE.txt" "${MOSIX_FFMPEG_DIR}/SOURCE.txt"
     DESTINATION "${INSTALL_BUNDLE_LIB_DIR}/ffmpeg" COMPONENT Runtime)
 else()
   message(WARNING
-    "No LGPL FFmpeg is staged in ${MORNYE_FFMPEG_DIR}; the bundle will use "
+    "No LGPL FFmpeg is staged in ${MOSIX_FFMPEG_DIR}; the bundle will use "
     "ffmpeg from PATH. Run `bash scripts/fetch_desktop_ffmpeg.sh "
-    "${MORNYE_FFMPEG_TARGET}` from the repository root to bundle it.")
+    "${MOSIX_FFMPEG_TARGET}` from the repository root to bundle it.")
 endif()
 
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")

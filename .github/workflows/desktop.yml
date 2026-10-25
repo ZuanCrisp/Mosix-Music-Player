@@ -106,15 +106,15 @@ jobs:
       # library and the FFmpeg tools built above.
       - name: Build macOS app
         env:
-          MORNYE_SKIP_RUST_BUILD: "1"
-          MORNYE_REQUIRE_FFMPEG: "1"
+          MOSIX_SKIP_RUST_BUILD: "1"
+          MOSIX_REQUIRE_FFMPEG: "1"
         run: |
           flutter build macos --release --target lib/main.dart \
             --dart-define="GIT_COMMIT=$(git rev-parse --short=8 HEAD)"
 
       - name: Verify and package macOS app
         run: |
-          app="build/macos/Build/Products/Release/Mornye.app"
+          app="build/macos/Build/Products/Release/Mosix.app"
           library="$app/Contents/Frameworks/libmornye_desktop.dylib"
           test -s "$library"
           ffmpeg_dir="$app/Contents/Resources/ffmpeg"
@@ -136,14 +136,14 @@ jobs:
           fi
           codesign --verify --deep --strict "$app"
           mkdir -p build/desktop
-          ditto -c -k --sequesterRsrc --keepParent "$app" build/desktop/Mornye-macos-universal.zip
+          ditto -c -k --sequesterRsrc --keepParent "$app" build/desktop/Mosix-macos-universal.zip
 
       - name: Upload macOS app artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: desktop-macos
           if-no-files-found: error
-          path: build/desktop/Mornye-macos-universal.zip
+          path: build/desktop/Mosix-macos-universal.zip
 
   build-linux:
     name: Linux bundle (${{ matrix.flutter_arch }})
@@ -265,14 +265,14 @@ jobs:
             exit 1
           fi
           mkdir -p build/desktop
-          (cd "$bundle" && zip -r -y "$GITHUB_WORKSPACE/build/desktop/Mornye-linux-${{ matrix.flutter_arch }}.zip" .)
+          (cd "$bundle" && zip -r -y "$GITHUB_WORKSPACE/build/desktop/Mosix-linux-${{ matrix.flutter_arch }}.zip" .)
 
       - name: Upload Linux bundle artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: desktop-linux-${{ matrix.flutter_arch }}
           if-no-files-found: error
-          path: build/desktop/Mornye-linux-${{ matrix.flutter_arch }}.zip
+          path: build/desktop/Mosix-linux-${{ matrix.flutter_arch }}.zip
 
   build-windows:
     name: Windows app (${{ matrix.arch }})
@@ -371,11 +371,11 @@ jobs:
           $bundle = 'build\windows\${{ matrix.arch }}\runner\Release'
           ./scripts/check_windows_bundle.ps1 -BundleDir $bundle -Arch ${{ matrix.arch }}
           New-Item -ItemType Directory -Force build\desktop | Out-Null
-          Compress-Archive -Path "$bundle\*" -DestinationPath build\desktop\Mornye-windows-${{ matrix.arch }}.zip -Force
+          Compress-Archive -Path "$bundle\*" -DestinationPath build\desktop\Mosix-windows-${{ matrix.arch }}.zip -Force
 
       - name: Upload Windows app artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: desktop-windows-${{ matrix.arch }}
           if-no-files-found: error
-          path: build/desktop/Mornye-windows-${{ matrix.arch }}.zip
+          path: build/desktop/Mosix-windows-${{ matrix.arch }}.zip

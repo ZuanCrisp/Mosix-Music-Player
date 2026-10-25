@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/utils/file_access.dart';
-import 'package:mornye/utils/string_utils.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/utils/file_access.dart';
+import 'package:mosix/utils/string_utils.dart';
 
 final RegExp _lrcDisplayTimestampPattern = RegExp(
   r'^\[\d{1,3}:\d{1,2}(?:[.:]\d{1,3})?\]',

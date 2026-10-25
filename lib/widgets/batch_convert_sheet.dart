@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/widgets/app_choice_chip.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/app_switch.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/utils/audio_conversion_utils.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/widgets/app_choice_chip.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/app_switch.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/utils/audio_conversion_utils.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 /// Conversion options shared by the queue, album and single-track sheets.
 class BatchConvertSheet extends StatefulWidget {
@@ -332,7 +332,7 @@ class _BatchConvertSheetState extends State<BatchConvertSheet> {
                       horizontal: 14,
                       vertical: 12,
                     ),
-                    decoration: context.isMornye
+                    decoration: context.isMosix
                         ? null
                         : BoxDecoration(
                             color: cs.primaryContainer.withValues(alpha: 0.4),
@@ -341,7 +341,7 @@ class _BatchConvertSheetState extends State<BatchConvertSheet> {
                     child: Row(
                       children: [
                         Icon(
-                          context.isMornye
+                          context.isMosix
                               ? CupertinoIcons.checkmark_seal
                               : Icons.verified,
                           size: 18,
@@ -436,13 +436,13 @@ class _BatchConvertSheetState extends State<BatchConvertSheet> {
 
   Widget _sheetSurface({required Widget child}) {
     final content = SafeArea(child: child);
-    return context.isMornye
-        ? MornyeGlassPanel.overlay(child: content)
+    return context.isMosix
+        ? MosixGlassPanel.overlay(child: content)
         : content;
   }
 
   Widget _card(ColorScheme cs, {required Widget child}) {
-    if (context.isMornye) {
+    if (context.isMosix) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 20),
         child: Column(
@@ -490,8 +490,8 @@ class _BatchConvertSheetState extends State<BatchConvertSheet> {
     required bool selected,
     required VoidCallback onTap,
   }) {
-    if (context.isMornye) {
-      return MornyeFilterChip(
+    if (context.isMosix) {
+      return MosixFilterChip(
         label: label,
         selected: selected,
         onTap: onTap,

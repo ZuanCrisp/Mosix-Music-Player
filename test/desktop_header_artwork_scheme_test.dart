@@ -5,17 +5,17 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/screens/local_album_screen.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/cover_palette.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/theme/player_artwork_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/desktop/detail_header.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/screens/local_album_screen.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/cover_palette.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/player_artwork_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/desktop/detail_header.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Hands out cover schemes without decoding images: [cached] answers a peek
@@ -230,8 +230,8 @@ void main() {
     expect(_schemeAt(tester, find.byKey(_details)), cover);
   });
 
-  testWidgets('Mornye desktop headers keep the app scheme', (tester) async {
-    final theme = MornyeTheme.build(Brightness.light);
+  testWidgets('Mosix desktop headers keep the app scheme', (tester) async {
+    final theme = MosixTheme.build(Brightness.light);
     palette.cached[_cover] = ColorScheme.fromSeed(seedColor: Colors.red);
     await tester.pumpWidget(_header(theme, _cover));
     await tester.pump(const Duration(milliseconds: 100));

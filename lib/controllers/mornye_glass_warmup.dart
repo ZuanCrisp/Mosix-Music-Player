@@ -5,17 +5,17 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:liquid_glass_easy/liquid_glass_easy.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/utils/logger.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/utils/logger.dart';
 
 /// Prepares the actual backdrop pipeline, not just the fragment asset. The
 /// detached scene is rasterized once and discarded without presenting a frame.
-class MornyeGlassWarmup {
+class MosixGlassWarmup {
   static Future<void>? _pending;
   static bool _ready = false;
-  static final _log = AppLogger('MornyeGlass');
+  static final _log = AppLogger('MosixGlass');
 
   @visibleForTesting
   static bool get isReady => _ready;
@@ -48,7 +48,7 @@ class MornyeGlassWarmup {
         _ready = true;
       },
       Priority.idle,
-      debugLabel: 'Prepare Mornye glass backdrop',
+      debugLabel: 'Prepare Mosix glass backdrop',
     );
   }
 }
@@ -76,7 +76,7 @@ Future<void> _rasterize(ui.FlutterView view) async {
       container: boundary,
       child: ProviderScope(
         overrides: [
-          mornyeGlassLevelProvider.overrideWithValue(MornyeGlassLevel.liquid),
+          mornyeGlassLevelProvider.overrideWithValue(MosixGlassLevel.liquid),
         ],
         child: Directionality(
           textDirection: TextDirection.ltr,
@@ -86,7 +86,7 @@ Future<void> _rasterize(ui.FlutterView view) async {
               devicePixelRatio: view.devicePixelRatio,
             ),
             child: Theme(
-              data: MornyeTheme.build(Brightness.dark),
+              data: MosixTheme.build(Brightness.dark),
               child: const Stack(
                 fit: StackFit.expand,
                 children: [
@@ -99,7 +99,7 @@ Future<void> _rasterize(ui.FlutterView view) async {
                   ),
                   Padding(
                     padding: EdgeInsets.all(12),
-                    child: MornyeGlassPanel.overlay(
+                    child: MosixGlassPanel.overlay(
                       child: Center(child: Text('Download')),
                     ),
                   ),

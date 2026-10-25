@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/theme_settings.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/providers/theme_provider.dart';
-import 'package:mornye/screens/settings/appearance_settings_page.dart';
-import 'package:mornye/theme/dynamic_color_wrapper.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/theme_settings.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/providers/theme_provider.dart';
+import 'package:mosix/screens/settings/appearance_settings_page.dart';
+import 'package:mosix/theme/dynamic_color_wrapper.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 void main() {
   test(
@@ -27,16 +27,16 @@ void main() {
   test('glass clarity restores safely from old and invalid settings', () {
     expect(
       ThemeSettings.fromJson({}).mornyeGlassClarity,
-      kDefaultMornyeGlassClarity,
+      kDefaultMosixGlassClarity,
     );
     for (final (saved, expected) in [
       (0, 0.0),
       (1, 1.0),
       (-1, 0.0),
       (2, 1.0),
-      (double.nan, kDefaultMornyeGlassClarity),
+      (double.nan, kDefaultMosixGlassClarity),
     ]) {
-      final settings = ThemeSettings.fromJson({kMornyeGlassClarityKey: saved});
+      final settings = ThemeSettings.fromJson({kMosixGlassClarityKey: saved});
       expect(settings.mornyeGlassClarity, expected);
       expect(ThemeSettings.fromJson(settings.toJson()), settings);
     }
@@ -53,8 +53,8 @@ void main() {
       final cell = brightness == Brightness.dark
           ? const Color(0xff1c1c1e)
           : Colors.white;
-      for (final accent in MornyeAccent.values) {
-        final scheme = MornyeTheme.build(
+      for (final accent in MosixAccent.values) {
+        final scheme = MosixTheme.build(
           brightness,
           accent: accent,
         ).colorScheme;
@@ -101,7 +101,7 @@ void main() {
             themeMode: mode,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const MornyeSettingsTheme(child: AppearanceSettingsPage()),
+            home: const MosixSettingsTheme(child: AppearanceSettingsPage()),
           ),
         ),
       ),
@@ -159,26 +159,26 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('Glass outlines'));
         await tester.pumpAndSettle();
-        expect(prefs.getBool(kMornyeGlassOutlinesKey), isFalse);
+        expect(prefs.getBool(kMosixGlassOutlinesKey), isFalse);
         final context = tester.element(toggle);
-        expect(MornyeTheme.glassOutlinesOf(context), isFalse);
-        final local = MornyeTheme.fromContext(
+        expect(MosixTheme.glassOutlinesOf(context), isFalse);
+        final local = MosixTheme.fromContext(
           context,
           brightness: Brightness.dark,
         );
-        expect(local.extension<MornyeTheme>()!.glassOutlines, isFalse);
+        expect(local.extension<MosixTheme>()!.glassOutlines, isFalse);
         expect(
-          local.extension<MornyeTheme>()!.glassClarity,
-          kDefaultMornyeGlassClarity,
+          local.extension<MosixTheme>()!.glassClarity,
+          kDefaultMosixGlassClarity,
         );
         await tester.pumpWidget(const SizedBox());
         await openSettings(tester, prefs);
-        expect(MornyeTheme.glassOutlinesOf(tester.element(toggle)), isFalse);
+        expect(MosixTheme.glassOutlinesOf(tester.element(toggle)), isFalse);
         await tester.ensureVisible(toggle);
         await tester.pumpAndSettle();
         await tester.tap(find.text('Glass outlines'));
         await tester.pumpAndSettle();
-        expect(prefs.getBool(kMornyeGlassOutlinesKey), isTrue);
+        expect(prefs.getBool(kMosixGlassOutlinesKey), isTrue);
         expect(tester.takeException(), isNull);
       },
     );
@@ -198,18 +198,18 @@ void main() {
       await tester.drag(slider, const Offset(160, 0));
       await tester.pumpAndSettle();
       expect(tester.widget<Slider>(slider).value, 1);
-      expect(prefs.getDouble(kMornyeGlassClarityKey), 1);
+      expect(prefs.getDouble(kMosixGlassClarityKey), 1);
       final context = tester.element(slider);
-      expect(MornyeTheme.glassClarityOf(context), 1);
+      expect(MosixTheme.glassClarityOf(context), 1);
       expect(
         find.byKey(const ValueKey('mornye-glass-clear-performance')),
         findsOneWidget,
       );
       expect(
-        MornyeTheme.fromContext(
+        MosixTheme.fromContext(
           context,
           brightness: Brightness.dark,
-        ).extension<MornyeTheme>()!.glassClarity,
+        ).extension<MosixTheme>()!.glassClarity,
         1,
       );
       await tester.pumpWidget(const SizedBox());
@@ -220,7 +220,7 @@ void main() {
       await tester.drag(slider, const Offset(-320, 0));
       await tester.pumpAndSettle();
       expect(tester.widget<Slider>(slider).value, 0);
-      expect(prefs.getDouble(kMornyeGlassClarityKey), 0);
+      expect(prefs.getDouble(kMosixGlassClarityKey), 0);
       expect(
         find.byKey(const ValueKey('mornye-glass-clear-performance')),
         findsNothing,
@@ -255,8 +255,8 @@ void main() {
       );
       await tester.drag(slider, const Offset(160, 0));
       await tester.pumpAndSettle();
-      expect(tester.widget<Slider>(slider).value, kDefaultMornyeGlassClarity);
-      expect(prefs.getDouble(kMornyeGlassClarityKey), isNull);
+      expect(tester.widget<Slider>(slider).value, kDefaultMosixGlassClarity);
+      expect(prefs.getDouble(kMosixGlassClarityKey), isNull);
 
       final forceBlur = find.text('Always use blur effects');
       await tester.scrollUntilVisible(
@@ -278,7 +278,7 @@ void main() {
       expect(tester.widget<Slider>(slider).onChanged, isNotNull);
       await tester.drag(slider, const Offset(160, 0));
       await tester.pumpAndSettle();
-      expect(prefs.getDouble(kMornyeGlassClarityKey), 1);
+      expect(prefs.getDouble(kMosixGlassClarityKey), 1);
       expect(tester.takeException(), isNull);
     });
 
@@ -334,7 +334,7 @@ void main() {
       expect(find.byType(BackdropFilter), findsWidgets);
       await tester.drag(slider, const Offset(160, 0));
       await tester.pumpAndSettle();
-      expect(prefs.getDouble(kMornyeGlassClarityKey), 1);
+      expect(prefs.getDouble(kMosixGlassClarityKey), 1);
 
       await tester.pumpWidget(const SizedBox());
       await openSettings(tester, prefs);
@@ -345,7 +345,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Mornye accent updates live and survives restart ($mode)', (
+    testWidgets('Mosix accent updates live and survives restart ($mode)', (
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({
@@ -359,7 +359,7 @@ void main() {
       final initial = Theme.of(tester.element(page));
       expect(
         initial.colorScheme.primary,
-        MornyeTheme.accentColor(MornyeAccent.red, initial.brightness),
+        MosixTheme.accentColor(MosixAccent.red, initial.brightness),
       );
 
       final blue = find.byTooltip('Blue');
@@ -369,18 +369,18 @@ void main() {
       final theme = Theme.of(tester.element(page));
       expect(
         theme.colorScheme.primary,
-        MornyeTheme.accentColor(MornyeAccent.blue, theme.brightness),
+        MosixTheme.accentColor(MosixAccent.blue, theme.brightness),
       );
-      expect(prefs.getString(kMornyeAccentKey), 'blue');
+      expect(prefs.getString(kMosixAccentKey), 'blue');
       expect(prefs.getInt(kSeedColorKey), 0xff123456);
-      final overlay = MornyeTheme.fromContext(
+      final overlay = MosixTheme.fromContext(
         tester.element(page),
         brightness: Brightness.dark,
       );
-      expect(overlay.extension<MornyeTheme>()!.accent, MornyeAccent.blue);
+      expect(overlay.extension<MosixTheme>()!.accent, MosixAccent.blue);
       expect(
         overlay.colorScheme.primary,
-        MornyeTheme.accentColor(MornyeAccent.blue, Brightness.dark),
+        MosixTheme.accentColor(MosixAccent.blue, Brightness.dark),
       );
 
       await tester.pumpWidget(const SizedBox());
@@ -406,7 +406,7 @@ void main() {
       (tester) async {
         SharedPreferences.setMockInitialValues({
           kThemeStyleKey: style.name,
-          kMornyeAccentKey: 'blue',
+          kMosixAccentKey: 'blue',
           kUseDynamicColorKey: false,
         });
         final prefs = await SharedPreferences.getInstance();
@@ -430,12 +430,12 @@ void main() {
         expect(systemFamily, isNot('Google Sans Flex'));
         expect(prefs.getBool(kUseSystemFontKey), isTrue);
         if (style == AppThemeStyle.mornye) {
-          final overlay = MornyeTheme.fromContext(
+          final overlay = MosixTheme.fromContext(
             tester.element(page),
             brightness: Brightness.dark,
           );
-          expect(overlay.extension<MornyeTheme>()!.useSystemFont, isTrue);
-          expect(overlay.extension<MornyeTheme>()!.accent, MornyeAccent.blue);
+          expect(overlay.extension<MosixTheme>()!.useSystemFont, isTrue);
+          expect(overlay.extension<MosixTheme>()!.accent, MosixAccent.blue);
           expect(overlay.textTheme.bodyLarge!.fontFamily, systemFamily);
         }
         await tester.pumpWidget(const SizedBox());

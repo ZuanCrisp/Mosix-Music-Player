@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 /// Builds a horizontal list that scrolls with [controller].
 typedef DesktopScrollArrowsBuilder =
@@ -87,7 +87,7 @@ class _DesktopScrollArrowsState extends State<DesktopScrollArrows> {
 
   Widget _arrow(BuildContext context, {required bool forward}) {
     final l10n = context.l10n;
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final colorScheme = Theme.of(context).colorScheme;
     final icon = forward
         ? (mornye ? CupertinoIcons.forward : Icons.chevron_right)

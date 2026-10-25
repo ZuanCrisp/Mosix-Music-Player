@@ -4,20 +4,20 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/models/download_history.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/services/history_database.dart';
-import 'package:mornye/services/history_maintenance.dart';
-import 'package:mornye/utils/logger.dart';
-import 'package:mornye/utils/file_access.dart';
-import 'package:mornye/utils/string_utils.dart';
-import 'package:mornye/utils/audio_format_utils.dart';
-import 'package:mornye/utils/int_utils.dart';
-import 'package:mornye/utils/lyrics_metadata_helper.dart';
-import 'package:mornye/utils/path_match_keys.dart';
+import 'package:mosix/models/download_history.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/services/history_database.dart';
+import 'package:mosix/services/history_maintenance.dart';
+import 'package:mosix/utils/logger.dart';
+import 'package:mosix/utils/file_access.dart';
+import 'package:mosix/utils/string_utils.dart';
+import 'package:mosix/utils/audio_format_utils.dart';
+import 'package:mosix/utils/int_utils.dart';
+import 'package:mosix/utils/lyrics_metadata_helper.dart';
+import 'package:mosix/utils/path_match_keys.dart';
 
-export 'package:mornye/models/download_history.dart';
+export 'package:mosix/models/download_history.dart';
 
 part 'download_history_provider_maintenance.dart';
 

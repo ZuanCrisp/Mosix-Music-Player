@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_icon.dart';
-import 'package:mornye/widgets/app_icon_button.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_icon.dart';
+import 'package:mosix/widgets/app_icon_button.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 /// Applies the same transient-message policy to existing snackbar call sites.
 /// A new message replaces the old one instead of building a stale FIFO queue.
@@ -83,7 +83,7 @@ void showCannotOpenFileSnackBar(BuildContext context, Object error) {
   );
 }
 
-/// Transient messages use the same glass as confirmation dialogs in Mornye.
+/// Transient messages use the same glass as confirmation dialogs in Mosix.
 ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showAppSnackBar(
   BuildContext context, {
   required Widget content,
@@ -92,7 +92,7 @@ ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showAppSnackBar(
   SnackBarAction? action,
 }) {
   final messenger = ScaffoldMessenger.of(context);
-  if (!context.isMornye) {
+  if (!context.isMosix) {
     return messenger.showSnackBar(
       SnackBar(
         content: content,
@@ -106,12 +106,12 @@ ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showAppSnackBar(
   }
   final theme = Theme.of(context);
   final reduceMotion = MediaQuery.disableAnimationsOf(context);
-  final snackBar = _MornyeSnackBar(
+  final snackBar = _MosixSnackBar(
     duration: duration,
     reduceMotion: reduceMotion,
     content: Theme(
       data: theme,
-      child: MornyeGlassPanel.overlay(
+      child: MosixGlassPanel.overlay(
         radius: 24,
         // Messages have no modal scrim; let more of the page show through.
         tintOpacity: 0.48,
@@ -163,8 +163,8 @@ ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showAppSnackBar(
   return messenger.showSnackBar(snackBar);
 }
 
-class _MornyeSnackBar extends SnackBar {
-  const _MornyeSnackBar({
+class _MosixSnackBar extends SnackBar {
+  const _MosixSnackBar({
     required super.content,
     required super.duration,
     required this.reduceMotion,

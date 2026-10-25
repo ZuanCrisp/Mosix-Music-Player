@@ -4,13 +4,13 @@ import MediaPlayer
 import UIKit
 
 /// iOS owns the lock-screen layout, transport glyphs and AirPlay button.
-/// Supply its favorite command with the same state/action as the Mornye player.
+/// Supply its favorite command with the same state/action as the Mosix player.
 final class PlaybackNotificationBridge {
     private let channel: FlutterMethodChannel
     private var target: Any?
 
     init(messenger: FlutterBinaryMessenger) {
-        channel = FlutterMethodChannel(name: "com.zarz.mornye/playback_notification", binaryMessenger: messenger)
+        channel = FlutterMethodChannel(name: "com.zuancrisp.mosix/playback_notification", binaryMessenger: messenger)
         let command = MPRemoteCommandCenter.shared().likeCommand
         target = command.addTarget { [weak self] _ in
             guard let self else { return .commandFailed }
@@ -41,7 +41,7 @@ final class AudioRouteInfoBridge {
     private let channel: FlutterMethodChannel
 
     init(messenger: FlutterBinaryMessenger) {
-        channel = FlutterMethodChannel(name: "com.zarz.mornye/audio_route", binaryMessenger: messenger)
+        channel = FlutterMethodChannel(name: "com.zuancrisp.mosix/audio_route", binaryMessenger: messenger)
         channel.setMethodCallHandler { call, result in
             guard call.method == "read" else {
                 result(FlutterMethodNotImplemented)
@@ -147,7 +147,7 @@ private final class AudioOutputView: NSObject, FlutterPlatformView, AVRoutePicke
 
     init(frame: CGRect, id: Int64, messenger: FlutterBinaryMessenger, arguments: Any?) {
         picker = AVRoutePickerView(frame: frame)
-        channel = FlutterMethodChannel(name: "com.zarz.mornye/audio_output/\(id)", binaryMessenger: messenger)
+        channel = FlutterMethodChannel(name: "com.zuancrisp.mosix/audio_output/\(id)", binaryMessenger: messenger)
         super.init()
         picker.backgroundColor = .clear
         picker.prioritizesVideoDevices = false

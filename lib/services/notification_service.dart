@@ -4,12 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:mornye/constants/app_info.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/services/verification_notification.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/utils/string_utils.dart';
+import 'package:mosix/constants/app_info.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/services/verification_notification.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/utils/string_utils.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -125,7 +125,7 @@ class NotificationService {
 
   /// Windows toast identity. Keep both values stable: Windows ties the
   /// notification settings and activation callback to them.
-  static const String windowsAppUserModelId = 'com.zarz.mornye';
+  static const String windowsAppUserModelId = 'com.zuancrisp.mosix';
   static const String windowsNotificationGuid =
       '1a458cb1-f396-4430-8ee3-23d66b56e12f';
 

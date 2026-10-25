@@ -6,9 +6,9 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/services/library_native_adapter.dart';
-import 'package:mornye/services/library_row_mapper.dart';
-import 'package:mornye/services/platform_bridge.dart';
+import 'package:mosix/services/library_native_adapter.dart';
+import 'package:mosix/services/library_row_mapper.dart';
+import 'package:mosix/services/platform_bridge.dart';
 
 import '../test/support/library_native_fixture.dart';
 

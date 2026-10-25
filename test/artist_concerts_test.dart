@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/models/artist_concert.dart';
-import 'package:mornye/screens/artist_concerts_screen.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/artist_concerts_button.dart';
-import 'package:mornye/widgets/mornye_artist_header.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/models/artist_concert.dart';
+import 'package:mosix/screens/artist_concerts_screen.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/artist_concerts_button.dart';
+import 'package:mosix/widgets/mornye_artist_header.dart';
 
 Map<String, dynamic> event({
   String id = 'event-1',
@@ -25,7 +25,7 @@ Map<String, dynamic> event({
 Widget app(Widget child, {bool mornye = true, String language = 'en'}) =>
     ProviderScope(
       child: MaterialApp(
-        theme: mornye ? MornyeTheme.build(Brightness.light) : ThemeData(),
+        theme: mornye ? MosixTheme.build(Brightness.light) : ThemeData(),
         locale: Locale(language),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -157,7 +157,7 @@ void main() {
         Scaffold(
           body: CustomScrollView(
             slivers: [
-              MornyeArtistHeader(
+              MosixArtistHeader(
                 name: 'Example Artist',
                 artwork: const SizedBox.expand(),
                 showTitle: false,

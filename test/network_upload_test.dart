@@ -4,8 +4,8 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/network_download_staging.dart';
-import 'package:mornye/services/network_storage_service.dart';
+import 'package:mosix/services/network_download_staging.dart';
+import 'package:mosix/services/network_storage_service.dart';
 
 class _Dav {
   late HttpServer server;
@@ -102,7 +102,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   // These integration tests use an authenticated in-process WebDAV server.
   HttpOverrides.global = null;
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   late _Dav dav;
   late NetworkStorageService storage;
   late NetworkDownloadStaging staging;

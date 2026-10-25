@@ -10,17 +10,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:material_color_utilities/quantize/quantizer_celebi.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/models/download_history.dart';
-import 'package:mornye/services/automix_analysis.dart';
-import 'package:mornye/services/backup_service.dart';
-import 'package:mornye/services/history_database.dart';
-import 'package:mornye/services/id3v23_lyrics.dart';
-import 'package:mornye/services/library_row_mapper.dart';
-import 'package:mornye/services/library_schema.dart';
-import 'package:mornye/services/platform_bridge.dart';
-import 'package:mornye/theme/cover_palette.dart';
-import 'package:mornye/utils/lyrics_parser.dart';
-import 'package:mornye/widgets/audio_analysis_widget.dart';
+import 'package:mosix/models/download_history.dart';
+import 'package:mosix/services/automix_analysis.dart';
+import 'package:mosix/services/backup_service.dart';
+import 'package:mosix/services/history_database.dart';
+import 'package:mosix/services/id3v23_lyrics.dart';
+import 'package:mosix/services/library_row_mapper.dart';
+import 'package:mosix/services/library_schema.dart';
+import 'package:mosix/services/platform_bridge.dart';
+import 'package:mosix/theme/cover_palette.dart';
+import 'package:mosix/utils/lyrics_parser.dart';
+import 'package:mosix/widgets/audio_analysis_widget.dart';
 
 // Run on a real Android/iOS host. These tests intentionally use the actual
 // channel and native workers; missing bindings must fail, never use a fallback.

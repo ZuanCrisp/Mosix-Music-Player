@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/metadata_separators.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/services/audio_metadata_mapper.dart';
-import 'package:mornye/services/download_request_payload.dart';
-import 'package:mornye/utils/artist_utils.dart';
+import 'package:mosix/models/metadata_separators.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/services/audio_metadata_mapper.dart';
+import 'package:mosix/services/download_request_payload.dart';
+import 'package:mosix/utils/artist_utils.dart';
 
 void main() {
   test(

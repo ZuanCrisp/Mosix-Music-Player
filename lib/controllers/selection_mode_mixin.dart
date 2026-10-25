@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mornye/widgets/desktop/desktop_selection.dart';
+import 'package:mosix/widgets/desktop/desktop_selection.dart';
 
 /// Shared multi-select state for list screens: enter/exit selection mode,
 /// toggle individual items, select all, and prune ids that fell out of the

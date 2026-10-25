@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
-import 'package:mornye/services/backend/native_backend_transport.dart';
+import 'package:mosix/services/backend/native_backend_transport.dart';
 import 'package:path/path.dart' as p;
 
 /// Absolute library path that takes precedence over the bundled location.
-const desktopBackendLibraryEnvironmentKey = 'MORNYE_DESKTOP_LIB';
+const desktopBackendLibraryEnvironmentKey = 'MOSIX_DESKTOP_LIB';
 
 typedef _CallbackNative =
     Void Function(Uint64 id, Int32 kind, Pointer<Uint8> data, Size len);

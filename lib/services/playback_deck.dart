@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 /// Transport state reported by a [PlaybackDeck].
 enum PlaybackDeckState { stopped, playing, paused, completed, disposed }

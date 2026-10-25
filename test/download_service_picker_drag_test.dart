@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/download_service_picker.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/download_service_picker.dart';
 
 import 'support/fixed_settings.dart';
 
@@ -96,7 +96,7 @@ void main() {
     (16, true),
   ]) {
     testWidgets(
-      'picker fits $qualityCount options and dismisses (Mornye=$mornye)',
+      'picker fits $qualityCount options and dismisses (Mosix=$mornye)',
       (tester) async {
         tester.view.physicalSize = const Size(320, 780);
         tester.view.devicePixelRatio = 1;
@@ -110,7 +110,7 @@ void main() {
             ],
             child: MaterialApp(
               theme: mornye
-                  ? MornyeTheme.build(Brightness.dark)
+                  ? MosixTheme.build(Brightness.dark)
                   : ThemeData(platform: TargetPlatform.iOS),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
@@ -189,7 +189,7 @@ void main() {
               settingsProvider.overrideWith(FixedSettingsNotifier.new),
             ],
             child: MaterialApp(
-              theme: MornyeTheme.build(brightness),
+              theme: MosixTheme.build(brightness),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(

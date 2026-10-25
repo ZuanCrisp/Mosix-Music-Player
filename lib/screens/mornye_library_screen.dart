@@ -2,50 +2,50 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/library_browse_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/screens/downloaded_album_screen.dart';
-import 'package:mornye/screens/listening_rewind_screen.dart';
-import 'package:mornye/screens/local_album_screen.dart';
-import 'package:mornye/services/album_completeness.dart';
-import 'package:mornye/services/downloaded_embedded_cover_resolver.dart';
-import 'package:mornye/services/library_database.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/utils/nav_bar_inset.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
-import 'package:mornye/widgets/app_refresh_indicator.dart';
-import 'package:mornye/widgets/app_search_field.dart';
-import 'package:mornye/widgets/app_sliver_header.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
-import 'package:mornye/widgets/desktop/context_menu.dart';
-import 'package:mornye/widgets/desktop/hover_play_button.dart';
-import 'package:mornye/widgets/cached_cover_image.dart';
-import 'package:mornye/widgets/local_library_artwork_builder.dart';
-import 'package:mornye/widgets/library_search_results.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/library_browse_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/screens/downloaded_album_screen.dart';
+import 'package:mosix/screens/listening_rewind_screen.dart';
+import 'package:mosix/screens/local_album_screen.dart';
+import 'package:mosix/services/album_completeness.dart';
+import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
+import 'package:mosix/services/library_database.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/utils/nav_bar_inset.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
+import 'package:mosix/widgets/app_refresh_indicator.dart';
+import 'package:mosix/widgets/app_search_field.dart';
+import 'package:mosix/widgets/app_sliver_header.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:mosix/widgets/desktop/context_menu.dart';
+import 'package:mosix/widgets/desktop/hover_play_button.dart';
+import 'package:mosix/widgets/cached_cover_image.dart';
+import 'package:mosix/widgets/local_library_artwork_builder.dart';
+import 'package:mosix/widgets/library_search_results.dart';
 
-enum MornyeLibraryPage { overview, albums, artists }
+enum MosixLibraryPage { overview, albums, artists }
 
-class MornyeLibraryScreen extends ConsumerStatefulWidget {
-  const MornyeLibraryScreen({
+class MosixLibraryScreen extends ConsumerStatefulWidget {
+  const MosixLibraryScreen({
     super.key,
     required this.onOpenSection,
-    this.page = MornyeLibraryPage.overview,
+    this.page = MosixLibraryPage.overview,
     this.artist,
   });
 
   final ValueChanged<String> onOpenSection;
-  final MornyeLibraryPage page;
+  final MosixLibraryPage page;
   final String? artist;
 
   @override
-  ConsumerState<MornyeLibraryScreen> createState() =>
-      _MornyeLibraryScreenState();
+  ConsumerState<MosixLibraryScreen> createState() =>
+      _MosixLibraryScreenState();
 }
 
-class _MornyeLibraryScreenState extends ConsumerState<MornyeLibraryScreen> {
+class _MosixLibraryScreenState extends ConsumerState<MosixLibraryScreen> {
   final _scroll = ScrollController();
   final _search = TextEditingController();
   Timer? _debounce;
@@ -56,8 +56,8 @@ class _MornyeLibraryScreenState extends ConsumerState<MornyeLibraryScreen> {
   List<LibraryBrowseEntry> _rows = const [];
   bool _loading = true;
 
-  bool get _overview => widget.page == MornyeLibraryPage.overview;
-  bool get _artists => widget.page == MornyeLibraryPage.artists;
+  bool get _overview => widget.page == MosixLibraryPage.overview;
+  bool get _artists => widget.page == MosixLibraryPage.artists;
   LibraryBrowseRequest get _request => (
     artists: _artists,
     artist: widget.artist,
@@ -101,11 +101,11 @@ class _MornyeLibraryScreenState extends ConsumerState<MornyeLibraryScreen> {
     });
   }
 
-  void _openPage(MornyeLibraryPage page, {String? artist}) {
+  void _openPage(MosixLibraryPage page, {String? artist}) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => Scaffold(
-          body: MornyeLibraryScreen(
+          body: MosixLibraryScreen(
             page: page,
             artist: artist,
             onOpenSection: widget.onOpenSection,
@@ -410,7 +410,7 @@ class _MornyeLibraryScreenState extends ConsumerState<MornyeLibraryScreen> {
             LibrarySearchResults(
               query: _query,
               onOpenArtist: (artist) =>
-                  _openPage(MornyeLibraryPage.albums, artist: artist),
+                  _openPage(MosixLibraryPage.albums, artist: artist),
             ),
           if (!searchingLibrary) ...[
             if (_overview && _query.isEmpty)
@@ -433,12 +433,12 @@ class _MornyeLibraryScreenState extends ConsumerState<MornyeLibraryScreen> {
                       (
                         Icons.mic_none,
                         context.l10n.searchArtists,
-                        () => _openPage(MornyeLibraryPage.artists),
+                        () => _openPage(MosixLibraryPage.artists),
                       ),
                       (
                         Icons.album_outlined,
                         context.l10n.searchAlbums,
-                        () => _openPage(MornyeLibraryPage.albums),
+                        () => _openPage(MosixLibraryPage.albums),
                       ),
                       (
                         Icons.music_note_outlined,
@@ -518,7 +518,7 @@ class _MornyeLibraryScreenState extends ConsumerState<MornyeLibraryScreen> {
                   itemBuilder: (context, index) {
                     final entry = _rows[index];
                     void open() => _openPage(
-                      MornyeLibraryPage.albums,
+                      MosixLibraryPage.albums,
                       artist: entry.artist,
                     );
                     return Column(

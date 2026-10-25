@@ -8,17 +8,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/app_state_database.dart';
-import 'package:mornye/services/backend/native_backend_transport.dart';
-import 'package:mornye/services/backend/rust_ffi_backend.dart';
-import 'package:mornye/services/download_keep_awake.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/app_state_database.dart';
+import 'package:mosix/services/backend/native_backend_transport.dart';
+import 'package:mosix/services/backend/rust_ffi_backend.dart';
+import 'package:mosix/services/download_keep_awake.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 final _events = <String>[];
 
@@ -176,7 +176,7 @@ void main() {
     SharedPreferences.setMockInitialValues({
       'app_state_migrated_queue_to_sqlite_v1': true,
     });
-    const backend = MethodChannel('com.zarz.mornye/backend');
+    const backend = MethodChannel('com.zuancrisp.mosix/backend');
     const sqlite = MethodChannel('com.tekartik.sqflite');
     const paths = MethodChannel('plugins.flutter.io/path_provider');
     const notifications = MethodChannel(
@@ -185,7 +185,7 @@ void main() {
     const connectivity = MethodChannel(
       'dev.fluttercommunity.plus/connectivity_status',
     );
-    const progress = MethodChannel('com.zarz.mornye/download_progress_stream');
+    const progress = MethodChannel('com.zuancrisp.mosix/download_progress_stream');
     messenger.setMockMethodCallHandler(paths, (_) async => directory.path);
     messenger.setMockMethodCallHandler(connectivity, (_) async => null);
     messenger.setMockMethodCallHandler(progress, (_) async => null);

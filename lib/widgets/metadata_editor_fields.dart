@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mornye/theme/mornye_icons.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_content_card.dart';
-import 'package:mornye/widgets/app_switch.dart';
-import 'package:mornye/widgets/expressive_button.dart';
-import 'package:mornye/widgets/metadata_text_field.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_content_card.dart';
+import 'package:mosix/widgets/app_switch.dart';
+import 'package:mosix/widgets/expressive_button.dart';
+import 'package:mosix/widgets/metadata_text_field.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 /// Grouped option list used by the metadata editor pickers.
 class MetadataEditorOptions extends StatelessWidget {
@@ -16,11 +16,11 @@ class MetadataEditorOptions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!context.isMornye) return SettingsGroup(children: children);
+    if (!context.isMosix) return SettingsGroup(children: children);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Material(
-        color: MornyeTheme.controlFill(context),
+        color: MosixTheme.controlFill(context),
         borderRadius: BorderRadius.circular(28),
         clipBehavior: Clip.antiAlias,
         child: Column(mainAxisSize: MainAxisSize.min, children: children),
@@ -45,7 +45,7 @@ class MetadataEditorQuickSelectButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (context.isMornye) {
+    if (context.isMosix) {
       return CupertinoButton(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         onPressed: fetching ? null : onTap,
@@ -101,7 +101,7 @@ class MetadataEditorSwitchField extends StatelessWidget {
               value: value,
               onChanged: onChanged,
               contentPadding: EdgeInsets.symmetric(
-                horizontal: context.isMornye ? 4 : 16,
+                horizontal: context.isMosix ? 4 : 16,
               ),
               title: Text(label, style: Theme.of(context).textTheme.bodyLarge),
               subtitle: Text(
@@ -112,7 +112,7 @@ class MetadataEditorSwitchField extends StatelessWidget {
               ),
             ),
           ),
-          if (context.isMornye) const Divider(height: 0.5),
+          if (context.isMosix) const Divider(height: 0.5),
         ],
       ),
     );
@@ -138,7 +138,7 @@ class MetadataEditorSelectionField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = colorScheme;
-    if (context.isMornye) {
+    if (context.isMosix) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 14),
         child: Column(
@@ -290,7 +290,7 @@ class MetadataEditorSectionCard extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
             child: Icon(
-              context.isMornye
+              context.isMosix
                   ? CupertinoIcons.chevron_down
                   : Icons.expand_more,
               size: 22,
@@ -334,15 +334,15 @@ class MetadataEditorSectionCard extends StatelessWidget {
     );
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: context.isMornye
+      child: context.isMosix
           ? Material(
-              color: MornyeTheme.controlFill(context),
+              color: MosixTheme.controlFill(context),
               borderRadius: BorderRadius.circular(28),
               clipBehavior: Clip.antiAlias,
               child: DividerTheme(
                 data: DividerTheme.of(
                   context,
-                ).copyWith(color: MornyeTheme.metadataDividerColor(context)),
+                ).copyWith(color: MosixTheme.metadataDividerColor(context)),
                 child: content,
               ),
             )

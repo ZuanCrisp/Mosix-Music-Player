@@ -73,7 +73,7 @@
   "@networkErrorPermission": {
     "description": "Network access error when the server denies account permissions for a shared folder; distinct from the device's local network permission"
   },
-  "networkErrorLocalPermission": "Local network access is not allowed. Allow Nearby devices for Mornye in Android app settings, then try again.",
+  "networkErrorLocalPermission": "Local network access is not allowed. Allow Nearby devices for Mosix in Android app settings, then try again.",
   "@networkErrorLocalPermission": {
     "description": "Network access error when Android denies local network permission; Nearby devices is the Android app permission setting"
   },
@@ -182,7 +182,7 @@
   "usbBitPerfectDescription": "Preserve source precision on compatible outputs. Choose direct USB or AAudio exclusive below; otherwise Android USB output requires Android 14 or later. Applies from the next track, without AutoMix or normalization. System volume may not control direct USB.",
   "usbHardwareVolume": "DAC hardware volume",
   "usbVolumeWarningTitle": "Check your listening volume",
-  "usbVolumeWarning": "Direct USB audio can be much louder than normal playback, and phone volume buttons may not control it. Lower your DAC or amplifier volume before starting. When supported, Mornye sets the DAC to at most −40 dB on connection; this does not guarantee a safe listening level on every amplifier or headphone.",
+  "usbVolumeWarning": "Direct USB audio can be much louder than normal playback, and phone volume buttons may not control it. Lower your DAC or amplifier volume before starting. When supported, Mosix sets the DAC to at most −40 dB on connection; this does not guarantee a safe listening level on every amplifier or headphone.",
   "usbVolumeAccept": "I understand",
   "usbVolumeUnavailable": "Playback is paused because this DAC has no verified hardware volume control. Lower the DAC or amplifier volume, then enable fixed-volume output if needed and select the track again.",
   "usbFixedVolume": "Allow fixed-volume USB output",
@@ -206,7 +206,7 @@
   "cacheMotionArtworkDesc": "Album videos saved with downloads. Removing them keeps your music files and static covers.",
   "nowPlayingVolume": "Volume",
   "@nowPlayingVolume": {
-    "description": "System volume control label in the Mornye player"
+    "description": "System volume control label in the Mosix player"
   },
   "appearanceStyle": "App Style",
   "appearanceAccentRed": "Red (default)",
@@ -218,14 +218,14 @@
   "appearanceAccentPink": "Pink",
   "appearanceGlassClarity": "Glass clarity",
   "appearanceGlassOutlines": "Glass outlines",
-  "appearanceGlassOutlinesSubtitle": "Show decorative edges around Mornye glass. Turning this off keeps blur and refraction.",
-  "appearanceGlassClaritySubtitle": "Adjust transparency in Mornye menus and navigation. Text contrast is preserved.",
+  "appearanceGlassOutlinesSubtitle": "Show decorative edges around Mosix glass. Turning this off keeps blur and refraction.",
+  "appearanceGlassClaritySubtitle": "Adjust transparency in Mosix menus and navigation. Text contrast is preserved.",
   "appearanceGlassTinted": "Tinted",
   "appearanceGlassClear": "Clear",
   "appearanceGlassClearPerformance": "Very clear glass may use more power and feel less smooth on older devices. Lower clarity if needed.",
   "appearanceGlassClarityBlurOff": "Glass is opaque on this device. Turn on “{setting}” to adjust clarity.",
   "@appearanceGlassClarityBlurOff": {
-    "description": "Shown under the disabled glass clarity slider when the device renders Mornye glass without blur. The placeholder is the name of the force-blur toggle.",
+    "description": "Shown under the disabled glass clarity slider when the device renders Mosix glass without blur. The placeholder is the name of the force-blur toggle.",
     "placeholders": {
       "setting": {
         "type": "String"
@@ -248,7 +248,7 @@
   },
   "@@locale": "en",
   "@@last_modified": "2026-04-28",
-  "appName": "Mornye",
+  "appName": "Mosix",
   "@appName": {
     "description": "App name - DO NOT TRANSLATE"
   },
@@ -733,7 +733,7 @@
   },
   "aboutServiceStatus": "Service status",
   "@aboutServiceStatus": {
-    "description": "Link to the status page of the Mornye online services"
+    "description": "Link to the status page of the Mosix online services"
   },
   "aboutReportIssue": "Report an issue",
   "@aboutReportIssue": {
@@ -944,7 +944,7 @@
   "@setupStorageRequired": {
     "description": "Title when storage permission needed"
   },
-  "setupStorageDescription": "Mornye needs storage permission to save your downloaded music files.",
+  "setupStorageDescription": "Mosix needs storage permission to save your downloaded music files.",
   "@setupStorageDescription": {
     "description": "Explanation for storage permission"
   },
@@ -1569,19 +1569,6 @@
   "@updateNewVersionReady": {
     "description": "Update subtitle"
   },
-  "updateRequiredTitle": "Update required",
-  "@updateRequiredTitle": {
-    "description": "Title of the mandatory update dialog shown when the installed version is too old"
-  },
-  "updateRequiredNotice": "This version is {count} releases behind and is no longer supported. Update to keep using the app.",
-  "@updateRequiredNotice": {
-    "description": "Subtitle of the mandatory update dialog; explains why the dialog cannot be dismissed",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "updateCurrent": "Current",
   "@updateCurrent": {
     "description": "Label for current version"
@@ -1614,15 +1601,15 @@
   "@updateStartingInstaller": {
     "description": "Update status on Windows - the downloaded installer is starting and the app will close"
   },
-  "updateMacInstallHint": "The disk image is open in Finder. Quit Mornye, then drag Mornye from the disk image to Applications and replace the old copy.",
+  "updateMacInstallHint": "The disk image is open in Finder. Quit Mosix, then drag Mosix from the disk image to Applications and replace the old copy.",
   "@updateMacInstallHint": {
     "description": "Update instructions on macOS after the downloaded disk image opens"
   },
-  "updateQuitApp": "Quit Mornye",
+  "updateQuitApp": "Quit Mosix",
   "@updateQuitApp": {
     "description": "Update button on macOS - quit the app so the new version can replace it"
   },
-  "updateReadyToRestart": "The update is installed. Restart Mornye to use it.",
+  "updateReadyToRestart": "The update is installed. Restart Mosix to use it.",
   "@updateReadyToRestart": {
     "description": "Update status on Linux after the AppImage was replaced"
   },
@@ -2881,9 +2868,15 @@
   "@librarySourceScanCount": {
     "description": "Live progress for one library folder scan",
     "placeholders": {
-      "scanned": {"type": "int"},
-      "total": {"type": "int"},
-      "progress": {"type": "String"}
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "progress": {
+        "type": "String"
+      }
     }
   },
   "libraryExternalStorage": "External storage",
@@ -2894,7 +2887,7 @@
   "@libraryRemoveFolder": {
     "description": "Action to remove one indexed library source"
   },
-  "libraryRemoveFolderMessage": "Remove this folder and its indexed tracks from Mornye? Audio files on the storage will not be deleted.",
+  "libraryRemoveFolderMessage": "Remove this folder and its indexed tracks from Mosix? Audio files on the storage will not be deleted.",
   "@libraryRemoveFolderMessage": {
     "description": "Confirmation shown before removing a library source"
   },
@@ -3084,13 +3077,13 @@
   "@libraryStorageAccessRequired": {
     "description": "Dialog title for storage permission"
   },
-  "libraryStorageAccessMessage": "Mornye needs storage access to scan your music library. Please grant permission in settings.",
+  "libraryStorageAccessMessage": "Mosix needs storage access to scan your music library. Please grant permission in settings.",
   "@libraryStorageAccessMessage": {
     "description": "Dialog message for storage permission"
   },
   "librarySourceDownloaded": "Downloaded",
   "@librarySourceDownloaded": {
-    "description": "Badge for tracks downloaded via Mornye"
+    "description": "Badge for tracks downloaded via Mosix"
   },
   "librarySourceLocal": "Local",
   "@librarySourceLocal": {
@@ -3226,11 +3219,11 @@
       }
     }
   },
-  "tutorialWelcomeTitle": "Welcome to Mornye!",
+  "tutorialWelcomeTitle": "Welcome to Mosix!",
   "@tutorialWelcomeTitle": {
     "description": "Tutorial welcome page title"
   },
-  "tutorialWelcomeDesc": "Learn how to find music with extensions, choose the quality you want, and manage downloads in Mornye.",
+  "tutorialWelcomeDesc": "Learn how to find music with extensions, choose the quality you want, and manage downloads in Mosix.",
   "@tutorialWelcomeDesc": {
     "description": "Tutorial welcome page description"
   },
@@ -3682,8 +3675,12 @@
   "@trackReEnrichReviewSubtitle": {
     "description": "Summary shown above proposed batch metadata changes",
     "placeholders": {
-      "changeCount": {"type": "int"},
-      "trackCount": {"type": "int"}
+      "changeCount": {
+        "type": "int"
+      },
+      "trackCount": {
+        "type": "int"
+      }
     }
   },
   "trackReEnrichNoChanges": "No metadata changes were found for the selected tracks.",
@@ -4355,7 +4352,7 @@
   "@safMigrationTitle": {
     "description": "Title of SAF migration dialog"
   },
-  "safMigrationMessage1": "Mornye now uses Android Storage Access Framework (SAF) for downloads. This fixes \"permission denied\" errors on Android 10+.",
+  "safMigrationMessage1": "Mosix now uses Android Storage Access Framework (SAF) for downloads. This fixes \"permission denied\" errors on Android 10+.",
   "@safMigrationMessage1": {
     "description": "First paragraph of SAF migration dialog"
   },
@@ -4435,7 +4432,7 @@
   "@backupRestoreFailed": {
     "description": "Snackbar when restore fails"
   },
-  "backupInvalidFile": "This file is not a valid Mornye backup",
+  "backupInvalidFile": "This file is not a valid Mosix backup",
   "@backupInvalidFile": {
     "description": "Snackbar when the chosen file is not a valid backup"
   },
@@ -4619,9 +4616,9 @@
     "description": "Subtitle shown in the download location picker sheet"
   },
   "storageAutomaticFolder": "Automatic folder",
-  "storageAutomaticDownloadFolder": "Uses Download/Mornye when writable, otherwise app storage",
+  "storageAutomaticDownloadFolder": "Uses Download/Mosix when writable, otherwise app storage",
   "storageSafRecommended": "Choose folder (Recommended)",
-  "storageDownloadFolderHint": "In the Android folder picker, open Download and select Mornye. If it does not exist, create it using New folder, then tap Use this folder to grant access.",
+  "storageDownloadFolderHint": "In the Android folder picker, open Download and select Mosix. If it does not exist, create it using New folder, then tap Use this folder to grant access.",
   "downloadFolderAccessLostTitle": "Download folder access lost",
   "@downloadFolderAccessLostTitle": {
     "description": "Title of the warning banner shown in Files settings when the saved SAF folder grant is no longer valid"
@@ -5634,7 +5631,7 @@
       }
     }
   },
-  "notifDownloadingUpdate": "Downloading Mornye v{version}",
+  "notifDownloadingUpdate": "Downloading Mosix v{version}",
   "@notifDownloadingUpdate": {
     "description": "Notification title while downloading an app update",
     "placeholders": {
@@ -5662,7 +5659,7 @@
   "@notifUpdateReady": {
     "description": "Notification title when app update download is complete"
   },
-  "notifUpdateReadyBody": "Mornye v{version} downloaded. Tap to install.",
+  "notifUpdateReadyBody": "Mosix v{version} downloaded. Tap to install.",
   "@notifUpdateReadyBody": {
     "description": "Notification body when app update is ready to install",
     "placeholders": {
@@ -6430,7 +6427,7 @@
   "@extensionCustomUrlHandlingSubtitle": {
     "description": "Extension detail subtitle for custom URL handling"
   },
-  "extensionCustomUrlHandlingShareHint": "Share links from these sites to Mornye and this extension will handle them.",
+  "extensionCustomUrlHandlingShareHint": "Share links from these sites to Mosix and this extension will handle them.",
   "@extensionCustomUrlHandlingShareHint": {
     "description": "Extension detail hint explaining share-to-app URL handling"
   },
@@ -6640,7 +6637,7 @@
   "@libraryBuiltInPreviewPlayer": {
     "description": "Setting option to use the built-in preview player"
   },
-  "libraryBuiltInPreviewPlayerSubtitle": "Play your music right inside Mornye",
+  "libraryBuiltInPreviewPlayerSubtitle": "Play your music right inside Mosix",
   "@libraryBuiltInPreviewPlayerSubtitle": {
     "description": "Subtitle for built-in preview player option"
   },
@@ -6659,9 +6656,21 @@
   "nowPlayingUpNext": "Up next",
   "nowPlayingAudioOutput": "Audio Output",
   "nowPlayingWrittenBy": "Written by: {writers}",
-  "@nowPlayingWrittenBy": {"placeholders": {"writers": {"type": "String"}}},
+  "@nowPlayingWrittenBy": {
+    "placeholders": {
+      "writers": {
+        "type": "String"
+      }
+    }
+  },
   "nowPlayingLyricsProvider": "Lyrics: {provider}",
-  "@nowPlayingLyricsProvider": {"placeholders": {"provider": {"type": "String"}}},
+  "@nowPlayingLyricsProvider": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
   "concertGetTickets": "Get Tickets",
   "concertSetList": "Concert Set List",
   "concertSetListButton": "Set List",
@@ -7111,11 +7120,11 @@
   "@extensionVerificationHelpTitleWaiting": {
     "description": "Dialog title when verification is taking longer than expected"
   },
-  "extensionVerificationHelpMessageManual": "Mornye could not open the browser automatically. Open this link in your browser, or copy it manually.",
+  "extensionVerificationHelpMessageManual": "Mosix could not open the browser automatically. Open this link in your browser, or copy it manually.",
   "@extensionVerificationHelpMessageManual": {
     "description": "Dialog message when automatic browser launch for verification fails"
   },
-  "extensionVerificationHelpMessageWaiting": "If the browser did not open, or verification finished but did not return to Mornye, open this link again or copy it manually.",
+  "extensionVerificationHelpMessageWaiting": "If the browser did not open, or verification finished but did not return to Mosix, open this link again or copy it manually.",
   "@extensionVerificationHelpMessageWaiting": {
     "description": "Dialog message when verification may need manual browser help"
   },
@@ -7247,7 +7256,7 @@
   "@playerCoverStyleFullScreen": {
     "description": "Cover art style: artwork fills the top of the player"
   },
-  "playerCoverStyleFullScreenDescription": "Artwork fills the top of the player and fades into a blur. Motion artwork is always full screen in Mornye",
+  "playerCoverStyleFullScreenDescription": "Artwork fills the top of the player and fades into a blur. Motion artwork is always full screen in Mosix",
   "@playerCoverStyleFullScreenDescription": {
     "description": "Subtitle of the full screen cover art style"
   },
@@ -7350,11 +7359,35 @@
   "listeningStatsDescription": "Stored only on this device, starting now. Records the built-in player only; pauses, buffering and seeking add no listening time. A play counts after 30 seconds.",
   "listeningStatsEmpty": "Play music with the built-in player to start your listening recap. Earlier listening cannot be recovered.",
   "listeningStatsDays": "{days} days",
-  "@listeningStatsDays": { "placeholders": { "days": { "type": "int" } } },
+  "@listeningStatsDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "listeningStatsMinutes": "{minutes} min",
-  "@listeningStatsMinutes": { "placeholders": { "minutes": { "type": "int" } } },
+  "@listeningStatsMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "listeningStatsTotals": "{plays, plural, =1{1 play} other{{plays} plays}} · {tracks, plural, =1{1 track} other{{tracks} tracks}} · {days, plural, =1{1 active day} other{{days} active days}}",
-  "@listeningStatsTotals": { "placeholders": { "plays": { "type": "int" }, "tracks": { "type": "int" }, "days": { "type": "int" } } },
+  "@listeningStatsTotals": {
+    "placeholders": {
+      "plays": {
+        "type": "int"
+      },
+      "tracks": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "listeningStatsPreviousYear": "Previous year",
   "listeningStatsNextYear": "Next year",
   "listeningStatsActivity": "Recent listening days · minutes",
@@ -7369,58 +7402,157 @@
   "listeningRewindDescription": "Relive the highlights of your recent weeks and months",
   "listeningRewindChoosePeriod": "Choose a period",
   "listeningRewindLastWeeks": "Last {weeks} weeks",
-  "@listeningRewindLastWeeks": { "placeholders": { "weeks": { "type": "int" } } },
+  "@listeningRewindLastWeeks": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindLastMonths": "Last {months} months",
-  "@listeningRewindLastMonths": { "placeholders": { "months": { "type": "int" } } },
+  "@listeningRewindLastMonths": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindThisYear": "{year} so far",
-  "@listeningRewindThisYear": { "placeholders": { "year": { "type": "int" } } },
+  "@listeningRewindThisYear": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindIntroTitle": "Your Rewind",
   "listeningRewindIntroBody": "A look back at what you played from {start} to {end}.",
-  "@listeningRewindIntroBody": { "placeholders": { "start": { "type": "String" }, "end": { "type": "String" } } },
+  "@listeningRewindIntroBody": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
   "listeningRewindMinutesTitle": "You listened for",
   "listeningRewindMinutesUnit": "{minutes, plural, =1{minute} other{minutes}}",
-  "@listeningRewindMinutesUnit": { "placeholders": { "minutes": { "type": "int" } } },
+  "@listeningRewindMinutesUnit": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindHours": "{hours, plural, =1{That's about 1 hour of music} other{That's about {hours} hours of music}}",
-  "@listeningRewindHours": { "placeholders": { "hours": { "type": "int" } } },
+  "@listeningRewindHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindMore": "{percent}% more than the period before",
-  "@listeningRewindMore": { "placeholders": { "percent": { "type": "int" } } },
+  "@listeningRewindMore": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindLess": "{percent}% less than the period before",
-  "@listeningRewindLess": { "placeholders": { "percent": { "type": "int" } } },
+  "@listeningRewindLess": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindSame": "About the same as the period before",
   "listeningRewindTopArtistTitle": "Your top artist",
   "listeningRewindArtistShare": "{percent}% of your listening time",
-  "@listeningRewindArtistShare": { "placeholders": { "percent": { "type": "int" } } },
+  "@listeningRewindArtistShare": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindArtistsTitle": "Artists on rotation",
   "listeningRewindTopTrackTitle": "Your top song",
   "listeningRewindPlays": "{plays, plural, =1{1 play} other{{plays} plays}}",
-  "@listeningRewindPlays": { "placeholders": { "plays": { "type": "int" } } },
+  "@listeningRewindPlays": {
+    "placeholders": {
+      "plays": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindTracksTitle": "Songs on repeat",
   "listeningRewindTopAlbumTitle": "The album you kept coming back to",
   "listeningRewindNewArtistsTitle": "New discoveries",
   "listeningRewindNewArtistsBody": "{count, plural, =1{You found 1 new artist} other{You found {count} new artists}}",
-  "@listeningRewindNewArtistsBody": { "placeholders": { "count": { "type": "int" } } },
+  "@listeningRewindNewArtistsBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindRhythmTitle": "Your listening rhythm",
   "listeningRewindPeakDay": "Biggest day",
   "listeningRewindFavoriteDay": "Favorite day",
   "listeningRewindStreak": "Longest streak",
   "listeningRewindStreakDays": "{days, plural, =1{1 day} other{{days} days in a row}}",
-  "@listeningRewindStreakDays": { "placeholders": { "days": { "type": "int" } } },
+  "@listeningRewindStreakDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindReplayTitle": "Couldn't stop playing",
   "listeningRewindReplayBody": "You played it {plays} times on {date}",
-  "@listeningRewindReplayBody": { "placeholders": { "plays": { "type": "int" }, "date": { "type": "String" } } },
+  "@listeningRewindReplayBody": {
+    "placeholders": {
+      "plays": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "listeningRewindOutroTitle": "That's your Rewind",
   "listeningRewindOutroBody": "Keep listening. Your next Rewind is already taking shape.",
   "listeningRewindEmpty": "Not enough listening in this period yet. Play some music with the built-in player and come back later.",
   "listeningRewindLoadError": "Could not load your Rewind",
   "listeningRewindSlide": "Slide {index} of {count}",
-  "@listeningRewindSlide": { "placeholders": { "index": { "type": "int" }, "count": { "type": "int" } } },
+  "@listeningRewindSlide": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindShare": "Share",
   "listeningRewindShareError": "Could not share your Rewind",
   "listeningRewindNext": "Next",
   "listeningRewindPrevious": "Previous",
   "listeningRewindMonthlyReady": "Your last 4 weeks are ready to replay",
   "listeningRewindYearTitle": "Your {year} in Music",
-  "@listeningRewindYearTitle": { "placeholders": { "year": { "type": "String" } } },
+  "@listeningRewindYearTitle": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
   "listeningRewindYearEyebrow": "Year-end Rewind",
   "listeningRewindYearBanner": "Your top artists, songs and moments of the year",
   "listeningRewindYearIntroBody": "Everything you played this year, from your first song to your biggest month.",
@@ -7430,20 +7562,50 @@
   "listeningRewindAlbumsLabel": "Albums",
   "listeningRewindDaysLabel": "Days with music",
   "listeningRewindDaysShare": "Music on {percent}% of your days",
-  "@listeningRewindDaysShare": { "placeholders": { "percent": { "type": "int" } } },
+  "@listeningRewindDaysShare": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindMonthsTitle": "Month by month",
   "listeningRewindBiggestMonthLabel": "Biggest month",
   "listeningRewindBiggestMonth": "Your biggest month was {month}",
-  "@listeningRewindBiggestMonth": { "placeholders": { "month": { "type": "String" } } },
+  "@listeningRewindBiggestMonth": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "listeningRewindMonthlyArtistsTitle": "Artist of the month",
   "listeningRewindLoyalTitle": "Always by your side",
   "listeningRewindLoyalBody": "{days, plural, =1{With you on 1 day} other{With you on {days} different days}}",
-  "@listeningRewindLoyalBody": { "placeholders": { "days": { "type": "int" } } },
+  "@listeningRewindLoyalBody": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "listeningRewindFirstSongTitle": "Where your year began",
   "listeningRewindFirstSongBody": "Your most-played song on your first listening day, {date}",
-  "@listeningRewindFirstSongBody": { "placeholders": { "date": { "type": "String" } } },
+  "@listeningRewindFirstSongBody": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "listeningRewindYearOutroTitle": "That was your {year}",
-  "@listeningRewindYearOutroTitle": { "placeholders": { "year": { "type": "String" } } },
+  "@listeningRewindYearOutroTitle": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
   "listeningRewindYearOutroBody": "Here's to another year of great music.",
   "weeklyReleases": "New releases",
   "weeklyReleasesDescription": "Recent albums and singles from your favorite artists, supplied by installed metadata extensions.",
@@ -7520,7 +7682,7 @@
   "equalizerPresetName": "Preset name",
   "equalizerImport": "Import preset",
   "equalizerExport": "Share preset",
-  "equalizerImportInvalid": "Choose a valid Mornye equalizer preset (JSON, up to 64 KB).",
+  "equalizerImportInvalid": "Choose a valid Mosix equalizer preset (JSON, up to 64 KB).",
   "equalizerSaved": "Preset saved",
   "equalizerResetTitle": "Reset equalizer?",
   "equalizerResetDescription": "Restore a flat curve, default tone and dynamics settings. Saved presets are kept.",
@@ -7628,7 +7790,7 @@
   "audioInfoOff": "Off",
   "audioInfoBypassed": "Bypassed by direct output",
   "audioInfoPlayer": "Player",
-  "audioInfoPlayerValue": "Mornye built-in player",
+  "audioInfoPlayerValue": "Mosix built-in player",
   "audioInfoSignalPath": "Signal path",
   "audioInfoPathSystem": "System mixer",
   "audioInfoPathDirect": "Direct USB, bypasses the system mixer",
@@ -7701,8 +7863,12 @@
   "@desktopShortcutTooltip": {
     "description": "Desktop tooltip that names an action and its keyboard shortcut, for example 'Next track (Ctrl+Right)'",
     "placeholders": {
-      "action": {"type": "String"},
-      "shortcut": {"type": "String"}
+      "action": {
+        "type": "String"
+      },
+      "shortcut": {
+        "type": "String"
+      }
     }
   },
   "desktopPlayerIdle": "Not playing",
@@ -7715,14 +7881,18 @@
   "@desktopTableSortedAscending": {
     "description": "Screen reader label of a song table column header that sorts the table A to Z",
     "placeholders": {
-      "column": {"type": "String"}
+      "column": {
+        "type": "String"
+      }
     }
   },
   "desktopTableSortedDescending": "{column}, sorted descending",
   "@desktopTableSortedDescending": {
     "description": "Screen reader label of a song table column header that sorts the table Z to A",
     "placeholders": {
-      "column": {"type": "String"}
+      "column": {
+        "type": "String"
+      }
     }
   },
   "desktopMenuOpen": "Open",
@@ -7741,7 +7911,9 @@
   "@desktopDropImported": {
     "description": "Snackbar after dropping music onto the desktop window; the folders are scanned into the library",
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "desktopDropNothingToImport": "Drop music files or folders to add them to your library",

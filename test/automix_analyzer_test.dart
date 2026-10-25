@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/automix_analysis.dart';
-import 'package:mornye/services/automix_analyzer.dart';
+import 'package:mosix/services/automix_analysis.dart';
+import 'package:mosix/services/automix_analyzer.dart';
 
 class WindowAnalyzer extends AutoMixAnalyzer {
   final calls = <double>[];

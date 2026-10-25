@@ -73,7 +73,7 @@ Future<void> _toggleMiniPlayerLyrics() async {
 /// floats above other apps while it shows; dragging anywhere but a control
 /// moves it.
 ///
-/// Material takes the track's artwork scheme on `surfaceContainer`; Mornye
+/// Material takes the track's artwork scheme on `surfaceContainer`; Mosix
 /// uses the dark Now Playing background.
 class DesktopMiniPlayer extends ConsumerStatefulWidget {
   const DesktopMiniPlayer({super.key, this.metadataControllerFactory});
@@ -114,7 +114,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
   @override
   Widget build(BuildContext context) {
     final mediaItem = ref.watch(currentMediaItemProvider).value;
-    if (context.isMornye) return _buildPanel(context, mediaItem);
+    if (context.isMosix) return _buildPanel(context, mediaItem);
     return PlayerArtworkTheme(
       artUri: mediaItem?.artUri?.toString(),
       child: Builder(builder: (context) => _buildPanel(context, mediaItem)),
@@ -122,9 +122,9 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
   }
 
   Widget _buildPanel(BuildContext context, MediaItem? mediaItem) {
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final theme = mornye
-        ? MornyeTheme.fromContext(context, brightness: Brightness.dark)
+        ? MosixTheme.fromContext(context, brightness: Brightness.dark)
         : Theme.of(context);
     final colorScheme = theme.colorScheme;
     return Theme(
@@ -135,7 +135,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
           fit: StackFit.expand,
           children: [
             if (mornye)
-              MornyePlayerBackground(artUri: mediaItem?.artUri)
+              MosixPlayerBackground(artUri: mediaItem?.artUri)
             else
               ColoredBox(color: colorScheme.surfaceContainer),
             // Behind the content, so empty space and text drag the window
@@ -170,7 +170,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
     MediaItem? mediaItem, {
     required bool lyrics,
   }) {
-    final mornye = context.isMornye;
+    final mornye = context.isMosix;
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final buttonStyle = IconButton.styleFrom(

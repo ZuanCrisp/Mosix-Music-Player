@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:mornye/models/library_scan_failure.dart';
+import 'package:mosix/models/library_scan_failure.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const localLibraryLastScannedAtKey = 'local_library_last_scanned_at';

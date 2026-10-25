@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/providers/extension_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/lyrics_provider_picker.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/providers/extension_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/lyrics_provider_picker.dart';
 
 class _NoExtensions extends ExtensionNotifier {
   @override
@@ -58,14 +58,14 @@ void main() {
 
   for (final mornye in [false, true]) {
     testWidgets('lists each provider in order and returns the chosen lyrics '
-        '(${mornye ? 'Mornye' : 'Material'})', (tester) async {
+        '(${mornye ? 'Mosix' : 'Material'})', (tester) async {
       final slow = Completer<Map<String, dynamic>>();
       String? chosen;
       await tester.pumpWidget(
         ProviderScope(
           overrides: [extensionProvider.overrideWith(_NoExtensions.new)],
           child: MaterialApp(
-            theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Builder(

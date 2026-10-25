@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/app_snack_bar.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/view_queue_snackbar_action.dart';
-import 'package:mornye/widgets/track_detail_actions.dart';
-import 'package:mornye/services/shell_navigation_service.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/app_snack_bar.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/view_queue_snackbar_action.dart';
+import 'package:mosix/widgets/track_detail_actions.dart';
+import 'package:mosix/services/shell_navigation_service.dart';
 
 void main() {
   for (final brightness in Brightness.values) {
@@ -25,7 +25,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: MornyeTheme.build(brightness),
+            theme: MosixTheme.build(brightness),
             builder: (_, child) => RepaintBoundary(
               key: capture,
               child: AppScaffoldMessenger(child: child!),
@@ -62,7 +62,7 @@ void main() {
       await tester.pump();
       for (final elapsed in [16, 80, 250]) {
         await tester.pump(Duration(milliseconds: elapsed));
-        final rect = tester.getRect(find.byType(MornyeGlassPanel));
+        final rect = tester.getRect(find.byType(MosixGlassPanel));
         final colors = await tester.runAsync(() async {
           final boundary = tester.renderObject<RenderRepaintBoundary>(
             find.byKey(capture),
@@ -92,7 +92,7 @@ void main() {
         // backdrop hues must remain visibly distinct throughout the transition.
         expect(colors![0].b - colors[0].r, greaterThan(0.16));
         expect(colors[1].r - colors[1].b, greaterThan(0.16));
-        final foreground = MornyeTheme.build(brightness).colorScheme.onSurface;
+        final foreground = MosixTheme.build(brightness).colorScheme.onSurface;
         for (final background in colors) {
           final luminances = [
             foreground.computeLuminance(),
@@ -110,13 +110,13 @@ void main() {
 
   for (final mornye in [true, false]) {
     testWidgets(
-      'new messages replace old ones and still dismiss (Mornye: $mornye)',
+      'new messages replace old ones and still dismiss (Mosix: $mornye)',
       (tester) async {
         late BuildContext messageContext;
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+              theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
               builder: (_, child) => AppScaffoldMessenger(child: child!),
               home: Builder(
                 builder: (context) {
@@ -157,7 +157,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: mornye ? MornyeTheme.build(Brightness.dark) : ThemeData(),
+            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
             builder: (_, child) => AppScaffoldMessenger(child: child!),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -175,7 +175,7 @@ void main() {
       expect(find.text('View Queue'), findsOneWidget);
       expect(find.byTooltip('Close'), findsOneWidget);
       expect(
-        find.byType(MornyeGlassPanel),
+        find.byType(MosixGlassPanel),
         mornye ? findsOneWidget : findsNothing,
       );
       await tester.pump(const Duration(seconds: 3));
@@ -209,7 +209,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: mornye ? MornyeTheme.build(Brightness.light) : ThemeData(),
+            theme: mornye ? MosixTheme.build(Brightness.light) : ThemeData(),
             builder: (context, child) => MediaQuery(
               data: MediaQuery.of(
                 context,
@@ -240,7 +240,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.byType(MornyeGlassPanel),
+        find.byType(MosixGlassPanel),
         mornye ? findsOneWidget : findsNothing,
       );
       expect(tester.takeException(), isNull);

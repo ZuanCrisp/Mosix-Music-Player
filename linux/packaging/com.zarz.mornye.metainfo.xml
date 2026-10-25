@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Packaging adds a <releases> entry for the version being built. -->
 <component type="desktop-application">
-  <id>com.zarz.mornye</id>
+  <id>com.zuancrisp.mosix</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>LGPL-3.0-only</project_license>
-  <name>Mornye</name>
+  <name>Mosix</name>
   <summary>Play, organize and download your music library</summary>
   <developer id="io.github.zarzet">
     <name>zarzet</name>
   </developer>
   <description>
     <p>
-      Mornye is a music player and library manager. It plays local and
+      Mosix is a music player and library manager. It plays local and
       network music, edits metadata, and fetches tracks and lyrics through
       extensions you install.
     </p>
@@ -21,12 +21,12 @@
       <li>Extension-driven search, downloads and lyrics</li>
     </ul>
   </description>
-  <launchable type="desktop-id">com.zarz.mornye.desktop</launchable>
+  <launchable type="desktop-id">com.zuancrisp.mosix.desktop</launchable>
   <provides>
     <binary>mornye</binary>
   </provides>
-  <url type="homepage">https://github.com/mornyeapp/Mornye</url>
-  <url type="bugtracker">https://github.com/mornyeapp/Mornye/issues</url>
+  <url type="homepage">https://github.com/ZuanCrisp/Mosix-Music-Player</url>
+  <url type="bugtracker">https://github.com/ZuanCrisp/Mosix-Music-Player/issues</url>
   <url type="translate">https://crowdin.com/project/mornye</url>
   <categories>
     <category>AudioVideo</category>

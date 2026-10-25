@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/services/platform_bridge.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/services/platform_bridge.dart';
 
 /// Opens the Android SAF tree picker and stores the chosen tree as the
 /// download folder. Returns true when a folder was saved. When

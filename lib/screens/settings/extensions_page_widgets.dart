@@ -29,7 +29,7 @@ class _ExtensionItem extends StatelessWidget {
     return ExtensionRow(
       showDivider: showDivider,
       onTap: onTap,
-      avatar: context.isMornye
+      avatar: context.isMosix
           ? null
           : ExtensionAvatar(
               filePath: extension.iconPath,

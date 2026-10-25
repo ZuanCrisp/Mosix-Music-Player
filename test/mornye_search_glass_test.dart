@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 void main() {
   for (final brightness in Brightness.values) {
@@ -13,14 +13,14 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: MornyeTheme.build(brightness),
+              theme: MosixTheme.build(brightness),
               home: Scaffold(
                 body: StatefulBuilder(
                   builder: (context, setState) => Column(
                     children: [
-                      MornyeGlassPanel.overlay(
+                      MosixGlassPanel.overlay(
                         radius: 24,
-                        child: MornyeFilterChip(
+                        child: MosixFilterChip(
                           label: 'Albums',
                           selected: selected,
                           glass: false,
@@ -32,7 +32,7 @@ void main() {
                         child: ListView.builder(
                           itemCount: 12,
                           itemBuilder: (context, index) =>
-                              MornyeGlassPanel.overlay(
+                              MosixGlassPanel.overlay(
                                 radius: 24,
                                 firstInGroup: index == 0,
                                 lastInGroup: index == 11,

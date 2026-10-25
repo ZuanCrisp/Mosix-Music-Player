@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/preview_player_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/widgets/preview_button.dart';
-import 'package:mornye/widgets/track_collection_quick_actions.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/preview_player_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/widgets/preview_button.dart';
+import 'package:mosix/widgets/track_collection_quick_actions.dart';
 
 import 'support/app_icon_finder.dart';
 

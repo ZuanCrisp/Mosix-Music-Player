@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:html/dom.dart' as dom;
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/editorial_notes.dart';
-import 'package:mornye/widgets/album_detail_header.dart';
-import 'package:mornye/widgets/app_bottom_sheet.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/editorial_notes.dart';
+import 'package:mosix/widgets/album_detail_header.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
 
 /// A short editorial preview below the album controls, with a full reading sheet.
 class AlbumDescription extends StatelessWidget {
@@ -87,7 +87,7 @@ class AlbumDescription extends StatelessWidget {
                     children: [
                       HeaderCircleButton(
                         buttonSize: 48,
-                        icon: context.isMornye
+                        icon: context.isMosix
                             ? CupertinoIcons.xmark
                             : Icons.close,
                         tooltip: MaterialLocalizations.of(
@@ -117,7 +117,7 @@ class AlbumDescription extends StatelessWidget {
                       child: Text.rich(
                         text,
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          fontSize: context.isMornye ? 18 : 16,
+                          fontSize: context.isMosix ? 18 : 16,
                           height: 1.45,
                           color: theme.colorScheme.onSurface,
                         ),
@@ -140,7 +140,7 @@ class AlbumDescription extends StatelessWidget {
     final theme = Theme.of(context);
     final more = MaterialLocalizations.of(context).moreButtonTooltip;
     final previewStyle = theme.textTheme.bodyLarge?.copyWith(
-      fontSize: context.isMornye ? 17 : 16,
+      fontSize: context.isMosix ? 17 : 16,
       height: 1.4,
       color: theme.colorScheme.onSurfaceVariant,
     );
@@ -187,7 +187,7 @@ class AlbumDescription extends StatelessWidget {
                       if (hasMore) ...[
                         const SizedBox(width: 8),
                         Text(
-                          context.isMornye ? more.toUpperCase() : more,
+                          context.isMosix ? more.toUpperCase() : more,
                           style: theme.textTheme.labelLarge?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: theme.colorScheme.onSurface,

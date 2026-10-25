@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:mornye/theme/material_expressive.dart';
+import 'package:mosix/theme/material_expressive.dart';
 
 /// Task progress (downloads, scans, updates), determinate or not.
 ///
-/// The Material theme draws the expressive wavy indicators. Mornye and
+/// The Material theme draws the expressive wavy indicators. Mosix and
 /// reduced motion keep Flutter's flat indicators with the same parameters.
 class AppProgressIndicator extends StatelessWidget {
   const AppProgressIndicator.linear({

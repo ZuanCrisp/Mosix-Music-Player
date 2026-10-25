@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 /// A page with a connected group below an app-level idle focus node, as the
 /// desktop shortcuts hold one to read Space for playback.

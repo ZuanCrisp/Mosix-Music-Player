@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/backend/rust_ffi_backend.dart';
-import 'package:mornye/services/folder_path_template.dart';
-import 'package:mornye/utils/desktop_platform.dart';
+import 'package:mosix/services/backend/rust_ffi_backend.dart';
+import 'package:mosix/services/folder_path_template.dart';
+import 'package:mosix/utils/desktop_platform.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -131,6 +131,6 @@ void main() {
         'AC DC/2026-05-04 - Example Album/Disc 02',
       );
     },
-    skip: Platform.environment['MORNYE_DESKTOP_LIB'] == null,
+    skip: Platform.environment['MOSIX_DESKTOP_LIB'] == null,
   );
 }

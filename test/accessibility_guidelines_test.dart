@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/screens/equalizer_screen.dart';
-import 'package:mornye/screens/settings/appearance_settings_page.dart';
-import 'package:mornye/screens/settings/download_settings_page.dart';
-import 'package:mornye/screens/settings/lyrics_settings_page.dart';
-import 'package:mornye/screens/settings/playback_settings_page.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/screens/equalizer_screen.dart';
+import 'package:mosix/screens/settings/appearance_settings_page.dart';
+import 'package:mosix/screens/settings/download_settings_page.dart';
+import 'package:mosix/screens/settings/lyrics_settings_page.dart';
+import 'package:mosix/screens/settings/playback_settings_page.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
 
 void main() {
   final pages = <String, Widget Function()>{
@@ -22,8 +22,8 @@ void main() {
   final themes = <String, ThemeData Function()>{
     'Material light': AppTheme.light,
     'Material dark': AppTheme.dark,
-    'Mornye light': () => MornyeTheme.build(Brightness.light),
-    'Mornye dark': () => MornyeTheme.build(Brightness.dark),
+    'Mosix light': () => MosixTheme.build(Brightness.light),
+    'Mosix dark': () => MosixTheme.build(Brightness.dark),
   };
 
   for (final page in pages.entries) {
@@ -36,7 +36,7 @@ void main() {
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.reset);
         final handle = tester.ensureSemantics();
-        final mornye = theme.key.startsWith('Mornye');
+        final mornye = theme.key.startsWith('Mosix');
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
@@ -44,7 +44,7 @@ void main() {
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: mornye
-                  ? MornyeSettingsTheme(child: page.value())
+                  ? MosixSettingsTheme(child: page.value())
                   : page.value(),
             ),
           ),

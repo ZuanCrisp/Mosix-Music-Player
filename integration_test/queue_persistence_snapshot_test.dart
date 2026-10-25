@@ -5,10 +5,10 @@ import 'package:integration_test/integration_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/services/app_state_database.dart';
-import 'package:mornye/services/download_queue_persistence.dart';
-import 'package:mornye/utils/chunked_list.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/services/app_state_database.dart';
+import 'package:mosix/services/download_queue_persistence.dart';
+import 'package:mosix/utils/chunked_list.dart';
 
 import '../test/support/queue_persistence_baseline.dart';
 import '../test/support/queue_removal_benchmark.dart';

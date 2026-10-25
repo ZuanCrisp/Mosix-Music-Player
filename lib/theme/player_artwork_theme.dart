@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
-import 'package:mornye/theme/app_motion.dart';
-import 'package:mornye/theme/cover_palette.dart';
+import 'package:mosix/theme/app_motion.dart';
+import 'package:mosix/theme/cover_palette.dart';
 
 /// Cover schemes for [PlayerArtworkTheme]: [CoverPalette] with the neutral
 /// scheme for black and white covers.

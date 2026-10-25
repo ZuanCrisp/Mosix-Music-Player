@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:mornye/services/platform_bridge.dart';
+import 'package:mosix/services/platform_bridge.dart';
 
 /// Expands each folder separately so metadata cannot introduce path separators.
 abstract final class FolderPathTemplate {

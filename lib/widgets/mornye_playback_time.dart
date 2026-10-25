@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mornye/utils/string_utils.dart';
+import 'package:mosix/utils/string_utils.dart';
 
 /// Rolls only the changed digits, keeping the timeline labels steady in width.
-class MornyePlaybackTime extends StatefulWidget {
-  const MornyePlaybackTime({
+class MosixPlaybackTime extends StatefulWidget {
+  const MosixPlaybackTime({
     super.key,
     required this.seconds,
     required this.style,
@@ -15,14 +15,14 @@ class MornyePlaybackTime extends StatefulWidget {
   final bool remaining;
 
   @override
-  State<MornyePlaybackTime> createState() => _MornyePlaybackTimeState();
+  State<MosixPlaybackTime> createState() => _MosixPlaybackTimeState();
 }
 
-class _MornyePlaybackTimeState extends State<MornyePlaybackTime> {
+class _MosixPlaybackTimeState extends State<MosixPlaybackTime> {
   bool _increasing = true;
 
   @override
-  void didUpdateWidget(MornyePlaybackTime oldWidget) {
+  void didUpdateWidget(MosixPlaybackTime oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.seconds != oldWidget.seconds) {
       _increasing = widget.seconds > oldWidget.seconds;

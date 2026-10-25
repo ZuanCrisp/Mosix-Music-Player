@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/models/album_track_order.dart';
+import 'package:mosix/models/album_track_order.dart';
 
 typedef _AlbumTrack = ({String name, int? disc, int? number});
 

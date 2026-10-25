@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mornye/controllers/queue_library_refresh_policy.dart';
-import 'package:mornye/services/library_database.dart' show QueueLibraryCounts;
+import 'package:mosix/controllers/queue_library_refresh_policy.dart';
+import 'package:mosix/services/library_database.dart' show QueueLibraryCounts;
 
 /// A paged Library query as seen by [QueueLibraryPager].
 abstract interface class QueueLibraryPageKey<K> {

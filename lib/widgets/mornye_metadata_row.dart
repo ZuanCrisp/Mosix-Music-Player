@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Mornye TrackInfoView's vertically stacked label and value.
-class MornyeMetadataRow extends StatelessWidget {
-  const MornyeMetadataRow({
+/// Mosix TrackInfoView's vertically stacked label and value.
+class MosixMetadataRow extends StatelessWidget {
+  const MosixMetadataRow({
     super.key,
     required this.label,
     required this.value,

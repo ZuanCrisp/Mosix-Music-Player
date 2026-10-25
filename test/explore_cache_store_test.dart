@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/services/explore_cache_store.dart';
+import 'package:mosix/services/explore_cache_store.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -6,20 +6,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/controllers/player_metadata_controller.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/models/settings.dart';
-import 'package:mornye/models/track.dart';
-import 'package:mornye/providers/library_collections_provider.dart';
-import 'package:mornye/providers/music_player_provider.dart';
-import 'package:mornye/providers/settings_provider.dart';
-import 'package:mornye/theme/app_theme.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/playback_seek_preview.dart';
-import 'package:mornye/widgets/mornye_player_artwork.dart';
-import 'package:mornye/widgets/mornye_player_layout.dart';
-import 'package:mornye/widgets/material_player_layout.dart';
-import 'package:mornye/widgets/player_volume_control.dart';
+import 'package:mosix/controllers/player_metadata_controller.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
+import 'package:mosix/providers/music_player_provider.dart';
+import 'package:mosix/providers/settings_provider.dart';
+import 'package:mosix/theme/app_theme.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/playback_seek_preview.dart';
+import 'package:mosix/widgets/mornye_player_artwork.dart';
+import 'package:mosix/widgets/mornye_player_layout.dart';
+import 'package:mosix/widgets/material_player_layout.dart';
+import 'package:mosix/widgets/player_volume_control.dart';
 
 import 'performance_probe.dart';
 
@@ -76,7 +76,7 @@ void runArtworkPerformanceTests({required bool mornye}) {
       duration: const Duration(minutes: 4),
       artUri: cover.uri,
     );
-    final theme = mornye ? MornyeTheme.build(Brightness.dark) : AppTheme.dark();
+    final theme = mornye ? MosixTheme.build(Brightness.dark) : AppTheme.dark();
     final page = ValueNotifier(0);
     final metadata = PlayerMetadataController();
     final seek = PlaybackSeekPreview();
@@ -149,13 +149,13 @@ void runArtworkPerformanceTests({required bool mornye}) {
                         ),
                         onOpenQueue: () {},
                       )
-                    : MornyePlayerLayout(
+                    : MosixPlayerLayout(
                         mediaItem: item,
                         metadata: metadata,
                         seekPreview: seek,
                         colorScheme: theme.colorScheme,
                         page: value,
-                        motionArtwork: MornyePlayerArtwork(mediaItem: item),
+                        motionArtwork: MosixPlayerArtwork(mediaItem: item),
                         insetArtwork: true,
                         artworkTopInset: 0,
                         artworkKeys: keys,
@@ -209,7 +209,7 @@ void runArtworkPerformanceTests({required bool mornye}) {
     await probe.finish(
       metadata: {
         'fixture':
-            'Production ${mornye ? 'MornyePlayerLayout' : 'MaterialPlayerLayout'}, local 2400px static cover; '
+            'Production ${mornye ? 'MosixPlayerLayout' : 'MaterialPlayerLayout'}, local 2400px static cover; '
             'synthetic lyrics/queue and no playback or persistent data',
         'style': style,
         'cache_snapshots': snapshots,

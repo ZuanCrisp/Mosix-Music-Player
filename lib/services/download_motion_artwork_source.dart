@@ -1,6 +1,6 @@
-import 'package:mornye/models/track.dart';
-import 'package:mornye/utils/provider_resource_ids.dart';
-import 'package:mornye/utils/string_utils.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/utils/provider_resource_ids.dart';
+import 'package:mosix/utils/string_utils.dart';
 
 /// Resolve optional artwork while downloading, using only the original
 /// metadata extension. Search results may omit artwork held by the album.

@@ -1,5 +1,5 @@
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/services/download_queue_codec.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/services/download_queue_codec.dart';
 
 /// Original snapshot/diff/encode pipeline for the device benchmark. Benchmark
 /// callers flush serially and do not invoke restore, scheduling or pause writes.

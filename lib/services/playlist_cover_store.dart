@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/services/ffmpeg_service.dart';
-import 'package:mornye/utils/file_access.dart';
+import 'package:mosix/services/ffmpeg_service.dart';
+import 'package:mosix/utils/file_access.dart';
 
 const _playlistCoverMaxDimension = 1024;
 const _playlistCoverMaxStoredBytes = 2 * 1024 * 1024;

@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/ffmpeg_service.dart';
+import 'package:mosix/services/ffmpeg_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

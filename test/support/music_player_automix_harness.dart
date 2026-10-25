@@ -6,14 +6,14 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/services/automix_analysis.dart';
-import 'package:mornye/services/automix_analyzer.dart';
-import 'package:mornye/services/music_player_service.dart';
-import 'package:mornye/services/music_haptics.dart';
-import 'package:mornye/services/playback_notification.dart';
-import 'package:mornye/models/automix_options.dart';
-import 'package:mornye/services/automix_effect_renderer.dart';
-import 'package:mornye/services/automix_status.dart';
+import 'package:mosix/services/automix_analysis.dart';
+import 'package:mosix/services/automix_analyzer.dart';
+import 'package:mosix/services/music_player_service.dart';
+import 'package:mosix/services/music_haptics.dart';
+import 'package:mosix/services/playback_notification.dart';
+import 'package:mosix/models/automix_options.dart';
+import 'package:mosix/services/automix_effect_renderer.dart';
+import 'package:mosix/services/automix_status.dart';
 
 import 'virtual_time.dart';
 

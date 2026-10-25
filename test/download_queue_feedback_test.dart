@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/providers/download_queue_provider.dart';
-import 'package:mornye/widgets/download_queue_feedback.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/providers/download_queue_provider.dart';
+import 'package:mosix/widgets/download_queue_feedback.dart';
 
 class _Queue extends DownloadQueueNotifier {
   int _retryCalls = 0;

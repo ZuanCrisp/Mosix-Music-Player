@@ -2,16 +2,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/app_localizations.dart';
-import 'package:mornye/widgets/app_loading_indicator.dart';
-import 'package:mornye/widgets/open_on_platform_sheet.dart';
+import 'package:mosix/l10n/app_localizations.dart';
+import 'package:mosix/widgets/app_loading_indicator.dart';
+import 'package:mosix/widgets/open_on_platform_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   testWidgets(
     'theme rebuild retains completed lookup; identifiers replace it',
     (tester) async {
-      const channel = MethodChannel('com.zarz.mornye/backend');
+      const channel = MethodChannel('com.zuancrisp.mosix/backend');
       final calls = <MethodCall>[];
       final pending = Completer<Map<String, dynamic>>();
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (

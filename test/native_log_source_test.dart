@@ -2,11 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/services/native_log_source.dart';
+import 'package:mosix/services/native_log_source.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   const source = NativeLogSource(channel: channel);
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;

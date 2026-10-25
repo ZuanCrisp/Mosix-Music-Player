@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/l10n/l10n.dart';
-import 'package:mornye/screens/network_storage_screen.dart';
-import 'package:mornye/services/network_storage_service.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/desktop_platform.dart';
-import 'package:mornye/widgets/app_action_button.dart';
-import 'package:mornye/widgets/settings_group.dart';
+import 'package:mosix/l10n/l10n.dart';
+import 'package:mosix/screens/network_storage_screen.dart';
+import 'package:mosix/services/network_storage_service.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/desktop_platform.dart';
+import 'package:mosix/widgets/app_action_button.dart';
+import 'package:mosix/widgets/settings_group.dart';
 
 class _Server extends NetworkStorageService {
   _Server() : super(read: () async => null, write: (_) async {});
@@ -46,7 +46,7 @@ void main() {
             platform == TargetPlatform.android ||
             platform == TargetPlatform.iOS;
         testWidgets(
-          'Subsonic form and browsing on $platform Mornye=$mornye largeText=$largeText',
+          'Subsonic form and browsing on $platform Mosix=$mornye largeText=$largeText',
           (tester) async {
             tester.view.physicalSize = mobile
                 ? const Size(360, 800)
@@ -60,7 +60,7 @@ void main() {
             addTearDown(service.dispose);
             final theme =
                 (mornye
-                        ? MornyeTheme.build(Brightness.dark)
+                        ? MosixTheme.build(Brightness.dark)
                         : ThemeData.dark(useMaterial3: true))
                     .copyWith(platform: platform);
             await tester.pumpWidget(

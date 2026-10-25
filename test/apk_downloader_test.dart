@@ -7,11 +7,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:path/path.dart' as p;
-import 'package:mornye/services/apk_downloader.dart';
+import 'package:mosix/services/apk_downloader.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('com.zarz.mornye/backend');
+  const channel = MethodChannel('com.zuancrisp.mosix/backend');
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
@@ -32,8 +32,8 @@ void main() {
       ...List.generate(64, (i) => i),
     ];
     const version = '5.0.0';
-    const url = 'https://updates.example.test/Mornye.apk';
-    final finalPath = p.join(directory.path, 'Mornye-$version.apk');
+    const url = 'https://updates.example.test/Mosix.apk';
+    final finalPath = p.join(directory.path, 'Mosix-$version.apk');
     final part = File('$finalPath.part');
     await part.writeAsBytes(payload.sublist(0, 12));
     await File(
@@ -123,11 +123,11 @@ void main() {
       expect(rejected, isNull);
       expect(hashes, 2);
       expect(
-        await File('${directory.path}/Mornye-mismatch.apk').exists(),
+        await File('${directory.path}/Mosix-mismatch.apk').exists(),
         false,
       );
       expect(
-        await File('${directory.path}/Mornye-mismatch.apk.part').exists(),
+        await File('${directory.path}/Mosix-mismatch.apk.part').exists(),
         false,
       );
     },

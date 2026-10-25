@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mornye/models/download_item.dart';
-import 'package:mornye/services/download_scheduler.dart';
+import 'package:mosix/models/download_item.dart';
+import 'package:mosix/services/download_scheduler.dart';
 
 import '../test/support/download_scheduler_baseline.dart';
 import '../test/support/queue_removal_benchmark.dart';

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mornye/providers/runtime_profile_provider.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
-import 'package:mornye/widgets/mornye_context_menu.dart';
-import 'package:mornye/widgets/mornye_squircle_border.dart';
+import 'package:mosix/providers/runtime_profile_provider.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/mornye_squircle_border.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -22,11 +22,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          mornyeGlassLevelProvider.overrideWithValue(MornyeGlassLevel.frosted),
+          mornyeGlassLevelProvider.overrideWithValue(MosixGlassLevel.frosted),
           mornyeBlurEnabledProvider.overrideWithValue(true),
         ],
         child: MaterialApp(
-          theme: MornyeTheme.build(Brightness.dark, glassClarity: 1),
+          theme: MosixTheme.build(Brightness.dark, glassClarity: 1),
           builder: (context, child) => MediaQuery(
             data: MediaQuery.of(context).copyWith(
               disableAnimations: reduced,
@@ -38,23 +38,23 @@ void main() {
             body: Builder(
               builder: (context) => Center(
                 child: TextButton(
-                  onPressed: () => showMornyeContextMenu<void>(
+                  onPressed: () => showMosixContextMenu<void>(
                     context: context,
                     anchor: anchor,
-                    builder: (context) => MornyeContextMenu(
+                    builder: (context) => MosixContextMenu(
                       groups: [
                         [
-                          MornyeMenuAction(
+                          MosixMenuAction(
                             icon: Icons.play_arrow,
                             label: 'Play',
                             onPressed: () => Navigator.pop(context),
                           ),
-                          MornyeMenuAction(
+                          MosixMenuAction(
                             icon: Icons.queue_music,
                             label: 'Add to queue',
                             onPressed: () {},
                           ),
-                          MornyeMenuAction(
+                          MosixMenuAction(
                             icon: Icons.album,
                             label: 'Go to album',
                             onPressed: () {},
@@ -76,15 +76,15 @@ void main() {
   }
 
   Rect visibleBounds(WidgetTester tester) {
-    final box = tester.renderObject<RenderBox>(find.byType(MornyeContextMenu));
+    final box = tester.renderObject<RenderBox>(find.byType(MosixContextMenu));
     return Rect.fromPoints(
       box.localToGlobal(Offset.zero),
       box.localToGlobal(box.size.bottomRight(Offset.zero)),
     );
   }
 
-  MornyeGlassPanel panel(WidgetTester tester) =>
-      tester.widget<MornyeGlassPanel>(find.byType(MornyeGlassPanel));
+  MosixGlassPanel panel(WidgetTester tester) =>
+      tester.widget<MosixGlassPanel>(find.byType(MosixGlassPanel));
 
   for (final anchor in [
     const Rect.fromLTWH(325, 100, 44, 44),
@@ -124,14 +124,14 @@ void main() {
           .widgetList<DecoratedBox>(find.byType(DecoratedBox))
           .map((w) => w.decoration)
           .whereType<ShapeDecoration>();
-      expect(shapes.any((d) => d.shape is MornyeSquircleBorder), isTrue);
+      expect(shapes.any((d) => d.shape is MosixSquircleBorder), isTrue);
       await tester.tap(find.text('Play'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 160));
       expect(panel(tester).glassProgress, 0);
       expect(find.byType(BackdropFilter), findsNothing);
       await tester.pumpAndSettle();
-      expect(find.byType(MornyeContextMenu), findsNothing);
+      expect(find.byType(MosixContextMenu), findsNothing);
       expect(tester.takeException(), isNull);
     });
   }
@@ -145,6 +145,6 @@ void main() {
     expect(panel(tester).glassProgress, 1);
     await tester.tap(find.text('Play'));
     await tester.pumpAndSettle();
-    expect(find.byType(MornyeContextMenu), findsNothing);
+    expect(find.byType(MosixContextMenu), findsNothing);
   });
 }

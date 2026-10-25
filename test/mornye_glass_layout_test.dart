@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mornye/theme/mornye_theme.dart';
-import 'package:mornye/utils/adaptive_layout.dart';
-import 'package:mornye/widgets/app_switch.dart';
-import 'package:mornye/widgets/mornye_chrome.dart';
+import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/utils/adaptive_layout.dart';
+import 'package:mosix/widgets/app_switch.dart';
+import 'package:mosix/widgets/mornye_chrome.dart';
 
 void main() {
   testWidgets('glass and controls share tablet layout coordinates', (
@@ -22,12 +22,12 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: MornyeTheme.build(Brightness.dark),
+            theme: MosixTheme.build(Brightness.dark),
             builder: (context, child) => AdaptiveUiScaler(child: child!),
             home: Scaffold(
               body: Column(
                 children: [
-                  MornyeGlass(
+                  MosixGlass(
                     blurEnabled: true,
                     child: Builder(
                       builder: (context) {
@@ -36,13 +36,13 @@ void main() {
                       },
                     ),
                   ),
-                  MornyeSegmentedControl(
+                  MosixSegmentedControl(
                     labels: const ['One', 'Two'],
                     selectedIndex: 0,
                     onChanged: (_) {},
                   ),
                   AppSwitch(value: true, onChanged: (_) {}),
-                  MornyeTabBar(
+                  MosixTabBar(
                     destinations: const [
                       NavigationDestination(
                         icon: Icon(Icons.home),
@@ -80,7 +80,7 @@ void main() {
       expect(contentMetrics!.size, size / scale);
       expect(contentMetrics!.devicePixelRatio, 2 * scale);
       expect(contentMetrics!.padding.bottom, closeTo(20 / scale, 0.01));
-      for (final type in [MornyeGlass, MornyeTabBar, AppSwitch]) {
+      for (final type in [MosixGlass, MosixTabBar, AppSwitch]) {
         final glass = find.byType(type);
         expect(glass, findsWidgets);
         for (final element in glass.evaluate()) {
@@ -92,7 +92,7 @@ void main() {
           expect(metrics.disableAnimations, contentMetrics!.disableAnimations);
         }
       }
-      final content = tester.getRect(find.byType(MornyeGlass).first);
+      final content = tester.getRect(find.byType(MosixGlass).first);
       expect(content.width, closeTo(200 * scale, 0.01));
       expect(content.height, closeTo(50 * scale, 0.01));
       expect(tester.takeException(), isNull);

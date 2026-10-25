@@ -4,9 +4,9 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:path_provider/path_provider.dart';
-import 'package:mornye/services/audio_analysis_models.dart';
-import 'package:mornye/services/network_audio_analysis_input.dart';
-import 'package:mornye/services/platform_bridge.dart';
+import 'package:mosix/services/audio_analysis_models.dart';
+import 'package:mosix/services/network_audio_analysis_input.dart';
+import 'package:mosix/services/platform_bridge.dart';
 
 /// On-disk analysis bundles: `{key}.json`, `{key}.png` and `{key}_ch{n}.png`
 /// in `audio_analysis_cache` under the application support directory. The

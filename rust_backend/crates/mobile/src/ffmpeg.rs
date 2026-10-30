@@ -1,4 +1,4 @@
-use mornye_extensions::ffmpeg::{CommandRegistry, CommandResult, RegistryClosed};
+use mosix_extensions::ffmpeg::{CommandRegistry, CommandResult, RegistryClosed};
 use std::sync::Arc;
 
 #[derive(Debug, thiserror::Error, uniffi::Error)]

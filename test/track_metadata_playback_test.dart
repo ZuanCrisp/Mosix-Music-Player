@@ -14,8 +14,8 @@ import 'package:mosix/screens/track_metadata_screen.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/services/music_player_service.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/theme/mosix_theme.dart';
+import 'package:mosix/widgets/mosix_context_menu.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Settings extends SettingsNotifier {
@@ -56,12 +56,12 @@ void main() {
   });
   tearDown(() => messenger.setMockMethodCallHandler(channel, null));
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final local in [false, true]) {
       for (final format in ['flac', 'opus']) {
-        for (final menu in [false, if (mornye) true]) {
+        for (final menu in [false, if (mosix) true]) {
           testWidgets('metadata Play carries $format file information '
-              '(Mosix=$mornye, local=$local, menu=$menu)', (tester) async {
+              '(Mosix=$mosix, local=$local, menu=$menu)', (tester) async {
             await tester.binding.setSurfaceSize(const Size(393, 852));
             addTearDown(() => tester.binding.setSurfaceSize(null));
             final player = _Player();
@@ -113,7 +113,7 @@ void main() {
                   musicPlayerControllerProvider.overrideWithValue(player),
                 ],
                 child: MaterialApp(
-                  theme: mornye
+                  theme: mosix
                       ? MosixTheme.build(Brightness.dark)
                       : AppTheme.dark(),
                   localizationsDelegates:

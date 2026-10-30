@@ -11,7 +11,7 @@ import 'package:mosix/models/settings.dart';
 import 'package:mosix/providers/explore_provider.dart';
 import 'package:mosix/providers/extension_provider.dart';
 import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_snack_bar.dart';
 import 'package:mosix/widgets/home_feed_region_setting.dart';
 import 'package:mosix/widgets/settings_group.dart';
@@ -279,8 +279,8 @@ void main() {
     },
   );
 
-  for (final mornye in [false, true]) {
-    testWidgets('country picker saves a country with either theme ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('country picker saves a country with either theme ($mosix)', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -293,7 +293,7 @@ void main() {
             locale: const Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
             builder: (_, child) => AppScaffoldMessenger(child: child!),
             home: const Scaffold(
               body: SettingsGroup(children: [HomeFeedRegionSetting()]),

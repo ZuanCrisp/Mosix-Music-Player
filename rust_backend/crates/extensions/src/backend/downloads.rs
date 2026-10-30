@@ -18,11 +18,11 @@ use crate::download::native_error_response;
 use crate::manager::{ProviderAvailabilityRequest, ProviderDownloadRequest};
 use crate::manifest::ExtensionManifest;
 use cap_std::fs::OpenOptions;
-use mornye_core::cancellation::RequestLease;
-use mornye_core::downloads::DownloadRequest;
-use mornye_core::metadata::reenrich::text;
-use mornye_core::tags::{embed_flac_metadata, extract_cover};
-use mornye_providers::resolver::Check;
+use mosix_core::cancellation::RequestLease;
+use mosix_core::downloads::DownloadRequest;
+use mosix_core::metadata::reenrich::text;
+use mosix_core::tags::{embed_flac_metadata, extract_cover};
+use mosix_providers::resolver::Check;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, VecDeque};
@@ -670,7 +670,7 @@ impl Backend {
         // Reclaim only that namespace after a process restart, including when
         // a complete file already exists but its finalizer still needs to run.
         let staging_prefix = format!(
-            ".mornye-download-{}-",
+            ".mosix-download-{}-",
             crate::binary::encode(
                 &Sha256::digest(output.display().to_lowercase().as_bytes()),
                 "hex"

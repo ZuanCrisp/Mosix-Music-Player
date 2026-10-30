@@ -1,7 +1,7 @@
 package com.zuancrisp.mosix
 
-import com.mornye.backend.NativeDataJobException
-import com.mornye.backend.RequestLease
+import com.mosix.backend.NativeDataJobException
+import com.mosix.backend.RequestLease
 import java.io.File
 import java.nio.file.Files
 import java.util.UUID
@@ -30,7 +30,7 @@ class NativeDataJobsTest {
             val library = System.getenv("MOSIX_NATIVE_HOST_LIBRARY")
             assumeTrue("Build the Rust host library for ABI tests", !library.isNullOrBlank())
             require(File(library!!).isFile) { "Native host library does not exist" }
-            System.setProperty("uniffi.component.mornye_mobile.libraryOverride", library)
+            System.setProperty("uniffi.component.mosix_mobile.libraryOverride", library)
             System.getenv("MOSIX_JNA_HOST_DIRECTORY")?.let {
                 System.setProperty("jna.boot.library.path", it)
             }

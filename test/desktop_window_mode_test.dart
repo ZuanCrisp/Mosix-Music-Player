@@ -10,7 +10,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/providers/system_volume_provider.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/desktop/desktop_commands.dart';
 import 'package:mosix/widgets/desktop/desktop_player_bar.dart';
@@ -213,7 +213,7 @@ void main() {
 
   Future<void> pumpApp(
     WidgetTester tester, {
-    required bool mornye,
+    required bool mosix,
     required Widget home,
     bool shortcuts = false,
     GlobalKey<NavigatorState>? navigator,
@@ -233,7 +233,7 @@ void main() {
         ],
         child: MaterialApp(
           navigatorKey: navigatorKey,
-          theme: mornye
+          theme: mosix
               ? MosixTheme.build(Brightness.light)
               : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -248,14 +248,14 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'window mode changes preserve mounted content and text (Mosix: $mornye)',
+      'window mode changes preserve mounted content and text (Mosix: $mosix)',
       (tester) async {
         var mounts = 0;
         await pumpApp(
           tester,
-          mornye: mornye,
+          mosix: mosix,
           home: _MountProbe(() => mounts++),
         );
         await tester.enterText(find.byType(TextField), 'kept text');
@@ -274,12 +274,12 @@ void main() {
     );
 
     testWidgets(
-      'borderless controls invoke native window actions (Mosix: $mornye)',
+      'borderless controls invoke native window actions (Mosix: $mosix)',
       (tester) async {
         await emitMode(DesktopWindowMode.borderless);
         await pumpApp(
           tester,
-          mornye: mornye,
+          mosix: mosix,
           home: const Scaffold(body: Text('content')),
         );
         for (final tooltip in [
@@ -309,11 +309,11 @@ void main() {
     );
 
     testWidgets(
-      'appearance choice applies fullscreen and offers an exit (Mosix: $mornye)',
+      'appearance choice applies fullscreen and offers an exit (Mosix: $mosix)',
       (tester) async {
         await pumpApp(
           tester,
-          mornye: mornye,
+          mosix: mosix,
           home: const Scaffold(body: DesktopWindowModeSetting()),
         );
         await tester.tap(find.text('Window mode'));
@@ -334,7 +334,7 @@ void main() {
     final navigator = GlobalKey<NavigatorState>();
     await pumpApp(
       tester,
-      mornye: false,
+      mosix: false,
       shortcuts: true,
       navigator: navigator,
       home: const Scaffold(body: Text('home')),
@@ -365,7 +365,7 @@ void main() {
     final navigator = GlobalKey<NavigatorState>();
     await pumpApp(
       tester,
-      mornye: false,
+      mosix: false,
       shortcuts: true,
       navigator: navigator,
       home: const Scaffold(body: Text('home')),

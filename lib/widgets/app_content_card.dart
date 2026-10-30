@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:mosix/theme/material_expressive.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 /// One inline surface, matching the metadata groups and dialog controls.
 class AppContentCard extends StatelessWidget {
@@ -16,7 +16,7 @@ class AppContentCard extends StatelessWidget {
     this.margin,
     this.onTap,
     this.onLongPress,
-    this.mornyeSurface = true,
+    this.mosixSurface = true,
   });
 
   final Widget child;
@@ -35,11 +35,11 @@ class AppContentCard extends StatelessWidget {
 
   /// False keeps a plain [Card] under Mosix for surfaces that carry their
   /// own tinted color (errors, notices) rather than the Mosix control fill.
-  final bool mornyeSurface;
+  final bool mosixSurface;
 
   @override
   Widget build(BuildContext context) {
-    if (!context.isMosix || !mornyeSurface) {
+    if (!context.isMosix || !mosixSurface) {
       if (!context.isMosix &&
           materialExpressiveEnabled(context) &&
           (shape == null || shape is RoundedRectangleBorder)) {

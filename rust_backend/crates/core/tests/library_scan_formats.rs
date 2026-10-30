@@ -1,6 +1,6 @@
 //! Real-world file shapes that Library scans used to drop as unreadable.
 
-use mornye_core::tags::{extract_cover, read_file_metadata, read_library_metadata};
+use mosix_core::tags::{extract_cover, read_file_metadata, read_library_metadata};
 use serde_json::Value;
 use std::io::{self, Cursor, Read, Seek, SeekFrom};
 

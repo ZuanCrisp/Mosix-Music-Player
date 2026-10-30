@@ -63,12 +63,12 @@ target 'Runner' do
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   rust_pod_dir = File.expand_path('../rust_backend/target/ios', __dir__)
-  unless File.directory?(File.join(rust_pod_dir, 'MornyeBackendFFI.xcframework')) &&
-         File.file?(File.join(rust_pod_dir, 'MornyeBackend.podspec')) &&
-         File.file?(File.join(rust_pod_dir, 'MornyeBackend.swift'))
+  unless File.directory?(File.join(rust_pod_dir, 'MosixBackendFFI.xcframework')) &&
+         File.file?(File.join(rust_pod_dir, 'MosixBackend.podspec')) &&
+         File.file?(File.join(rust_pod_dir, 'MosixBackend.swift'))
     raise 'Run bash scripts/build_rust_backend.sh ios before installing Rust application pods'
   end
-  pod 'MornyeBackend', :path => '../rust_backend/target/ios'
+  pod 'MosixBackend', :path => '../rust_backend/target/ios'
 
   target 'RunnerTests' do
     inherit! :search_paths

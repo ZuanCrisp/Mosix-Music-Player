@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 import 'package:mosix/widgets/app_choice_chip.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 import 'package:mosix/widgets/app_switch.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/l10n/l10n.dart';

@@ -17,7 +17,7 @@ import 'package:mosix/providers/runtime_profile_provider.dart';
 import 'package:mosix/theme/app_motion.dart';
 import 'package:mosix/theme/app_tokens.dart';
 import 'package:mosix/theme/material_expressive.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/player_artwork_theme.dart';
 import 'package:mosix/screens/now_playing_screen.dart';
 import 'package:mosix/utils/desktop_platform.dart';
@@ -26,7 +26,7 @@ import 'package:mosix/widgets/audio_quality_badges.dart';
 import 'package:mosix/widgets/overflow_marquee.dart';
 import 'package:mosix/widgets/player_artwork.dart';
 import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 
 class MiniPlayer extends ConsumerStatefulWidget {
   const MiniPlayer({super.key, this.compact = false, this.bottomPadding = 8});
@@ -138,16 +138,16 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
 
     final controller = ref.read(musicPlayerControllerProvider);
     final colorScheme = Theme.of(context).colorScheme;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final expressive = materialExpressiveEnabled(context);
-    final compact = mornye && widget.compact;
+    final compact = mosix && widget.compact;
     // Frosted and flat glass levels run on constrained Android hardware. They
     // skip keeping a paused video decoder for the full player's motion cover,
     // and stop the title marquee after a few passes: every marquee frame
     // re-filters the blurred chrome around it.
-    final fullEffects = !mornye || ref.watch(mornyeLiquidGlassProvider);
+    final fullEffects = !mosix || ref.watch(mosixLiquidGlassProvider);
     final marqueeCycles = fullEffects ? null : 2;
-    if (mornye &&
+    if (mosix &&
         fullEffects &&
         ref.watch(settingsProvider.select((s) => s.motionArtworkEnabled)) &&
         !MediaQuery.disableAnimationsOf(context)) {
@@ -168,7 +168,7 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
       key: _surfaceKey,
       position: DecorationPosition.foreground,
       decoration: BoxDecoration(
-        border: mornye
+        border: mosix
             ? null
             : Border(
                 top: BorderSide(
@@ -177,7 +177,7 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
               ),
       ),
       child: Material(
-        color: mornye
+        color: mosix
             ? Colors.transparent
             : settingsGroupColor(context).withValues(alpha: 0.72),
         child: InkWell(
@@ -185,7 +185,7 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (!mornye)
+              if (!mosix)
                 _MiniPlayerProgress(
                   duration: mediaItem.duration ?? Duration.zero,
                   backgroundColor: colorScheme.surfaceContainerHighest,
@@ -194,7 +194,7 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
               Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: compact ? 8 : 12,
-                  vertical: mornye ? 0 : 8,
+                  vertical: mosix ? 0 : 8,
                 ),
                 child: Row(
                   children: [
@@ -202,7 +202,7 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
                       tag: kNowPlayingArtworkHeroTag,
                       child: ClipRRect(
                         key: _artworkKey,
-                        borderRadius: BorderRadius.circular(mornye ? 6 : 12),
+                        borderRadius: BorderRadius.circular(mosix ? 6 : 12),
                         child: SizedBox(
                           width: context.tokens.coverMini,
                           height: context.tokens.coverMini,
@@ -244,7 +244,7 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
                               mediaItem.artist ?? '',
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
-                                    color: mornye
+                                    color: mosix
                                         ? Color.lerp(
                                             colorScheme.onSurfaceVariant,
                                             colorScheme.onSurface,
@@ -290,7 +290,7 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
                       )
                     else
                       AppIconButton(
-                        color: mornye ? colorScheme.onSurface : null,
+                        color: mosix ? colorScheme.onSurface : null,
                         tooltip: isPlaying
                             ? context.l10n.actionPause
                             : context.l10n.tooltipPlay,
@@ -300,7 +300,7 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
                                 strokeWidth: 2.5,
                               )
                             : AppIcon(
-                                mornye
+                                mosix
                                     ? (isPlaying
                                           ? CupertinoIcons.pause_fill
                                           : CupertinoIcons.play_fill)
@@ -314,10 +314,10 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
                       ),
                     if (!compact)
                       AppIconButton(
-                        color: mornye ? colorScheme.onSurface : null,
+                        color: mosix ? colorScheme.onSurface : null,
                         tooltip: context.l10n.nowPlayingNextTrack,
                         icon: AppIcon(
-                          mornye
+                          mosix
                               ? CupertinoIcons.forward_fill
                               : Icons.skip_next,
                         ),
@@ -355,13 +355,13 @@ class _MiniPlayerBodyState extends ConsumerState<_MiniPlayerBody> {
               child: surface,
             ),
           );
-    return mornye
+    return mosix
         ? Padding(
             padding: EdgeInsets.only(bottom: widget.bottomPadding),
             child: MosixGlass.navigation(
               strongTint: true,
               tintOpacity: MosixTheme.chromeOpacity(context),
-              blurEnabled: ref.watch(mornyeBlurEnabledProvider),
+              blurEnabled: ref.watch(mosixBlurEnabledProvider),
               child: swipeable,
             ),
           )

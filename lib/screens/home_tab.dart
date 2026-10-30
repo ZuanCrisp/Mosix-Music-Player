@@ -7,7 +7,7 @@ import 'package:mosix/widgets/app_snack_bar.dart';
 import 'package:mosix/screens/track_history_snapshot.dart';
 import 'package:mosix/theme/app_tokens.dart';
 import 'package:mosix/theme/cover_palette.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_switch.dart';
 import 'package:mosix/widgets/app_checkbox.dart';
 import 'package:mosix/widgets/app_content_card.dart';
@@ -20,12 +20,12 @@ import 'package:mosix/widgets/app_shape.dart';
 import 'package:mosix/widgets/expressive_button.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
 import 'package:mosix/widgets/app_menu_button.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/theme/mosix_icons.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
+import 'package:mosix/widgets/mosix_context_menu.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/library_search_results.dart';
-import 'package:mosix/screens/mornye_library_screen.dart';
+import 'package:mosix/screens/mosix_library_screen.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:mosix/widgets/app_sliver_header.dart';
@@ -1153,7 +1153,7 @@ class _HomeTabState extends ConsumerState<HomeTab>
     return AppSliverHeader.tabRoot(
       alignToContent: true,
       title: widget.mode == HomeTabMode.search
-          ? context.l10n.mornyeSearch
+          ? context.l10n.mosixSearch
           : greeting ?? context.l10n.homeTitle,
       // The desktop sidebar's account row already opens the profile.
       actions: context.isMosix && _showsHome && !isDesktopPlatform

@@ -1,6 +1,6 @@
 package com.zuancrisp.mosix
 
-import com.mornye.backend.LyricsRequest
+import com.mosix.backend.LyricsRequest
 import java.io.File
 import java.util.UUID
 import org.json.JSONArray

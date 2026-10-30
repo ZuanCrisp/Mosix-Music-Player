@@ -54,13 +54,13 @@ import 'package:mosix/utils/nav_bar_inset.dart';
 import 'package:mosix/utils/re_enrich_release_policy.dart';
 import 'package:mosix/utils/saf_display_path.dart';
 import 'package:mosix/theme/cover_palette.dart' show HeaderPalette;
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mosix_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
 import 'package:mosix/widgets/album_detail_header.dart'
     show HeaderMetaRow, HeaderMetaItem, HeaderCircleButton, HeaderFilledButton;
 import 'package:mosix/widgets/desktop/context_menu.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
-import 'package:mosix/widgets/mornye_metadata_row.dart';
+import 'package:mosix/widgets/mosix_context_menu.dart';
+import 'package:mosix/widgets/mosix_metadata_row.dart';
 import 'package:mosix/widgets/player_artwork.dart';
 import 'package:mosix/widgets/audio_analysis_widget.dart';
 import 'package:mosix/widgets/hires_check_card.dart';
@@ -81,7 +81,7 @@ import 'package:mosix/utils/clickable_metadata.dart';
 part 'track_metadata_screen_cover.dart';
 part 'track_metadata_screen_display.dart';
 part 'track_metadata_screen_menu.dart';
-part 'track_metadata_mornye.dart';
+part 'track_metadata_mosix.dart';
 
 part 'track_metadata_cards.dart';
 part 'track_metadata_lyrics.dart';
@@ -788,7 +788,7 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen>
                       context,
                       ref,
                       colorScheme,
-                      anchor: mornyeMenuAnchor(buttonContext),
+                      anchor: mosixMenuAnchor(buttonContext),
                     ),
                   ),
                 ),
@@ -969,7 +969,7 @@ class _MetadataOptionTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 16),
-            Icon(mornyeIconFor(option.icon), color: iconColor, size: 22),
+            Icon(mosixIconFor(option.icon), color: iconColor, size: 22),
           ],
         ),
       );

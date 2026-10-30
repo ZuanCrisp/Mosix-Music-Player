@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/models/track.dart';
 import 'package:mosix/providers/library_collections_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/logger.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
@@ -15,7 +15,7 @@ import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/app_loading_indicator.dart';
 import 'package:mosix/widgets/expressive_button.dart';
 import 'package:mosix/widgets/cached_cover_image.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 
 final _log = AppLogger('PlaylistPicker');
 
@@ -44,7 +44,7 @@ Future<void> showAddTracksToPlaylistSheet(
     showDragHandle: !context.isMosix,
     isScrollControlled: true,
     // The picker keeps its lighter glass tint.
-    mornyeGlass: false,
+    mosixGlass: false,
     builder: (sheetContext) {
       final content = _PlaylistPickerSheetContent(
         tracks: tracks,

@@ -15,7 +15,7 @@ import 'package:mosix/providers/listening_rewind_provider.dart';
 import 'package:mosix/services/listening_rewind.dart';
 import 'package:mosix/theme/app_motion.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/widget_capture.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
@@ -149,12 +149,12 @@ class _MonthlyRewindBanner extends StatelessWidget {
     final l10n = context.l10n;
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     // Mosix keeps its neutral control fill and accent tint. Material keeps
     // the card neutral too: the statistics hero is the strong container.
     final foreground = colors.onSurface;
-    final accent = mornye ? colors.primary : colors.tertiary;
-    final onAccent = mornye ? colors.onPrimary : colors.onTertiary;
+    final accent = mosix ? colors.primary : colors.tertiary;
+    final onAccent = mosix ? colors.onPrimary : colors.onTertiary;
     return AppContentCard(
       margin: margin,
       color: colors.surfaceContainerHigh,
@@ -344,10 +344,10 @@ class ListeningRewindScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rewind = ref.watch(listeningRewindProvider(period));
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final colors = Theme.of(context).colorScheme;
-    final background = mornye ? Colors.black : colors.surface;
-    final foreground = mornye ? Colors.white : colors.onSurface;
+    final background = mosix ? Colors.black : colors.surface;
+    final foreground = mosix ? Colors.white : colors.onSurface;
     Widget message(String text) => _RewindMessage(
       text: text,
       background: background,

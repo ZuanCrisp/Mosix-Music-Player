@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/theme/app_theme.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
@@ -16,8 +16,8 @@ void main() {
   setUp(() => debugDesktopPlatformOverride = true);
   tearDown(() => debugDesktopPlatformOverride = null);
 
-  Widget app({required bool mornye, required Widget child}) => MaterialApp(
-    theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
+  Widget app({required bool mosix, required Widget child}) => MaterialApp(
+    theme: mosix ? MosixTheme.build(Brightness.light) : AppTheme.light(),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(body: child),
@@ -48,12 +48,12 @@ void main() {
     tester.view.physicalSize = const Size(1920, 1080);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    for (final mornye in [false, true]) {
+    for (final mosix in [false, true]) {
       late double inset;
       late double rowHeight;
       await tester.pumpWidget(
         app(
-          mornye: mornye,
+          mosix: mosix,
           child: Builder(
             builder: (context) {
               inset = wideListInset(context);
@@ -67,12 +67,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         inset,
-        mornye
+        mosix
             ? (1920 - desktopContentMaxWidth) / 2
             : (1920 - desktopMaterialContentMaxWidth) / 2,
-        reason: 'Mosix=$mornye',
+        reason: 'Mosix=$mosix',
       );
-      expect(rowHeight, mornye ? 40 : 44, reason: 'Mosix=$mornye');
+      expect(rowHeight, mosix ? 40 : 44, reason: 'Mosix=$mosix');
     }
   });
 
@@ -83,7 +83,7 @@ void main() {
       debugDesktopPlatformOverride = desktop;
       await tester.pumpWidget(
         app(
-          mornye: false,
+          mosix: false,
           child: SettingsGroup(
             children: [
               SettingsItem(
@@ -139,7 +139,7 @@ void main() {
 
     for (final desktop in [true, false]) {
       debugDesktopPlatformOverride = desktop;
-      await tester.pumpWidget(app(mornye: false, child: bar()));
+      await tester.pumpWidget(app(mosix: false, child: bar()));
       await tester.pumpAndSettle();
       final buttons = find.byType(SelectionActionButton);
       final first = tester.getRect(buttons.at(0));

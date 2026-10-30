@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/expressive_seek_track.dart';
 import 'package:mosix/widgets/playback_seek_slider.dart';
 
@@ -12,13 +12,13 @@ Widget _host({
   bool playing = true,
   bool reduceMotion = false,
   bool visible = true,
-  bool mornye = false,
+  bool mosix = false,
   TextDirection direction = TextDirection.ltr,
   Duration position = const Duration(seconds: 30),
   Duration duration = const Duration(seconds: 100),
   Future<void> Function(Duration)? onSeek,
 }) => MaterialApp(
-  theme: mornye ? MosixTheme.build(Brightness.dark) : null,
+  theme: mosix ? MosixTheme.build(Brightness.dark) : null,
   home: MediaQuery(
     data: MediaQueryData(disableAnimations: reduceMotion),
     child: Directionality(
@@ -208,7 +208,7 @@ void main() {
   testWidgets('Mosix keeps its continuous track without a wave or handle', (
     tester,
   ) async {
-    await tester.pumpWidget(_host(mornye: true));
+    await tester.pumpWidget(_host(mosix: true));
     await tester.pumpAndSettle();
     expect(find.byType(ExpressiveSeekTrack), findsNothing);
     final theme = SliderTheme.of(tester.element(find.byType(Slider)));

@@ -5,15 +5,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/download_history_provider.dart';
 import 'package:mosix/screens/track_metadata_screen.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 void main() {
   const channel = MethodChannel('com.zuancrisp.mosix/backend');
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final unavailable in [false, true]) {
       testWidgets('file status distinguishes provider errors from absence '
-          '(Mosix=$mornye, unavailable=$unavailable)', (tester) async {
+          '(Mosix=$mosix, unavailable=$unavailable)', (tester) async {
         await tester.binding.setSurfaceSize(const Size(320, 780));
         addTearDown(() => tester.binding.setSurfaceSize(null));
         final messenger = tester.binding.defaultBinaryMessenger;
@@ -39,7 +39,7 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.dark)
                   : ThemeData.dark(useMaterial3: true),
               localizationsDelegates: AppLocalizations.localizationsDelegates,

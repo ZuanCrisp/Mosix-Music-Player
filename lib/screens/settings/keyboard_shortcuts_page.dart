@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/services/shell_navigation_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_sliver_header.dart';
 import 'package:mosix/widgets/desktop/desktop_commands.dart';
 import 'package:mosix/widgets/settings_group.dart';
@@ -23,7 +23,7 @@ class KeyboardShortcutsPage extends ConsumerWidget {
       settingsProvider.select((s) => s.showExtensionStore),
     );
     final tabs = desktopDestinationTabs(
-      mornye: context.isMosix,
+      mosix: context.isMosix,
       showStore: showStore,
     );
 
@@ -42,7 +42,7 @@ class KeyboardShortcutsPage extends ConsumerWidget {
       ShellTab.home => l10n.navHome,
       ShellTab.library => l10n.navLibrary,
       ShellTab.repository => l10n.navStore,
-      ShellTab.search => l10n.mornyeSearch,
+      ShellTab.search => l10n.mosixSearch,
       ShellTab.settings => l10n.navSettings,
     };
 
@@ -62,7 +62,7 @@ class KeyboardShortcutsPage extends ConsumerWidget {
         [
           for (final tab in tabs) (tabLabel(tab), tabKeys(tab)),
           if (!tabs.contains(ShellTab.search))
-            (l10n.mornyeSearch, keys(DesktopCommand.search)),
+            (l10n.mosixSearch, keys(DesktopCommand.search)),
           (
             MaterialLocalizations.of(context).backButtonTooltip,
             keys(DesktopCommand.back),

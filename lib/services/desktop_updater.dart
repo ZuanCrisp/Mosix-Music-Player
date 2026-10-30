@@ -108,7 +108,7 @@ class DesktopUpdater {
       final directory =
           _downloadDirectory ??
           Directory(
-            p.join((await getTemporaryDirectory()).path, 'mornye-update'),
+            p.join((await getTemporaryDirectory()).path, 'mosix-update'),
           );
       await directory.create(recursive: true);
       final target = File(p.join(directory.path, assetName));

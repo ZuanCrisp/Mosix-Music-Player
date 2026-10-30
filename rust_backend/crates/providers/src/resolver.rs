@@ -8,7 +8,7 @@ mod service;
 pub mod urls;
 
 pub use client::{PlatformResolverChain, ResolverOptions};
-pub use mornye_core::resolver::Metadata;
+pub use mosix_core::resolver::Metadata;
 use serde::Serialize;
 pub use service::PlatformResolverService;
 use std::collections::BTreeMap;

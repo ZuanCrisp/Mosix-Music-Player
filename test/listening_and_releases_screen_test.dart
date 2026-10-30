@@ -8,21 +8,21 @@ import 'package:mosix/screens/listening_statistics_screen.dart';
 import 'package:mosix/screens/weekly_releases_screen.dart';
 import 'package:mosix/services/listening_statistics.dart';
 import 'package:mosix/services/weekly_releases.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/player_artwork.dart';
 
 import 'support/fixed_settings.dart';
 
 void main() {
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     Widget app(Widget page) => MaterialApp(
-      theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+      theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: page,
     );
     testWidgets(
-      'listening recap shows totals and supports annual view ($mornye)',
+      'listening recap shows totals and supports annual view ($mosix)',
       (tester) async {
         final requested = <({int days, int year})>[];
         await tester.pumpWidget(
@@ -76,7 +76,7 @@ void main() {
     );
 
     testWidgets(
-      'new releases supports week/month and explains incomplete providers ($mornye)',
+      'new releases supports week/month and explains incomplete providers ($mosix)',
       (tester) async {
         final now = DateTime.now();
         await tester.pumpWidget(

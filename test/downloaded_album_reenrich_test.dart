@@ -16,7 +16,7 @@ import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/services/local_track_batch_actions.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/selection_bottom_bar.dart';
 
 import 'support/re_enrich_settings.dart';
@@ -202,9 +202,9 @@ void main() {
     );
   }
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'downloaded album re-enrich restores selection on cancel and updates only selected files ($mornye)',
+      'downloaded album re-enrich restores selection on cancel and updates only selected files ($mosix)',
       (tester) async {
         SharedPreferences.setMockInitialValues({});
         final cache = Directory.systemTemp.createTempSync('album_reenrich_');
@@ -279,7 +279,7 @@ void main() {
             ],
             child: MaterialApp(
               navigatorKey: navigator,
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.light)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,

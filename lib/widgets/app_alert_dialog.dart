@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:mosix/theme/app_motion.dart';
 import 'package:mosix/theme/app_tokens.dart';
 import 'package:mosix/theme/material_expressive.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/expressive_button.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 
 /// Dialog presentation follows the selected design, including on Android.
 Future<T?> showAppDialog<T>({
@@ -84,11 +84,11 @@ class AppDialogSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     return Dialog(
-      backgroundColor: mornye ? Colors.transparent : backgroundColor,
-      surfaceTintColor: mornye ? Colors.transparent : null,
-      elevation: mornye ? 0 : null,
+      backgroundColor: mosix ? Colors.transparent : backgroundColor,
+      surfaceTintColor: mosix ? Colors.transparent : null,
+      elevation: mosix ? 0 : null,
       shape: shape,
       insetPadding: EdgeInsets.symmetric(
         horizontal: context.tokens.dialogInsetH,
@@ -96,7 +96,7 @@ class AppDialogSurface extends StatelessWidget {
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
-        child: mornye
+        child: mosix
             ? MosixGlassPanel.overlay(
                 child: SingleChildScrollView(child: child),
               )

@@ -11,13 +11,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/theme/app_theme.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/cover_palette.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/app_content_card.dart';
 import 'package:mosix/widgets/album_detail_header.dart';
 import 'package:mosix/widgets/app_search_field.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 import 'package:mosix/widgets/app_sliver_header.dart';
 import 'package:mosix/widgets/collection_scaffold.dart';
 import 'package:mosix/widgets/selection_action_button.dart';
@@ -401,7 +401,7 @@ void main() {
       'local cache identity changes when artwork is replaced in place',
       () async {
         final directory = Directory.systemTemp.createTempSync(
-          'mornye-cover-palette-',
+          'mosix-cover-palette-',
         );
         final file = File('${directory.path}/cover.jpg');
         try {

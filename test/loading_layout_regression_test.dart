@@ -6,7 +6,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/repo_provider.dart';
 import 'package:mosix/screens/repo_tab.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/animation_utils.dart';
 import 'package:mosix/widgets/extension_row.dart';
 
@@ -51,8 +51,8 @@ void main() {
       });
     }
 
-    for (final mornye in [false, true]) {
-      testWidgets('store skeleton fits at $width with Mosix=$mornye', (
+    for (final mosix in [false, true]) {
+      testWidgets('store skeleton fits at $width with Mosix=$mosix', (
         tester,
       ) async {
         tester.view.physicalSize = Size(width, 1200);
@@ -63,14 +63,14 @@ void main() {
             TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
         messenger.setMockMethodCallHandler(
           paths,
-          (_) async => '/tmp/mornye-loading-test',
+          (_) async => '/tmp/mosix-loading-test',
         );
         addTearDown(() => messenger.setMockMethodCallHandler(paths, null));
         await tester.pumpWidget(
           ProviderScope(
             overrides: [repoProvider.overrideWith(_LoadingRepo.new)],
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.dark)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,

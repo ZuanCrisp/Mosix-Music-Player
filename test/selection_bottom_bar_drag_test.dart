@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/selection_bottom_bar.dart';
 
 void main() {
-  for (final mornye in [false, true]) {
-    final name = mornye ? 'Mosix' : 'Material';
+  for (final mosix in [false, true]) {
+    final name = mosix ? 'Mosix' : 'Material';
 
     Future<void> showPanel(
       WidgetTester tester,
@@ -27,7 +27,7 @@ void main() {
               ).copyWith(textScaler: TextScaler.linear(textScale)),
               child: child!,
             ),
-            theme: mornye
+            theme: mosix
                 ? MosixTheme.build(Brightness.light)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,

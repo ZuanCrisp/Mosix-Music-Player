@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/theme_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
 import 'package:mosix/widgets/app_slider.dart';
 import 'package:mosix/widgets/lyrics_text_scale.dart';

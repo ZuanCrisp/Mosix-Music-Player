@@ -19,8 +19,8 @@ final playbackNotificationProvider = Provider.autoDispose
         String shuffleOff,
       })
     >((ref, labels) {
-      final mornye = ref.watch(
-        themeProvider.select((theme) => theme.style == AppThemeStyle.mornye),
+      final mosix = ref.watch(
+        themeProvider.select((theme) => theme.style == AppThemeStyle.mosix),
       );
       final item = ref.watch(currentMediaItemProvider).value;
       final track = item == null
@@ -40,7 +40,7 @@ final playbackNotificationProvider = Provider.autoDispose
         final runtime = ref.read(musicPlayerRuntimeProvider);
         runtime.configureNotification(
           presentation: PlaybackNotification(
-            mornye: mornye,
+            mosix: mosix,
             mediaId: item?.id,
             source: item?.extras?['source']?.toString(),
             loved: loved,

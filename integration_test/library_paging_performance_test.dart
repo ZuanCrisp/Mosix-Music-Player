@@ -13,8 +13,8 @@ import 'package:mosix/providers/download_history_provider.dart';
 import 'package:mosix/providers/library_browse_provider.dart';
 import 'package:mosix/providers/local_library_provider.dart';
 import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/screens/mornye_library_screen.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/screens/mosix_library_screen.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 import '../test/support/fixed_settings.dart';
 import '../test/support/library_paging_fixture.dart';

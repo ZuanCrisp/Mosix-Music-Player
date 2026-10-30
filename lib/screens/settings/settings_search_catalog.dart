@@ -94,7 +94,7 @@ class SettingsSearchCatalog {
           title: l10n.appearanceGlassOutlines,
           subtitle: l10n.appearanceGlassOutlinesSubtitle,
           keywords: const [
-            'mornye',
+            'mosix',
             'liquid glass',
             'border',
             'rim',
@@ -765,18 +765,6 @@ class SettingsSearchCatalog {
           title: l10n.aboutFeatureRequest,
           subtitle: l10n.aboutFeatureRequestSubtitle,
           keywords: const ['suggestion', 'idea'],
-        ),
-        SettingsSearchEntry(
-          icon: Icons.telegram,
-          title: l10n.aboutTelegramChannel,
-          subtitle: l10n.aboutTelegramChannelSubtitle,
-          keywords: const ['social'],
-        ),
-        SettingsSearchEntry(
-          icon: Icons.forum_outlined,
-          title: l10n.aboutTelegramChat,
-          subtitle: l10n.aboutTelegramChatSubtitle,
-          keywords: const ['community', 'support chat'],
         ),
       ];
 

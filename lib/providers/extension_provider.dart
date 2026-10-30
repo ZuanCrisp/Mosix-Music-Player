@@ -734,7 +734,7 @@ class ExtensionNotifier extends Notifier<ExtensionState> {
     try {
       final tmp = await getTemporaryDirectory();
       destDir = await Directory(
-        '${tmp.path}/mornye_restore_ext',
+        '${tmp.path}/mosix_restore_ext',
       ).create(recursive: true);
       await PlatformBridge.initExtensionRepo(destDir.path);
       if (registryUrl.isNotEmpty) {

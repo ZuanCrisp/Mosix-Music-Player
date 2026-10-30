@@ -13,9 +13,9 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.os.PowerManager
-import com.mornye.backend.UsbDirectOutput
-import com.mornye.backend.UsbOutputFormat
-import com.mornye.backend.UsbHardwareVolume
+import com.mosix.backend.UsbDirectOutput
+import com.mosix.backend.UsbOutputFormat
+import com.mosix.backend.UsbHardwareVolume
 import io.flutter.plugin.common.MethodCall
 import java.nio.ByteBuffer
 

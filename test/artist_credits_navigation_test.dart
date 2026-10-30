@@ -3,20 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/clickable_metadata.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  for (final mornye in [false, true]) {
-    testWidgets('artist picker offers each featured credit ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('artist picker offers each featured credit ($mosix)', (
       tester,
     ) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Builder(

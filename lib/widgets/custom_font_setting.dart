@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/theme_provider.dart';
 import 'package:mosix/services/custom_font_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
 import 'package:mosix/widgets/app_loading_indicator.dart';
 

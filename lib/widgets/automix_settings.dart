@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/models/automix_options.dart';
 import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/app_slider.dart';
 import 'package:mosix/widgets/settings_group.dart';

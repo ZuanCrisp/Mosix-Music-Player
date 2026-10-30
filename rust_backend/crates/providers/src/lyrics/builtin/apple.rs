@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::lyrics::http;
-use mornye_core::lyrics::payloads;
+use mosix_core::lyrics::payloads;
 use regex::Regex;
 use std::sync::{LazyLock, MutexGuard, TryLockError};
 use std::time::Duration;
@@ -253,7 +253,7 @@ mod tests {
     #[test]
     fn zarz_lrc_lyrics_credit_never_names_the_proxy() {
         let lyrics = LyricsResponse::from_text("[00:01.00]Example", "Zarz-LRC", "Zarz-LRC");
-        let saved = mornye_core::lyrics::lrc::with_metadata(&lyrics, "Track", "Artist");
+        let saved = mosix_core::lyrics::lrc::with_metadata(&lyrics, "Track", "Artist");
         assert!(saved.contains("source: Zarz-LRC"));
         assert!(!saved.contains("Paxsenix"));
     }

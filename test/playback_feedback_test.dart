@@ -7,14 +7,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/services/music_player_runtime.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_snack_bar.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 import 'package:mosix/widgets/playback_feedback.dart';
 
 void main() {
-  for (final mornye in [false, true]) {
-    testWidgets('playback errors show themed feedback (Mosix: $mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('playback errors show themed feedback (Mosix: $mosix)', (
       tester,
     ) async {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
@@ -31,7 +31,7 @@ void main() {
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
             builder: (_, child) =>
                 AppScaffoldMessenger(child: PlaybackFeedback(child: child!)),
             home: const Scaffold(body: SizedBox.expand()),
@@ -52,7 +52,7 @@ void main() {
       );
       expect(
         find.byType(MosixGlassPanel),
-        mornye ? findsOneWidget : findsNothing,
+        mosix ? findsOneWidget : findsNothing,
       );
       await tester.pump(const Duration(seconds: 4));
       await tester.pumpAndSettle();
@@ -62,7 +62,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('muted feedback is transient and themed (Mosix: $mornye)', (
+    testWidgets('muted feedback is transient and themed (Mosix: $mosix)', (
       tester,
     ) async {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
@@ -75,17 +75,17 @@ void main() {
       addTearDown(runtime.dispose);
       // Notices emitted before the shell mounts must not be replayed.
       runtime.notifyMutedPlayback();
-      final message = mornye
+      final message = mosix
           ? 'Volume media nol. Lagu dijeda. Tekan play lagi untuk tetap memutar.'
           : 'Media volume is zero. Playback paused. Press play again to continue.';
       await tester.pumpWidget(
         ProviderScope(
           overrides: [musicPlayerRuntimeProvider.overrideWithValue(runtime)],
           child: MaterialApp(
-            locale: Locale(mornye ? 'id' : 'en'),
+            locale: Locale(mosix ? 'id' : 'en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
             builder: (_, child) =>
                 AppScaffoldMessenger(child: PlaybackFeedback(child: child!)),
             home: const Scaffold(body: SizedBox.expand()),
@@ -99,7 +99,7 @@ void main() {
       expect(find.text(message), findsOneWidget);
       expect(
         find.byType(MosixGlassPanel),
-        mornye ? findsOneWidget : findsNothing,
+        mosix ? findsOneWidget : findsNothing,
       );
       await tester.pump(const Duration(seconds: 4));
       await tester.pumpAndSettle();

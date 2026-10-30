@@ -6,7 +6,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/screens/track_metadata_screen.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/audio_analysis_widget.dart';
 import 'package:mosix/widgets/hires_check_card.dart';
 
@@ -36,9 +36,9 @@ void main() {
     }
     await storage.dispose();
   });
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final protocol in NetworkProtocol.values) {
-      testWidgets('network delete capability: $protocol (Mosix=$mornye)', (
+      testWidgets('network delete capability: $protocol (Mosix=$mosix)', (
         tester,
       ) async {
         final item = LocalLibraryItem(
@@ -52,7 +52,7 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.dark)
                   : ThemeData.dark(useMaterial3: true),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -99,7 +99,7 @@ void main() {
     }
     for (final format in ['flac', 'wav', 'mp3']) {
       testWidgets(
-        'network $format exposes supported analysers (Mosix=$mornye)',
+        'network $format exposes supported analysers (Mosix=$mosix)',
         (tester) async {
           final item = LocalLibraryItem(
             id: 'network://fixture/track.$format',
@@ -112,7 +112,7 @@ void main() {
           await tester.pumpWidget(
             ProviderScope(
               child: MaterialApp(
-                theme: mornye
+                theme: mosix
                     ? MosixTheme.build(Brightness.dark)
                     : ThemeData.dark(useMaterial3: true),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,

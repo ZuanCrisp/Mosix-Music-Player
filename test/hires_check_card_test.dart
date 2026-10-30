@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/expressive_button.dart';
 import 'package:mosix/widgets/hires_check_card.dart';
 
@@ -61,7 +61,7 @@ void main() {
 
   Future<void> openCard(
     WidgetTester tester, {
-    bool mornye = true,
+    bool mosix = true,
     Brightness brightness = Brightness.light,
     double textScale = 1,
     String path = '/music/track.flac',
@@ -71,7 +71,7 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
       MaterialApp(
-        theme: mornye
+        theme: mosix
             ? MosixTheme.build(brightness)
             : brightness == Brightness.light
             ? AppTheme.light()
@@ -104,30 +104,30 @@ void main() {
       final image = await boundary.toImage(pixelRatio: 2);
       final data = await image.toByteData(format: ui.ImageByteFormat.png);
       await File(
-        '/tmp/mornye-hires-$name.png',
+        '/tmp/mosix-hires-$name.png',
       ).writeAsBytes(data!.buffer.asUint8List());
       image.dispose();
     });
   }
 
-  for (final mornye in [true, false]) {
+  for (final mosix in [true, false]) {
     for (final brightness in Brightness.values) {
-      final name = '${mornye ? 'mornye' : 'material'}-${brightness.name}';
+      final name = '${mosix ? 'mosix' : 'material'}-${brightness.name}';
       testWidgets('centered action and neutral bandwidth result ($name)', (
         tester,
       ) async {
-        await openCard(tester, mornye: mornye, brightness: brightness);
+        await openCard(tester, mosix: mosix, brightness: brightness);
         await tester.pumpAndSettle();
         final button = find.ancestor(
           of: find.text('Check'),
-          matching: mornye
+          matching: mosix
               ? find.byType(CupertinoButton)
               : find.byType(ExpressiveButton),
         );
         expect(button, findsOneWidget);
         expect(tester.getSize(button).width, greaterThan(300));
         expect(tester.getCenter(button).dx, closeTo(195, 1));
-        expect(find.byType(M3ECard), mornye ? findsNothing : findsOneWidget);
+        expect(find.byType(M3ECard), mosix ? findsNothing : findsOneWidget);
         await captureCard(tester, '$name-idle');
 
         await tester.tap(find.text('Check'));
@@ -153,9 +153,9 @@ void main() {
     }
   }
 
-  for (final mornye in [true, false]) {
-    testWidgets('large text stays readable ($mornye)', (tester) async {
-      await openCard(tester, mornye: mornye, textScale: 2);
+  for (final mosix in [true, false]) {
+    testWidgets('large text stays readable ($mosix)', (tester) async {
+      await openCard(tester, mosix: mosix, textScale: 2);
       await tester.tap(find.text('Check'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(

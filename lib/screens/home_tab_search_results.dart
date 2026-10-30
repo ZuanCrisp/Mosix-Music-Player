@@ -67,7 +67,7 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
     if (isUrlNotRecognized) {
       return AppContentCard(
         elevation: 0,
-        mornyeSurface: false,
+        mosixSurface: false,
         // Matches ErrorCard: a solid container with its paired on-color.
         color: colorScheme.errorContainer,
         shape: RoundedRectangleBorder(
@@ -176,12 +176,12 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
 
   void _showSortOptions(ColorScheme colorScheme) {
     var tempSort = _searchSortOption;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     showAppModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
-      backgroundColor: mornye ? null : colorScheme.surfaceContainerLow,
+      backgroundColor: mosix ? null : colorScheme.surfaceContainerLow,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) {
           final content = SafeArea(
@@ -459,14 +459,14 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
   }) {
     // Material result groups are grouped rows, on the settings group tier.
     final sectionColor = colorScheme.surfaceContainer;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
 
     return [
       SliverToBoxAdapter(
         child: Padding(
           // Aligned with the clamped result list below on wide screens.
           padding:
-              (mornye
+              (mosix
                       ? const EdgeInsetsDirectional.fromSTEB(20, 16, 12, 10)
                       : const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8))
                   .add(
@@ -477,7 +477,7 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
               Expanded(
                 child: Text(
                   title,
-                  style: mornye
+                  style: mosix
                       ? Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -493,7 +493,7 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
                 ExpressiveButton(
                   text: true,
                   onPressed: () => _showSortOptions(colorScheme),
-                  icon: mornye
+                  icon: mosix
                       ? null
                       : Icon(
                           Icons.swap_vert,
@@ -529,7 +529,7 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
           delegate: SliverChildBuilderDelegate((context, index) {
             final isFirst = index == 0;
             final isLast = index == itemCount - 1;
-            if (mornye) {
+            if (mosix) {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: MosixGlassPanel.overlay(
@@ -720,7 +720,7 @@ extension _HomeTabSearchResultsUI on _HomeTabState {
               child: MosixFilterChip(
                 label: label,
                 selected: selectedFilter == id,
-                icon: icon == null ? null : mornyeIconFor(icon),
+                icon: icon == null ? null : mosixIconFor(icon),
                 glass: false,
                 tonal: selectedFilter == id,
                 onTap: select,

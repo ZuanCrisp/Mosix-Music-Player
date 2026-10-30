@@ -6,7 +6,7 @@ import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:mosix/widgets/settings_group.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 import 'package:mosix/widgets/app_content_card.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 /// Results belong above the Library selection card and metadata sheets.
 /// A page snackbar can be painted behind either of those surfaces.

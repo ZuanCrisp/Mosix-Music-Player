@@ -9,19 +9,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/screens/selection_mode_mixin.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/desktop/context_menu.dart';
 import 'package:mosix/widgets/desktop/desktop_selection.dart';
 import 'package:mosix/widgets/desktop/hover_play_button.dart';
 import 'package:mosix/widgets/desktop/library_drop_target.dart';
 import 'package:mosix/widgets/desktop/track_table.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/mosix_context_menu.dart';
 import 'package:mosix/widgets/track_card.dart';
 
-Widget _app(Widget child, {bool mornye = false}) => ProviderScope(
+Widget _app(Widget child, {bool mosix = false}) => ProviderScope(
   child: MaterialApp(
-    theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
+    theme: mosix ? MosixTheme.build(Brightness.light) : AppTheme.light(),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(body: child),
@@ -194,7 +194,7 @@ void main() {
       tester,
     ) async {
       final log = <String>[];
-      await tester.pumpWidget(_app(card(log), mornye: true));
+      await tester.pumpWidget(_app(card(log), mosix: true));
 
       await _rightClick(tester, find.text('Song'));
       expect(find.byType(MosixContextMenu), findsOneWidget);

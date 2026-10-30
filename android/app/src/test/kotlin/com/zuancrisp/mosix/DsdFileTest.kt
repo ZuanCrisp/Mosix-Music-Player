@@ -43,7 +43,7 @@ class DsdFileTest {
     }
 
     private fun <T> withFile(data: ByteArray, run: (String) -> T): T {
-        val file = File.createTempFile("mornye-dsd-", ".audio")
+        val file = File.createTempFile("mosix-dsd-", ".audio")
         try { file.writeBytes(data); return run(file.absolutePath) } finally { file.delete() }
     }
 

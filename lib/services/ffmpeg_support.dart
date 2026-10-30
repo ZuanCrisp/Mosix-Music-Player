@@ -177,7 +177,7 @@ abstract final class FFmpegOutput {
     if (samePath(requested, inputPath) && deleteOriginal) {
       return FFmpegOutputPlan(
         workingPath: await reserve(
-          '${file.parent.path}${Platform.pathSeparator}.$base.mornye-${DateTime.now().microsecondsSinceEpoch}$ext',
+          '${file.parent.path}${Platform.pathSeparator}.$base.mosix-${DateTime.now().microsecondsSinceEpoch}$ext',
         ),
         finalPath: inputPath,
       );
@@ -217,7 +217,7 @@ abstract final class FFmpegOutput {
     if (plan.workingPath != plan.finalPath) {
       final source = File(inputPath);
       final backupPath =
-          '$inputPath.mornye-backup-${DateTime.now().microsecondsSinceEpoch}';
+          '$inputPath.mosix-backup-${DateTime.now().microsecondsSinceEpoch}';
       final backup = File(backupPath);
       var backedUp = false;
       try {
@@ -269,7 +269,7 @@ abstract final class FFmpegOutput {
         return false;
       }
       staging = await reserve(
-        '$targetPath.mornye-staging-${DateTime.now().microsecondsSinceEpoch}',
+        '$targetPath.mosix-staging-${DateTime.now().microsecondsSinceEpoch}',
       );
       await temp.copy(staging);
       return await finalize(

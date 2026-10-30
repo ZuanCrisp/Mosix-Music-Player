@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 /// The title row above a settings slider, with the slider's current value.
 ///

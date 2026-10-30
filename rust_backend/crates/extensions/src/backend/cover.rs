@@ -2,10 +2,10 @@
 
 use super::Backend;
 use cap_std::fs::OpenOptions;
-use mornye_core::app_version::AppVersion;
-use mornye_core::cover::{MAX_DOWNLOAD_BYTES, resize};
-use mornye_core::tags::{CoverArt, extract_cover};
-use mornye_network::{
+use mosix_core::app_version::AppVersion;
+use mosix_core::cover::{MAX_DOWNLOAD_BYTES, resize};
+use mosix_core::tags::{CoverArt, extract_cover};
+use mosix_network::{
     HttpRequest, NetworkService, NetworkSession, random_user_agent, url::UrlParts,
 };
 use std::cell::RefCell;
@@ -275,7 +275,7 @@ impl Backend {
         read: impl FnOnce(&crate::files::FilePath, &str, &Check<'_>) -> Result<CoverArt, String>,
         check: &Check<'_>,
     ) -> Result<String, String> {
-        let format = mornye_core::tags::library_extension(audio_path, hint);
+        let format = mosix_core::tags::library_extension(audio_path, hint);
         // The scan's MP4-family reader also accepts .mp4/.aac. The standalone
         // cover export deliberately keeps its narrower legacy suffix policy.
         let format = matches!(format.as_str(), "mp4" | "aac").then_some("m4a");
@@ -364,7 +364,7 @@ impl Backend {
             ));
         }
         let mut cover = read(&input, &format, &check)?;
-        if let Ok(resized) = mornye_core::cover::library_thumbnail(&cover.data, &check) {
+        if let Ok(resized) = mosix_core::cover::library_thumbnail(&cover.data, &check) {
             cover.mime = if resized.starts_with(b"\x89PNG") {
                 "image/png"
             } else if resized.starts_with(b"\xff\xd8") {

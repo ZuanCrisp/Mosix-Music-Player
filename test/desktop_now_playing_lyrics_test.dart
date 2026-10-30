@@ -11,7 +11,7 @@ import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/providers/system_volume_provider.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/utils/lyrics_parser.dart';
 import 'package:mosix/widgets/app_loading_indicator.dart';
@@ -54,9 +54,9 @@ void main() {
     desktopInspectorPanel.value = null;
   });
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      '${mornye ? 'Mosix' : 'Material'} hidden lyrics stop word sweep frames',
+      '${mosix ? 'Mosix' : 'Material'} hidden lyrics stop word sweep frames',
       (tester) async {
         tester.view.physicalSize = const Size(1520, 1000);
         tester.view.devicePixelRatio = 1;
@@ -86,7 +86,7 @@ void main() {
               systemVolumeProvider.overrideWith((ref) => Stream.value(0.5)),
             ],
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.dark)
                   : AppTheme.dark(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,

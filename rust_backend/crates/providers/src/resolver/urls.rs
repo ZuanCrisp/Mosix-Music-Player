@@ -1,4 +1,4 @@
-use mornye_network::url::UrlParts;
+use mosix_network::url::UrlParts;
 
 pub fn canonical(platform: &str) -> &'static str {
     match platform

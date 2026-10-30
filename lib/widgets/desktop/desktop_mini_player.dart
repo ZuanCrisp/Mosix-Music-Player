@@ -122,8 +122,8 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
   }
 
   Widget _buildPanel(BuildContext context, MediaItem? mediaItem) {
-    final mornye = context.isMosix;
-    final theme = mornye
+    final mosix = context.isMosix;
+    final theme = mosix
         ? MosixTheme.fromContext(context, brightness: Brightness.dark)
         : Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -134,7 +134,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (mornye)
+            if (mosix)
               MosixPlayerBackground(artUri: mediaItem?.artUri)
             else
               ColoredBox(color: colorScheme.surfaceContainer),
@@ -170,7 +170,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
     MediaItem? mediaItem, {
     required bool lyrics,
   }) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final buttonStyle = IconButton.styleFrom(
@@ -185,7 +185,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
           height: 88,
           child: Row(
             children: [
-              _Artwork(mediaItem: mediaItem, size: 72, radius: mornye ? 8 : 12),
+              _Artwork(mediaItem: mediaItem, size: 72, radius: mosix ? 8 : 12),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -221,7 +221,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                     style: buttonStyle,
                     color: colorScheme.onSurfaceVariant,
                     icon: AppIcon(
-                      mornye
+                      mosix
                           ? CupertinoIcons.arrow_up_left_arrow_down_right
                           : Icons.open_in_full,
                     ),
@@ -237,7 +237,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                         ? colorScheme.primary
                         : colorScheme.onSurfaceVariant,
                     icon: AppIcon(
-                      mornye
+                      mosix
                           ? CupertinoIcons.quote_bubble
                           : Icons.lyrics_outlined,
                     ),
@@ -255,7 +255,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
           height: 16,
           child: OverflowBox(
             minHeight: 0,
-            maxHeight: mornye ? 10 : 48,
+            maxHeight: mosix ? 10 : 48,
             child: _SeekRow(mediaItem: mediaItem, dense: true),
           ),
         ),

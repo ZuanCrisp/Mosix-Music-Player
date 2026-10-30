@@ -10,7 +10,7 @@ import 'package:mosix/models/track.dart';
 import 'package:mosix/screens/album_screen.dart';
 import 'package:mosix/screens/home_tab.dart';
 import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/album_description.dart';
 import 'package:mosix/widgets/album_detail_header.dart';
 import 'package:mosix/widgets/audio_quality_badges.dart';
@@ -111,9 +111,9 @@ void main() {
     }
   }
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final discs in [1, 2]) {
-      testWidgets('online album disc groups (Mosix: $mornye, discs: $discs)', (
+      testWidgets('online album disc groups (Mosix: $mosix, discs: $discs)', (
         tester,
       ) async {
         await tester.binding.setSurfaceSize(const Size(430, 1200));
@@ -138,12 +138,12 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+              theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: ExtensionAlbumScreen(
                 extensionId: 'example-metadata',
-                albumId: 'disc-album-$mornye-$discs',
+                albumId: 'disc-album-$mosix-$discs',
                 albumName: 'Example Album',
               ),
             ),

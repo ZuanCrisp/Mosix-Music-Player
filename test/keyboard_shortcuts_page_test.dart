@@ -6,7 +6,7 @@ import 'package:mosix/models/settings.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/settings/keyboard_shortcuts_page.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/desktop/desktop_commands.dart';
 
 class _Settings extends SettingsNotifier {
@@ -15,9 +15,9 @@ class _Settings extends SettingsNotifier {
 }
 
 void main() {
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final platform in [TargetPlatform.macOS, TargetPlatform.windows]) {
-      final style = mornye ? 'Mosix' : 'Material';
+      final style = mosix ? 'Mosix' : 'Material';
       testWidgets('$style lists every ${platform.name} shortcut', (
         tester,
       ) async {
@@ -28,7 +28,7 @@ void main() {
           ProviderScope(
             overrides: [settingsProvider.overrideWith(_Settings.new)],
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.light)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -44,7 +44,7 @@ void main() {
             .map((text) => text.data ?? '')
             .join('\n');
         final destinations = desktopDestinationTabs(
-          mornye: mornye,
+          mosix: mosix,
           showStore: const AppSettings().showExtensionStore,
         ).length;
         final bound = desktopShortcutBindings(platform).keys;

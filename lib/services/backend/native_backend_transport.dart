@@ -18,15 +18,15 @@ abstract final class NativeMessageKind {
 /// Raw access to the desktop backend's exported functions, injectable so the
 /// message handling can be tested without the native library.
 abstract interface class NativeBackendTransport {
-  /// `mornye_init`: installs [listener] and passes the config JSON.
+  /// `mosix_init`: installs [listener] and passes the config JSON.
   void init(Uint8List configJson, NativeMessageListener listener);
 
-  /// `mornye_call`: starts [method]; the answer arrives with the same [id].
+  /// `mosix_call`: starts [method]; the answer arrives with the same [id].
   void call(int id, String method, Uint8List argsJson, Uint8List? bytes);
 
-  /// `mornye_subscribe`: starts pushing an event [kind].
+  /// `mosix_subscribe`: starts pushing an event [kind].
   void subscribe(int kind);
 
-  /// `mornye_unsubscribe`: stops pushing an event [kind].
+  /// `mosix_unsubscribe`: stops pushing an event [kind].
   void unsubscribe(int kind);
 }

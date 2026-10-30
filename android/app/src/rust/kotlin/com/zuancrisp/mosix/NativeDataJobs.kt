@@ -1,8 +1,8 @@
 package com.zuancrisp.mosix
 
-import com.mornye.backend.CancellationDomain
-import com.mornye.backend.CancellationRegistry
-import com.mornye.backend.RequestLease
+import com.mosix.backend.CancellationDomain
+import com.mosix.backend.CancellationRegistry
+import com.mosix.backend.RequestLease
 import java.io.File
 import org.json.JSONArray
 import org.json.JSONObject

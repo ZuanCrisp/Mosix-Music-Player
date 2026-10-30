@@ -110,7 +110,7 @@ extension _ArtistScreenDiscography on _ArtistScreenState {
       useRootNavigator: true,
       isScrollControlled: true,
       // The sheet forces the dark theme on its own glass.
-      mornyeGlass: false,
+      mosixGlass: false,
       builder: (sheetContext) => sheetContext.isMosix
           ? Theme(
               data: MosixTheme.fromContext(
@@ -390,7 +390,7 @@ class _DiscographyOptionTile extends StatelessWidget {
                   ),
                   const SizedBox(width: 16),
                   Icon(
-                    mornyeIconFor(icon),
+                    mosixIconFor(icon),
                     size: 22,
                     color: colorScheme.onSurface,
                   ),

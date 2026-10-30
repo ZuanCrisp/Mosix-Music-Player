@@ -207,7 +207,7 @@ fn compiled_source_reuses_bytecode_but_isolates_state_settings_and_new_source() 
 
 #[test]
 fn ffmpeg_waits_for_completion_cancellation_or_deadline_without_polling() {
-    use mornye_core::cancellation::{CancellationDomain, CancellationRegistry};
+    use mosix_core::cancellation::{CancellationDomain, CancellationRegistry};
     for mode in [
         "complete",
         "cancel",

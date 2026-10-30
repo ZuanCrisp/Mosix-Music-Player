@@ -4,7 +4,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/models/artist_concert.dart';
 import 'package:mosix/screens/concert_detail_screen.dart';
 import 'package:mosix/services/shell_navigation_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/utils/nav_bar_inset.dart';
 import 'package:mosix/widgets/album_detail_header.dart';

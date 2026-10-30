@@ -20,7 +20,7 @@ public final class LookupTestControlProvider extends ContentProvider {
         long identity = Binder.clearCallingIdentity();
         try {
             return getContext().getContentResolver().call(
-                Uri.parse("content://com.mornye.test.documents.lookup"), method, arg, extras
+                Uri.parse("content://com.mosix.test.documents.lookup"), method, arg, extras
             );
         } finally {
             Binder.restoreCallingIdentity(identity);

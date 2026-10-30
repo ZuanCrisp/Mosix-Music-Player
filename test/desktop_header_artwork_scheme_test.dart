@@ -11,7 +11,7 @@ import 'package:mosix/screens/local_album_screen.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/theme/app_theme.dart';
 import 'package:mosix/theme/cover_palette.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/player_artwork_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/album_detail_header.dart';

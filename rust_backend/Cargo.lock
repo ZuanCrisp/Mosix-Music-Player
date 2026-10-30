@@ -1629,14 +1629,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "mornye-bindgen"
+name = "mosix-bindgen"
 version = "0.1.0"
 dependencies = [
  "uniffi",
 ]
 
 [[package]]
-name = "mornye-core"
+name = "mosix-core"
 version = "0.1.0"
 dependencies = [
  "base64",
@@ -1656,12 +1656,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "mornye-desktop"
+name = "mosix-desktop"
 version = "0.1.0"
 dependencies = [
  "chrono",
  "getrandom 0.4.3",
- "mornye-mobile",
+ "mosix-mobile",
  "notify",
  "serde_json",
  "sha2",
@@ -1671,7 +1671,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mornye-extensions"
+name = "mosix-extensions"
 version = "0.1.0"
 dependencies = [
  "aes",
@@ -1685,9 +1685,9 @@ dependencies = [
  "httpdate",
  "libc",
  "md-5",
- "mornye-core",
- "mornye-network",
- "mornye-providers",
+ "mosix-core",
+ "mosix-network",
+ "mosix-providers",
  "rcgen",
  "regex",
  "rquickjs",
@@ -1707,16 +1707,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "mornye-mobile"
+name = "mosix-mobile"
 version = "0.1.0"
 dependencies = [
  "base64",
  "chrono",
  "libc",
  "libusb1-sys",
- "mornye-core",
- "mornye-extensions",
- "mornye-network",
+ "mosix-core",
+ "mosix-extensions",
+ "mosix-network",
  "regex",
  "roxmltree",
  "rusqlite",
@@ -1734,7 +1734,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mornye-network"
+name = "mosix-network"
 version = "0.1.0"
 dependencies = [
  "async-compression",
@@ -1759,14 +1759,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "mornye-providers"
+name = "mosix-providers"
 version = "0.1.0"
 dependencies = [
  "base64",
  "html5ever",
  "httpdate",
- "mornye-core",
- "mornye-network",
+ "mosix-core",
+ "mosix-network",
  "regex",
  "scraper",
  "serde",

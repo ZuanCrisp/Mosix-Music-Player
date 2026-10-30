@@ -10,7 +10,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/screens/local_album_screen.dart';
 import 'package:mosix/screens/track_metadata_screen.dart';
 import 'package:mosix/services/library_database.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/animation_utils.dart';
 
 LocalLibraryItem _track(int number) => LocalLibraryItem(

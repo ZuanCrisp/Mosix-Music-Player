@@ -211,7 +211,7 @@ class MusicPlayerRuntime {
   Future<void> _publishNotificationFavorite() async {
     try {
       await dependencies.notificationChannel.invokeMethod<void>('update', {
-        'enabled': _notification.mornye && _notification.mediaId != null,
+        'enabled': _notification.mosix && _notification.mediaId != null,
         'loved': _notification.loved,
         'label': _notification.favoriteActionLabel,
       });

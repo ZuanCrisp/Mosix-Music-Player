@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/theme/app_tokens.dart';
 import 'package:mosix/widgets/app_icon_button.dart';

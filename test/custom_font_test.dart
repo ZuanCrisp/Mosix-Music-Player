@@ -9,7 +9,7 @@ import 'package:mosix/models/theme_settings.dart';
 import 'package:mosix/providers/theme_provider.dart';
 import 'package:mosix/services/custom_font_service.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

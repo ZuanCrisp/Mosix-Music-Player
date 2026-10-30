@@ -2,8 +2,8 @@
 
 use crate::host::decode_go_utf8;
 use crate::manifest::ExtensionManifest;
-use mornye_core::fs::OpenOptionsPortableExt;
-use mornye_core::matching::lowercase;
+use mosix_core::fs::OpenOptionsPortableExt;
+use mosix_core::matching::lowercase;
 use std::collections::HashSet;
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};
@@ -32,7 +32,10 @@ fn io_error(message: &str, cause: impl std::fmt::Display) -> PackageError {
 
 pub fn is_package_path(path: &Path) -> bool {
     let name = lowercase(&path.to_string_lossy());
-    name.ends_with(".mornye-ext") || name.ends_with(".spotiflac-ext") || name.ends_with(".sflx")
+    name.ends_with(".mosix-ext")
+        || name.ends_with(".mornye-ext")
+        || name.ends_with(".spotiflac-ext")
+        || name.ends_with(".sflx")
 }
 
 struct Entry {
@@ -52,7 +55,7 @@ impl ExtensionPackage {
     pub fn open(path: &Path) -> Result<Self, PackageError> {
         if !is_package_path(path) {
             return Err(error(
-                "invalid file format: please select a .mornye-ext or .sflx file",
+                "invalid file format: please select a .mosix-ext or .sflx file",
             ));
         }
         let mut input = OpenOptions::new()
@@ -353,6 +356,7 @@ mod branding_tests {
     #[test]
     fn current_and_legacy_package_extensions_remain_supported() {
         for name in [
+            "example.mosix-ext",
             "example.mornye-ext",
             "example.spotiflac-ext",
             "example.sflx",

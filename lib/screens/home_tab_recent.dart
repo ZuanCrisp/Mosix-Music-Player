@@ -281,7 +281,7 @@ extension _HomeTabRecentUI on _HomeTabState {
           groups: [
             [
               MosixMenuAction(
-                icon: mornyeIconFor(Icons.delete_outline),
+                icon: mosixIconFor(Icons.delete_outline),
                 label: menuContext.l10n.dialogRemove,
                 destructive: true,
                 onPressed: () {

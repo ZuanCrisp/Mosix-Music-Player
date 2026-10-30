@@ -6,7 +6,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/services/local_track_batch_actions.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/re_enrich_review_sheet.dart';
 import 'package:mosix/widgets/selection_bottom_bar.dart';
@@ -14,14 +14,14 @@ import 'package:mosix/widgets/selection_bottom_bar.dart';
 import 'support/re_enrich_settings.dart';
 
 void main() {
-  for (final mornye in [false, true]) {
-    testWidgets('result is readable above an open metadata sheet ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('result is readable above an open metadata sheet ($mosix)', (
       tester,
     ) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
@@ -61,7 +61,7 @@ void main() {
 
     for (final fails in [false, true]) {
       testWidgets(
-        'empty/failed preview stays visible before selection returns ($mornye/$fails)',
+        'empty/failed preview stays visible before selection returns ($mosix/$fails)',
         (tester) async {
           const channel = MethodChannel('com.zuancrisp.mosix/backend');
           tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
@@ -89,7 +89,7 @@ void main() {
                 settingsProvider.overrideWith(ReEnrichTestSettings.new),
               ],
               child: MaterialApp(
-                theme: mornye
+                theme: mosix
                     ? MosixTheme.build(Brightness.dark)
                     : ThemeData(),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,

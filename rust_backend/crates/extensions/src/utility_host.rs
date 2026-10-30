@@ -1,6 +1,6 @@
 use crate::runtime::{Control, ExtensionServices};
-use mornye_core::matching;
-pub(crate) use mornye_network::random_user_agent;
+use mosix_core::matching;
+pub(crate) use mosix_network::random_user_agent;
 use rquickjs::{Ctx, Function, Object, Value};
 use std::sync::Arc;
 

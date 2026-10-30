@@ -152,8 +152,8 @@ class MpvAudioFilterChain {
   /// The value of mpv's `af` property.
   String get spec => filters.isEmpty
       ? ''
-      : '@mornye_format:format=format=floatp,'
-            '@mornye_dsp:lavfi=[${filters.map((filter) => filter.spec).join(',')}]';
+      : '@mosix_format:format=format=floatp,'
+            '@mosix_dsp:lavfi=[${filters.map((filter) => filter.spec).join(',')}]';
 
   bool get isEmpty => filters.isEmpty;
 

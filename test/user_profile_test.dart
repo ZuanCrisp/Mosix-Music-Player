@@ -14,7 +14,7 @@ import 'package:mosix/screens/settings/settings_tab.dart';
 import 'package:mosix/services/backup_service.dart';
 import 'package:mosix/services/shell_navigation_service.dart';
 import 'package:mosix/services/user_profile_store.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/profile_avatar.dart';
 import 'package:mosix/widgets/settings_group.dart';

@@ -1,6 +1,6 @@
 [bindings.kotlin]
-package_name = "com.mornye.backend"
-cdylib_name = "mornye_mobile"
+package_name = "com.mosix.backend"
+cdylib_name = "mosix_mobile"
 
 [bindings.swift]
 module_name = "MosixBackend"

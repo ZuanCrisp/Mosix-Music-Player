@@ -48,7 +48,7 @@ class DesktopDiagnostics {
   @visibleForTesting
   static set debugInstance(DesktopDiagnostics? value) => _instance = value;
 
-  static const logFileName = 'mornye.log';
+  static const logFileName = 'mosix.log';
   static const panicLogFileName = 'rust-panic.log';
   static const _markerFileName = 'session.running';
   static const _reportFileName = 'crash-report.json';
@@ -308,12 +308,12 @@ class DesktopDiagnostics {
     }
   }
 
-  /// `mornye.log` becomes `mornye.1.log`; the oldest file is removed.
+  /// `mosix.log` becomes `mosix.1.log`; the oldest file is removed.
   void _rotate() {
     _log?.closeSync();
     _log = null;
     String rotated(int index) =>
-        p.join(directory.path, index == 0 ? logFileName : 'mornye.$index.log');
+        p.join(directory.path, index == 0 ? logFileName : 'mosix.$index.log');
     final oldest = File(rotated(keptLogFiles - 1));
     if (oldest.existsSync()) oldest.deleteSync();
     for (var index = keptLogFiles - 2; index >= 0; index--) {

@@ -6,9 +6,9 @@ mod tests;
 
 use crate::coalescer::{Coalescer, Flight, Waiter};
 use crate::resolver::{Check, ResolverError};
-use mornye_core::matching::uppercase;
-use mornye_core::metadata::musicbrainz::Response;
-use mornye_network::NetworkService;
+use mosix_core::matching::uppercase;
+use mosix_core::metadata::musicbrainz::Response;
+use mosix_network::NetworkService;
 use std::collections::BTreeMap;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::atomic::{AtomicBool, Ordering};

@@ -2,14 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons, CupertinoTextField;
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mosix_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/app_text_field.dart';
 import 'package:mosix/widgets/app_switch.dart';
 import 'package:mosix/widgets/app_snack_bar.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/extension_provider.dart';

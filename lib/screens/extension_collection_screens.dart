@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/error_card.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
+import 'package:mosix/widgets/mosix_artist_header.dart';
 import 'package:mosix/widgets/album_detail_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mosix/l10n/l10n.dart';

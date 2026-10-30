@@ -1,9 +1,9 @@
 //! Bounded, seekable metadata reads through the app's authenticated loopback
 //! proxy. The native reader never receives NAS credentials or external URLs.
 use base64::Engine;
-use mornye_core::fs::{DEFAULT_TEMP_PREFIX, write_atomic};
-use mornye_core::{lower_hex, tags};
-use mornye_network::{
+use mosix_core::fs::{DEFAULT_TEMP_PREFIX, write_atomic};
+use mosix_core::{lower_hex, tags};
+use mosix_network::{
     HttpRequest, NetworkService, NetworkSession, policy::NetworkPermissions, url::UrlParts,
 };
 use serde_json::{Value, json};

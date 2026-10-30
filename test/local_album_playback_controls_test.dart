@@ -12,7 +12,7 @@ import 'package:mosix/providers/playback_provider.dart';
 import 'package:mosix/screens/local_album_screen.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/album_detail_header.dart';
 import 'package:mosix/widgets/album_track_tile.dart';
 
@@ -68,9 +68,9 @@ Future<void> _settle(WidgetTester tester) async {
 }
 
 void main() {
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'local album controls pause and resume without restarting ($mornye)',
+      'local album controls pause and resume without restarting ($mosix)',
       (tester) async {
         SharedPreferences.setMockInitialValues({});
         tester.view.physicalSize = const Size(430, 1200);
@@ -117,7 +117,7 @@ void main() {
               playbackProvider.overrideWith(() => playback),
             ],
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.light)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -141,8 +141,8 @@ void main() {
         );
         Finder rowButton(int number) =>
             find.descendant(of: row(number), matching: find.byType(IconButton));
-        final pauseIcon = mornye ? CupertinoIcons.pause_fill : Icons.pause;
-        final playIcon = mornye ? CupertinoIcons.play_fill : Icons.play_arrow;
+        final pauseIcon = mosix ? CupertinoIcons.pause_fill : Icons.pause;
+        final playIcon = mosix ? CupertinoIcons.play_fill : Icons.play_arrow;
 
         await tester.tap(
           find.descendant(of: header, matching: find.text('Play')),

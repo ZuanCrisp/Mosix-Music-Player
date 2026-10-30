@@ -213,7 +213,7 @@ Handles<DsdDecoder> decoders;
 Handles<FlacPcmSource> flacSources;
 }
 
-#define JNI_AUDIO(name) Java_com_zarz_mornye_NativeAudio_##name
+#define JNI_AUDIO(name) Java_com_zuancrisp_mosix_NativeAudio_##name
 extern "C" {
 JNIEXPORT jlong JNICALL JNI_AUDIO(openOboe)(JNIEnv *env, jobject, jint rate, jint channels, jint bits, jint device) {
     try { return outputs.add(std::make_shared<ExclusiveOutput>(rate, channels, bits, device)); }

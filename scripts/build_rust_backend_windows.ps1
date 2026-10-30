@@ -1,6 +1,6 @@
-# Build the Rust desktop backend (mornye_desktop.dll) on Windows and stage it
+# Build the Rust desktop backend (mosix_desktop.dll) on Windows and stage it
 # in rust_backend\target\desktop\windows\<arch>\, where windows\CMakeLists.txt
-# installs it next to mornye.exe. This is the Windows counterpart of
+# installs it next to mosix.exe. This is the Windows counterpart of
 # `bash scripts/build_rust_backend.sh desktop`.
 #
 # Requirements: rustup (the toolchain is pinned by rust_backend\rust-toolchain.toml)
@@ -35,13 +35,13 @@ try {
     rustup target add $Target
     if ($LASTEXITCODE -ne 0) { throw "rustup target add $Target failed." }
 
-    cargo build --locked --release -p mornye-desktop --target $Target
-    if ($LASTEXITCODE -ne 0) { throw "Building mornye-desktop for $Target failed." }
+    cargo build --locked --release -p mosix-desktop --target $Target
+    if ($LASTEXITCODE -ne 0) { throw "Building mosix-desktop for $Target failed." }
 
     $arch = if ($Target -eq 'aarch64-pc-windows-msvc') { 'arm64' } else { 'x64' }
     $desktopDir = Join-Path $targetDir "desktop\windows\$arch"
     New-Item -ItemType Directory -Force $desktopDir | Out-Null
-    Copy-Item -Force (Join-Path $targetDir "$Target\release\mornye_desktop.dll") $desktopDir
+    Copy-Item -Force (Join-Path $targetDir "$Target\release\mosix_desktop.dll") $desktopDir
     Write-Host "Rust desktop library is staged in $desktopDir."
 }
 finally {

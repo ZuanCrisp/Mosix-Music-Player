@@ -191,7 +191,7 @@ void main() {
     await _settle();
     expect(
       engine.properties['af'],
-      contains('@mornye_dsp:lavfi=[volume@pre=precision=float:volume=0dB,'),
+      contains('@mosix_dsp:lavfi=[volume@pre=precision=float:volume=0dB,'),
     );
 
     await deck.setFileSource('/song.flac');
@@ -244,14 +244,14 @@ void main() {
     expect(playbackEqualizerError.value, contains('balance'));
 
     final probes = engine.filterWrites
-        .where((call) => call[2].startsWith('@mornye_probe'))
+        .where((call) => call[2].startsWith('@mosix_probe'))
         .length;
     expect(probes, 4);
     final other = FakeMpvEngine()..missingFilters = engine.missingFilters;
     final second = MediaKitPlaybackDeck(playerId: 'mpv-other', engine: other);
     await _settle();
     expect(
-      other.filterWrites.where((call) => call[2].startsWith('@mornye_probe')),
+      other.filterWrites.where((call) => call[2].startsWith('@mosix_probe')),
       isEmpty,
     );
     await second.dispose();
@@ -262,10 +262,10 @@ void main() {
     await _settle();
     engine.errorEvents.add((
       prefix: 'af',
-      text: 'Disabling filter mornye_dsp because it has failed.',
+      text: 'Disabling filter mosix_dsp because it has failed.',
     ));
     await Future<void>.delayed(Duration.zero);
-    expect(playbackEqualizerError.value, contains('mornye_dsp'));
+    expect(playbackEqualizerError.value, contains('mosix_dsp'));
     final writes = engine.filterWrites.length;
     // Same chain as before: a rate change that leaves every band in place.
     engine.sampleRateEvents.add(48000);

@@ -37,7 +37,7 @@ extension _TrackMetadataMenu on _TrackMetadataScreenState {
         ),
       _MetadataOption(
         icon: Icons.person_outline,
-        label: l10n.mornyeGoToArtist,
+        label: l10n.mosixGoToArtist,
         onTap: () =>
             navigateToArtistCredits(screenContext, artistNames: artistName),
       ),
@@ -150,7 +150,7 @@ extension _TrackMetadataMenu on _TrackMetadataScreenState {
           }
           groups.last.add(
             MosixMenuAction(
-              icon: mornyeIconFor(option.icon),
+              icon: mosixIconFor(option.icon),
               label: option.label,
               destructive: option.destructive,
               onPressed: () =>

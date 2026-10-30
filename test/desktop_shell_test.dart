@@ -14,7 +14,7 @@ import 'package:mosix/providers/system_volume_provider.dart';
 import 'package:mosix/services/shell_navigation_service.dart';
 import 'package:mosix/services/user_profile_store.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/desktop/desktop_commands.dart';
@@ -25,7 +25,7 @@ import 'package:mosix/widgets/desktop/desktop_shortcuts.dart';
 import 'package:mosix/widgets/desktop/desktop_window.dart';
 import 'package:mosix/widgets/expressive_navigation_bar.dart';
 import 'package:mosix/widgets/mini_player.dart';
-import 'package:mosix/widgets/mornye_bottom_bar.dart';
+import 'package:mosix/widgets/mosix_bottom_bar.dart';
 
 class _FakeController implements MusicPlayerController {
   final calls = <String>[];
@@ -71,8 +71,8 @@ const _libraryLinks = [
   DesktopSidebarLink(id: 'albums', icon: Icons.album, label: 'Albums'),
 ];
 
-List<DesktopDestination> _destinations({required bool mornye}) => [
-  for (final tab in desktopDestinationTabs(mornye: mornye, showStore: true))
+List<DesktopDestination> _destinations({required bool mosix}) => [
+  for (final tab in desktopDestinationTabs(mosix: mosix, showStore: true))
     DesktopDestination(
       tab: tab,
       icon: Icons.circle_outlined,
@@ -125,7 +125,7 @@ void main() {
 
   Future<void> pumpShell(
     WidgetTester tester, {
-    required bool mornye,
+    required bool mosix,
     required double width,
     MediaItem? item = _track,
     List<DesktopSidebarLink> libraryLinks = const [],
@@ -140,14 +140,14 @@ void main() {
       ProviderScope(
         overrides: overrides(item: item),
         child: MaterialApp(
-          theme: mornye
+          theme: mosix
               ? MosixTheme.build(Brightness.light)
               : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DesktopShellLayout(
-              destinations: _destinations(mornye: mornye),
+              destinations: _destinations(mosix: mosix),
               selected: ShellTab.home,
               onSelected: selections.add,
               libraryLinks: libraryLinks,
@@ -178,7 +178,7 @@ void main() {
     testWidgets('collapses the rail at 900 and shows the player bar', (
       tester,
     ) async {
-      await pumpShell(tester, mornye: false, width: 900);
+      await pumpShell(tester, mosix: false, width: 900);
 
       expect(find.byType(DesktopNavigationRail), findsOneWidget);
       // Narrow windows keep the rail collapsed even when it was expanded.
@@ -200,7 +200,7 @@ void main() {
     testWidgets('expanded rail at 1400 keeps Settings at the bottom', (
       tester,
     ) async {
-      await pumpShell(tester, mornye: false, width: 1400);
+      await pumpShell(tester, mosix: false, width: 1400);
 
       expect(
         tester.getSize(find.byType(DesktopNavigationRail)).width,
@@ -222,7 +222,7 @@ void main() {
     testWidgets('player bar names its shortcuts and runs the transport', (
       tester,
     ) async {
-      await pumpShell(tester, mornye: false, width: 1400);
+      await pumpShell(tester, mosix: false, width: 1400);
 
       expect(find.byTooltip('Next track (Ctrl+Right)'), findsOneWidget);
       expect(find.byTooltip('Previous track (Ctrl+Left)'), findsOneWidget);
@@ -238,7 +238,7 @@ void main() {
     testWidgets('idle player bar stays in place with disabled controls', (
       tester,
     ) async {
-      await pumpShell(tester, mornye: false, width: 900, item: null);
+      await pumpShell(tester, mosix: false, width: 900, item: null);
 
       expect(find.byType(DesktopPlayerBar), findsOneWidget);
       expect(find.text('Not playing'), findsOneWidget);
@@ -249,7 +249,7 @@ void main() {
     testWidgets('pages start at the top with no shell search bar', (
       tester,
     ) async {
-      await pumpShell(tester, mornye: false, width: 1400);
+      await pumpShell(tester, mosix: false, width: 1400);
 
       // Home and Library bring their own search fields, so the shell adds
       // no second one above them.
@@ -259,7 +259,7 @@ void main() {
     });
 
     testWidgets('expanded rail keeps a gap between indicators', (tester) async {
-      await pumpShell(tester, mornye: false, width: 1400);
+      await pumpShell(tester, mosix: false, width: 1400);
 
       final home = tester.getRect(find.text('home'));
       final library = tester.getRect(find.text('library'));
@@ -269,7 +269,7 @@ void main() {
 
     testWidgets('rail starts collapsed with no menu button', (tester) async {
       desktopSidebarCollapsed.value = true;
-      await pumpShell(tester, mornye: false, width: 1400);
+      await pumpShell(tester, mosix: false, width: 1400);
       double railWidth() =>
           tester.getSize(find.byType(DesktopNavigationRail)).width;
       expect(railWidth(), closeTo(desktopCollapsedRailWidth, 0.5));
@@ -295,7 +295,7 @@ void main() {
     testWidgets('expanded rail pills hug their labels and take the clicks', (
       tester,
     ) async {
-      await pumpShell(tester, mornye: false, width: 1400);
+      await pumpShell(tester, mosix: false, width: 1400);
 
       final library = tester.getRect(find.text('library'));
       final settings = tester.getRect(find.text('settings'));
@@ -315,7 +315,7 @@ void main() {
   group('Mosix shell', () {
     for (final width in [900.0, 1400.0]) {
       testWidgets('shows the sidebar and player bar at $width', (tester) async {
-        await pumpShell(tester, mornye: true, width: width);
+        await pumpShell(tester, mosix: true, width: width);
 
         expect(find.byType(DesktopSidebar), findsOneWidget);
         expect(
@@ -335,13 +335,13 @@ void main() {
     testWidgets('player capsule floats centered over the content pane', (
       tester,
     ) async {
-      await pumpShell(tester, mornye: true, width: 1235);
+      await pumpShell(tester, mosix: true, width: 1235);
 
       final player = tester.getRect(find.byType(DesktopPlayerBar));
       final pane = tester.getRect(
         find.byKey(const ValueKey('desktop-content')),
       );
-      expect(player.height, DesktopPlayerBar.mornyeHeight);
+      expect(player.height, DesktopPlayerBar.mosixHeight);
       expect(player.bottom, 800 - DesktopPlayerBar.floatingMargin);
       expect(player.center.dx, closeTo(pane.center.dx, 0.5));
       expect(
@@ -357,7 +357,7 @@ void main() {
     });
 
     testWidgets('player capsule keeps volume in a popover', (tester) async {
-      await pumpShell(tester, mornye: true, width: 1400);
+      await pumpShell(tester, mosix: true, width: 1400);
 
       expect(find.byType(Slider), findsOneWidget, reason: 'seek bar only');
       await tester.tap(find.byKey(const ValueKey('desktop-player-volume')));
@@ -372,7 +372,7 @@ void main() {
     testWidgets('idle capsule shows the glyph and dims its controls', (
       tester,
     ) async {
-      await pumpShell(tester, mornye: true, width: 1400, item: null);
+      await pumpShell(tester, mosix: true, width: 1400, item: null);
 
       expect(find.bySemanticsLabel('Not playing'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('desktop-player-shuffle')));
@@ -383,7 +383,7 @@ void main() {
     testWidgets('sidebar rows select destinations and name shortcuts', (
       tester,
     ) async {
-      await pumpShell(tester, mornye: true, width: 1400);
+      await pumpShell(tester, mosix: true, width: 1400);
 
       expect(find.byTooltip('library (Ctrl+2)'), findsOneWidget);
       expect(find.byTooltip('settings (Ctrl+5)'), findsOneWidget);
@@ -403,7 +403,7 @@ void main() {
       final opened = <String>[];
       await pumpShell(
         tester,
-        mornye: true,
+        mosix: true,
         width: 1400,
         libraryLinks: _libraryLinks,
         onOpenLibraryLink: opened.add,
@@ -428,7 +428,7 @@ void main() {
       var profileOpened = 0;
       await pumpShell(
         tester,
-        mornye: true,
+        mosix: true,
         width: 1400,
         onOpenProfile: () => profileOpened++,
       );
@@ -442,7 +442,7 @@ void main() {
     testWidgets('sidebar stays in narrow windows and ignores the shortcut', (
       tester,
     ) async {
-      await pumpShell(tester, mornye: true, width: 820);
+      await pumpShell(tester, mosix: true, width: 820);
       desktopSidebarCollapsed.value = true;
       await tester.pumpAndSettle();
 

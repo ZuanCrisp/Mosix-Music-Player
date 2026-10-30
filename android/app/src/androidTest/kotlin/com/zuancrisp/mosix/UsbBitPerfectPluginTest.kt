@@ -3,7 +3,7 @@ package com.zuancrisp.mosix
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.ParcelFileDescriptor
-import com.mornye.backend.UsbDirectOutput
+import com.mosix.backend.UsbDirectOutput
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

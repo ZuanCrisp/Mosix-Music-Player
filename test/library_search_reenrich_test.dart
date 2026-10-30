@@ -13,7 +13,7 @@ import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/services/library_search.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/library_search_results.dart';
 import 'package:mosix/widgets/selection_bottom_bar.dart';
 
@@ -28,10 +28,10 @@ class _Library extends LocalLibraryNotifier {
 }
 
 void main() {
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final hosted in [false, true]) {
       testWidgets(
-        'search can re-enrich another song without leaving search ($mornye/$hosted)',
+        'search can re-enrich another song without leaving search ($mosix/$hosted)',
         (tester) async {
           SharedPreferences.setMockInitialValues({});
           tester.view.physicalSize = const Size(800, 1600);
@@ -95,7 +95,7 @@ void main() {
                 ),
               ],
               child: MaterialApp(
-                theme: mornye
+                theme: mosix
                     ? MosixTheme.build(Brightness.dark)
                     : AppTheme.light(),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -10,7 +10,7 @@ import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/providers/extension_provider.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/settings/extension_detail_page.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/settings_group.dart';
 
 import 'support/fixed_settings.dart';
@@ -61,9 +61,9 @@ void main() {
         .setMockMethodCallHandler(channel, null);
   });
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'account settings work at narrow width and large text ($mornye)',
+      'account settings work at narrow width and large text ($mosix)',
       (tester) async {
         tester.view.physicalSize = const Size(320, 800);
         tester.view.devicePixelRatio = 1;
@@ -109,7 +109,7 @@ void main() {
               extensionProvider.overrideWith(_Extensions.new),
             ],
             child: MaterialApp(
-              theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+              theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               builder: (context, child) => MediaQuery(
@@ -151,7 +151,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 500));
         expect(find.text('Account login'), findsOneWidget);
         expect(
-          find.byType(mornye ? CupertinoTextField : TextFormField),
+          find.byType(mosix ? CupertinoTextField : TextFormField),
           findsOneWidget,
         );
         expect(

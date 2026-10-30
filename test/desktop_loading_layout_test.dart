@@ -11,7 +11,7 @@ import 'package:mosix/services/backend/native_backend_transport.dart';
 import 'package:mosix/services/backend/rust_ffi_backend.dart';
 import 'package:mosix/services/platform_bridge.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/animation_utils.dart';
@@ -58,7 +58,7 @@ void main() {
 
   Future<void> mount(
     WidgetTester tester, {
-    required bool mornye,
+    required bool mosix,
     required double width,
     required Widget child,
     double textScale = 1,
@@ -69,7 +69,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: mornye ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
+          theme: mosix ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Align(
@@ -93,17 +93,17 @@ void main() {
     await tester.pump(const Duration(milliseconds: 16));
   }
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final width in [600.0, 1100.0, 1800.0]) {
       for (final album in [false, true]) {
         testWidgets(
-          'desktop loading matches table at $width, Mosix=$mornye, album=$album',
+          'desktop loading matches table at $width, Mosix=$mosix, album=$album',
           (tester) async {
-            final albumLayout = album && mornye;
+            final albumLayout = album && mosix;
             final textScale = width == 600 ? 2.0 : 1.0;
             await mount(
               tester,
-              mornye: mornye,
+              mosix: mosix,
               width: width,
               textScale: textScale,
               child: Builder(
@@ -164,7 +164,7 @@ void main() {
 
             await mount(
               tester,
-              mornye: mornye,
+              mosix: mosix,
               width: width,
               textScale: textScale,
               child: album
@@ -201,12 +201,12 @@ void main() {
         );
       }
 
-      testWidgets('artist loading fits scaled text at $width, Mosix=$mornye', (
+      testWidgets('artist loading fits scaled text at $width, Mosix=$mosix', (
         tester,
       ) async {
         await mount(
           tester,
-          mornye: mornye,
+          mosix: mosix,
           width: width,
           textScale: 2,
           child: const ArtistScreenSkeleton(showCoverHeader: false),
@@ -226,7 +226,7 @@ void main() {
       });
     }
 
-    testWidgets('collection loading keeps one desktop header, Mosix=$mornye', (
+    testWidgets('collection loading keeps one desktop header, Mosix=$mosix', (
       tester,
     ) async {
       final pending = _PendingMetadata();
@@ -241,11 +241,11 @@ void main() {
       await PlatformBridge.clearTrackCache();
       await mount(
         tester,
-        mornye: mornye,
+        mosix: mosix,
         width: 900,
         child: ExtensionAlbumScreen(
           extensionId: 'example-metadata',
-          albumId: 'loading-$mornye',
+          albumId: 'loading-$mosix',
           albumName: 'Album',
         ),
       );

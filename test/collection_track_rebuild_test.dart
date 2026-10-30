@@ -12,7 +12,7 @@ import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/album_screen.dart';
 import 'package:mosix/screens/playlist_screen.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/album_detail_header.dart';
 import 'package:mosix/widgets/track_list_tile.dart';
 import 'package:mosix/widgets/track_detail_actions.dart';
@@ -66,11 +66,11 @@ class _Recent extends RecentAccessNotifier {
   }) {}
 }
 
-Widget _app(ProviderContainer container, Widget child, {bool mornye = false}) =>
+Widget _app(ProviderContainer container, Widget child, {bool mosix = false}) =>
     UncontrolledProviderScope(
       container: container,
       child: MaterialApp(
-        theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
+        theme: mosix ? MosixTheme.build(Brightness.light) : AppTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(body: child),
@@ -149,9 +149,9 @@ void main() {
     },
   );
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'Love All action keeps its add/remove feedback in Mosix=$mornye',
+      'Love All action keeps its add/remove feedback in Mosix=$mosix',
       (tester) async {
         final collections = _Collections();
         final container = ProviderContainer(
@@ -169,7 +169,7 @@ void main() {
                 child: const Text('Apply'),
               ),
             ),
-            mornye: mornye,
+            mosix: mosix,
           ),
         );
         await tester.tap(find.text('Apply'));
@@ -193,7 +193,7 @@ void main() {
     );
 
     for (final album in [false, true]) {
-      testWidgets('Love All isolates the $album page in Mosix=$mornye', (
+      testWidgets('Love All isolates the $album page in Mosix=$mosix', (
         tester,
       ) async {
         tester.view.physicalSize = const Size(430, 1000);
@@ -230,7 +230,7 @@ void main() {
                     playlistName: 'Example playlist',
                     tracks: [_track],
                   ),
-            mornye: mornye,
+            mosix: mosix,
           ),
         );
         await tester.pumpAndSettle();

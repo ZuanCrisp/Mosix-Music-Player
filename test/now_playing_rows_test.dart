@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/player_artwork_theme.dart';
 import 'package:mosix/widgets/album_track_tile.dart';
 import 'package:mosix/widgets/app_content_card.dart';
@@ -32,7 +32,7 @@ class _CachedPalette extends PlayerArtworkPalette {
 
 Widget _app(
   Widget child, {
-  bool mornye = false,
+  bool mosix = false,
   String? currentId,
   String? artUri,
   bool playing = true,
@@ -54,7 +54,7 @@ Widget _app(
     playbackLoadingProvider.overrideWith((ref) => false),
   ],
   child: MaterialApp(
-    theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
+    theme: mosix ? MosixTheme.build(Brightness.light) : AppTheme.light(),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     builder: (context, child) => MediaQuery(
@@ -294,7 +294,7 @@ void main() {
 
     testWidgets('Mosix keeps the plain row', (tester) async {
       await tester.pumpWidget(
-        _app(_table(), mornye: true, currentId: 'media-0'),
+        _app(_table(), mosix: true, currentId: 'media-0'),
       );
       await tester.pump();
 
@@ -471,7 +471,7 @@ void main() {
     });
 
     testWidgets('Mosix ignores the current track', (tester) async {
-      await tester.pumpWidget(_app(card(current: true), mornye: true));
+      await tester.pumpWidget(_app(card(current: true), mosix: true));
       await tester.pump();
 
       expect(find.byType(NowPlayingIndicator), findsNothing);
@@ -483,7 +483,7 @@ void main() {
     });
 
     testWidgets('Mosix keeps its selection tint', (tester) async {
-      await tester.pumpWidget(_app(card(selected: true), mornye: true));
+      await tester.pumpWidget(_app(card(selected: true), mosix: true));
       await tester.pump();
 
       final scheme = _scheme(tester, find.text('Song'));

@@ -16,8 +16,8 @@ import 'package:mosix/screens/downloaded_album_screen.dart';
 import 'package:mosix/screens/local_album_screen.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/services/motion_artwork_store.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_player_artwork.dart';
+import 'package:mosix/theme/mosix_theme.dart';
+import 'package:mosix/widgets/mosix_player_artwork.dart';
 import 'package:mosix/widgets/motion_header_banner.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 

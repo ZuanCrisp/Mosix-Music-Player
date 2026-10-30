@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 import 'package:mosix/widgets/app_checkbox.dart';
 import 'package:mosix/widgets/app_text_field.dart';
@@ -396,7 +396,7 @@ class _ReEnrichFieldSheetState extends State<_ReEnrichFieldSheet> {
         onPressed: select,
         child: Row(
           children: [
-            Icon(mornyeIconFor(icon), color: scheme.primary, size: 24),
+            Icon(mosixIconFor(icon), color: scheme.primary, size: 24),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -466,7 +466,7 @@ class _ReEnrichFieldSheetState extends State<_ReEnrichFieldSheet> {
             ),
             if (icon != null)
               Icon(
-                mornyeIconFor(icon),
+                mosixIconFor(icon),
                 color: scheme.onSurfaceVariant,
                 size: 20,
               ),

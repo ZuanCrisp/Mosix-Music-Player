@@ -8,7 +8,7 @@ import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/network_storage_screen.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 
 class _Storage extends NetworkStorageService {
@@ -60,10 +60,10 @@ class _Library extends LocalLibraryNotifier {
 }
 
 void main() {
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final protocol in [NetworkProtocol.smb, NetworkProtocol.webdav]) {
       testWidgets(
-        'adds selected folder and starts Library scan ($mornye, $protocol)',
+        'adds selected folder and starts Library scan ($mosix, $protocol)',
         (tester) async {
           final events = <String>[];
           final connection = NetworkConnection(
@@ -81,7 +81,7 @@ void main() {
                 settingsProvider.overrideWith(_Settings.new),
               ],
               child: MaterialApp(
-                theme: mornye
+                theme: mosix
                     ? MosixTheme.build(Brightness.dark)
                     : ThemeData(),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,

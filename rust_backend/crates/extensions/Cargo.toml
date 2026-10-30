@@ -1,5 +1,5 @@
 [package]
-name = "mornye-extensions"
+name = "mosix-extensions"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -7,9 +7,9 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
-mornye-core.workspace = true
-mornye-network.workspace = true
-mornye-providers.workspace = true
+mosix-core.workspace = true
+mosix-network.workspace = true
+mosix-providers.workspace = true
 rquickjs.workspace = true
 serde.workspace = true
 serde_json.workspace = true

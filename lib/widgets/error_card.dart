@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_content_card.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_shape.dart';
@@ -48,7 +48,7 @@ class ErrorCard extends StatelessWidget {
     return AppContentCard(
       elevation: 0,
       color: background,
-      mornyeSurface: false,
+      mosixSurface: false,
       shape: RoundedRectangleBorder(borderRadius: tokens.borderRadiusCard),
       child: Padding(
         padding: EdgeInsets.all(tokens.gapLg),

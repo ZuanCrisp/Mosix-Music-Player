@@ -68,7 +68,7 @@ class FakeMpvEngine implements MpvEngine {
       if (missingFilters.any((filter) => value.contains('lavfi-$filter'))) {
         return -9;
       }
-      if (rejectFilters && value.startsWith('@mornye_format')) return -7;
+      if (rejectFilters && value.startsWith('@mosix_format')) return -7;
     }
     properties[name] = value;
     return 0;

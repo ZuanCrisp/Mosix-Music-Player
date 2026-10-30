@@ -13,7 +13,7 @@ import 'package:mosix/providers/equalizer_provider.dart';
 import 'package:mosix/services/playback_equalizer.dart';
 import 'package:mosix/theme/app_tokens.dart';
 import 'package:mosix/theme/material_expressive.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
@@ -27,8 +27,8 @@ import 'package:mosix/widgets/app_text_field.dart';
 import 'package:mosix/widgets/beta_badge.dart';
 import 'package:mosix/widgets/expressive_button.dart';
 import 'package:mosix/widgets/expressive_icon_button.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/mornye_level_slider.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
+import 'package:mosix/widgets/mosix_level_slider.dart';
 import 'package:mosix/widgets/settings_group.dart';
 import 'package:mosix/widgets/slider_value_header.dart';
 
@@ -99,7 +99,7 @@ class _EqualizerScreenState extends ConsumerState<EqualizerScreen> {
               mimeType: 'application/json',
             ),
           ],
-          fileNameOverrides: ['mornye-equalizer.json'],
+          fileNameOverrides: ['mosix-equalizer.json'],
           sharePositionOrigin: box == null
               ? null
               : box.localToGlobal(Offset.zero) & box.size,
@@ -119,7 +119,7 @@ class _EqualizerScreenState extends ConsumerState<EqualizerScreen> {
       builder: (context, ref, _) {
         final state = ref.watch(equalizerProvider);
         final selected = _matchingPreset(state);
-        final mornye = context.isMosix;
+        final mosix = context.isMosix;
         return SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -132,18 +132,18 @@ class _EqualizerScreenState extends ConsumerState<EqualizerScreen> {
                   title: Text(preset.name),
                   selected: preset == selected,
                   // iOS lists mark the choice with a trailing checkmark.
-                  leading: mornye
+                  leading: mosix
                       ? null
                       : preset == selected
                       ? const AppIcon(Icons.check)
                       : const AppIcon(Icons.graphic_eq),
                   trailing:
-                      (mornye && preset == selected) ||
+                      (mosix && preset == selected) ||
                           state.presets.contains(preset)
                       ? Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (mornye && preset == selected)
+                            if (mosix && preset == selected)
                               AppIcon(
                                 Icons.check,
                                 color: Theme.of(context).colorScheme.primary,
@@ -209,7 +209,7 @@ class _EqualizerScreenState extends ConsumerState<EqualizerScreen> {
     final settings = state.settings;
     final notifier = ref.read(equalizerProvider.notifier);
     final l10n = context.l10n;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final selectedPreset = _matchingPreset(state);
     final presetName = selectedPreset?.name ?? l10n.equalizerCustom;
     void update(EqualizerSettings next) => notifier.update(next);
@@ -235,7 +235,7 @@ class _EqualizerScreenState extends ConsumerState<EqualizerScreen> {
       body: CustomScrollView(
         slivers: [
           AppSliverHeader.page(title: l10n.equalizerTitle),
-          if (mornye) ...[
+          if (mosix) ...[
             // iOS order: the master switch, its footnote, then the response.
             section(
               SettingsGroup(
@@ -461,7 +461,7 @@ class _EqualizerScreenState extends ConsumerState<EqualizerScreen> {
               ],
             ),
           ),
-          if (mornye) ...[
+          if (mosix) ...[
             // iOS keeps a destructive command in its own group at the end.
             const SliverToBoxAdapter(child: SizedBox(height: 28)),
             section(

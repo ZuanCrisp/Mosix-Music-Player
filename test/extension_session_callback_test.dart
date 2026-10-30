@@ -14,7 +14,7 @@ void main() {
 
   test('extracts the expected state from a nested challenge callback', () {
     final callback = Uri(
-      scheme: 'mornye',
+      scheme: 'mosix',
       host: 'session-grant',
       queryParameters: const {'cb_version': 'v2grant', 'state': 'nonce_123'},
     );

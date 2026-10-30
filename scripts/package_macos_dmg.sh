@@ -42,7 +42,7 @@ case "$OUTPUT" in
   *) echo "Error: the output must end in .dmg." >&2; exit 1 ;;
 esac
 
-WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mornye-dmg.XXXXXX")"
+WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mosix-dmg.XXXXXX")"
 MOUNT_POINT="$WORK_DIR/mount"
 MOUNTED=0
 cleanup() {
@@ -120,7 +120,7 @@ test -L "$MOUNT_POINT/Applications"
 test "$(readlink "$MOUNT_POINT/Applications")" = "/Applications"
 codesign --verify --deep --strict "$MOUNTED_APP"
 for binary in "$MOUNTED_APP/Contents/MacOS/$EXECUTABLE" \
-  "$MOUNTED_APP/Contents/Frameworks/libmornye_desktop.dylib"; do
+  "$MOUNTED_APP/Contents/Frameworks/libmosix_desktop.dylib"; do
   [[ -f "$binary" ]] || continue
   # One architecture per call: some lipo builds reject several at once.
   for arch in arm64 x86_64; do

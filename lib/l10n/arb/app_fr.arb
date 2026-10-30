@@ -1065,7 +1065,7 @@
   "@snackbarFileNotFound": {
     "description": "Snackbar - file doesn't exist"
   },
-  "snackbarSelectExtFile": "Veuillez sélectionner un fichier .mornye-ext",
+  "snackbarSelectExtFile": "Veuillez sélectionner un fichier .mosix-ext",
   "@snackbarSelectExtFile": {
     "description": "Snackbar - wrong file type selected"
   },
@@ -1982,7 +1982,7 @@
   "@extensionsNoExtensions": {
     "description": "Empty state - no extensions"
   },
-  "extensionsNoExtensionsSubtitle": "Installez les fichiers .mornye-ext pour ajouter de nouveaux fournisseurs",
+  "extensionsNoExtensionsSubtitle": "Installez les fichiers .mosix-ext pour ajouter de nouveaux fournisseurs",
   "@extensionsNoExtensionsSubtitle": {
     "description": "Empty state subtitle"
   },
@@ -6742,8 +6742,8 @@
   "@metadataCopyField": {
     "description": "Metadata menu action that copies the selected key and value"
   },
-  "mornyeSearch": "Rechercher",
-  "mornyeContinuePlaying": "Continuer à lire",
+  "mosixSearch": "Rechercher",
+  "mosixContinuePlaying": "Continuer à lire",
   "metadataCopyAll": "Copier toutes les métadonnées",
   "@metadataCopyAll": {
     "description": "Metadata menu action that copies every visible key and value"
@@ -6756,13 +6756,13 @@
   "@optionsEmbeddedCoverSizeDescription": {
     "description": "Description shown in the embedded cover size picker"
   },
-  "mornyeFavorite": "Favoris",
-  "mornyeGoToArtist": "Aller à la page de l'artiste",
-  "@mornyeFavorite": {
+  "mosixFavorite": "Favoris",
+  "mosixGoToArtist": "Aller à la page de l'artiste",
+  "@mosixFavorite": {
     "description": "Compact context menu action that adds a track to Loved"
   },
-  "mornyeFavorited": "Ajouté aux favoris",
-  "@mornyeFavorited": {
+  "mosixFavorited": "Ajouté aux favoris",
+  "@mosixFavorited": {
     "description": "Selected state of the compact favorite action"
   },
   "autoMixDescription": "Mélangez des morceaux grâce à la synchronisation des rythmes et à l'ajustement du tempo tout en conservant la hauteur tonale. Utilise un fondu enchaîné lorsque les rythmes ne peuvent pas être synchronisés.",

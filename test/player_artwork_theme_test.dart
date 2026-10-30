@@ -13,7 +13,7 @@ import 'package:mosix/providers/runtime_profile_provider.dart';
 import 'package:mosix/providers/system_volume_provider.dart';
 import 'package:mosix/screens/now_playing_screen.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/player_artwork_theme.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
 import 'package:mosix/widgets/desktop/desktop_downloads_button.dart';
@@ -210,7 +210,7 @@ void main() {
     );
     final cover = _seeded(Colors.teal);
 
-    Widget app(Widget home, {required bool mornye}) => ProviderScope(
+    Widget app(Widget home, {required bool mosix}) => ProviderScope(
       overrides: [
         currentMediaItemProvider.overrideWithBuild(
           (ref, notifier) => Stream.value(track),
@@ -219,7 +219,7 @@ void main() {
           (ref) => Stream.value(PlaybackState()),
         ),
         musicPlayerControllerProvider.overrideWithValue(_Controller()),
-        mornyeLiquidGlassProvider.overrideWithValue(false),
+        mosixLiquidGlassProvider.overrideWithValue(false),
         backdropBlurEnabledProvider.overrideWithValue(false),
         systemVolumeProvider.overrideWith((ref) => Stream.value(0.5)),
         systemVolumeWriterProvider.overrideWithValue((value) async {}),
@@ -237,7 +237,7 @@ void main() {
         playQueueProvider.overrideWith((ref) => Stream.value(const [])),
       ],
       child: MaterialApp(
-        theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
+        theme: mosix ? MosixTheme.build(Brightness.light) : AppTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: home,
@@ -251,7 +251,7 @@ void main() {
       await tester.pumpWidget(
         app(
           const Scaffold(bottomNavigationBar: DesktopPlayerBar()),
-          mornye: false,
+          mosix: false,
         ),
       );
       await tester.pumpAndSettle();
@@ -284,7 +284,7 @@ void main() {
     ) async {
       palette.cached[_coverA] = cover;
       await tester.pumpWidget(
-        app(const Scaffold(bottomNavigationBar: MiniPlayer()), mornye: false),
+        app(const Scaffold(bottomNavigationBar: MiniPlayer()), mosix: false),
       );
       await tester.pumpAndSettle();
       expect(Theme.of(tester.element(find.text('Song'))).colorScheme, cover);
@@ -310,7 +310,7 @@ void main() {
             ),
       );
       palette.cached[_coverA] = cover;
-      await tester.pumpWidget(app(const NowPlayingScreen(), mornye: false));
+      await tester.pumpWidget(app(const NowPlayingScreen(), mosix: false));
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
 
@@ -332,7 +332,7 @@ void main() {
     ]) {
       testWidgets('the Mosix $name keeps its own theme', (tester) async {
         palette.cached[_coverA] = cover;
-        await tester.pumpWidget(app(home, mornye: true));
+        await tester.pumpWidget(app(home, mosix: true));
         await tester.pumpAndSettle();
         expect(find.byType(PlayerArtworkTheme), findsNothing);
         expect(palette.requests, isEmpty);

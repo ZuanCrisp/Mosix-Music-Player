@@ -9,7 +9,7 @@ import 'package:mosix/models/theme_settings.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/widgets/automix_settings.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/app_slider.dart';
 
@@ -64,9 +64,9 @@ void main() {
     },
   );
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'effect picker follows app theme and saves selection ($mornye)',
+      'effect picker follows app theme and saves selection ($mosix)',
       (tester) async {
         SharedPreferences.setMockInitialValues({});
         tester.view.physicalSize = const Size(350, 600);
@@ -84,7 +84,7 @@ void main() {
           UncontrolledProviderScope(
             container: container,
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(
                       Brightness.dark,
                       accent: MosixAccent.blue,
@@ -106,7 +106,7 @@ void main() {
         expect(find.byType(AppBottomSheet), findsOneWidget);
         expect(find.byType(AppSheetOption), findsNWidgets(6));
         final context = tester.element(find.byType(AppBottomSheet));
-        expect(context.isMosix, mornye);
+        expect(context.isMosix, mosix);
         final selected = tester
             .widgetList<AppSheetOption>(find.byType(AppSheetOption))
             .singleWhere((option) => option.trailing != null);

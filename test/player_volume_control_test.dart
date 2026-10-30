@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/services/playback_deck.dart';
 import 'package:mosix/services/system_volume_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_slider.dart';
 import 'package:mosix/widgets/player_volume_control.dart';

@@ -6,7 +6,7 @@ import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/models/app_crash_report.dart';
 import 'package:mosix/providers/app_crash_provider.dart';
 import 'package:mosix/services/app_crash_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/logger.dart';
 import 'package:mosix/widgets/app_content_card.dart';
 import 'package:mosix/widgets/app_crash_banner.dart';
@@ -287,14 +287,14 @@ void main() {
     },
   );
 
-  for (final mornye in [false, true]) {
-    testWidgets('Home crash card copies full report and dismisses ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('Home crash card copies full report and dismisses ($mosix)', (
       tester,
     ) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
             locale: const Locale('id'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

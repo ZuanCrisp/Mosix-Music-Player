@@ -4,7 +4,7 @@ use crate::{
     RuntimeLimits,
     backend::{LyricsRequest, MetadataOptions},
 };
-use mornye_network::{NetworkOptions, NetworkService};
+use mosix_network::{NetworkOptions, NetworkService};
 use std::io::{Read, Write};
 use std::net::TcpListener;
 use std::sync::atomic::{AtomicBool, Ordering};

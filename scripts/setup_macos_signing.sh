@@ -24,7 +24,7 @@ CERT_NAME="Mosix Local Signing"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 XCCONFIG="$PROJECT_DIR/macos/Runner/Configs/LocalSigning.xcconfig"
-EXPORT_DIR="${MOSIX_SIGNING_EXPORT_DIR:-$HOME/.mornye-signing}"
+EXPORT_DIR="${MOSIX_SIGNING_EXPORT_DIR:-$HOME/.mosix-signing}"
 LOGIN_KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
 
 identity_hash() {
@@ -72,10 +72,10 @@ create_certificate() {
 }
 
 import_for_ci() {
-  local keychain="$RUNNER_TEMP/mornye-signing.keychain-db"
+  local keychain="$RUNNER_TEMP/mosix-signing.keychain-db"
   local keychain_password p12
   keychain_password="$(openssl rand -hex 24)"
-  p12="$RUNNER_TEMP/mornye-signing.p12"
+  p12="$RUNNER_TEMP/mosix-signing.p12"
   printf '%s' "$MACOS_SIGNING_P12_BASE64" | base64 --decode > "$p12"
 
   security create-keychain -p "$keychain_password" "$keychain"

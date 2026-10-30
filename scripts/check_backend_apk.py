@@ -119,9 +119,9 @@ def check_backend_markers(
             if marker is not None:
                 raise AuditError(f"Rust APK DEX {info.filename} contains {marker.decode()}")
     elif any(
-        name.rsplit("/", 1)[-1] == "libmornye_mobile.so" for name in names
+        name.rsplit("/", 1)[-1] == "libmosix_mobile.so" for name in names
     ):
-        raise AuditError("Go APK contains forbidden libmornye_mobile.so")
+        raise AuditError("Go APK contains forbidden libmosix_mobile.so")
 
 
 def audit(path: Path, backend: str, abis: Sequence[str], discord_sdk: bool = False) -> str:
@@ -141,7 +141,7 @@ def audit(path: Path, backend: str, abis: Sequence[str], discord_sdk: bool = Fal
             check_abi_directories(names, abis)
             check_backend_markers(zf, infos, backend)
             backend_library = (
-                "libmornye_mobile.so" if backend == "rust" else "libgojni.so"
+                "libmosix_mobile.so" if backend == "rust" else "libgojni.so"
             )
             libraries = CORE_LIBRARIES + (backend_library,)
             if backend == "rust":

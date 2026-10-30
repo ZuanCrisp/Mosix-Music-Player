@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mosix/theme/app_motion.dart';
 import 'package:mosix/theme/app_tokens.dart';
 import 'package:mosix/theme/material_expressive.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/desktop/track_table.dart';
@@ -1149,13 +1149,13 @@ class HomeSearchSkeleton extends StatelessWidget {
     int itemCount, {
     required bool round,
   }) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final colorScheme = Theme.of(context).colorScheme;
     final inset = wideListInset(context);
     final rows = List.generate(itemCount, (index) {
       return Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: mornye ? 12 : 16,
+          horizontal: mosix ? 12 : 16,
           vertical: context.tokens.trackRowPaddingV,
         ),
         child: Row(
@@ -1180,7 +1180,7 @@ class HomeSearchSkeleton extends StatelessWidget {
                 ],
               ),
             ),
-            if (!mornye)
+            if (!mosix)
               const SkeletonBox(width: 10, height: 16, borderRadius: 4),
           ],
         ),
@@ -1188,7 +1188,7 @@ class HomeSearchSkeleton extends StatelessWidget {
     });
     // Material uses the result groups' own container tier; Mosix's glass
     // results keep a faint neutral wash.
-    final groupColor = mornye
+    final groupColor = mosix
         ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
         : colorScheme.surfaceContainer;
     return Column(
@@ -1196,7 +1196,7 @@ class HomeSearchSkeleton extends StatelessWidget {
       children: [
         Padding(
           padding:
-              (mornye
+              (mosix
                       ? const EdgeInsetsDirectional.fromSTEB(20, 16, 12, 10)
                       : const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8))
                   .add(EdgeInsets.symmetric(horizontal: inset)),
@@ -1210,7 +1210,7 @@ class HomeSearchSkeleton extends StatelessWidget {
             ),
           ),
         ),
-        if (mornye)
+        if (mosix)
           Container(
             margin: EdgeInsets.symmetric(horizontal: 16 + inset),
             decoration: BoxDecoration(

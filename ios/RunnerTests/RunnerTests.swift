@@ -162,10 +162,10 @@ class RunnerTests: XCTestCase {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
         defer { try? FileManager.default.removeItem(at: root) }
 
-        let prefix = ".mornye-ffmpeg-\(Bundle.main.bundleIdentifier ?? "mornye")-"
+        let prefix = ".mosix-ffmpeg-\(Bundle.main.bundleIdentifier ?? "mosix")-"
         let ownOrphan = root.appendingPathComponent("\(prefix)\(UUID().uuidString).flac")
         try Data("orphan".utf8).write(to: ownOrphan)
-        let foreignFile = root.appendingPathComponent(".mornye-ffmpeg-foreign-\(UUID().uuidString).flac")
+        let foreignFile = root.appendingPathComponent(".mosix-ffmpeg-foreign-\(UUID().uuidString).flac")
         try Data("foreign".utf8).write(to: foreignFile)
         let malformedFile = root.appendingPathComponent("\(prefix)not-a-uuid.flac")
         try Data("malformed".utf8).write(to: malformedFile)

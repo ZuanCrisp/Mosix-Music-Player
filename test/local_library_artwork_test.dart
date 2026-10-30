@@ -13,15 +13,15 @@ import 'package:mosix/providers/download_history_provider.dart';
 import 'package:mosix/providers/library_browse_provider.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/local_album_screen.dart';
-import 'package:mosix/screens/mornye_library_screen.dart';
+import 'package:mosix/screens/mosix_library_screen.dart';
 import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/album_detail_header.dart';
 import 'package:mosix/widgets/cached_cover_image.dart';
 import 'package:mosix/widgets/local_library_artwork_builder.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
+import 'package:mosix/widgets/mosix_artist_header.dart';
 
 import 'support/fixed_settings.dart';
 
@@ -75,7 +75,7 @@ void main() {
     await directory.delete(recursive: true);
   });
 
-  Widget app(Widget home, {bool mornye = false}) => ProviderScope(
+  Widget app(Widget home, {bool mosix = false}) => ProviderScope(
     overrides: [
       settingsProvider.overrideWith(
         () => FixedSettingsNotifier(
@@ -84,7 +84,7 @@ void main() {
       ),
     ],
     child: MaterialApp(
-      theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
+      theme: mosix ? MosixTheme.build(Brightness.light) : AppTheme.light(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: home,
@@ -199,8 +199,8 @@ void main() {
     },
   );
 
-  for (final mornye in [false, true]) {
-    testWidgets('blank album cover keeps the scanned track cover ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('blank album cover keeps the scanned track cover ($mosix)', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(430, 1200);
@@ -226,14 +226,14 @@ void main() {
                 ),
               ],
             ),
-            mornye: mornye,
+            mosix: mosix,
           ),
         );
         await tester.pumpAndSettle();
       });
       await tester.pumpAndSettle();
       expect(
-        mornye
+        mosix
             ? tester
                   .widget<MosixArtistSurface>(find.byType(MosixArtistSurface))
                   .imageSource
@@ -247,7 +247,7 @@ void main() {
     });
 
     for (final stale in [false, true]) {
-      testWidgets('album header recovers artwork ($mornye, stale: $stale)', (
+      testWidgets('album header recovers artwork ($mosix, stale: $stale)', (
         tester,
       ) async {
         tester.view.physicalSize = const Size(430, 1200);
@@ -274,7 +274,7 @@ void main() {
                   ),
                 ],
               ),
-              mornye: mornye,
+              mosix: mosix,
             ),
           );
           await tester.pumpAndSettle();
@@ -282,7 +282,7 @@ void main() {
         await tester.pumpAndSettle();
         await pumpUntil(
           tester,
-          () => mornye
+          () => mosix
               ? tester
                         .widget<MosixArtistSurface>(
                           find.byType(MosixArtistSurface),

@@ -29,6 +29,7 @@
 			<string>com.zuancrisp.mosix</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>mosix</string>
 				<string>mornye</string>
 				<string>discord-1549854098801692862</string>
 			</array>

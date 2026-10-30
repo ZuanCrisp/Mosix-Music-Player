@@ -1,6 +1,6 @@
 use super::{ExtensionFiles, clean};
 use cap_std::fs::{Metadata, OpenOptions};
-use mornye_core::isrc::{FileStamp, IndexFiles};
+use mosix_core::isrc::{FileStamp, IndexFiles};
 use std::time::UNIX_EPOCH;
 
 impl IndexFiles for ExtensionFiles {
@@ -62,7 +62,7 @@ impl IndexFiles for ExtensionFiles {
             .and_then(|extension| extension.to_str())
             .unwrap_or_default()
             .to_ascii_lowercase();
-        mornye_core::isrc::read_isrc(&mut file, &format, check)
+        mosix_core::isrc::read_isrc(&mut file, &format, check)
     }
 
     fn stat(&self, path: &str) -> Result<Option<FileStamp>, String> {

@@ -337,7 +337,7 @@ extension _SetupScreenSteps on _SetupScreenState {
           if (_selectedDirectory != null)
             AppContentCard(
               color: colorScheme.secondaryContainer,
-              mornyeSurface: false,
+              mosixSurface: false,
               child: ListTile(
                 leading: Icon(
                   Icons.folder,

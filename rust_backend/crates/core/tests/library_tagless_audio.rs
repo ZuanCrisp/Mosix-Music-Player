@@ -1,4 +1,4 @@
-use mornye_core::tags::{read_library_metadata, rewrite_audio_tags};
+use mosix_core::tags::{read_library_metadata, rewrite_audio_tags};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::io::{self, Cursor, Read, Seek, SeekFrom};

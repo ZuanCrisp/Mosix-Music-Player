@@ -12,7 +12,7 @@ import 'package:mosix/screens/local_album_screen.dart';
 import 'package:mosix/screens/track_metadata_screen.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/album_track_tile.dart';
 import 'package:mosix/widgets/app_loading_indicator.dart';
 
@@ -29,8 +29,8 @@ class _Playback extends PlaybackController {
 }
 
 void main() {
-  for (final mornye in [false, true]) {
-    testWidgets('downloaded album order survives empty and reload ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('downloaded album order survives empty and reload ($mosix)', (
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({});
@@ -54,7 +54,7 @@ void main() {
             }),
           ],
           child: MaterialApp(
-            theme: mornye
+            theme: mosix
                 ? MosixTheme.build(Brightness.light)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -105,7 +105,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('album row opens metadata, Play plays ($mornye)', (
+    testWidgets('album row opens metadata, Play plays ($mosix)', (
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({});
@@ -131,7 +131,7 @@ void main() {
           overrides: [playbackProvider.overrideWith(() => playback)],
           child: MaterialApp(
             navigatorKey: navigator,
-            theme: mornye
+            theme: mosix
                 ? MosixTheme.build(Brightness.light)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,

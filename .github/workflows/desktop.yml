@@ -115,7 +115,7 @@ jobs:
       - name: Verify and package macOS app
         run: |
           app="build/macos/Build/Products/Release/Mosix.app"
-          library="$app/Contents/Frameworks/libmornye_desktop.dylib"
+          library="$app/Contents/Frameworks/libmosix_desktop.dylib"
           test -s "$library"
           ffmpeg_dir="$app/Contents/Resources/ffmpeg"
           test -x "$ffmpeg_dir/ffmpeg"
@@ -251,8 +251,8 @@ jobs:
       - name: Verify and package Linux bundle
         run: |
           bundle="build/linux/${{ matrix.flutter_arch }}/release/bundle"
-          test -x "$bundle/mornye"
-          test -s "$bundle/lib/libmornye_desktop.so"
+          test -x "$bundle/mosix"
+          test -s "$bundle/lib/libmosix_desktop.so"
           ffmpeg_dir="$bundle/lib/ffmpeg"
           for tool in ffmpeg ffprobe; do
             test -x "$ffmpeg_dir/$tool"
@@ -320,7 +320,7 @@ jobs:
       # Runs the Windows-only extension sandbox and junction tests.
       - name: Test Rust core and extensions
         working-directory: rust_backend
-        run: cargo test -p mornye-extensions -p mornye-core --target ${{ matrix.rust_target }}
+        run: cargo test -p mosix-extensions -p mosix-core --target ${{ matrix.rust_target }}
 
       - name: Build Rust desktop library
         run: ./scripts/build_rust_backend_windows.ps1 -Target ${{ matrix.rust_target }}
@@ -356,7 +356,7 @@ jobs:
         run: dart scripts/prepare_flutter_sdk.dart
 
       # windows/CMakeLists.txt installs the library built above next to
-      # mornye.exe and the FFmpeg tools staged above into ffmpeg\.
+      # mosix.exe and the FFmpeg tools staged above into ffmpeg\.
       - name: Test desktop duplicate review and updater
         run: flutter test --reporter expanded test/duplicate_review_sheet_test.dart test/desktop_updater_test.dart test/settings_bottom_inset_test.dart test/semantics_geometry_regression_test.dart
 

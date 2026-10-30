@@ -72,7 +72,7 @@ extension _DownloadQueuePaths on DownloadQueueNotifier {
       }
       probe = File(
         '${directory.path}${Platform.pathSeparator}'
-        '.mornye-write-${DateTime.now().microsecondsSinceEpoch}',
+        '.mosix-write-${DateTime.now().microsecondsSinceEpoch}',
       );
       await probe.writeAsBytes(const [0], flush: true);
       return await probe.exists();

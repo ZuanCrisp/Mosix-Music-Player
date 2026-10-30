@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:mosix/services/app_remote_config_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/widgets/app_content_card.dart';
 import 'package:mosix/widgets/app_icon.dart';
@@ -138,7 +138,7 @@ class _MonthlyDonationGoalCard extends StatelessWidget {
 
     return AppContentCard(
       elevation: 0,
-      mornyeSurface: false,
+      mosixSurface: false,
       color: cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
@@ -265,7 +265,7 @@ class _DonateLinksCard extends StatelessWidget {
 
     return AppContentCard(
       elevation: 0,
-      mornyeSurface: false,
+      mosixSurface: false,
       color: cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       clipBehavior: Clip.antiAlias,
@@ -332,7 +332,7 @@ class _RecentSupportersCard extends StatelessWidget {
 
     return AppContentCard(
       elevation: 0,
-      mornyeSurface: false,
+      mosixSurface: false,
       color: _donateCardColor(context),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
@@ -426,7 +426,7 @@ class _DonateNoticeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppContentCard(
       elevation: 0,
-      mornyeSurface: false,
+      mosixSurface: false,
       color: colorScheme.secondaryContainer.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(

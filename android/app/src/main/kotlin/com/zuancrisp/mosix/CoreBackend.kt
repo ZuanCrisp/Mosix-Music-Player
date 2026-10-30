@@ -45,7 +45,7 @@ internal fun parseCoreFFmpegCommands(raw: String): List<CoreFFmpegCommand> {
 
 private object CoreFFmpegStaging {
     private val directories = mutableSetOf<String>()
-    private val prefix = ".mornye-ffmpeg-${BuildConfig.APPLICATION_ID}-"
+    private val prefix = ".mosix-ffmpeg-${BuildConfig.APPLICATION_ID}-"
 
     @Synchronized
     fun create(target: File): File {

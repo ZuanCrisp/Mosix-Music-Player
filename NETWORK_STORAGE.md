@@ -160,7 +160,7 @@ range transfers and cache reuse. It also exercises the platform decoder with
 silent WAV data through the loopback proxy, including preparation, playback
 and seeking.
 
-`cargo test -p mornye-mobile network_tags --lib` from `rust_backend` checks
+`cargo test -p mosix-mobile network_tags --lib` from `rust_backend` checks
 FLAC metadata/cover extraction, seeking past M4A audio to tail tags, and rejection
 of external URLs and large non-range responses. Flutter metadata service tests
 cover shared reads, recoverable failures, and embedded cover caching; the Now

@@ -4,7 +4,7 @@ import 'package:audio_service/audio_service.dart' show MediaItem;
 import 'package:mosix/services/deleted_library_files.dart';
 import 'package:flutter/material.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/services/local_track_batch_actions.dart';
 import 'package:mosix/theme/cover_palette.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,7 +46,7 @@ import 'package:mosix/widgets/library_selection_playback_actions.dart';
 import 'package:mosix/widgets/local_library_artwork_builder.dart';
 import 'package:mosix/widgets/disc_separator_chip.dart';
 import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
+import 'package:mosix/widgets/mosix_artist_header.dart';
 import 'package:mosix/widgets/motion_header_banner.dart';
 
 class LocalAlbumScreen extends ConsumerStatefulWidget {

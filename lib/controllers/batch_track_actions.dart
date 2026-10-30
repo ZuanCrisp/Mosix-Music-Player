@@ -126,7 +126,7 @@ Future<void> showBatchConvertSheet(
     useRootNavigator: true,
     isScrollControlled: true,
     // The sheet draws its own glass.
-    mornyeGlass: false,
+    mosixGlass: false,
     builder: (sheetContext) => BatchConvertSheet(
       formats: formats,
       title: sheetTitle,

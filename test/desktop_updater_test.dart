@@ -125,7 +125,7 @@ void main() {
       expect(
         UpdateHost.detectLinuxPackage(
           environment: {'APPIMAGE': '/home/user/Mosix.AppImage'},
-          resolvedExecutable: '/tmp/.mount_MosixAbc/usr/lib/mornye/mornye',
+          resolvedExecutable: '/tmp/.mount_MosixAbc/usr/lib/mosix/mosix',
         ),
         LinuxPackageKind.appImage,
       );
@@ -135,7 +135,7 @@ void main() {
       expect(
         UpdateHost.detectLinuxPackage(
           environment: const {},
-          resolvedExecutable: '/usr/lib/mornye/mornye',
+          resolvedExecutable: '/usr/lib/mosix/mosix',
         ),
         LinuxPackageKind.deb,
       );
@@ -145,14 +145,14 @@ void main() {
       expect(
         UpdateHost.detectLinuxPackage(
           environment: {'FLATPAK_ID': 'com.zuancrisp.mosix'},
-          resolvedExecutable: '/app/lib/mornye/mornye',
+          resolvedExecutable: '/app/lib/mosix/mosix',
         ),
         LinuxPackageKind.flatpak,
       );
       expect(
         UpdateHost.detectLinuxPackage(
           environment: const {},
-          resolvedExecutable: '/app/lib/mornye/mornye',
+          resolvedExecutable: '/app/lib/mosix/mosix',
           flatpakInfoExists: true,
         ),
         LinuxPackageKind.flatpak,
@@ -163,7 +163,7 @@ void main() {
       expect(
         UpdateHost.detectLinuxPackage(
           environment: {'APPIMAGE': ''},
-          resolvedExecutable: '/home/user/mornye/mornye',
+          resolvedExecutable: '/home/user/mosix/mosix',
         ),
         LinuxPackageKind.bundle,
       );
@@ -307,7 +307,7 @@ void main() {
     const assetName = 'Mosix-$_version-linux-x86_64.AppImage';
 
     setUp(() async {
-      temp = await Directory.systemTemp.createTemp('mornye-updater-test');
+      temp = await Directory.systemTemp.createTemp('mosix-updater-test');
     });
     tearDown(() async {
       if (await temp.exists()) await temp.delete(recursive: true);

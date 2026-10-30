@@ -5,9 +5,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_snack_bar.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 import 'package:mosix/widgets/view_queue_snackbar_action.dart';
 import 'package:mosix/widgets/track_detail_actions.dart';
 import 'package:mosix/services/shell_navigation_service.dart';
@@ -108,15 +108,15 @@ void main() {
     });
   }
 
-  for (final mornye in [true, false]) {
+  for (final mosix in [true, false]) {
     testWidgets(
-      'new messages replace old ones and still dismiss (Mosix: $mornye)',
+      'new messages replace old ones and still dismiss (Mosix: $mosix)',
       (tester) async {
         late BuildContext messageContext;
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+              theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
               builder: (_, child) => AppScaffoldMessenger(child: child!),
               home: Builder(
                 builder: (context) {
@@ -150,14 +150,14 @@ void main() {
       },
     );
 
-    testWidgets('View Queue times out and has a close button ($mornye)', (
+    testWidgets('View Queue times out and has a close button ($mosix)', (
       tester,
     ) async {
       late BuildContext messageContext;
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
             builder: (_, child) => AppScaffoldMessenger(child: child!),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -176,7 +176,7 @@ void main() {
       expect(find.byTooltip('Close'), findsOneWidget);
       expect(
         find.byType(MosixGlassPanel),
-        mornye ? findsOneWidget : findsNothing,
+        mosix ? findsOneWidget : findsNothing,
       );
       await tester.pump(const Duration(seconds: 3));
       await tester.pumpAndSettle();
@@ -190,7 +190,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('queue confirmation keeps its View action ($mornye)', (
+    testWidgets('queue confirmation keeps its View action ($mosix)', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(320, 780);
@@ -209,11 +209,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: mornye ? MosixTheme.build(Brightness.light) : ThemeData(),
+            theme: mosix ? MosixTheme.build(Brightness.light) : ThemeData(),
             builder: (context, child) => MediaQuery(
               data: MediaQuery.of(
                 context,
-              ).copyWith(textScaler: TextScaler.linear(mornye ? 2 : 1)),
+              ).copyWith(textScaler: TextScaler.linear(mosix ? 2 : 1)),
               child: AppScaffoldMessenger(child: child!),
             ),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -241,7 +241,7 @@ void main() {
       );
       expect(
         find.byType(MosixGlassPanel),
-        mornye ? findsOneWidget : findsNothing,
+        mosix ? findsOneWidget : findsNothing,
       );
       expect(tester.takeException(), isNull);
     });

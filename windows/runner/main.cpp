@@ -18,39 +18,36 @@ constexpr wchar_t kSingleInstanceMutex[] = L"Local\\com.zuancrisp.mosix.instance
 // taskbar groups the window with its pinned shortcut.
 constexpr wchar_t kAppUserModelId[] = L"com.zuancrisp.mosix";
 
-constexpr wchar_t kUrlSchemeKey[] = L"Software\\Classes\\mornye";
-constexpr wchar_t kUrlCommandKey[] =
-    L"Software\\Classes\\mornye\\shell\\open\\command";
-
 void SetUserRegistryString(const wchar_t* key, const wchar_t* name,
                            const std::wstring& value) {
   ::RegSetKeyValueW(HKEY_CURRENT_USER, key, name, REG_SZ, value.c_str(),
                     static_cast<DWORD>((value.size() + 1) * sizeof(wchar_t)));
 }
 
-// The installer registers mornye://, but a portable copy has no installer,
-// so the browser could not hand an extension callback back to it. Points
-// the per-user handler at this executable unless it already does.
-void RegisterUrlScheme() {
+// A portable copy has no installer to register the current and legacy
+// extension callback schemes, so point both per-user handlers at this copy.
+void RegisterUrlScheme(const wchar_t* scheme) {
   wchar_t path[MAX_PATH];
   const DWORD length = ::GetModuleFileNameW(nullptr, path, MAX_PATH);
   if (length == 0 || length == MAX_PATH) return;
   const std::wstring executable = L"\"" + std::wstring(path) + L"\"";
   const std::wstring command = executable + L" \"%1\"";
+  const std::wstring root = L"Software\\Classes\\" + std::wstring(scheme);
+  const std::wstring command_key = root + L"\\shell\\open\\command";
+  const std::wstring icon_key = root + L"\\DefaultIcon";
 
   wchar_t current[MAX_PATH + 16];
   DWORD size = sizeof(current);
-  if (::RegGetValueW(HKEY_CURRENT_USER, kUrlCommandKey, nullptr,
+  if (::RegGetValueW(HKEY_CURRENT_USER, command_key.c_str(), nullptr,
                      RRF_RT_REG_SZ, nullptr, current,
                      &size) == ERROR_SUCCESS &&
       ::_wcsicmp(current, command.c_str()) == 0) {
     return;
   }
-  SetUserRegistryString(kUrlSchemeKey, nullptr, L"URL:Mosix Protocol");
-  SetUserRegistryString(kUrlSchemeKey, L"URL Protocol", L"");
-  SetUserRegistryString(L"Software\\Classes\\mornye\\DefaultIcon", nullptr,
-                        executable + L",0");
-  SetUserRegistryString(kUrlCommandKey, nullptr, command);
+  SetUserRegistryString(root.c_str(), nullptr, L"URL:Mosix Protocol");
+  SetUserRegistryString(root.c_str(), L"URL Protocol", L"");
+  SetUserRegistryString(icon_key.c_str(), nullptr, executable + L",0");
+  SetUserRegistryString(command_key.c_str(), nullptr, command);
 }
 
 }  // namespace
@@ -59,7 +56,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
   // Single instance. A second launch (for example a mornye:// callback from
   // the browser: the installer and RegisterUrlScheme register
-  // `"mornye.exe" "%1"` under HKCU\Software\Classes\mornye) hands its URL
+  // `"mosix.exe" "%1"` under HKCU\Software\Classes\mosix) hands its URL
   // to the running window with WM_COPYDATA, raises that window and exits.
   // The installer closes the app before it replaces files, so a
   // /RELAUNCH=1 start finds no instance.
@@ -74,7 +71,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   }
 
   ::SetCurrentProcessExplicitAppUserModelID(kAppUserModelId);
-  RegisterUrlScheme();
+  RegisterUrlScheme(L"mosix");
+  RegisterUrlScheme(L"mornye");
 
   // Attach to console when present (e.g., 'flutter run') or create a
   // new console when running with a debugger.

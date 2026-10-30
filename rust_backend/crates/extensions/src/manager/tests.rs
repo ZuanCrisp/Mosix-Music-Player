@@ -18,7 +18,7 @@ fn manager(directory: &Path) -> ExtensionManager {
 }
 
 fn package(directory: &Path, id: &str, version: &str, source: &str) -> PathBuf {
-    let path = directory.join(format!("{id}-{version}.mornye-ext"));
+    let path = directory.join(format!("{id}-{version}.mosix-ext"));
     let mut writer = zip::ZipWriter::new(File::create(&path).unwrap());
     let manifest = json!({"name":id,"displayName":"Example","version":version,
         "description":"Generic installation fixture","type":["metadata_provider"]});

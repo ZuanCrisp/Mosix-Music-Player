@@ -6,7 +6,7 @@
 //! semantics and cancellation.
 
 use crate::paths::{self, RemoveOnDrop};
-use mornye_mobile::{ExtensionManager, FfmpegCommands};
+use mosix_mobile::{ExtensionManager, FfmpegCommands};
 use serde_json::Value;
 use std::collections::HashSet;
 use std::fs;
@@ -64,7 +64,7 @@ pub(crate) fn with_ffmpeg_commands<T>(
     let running = Arc::new(AtomicBool::new(true));
     let pump_running = Arc::clone(&running);
     let pump = std::thread::Builder::new()
-        .name("mornye-ffmpeg-pump".into())
+        .name("mosix-ffmpeg-pump".into())
         .spawn(move || pump_commands(&commands, &pump_running, ffmpeg.as_deref()));
     if let Err(error) = pump {
         crate::runtime::log("error", &format!("FFmpeg pump could not start: {error}"));
@@ -120,7 +120,7 @@ fn pump_commands(commands: &FfmpegCommands, running: &AtomicBool, ffmpeg: Option
 mod staging {
     use super::*;
 
-    pub(super) const PREFIX: &str = ".mornye-ffmpeg-mornye-desktop-";
+    pub(super) const PREFIX: &str = ".mosix-ffmpeg-mosix-desktop-";
 
     static SWEPT: Mutex<Option<HashSet<PathBuf>>> = Mutex::new(None);
 

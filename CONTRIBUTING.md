@@ -16,7 +16,7 @@ the project.
   artifacts.
 
 Translations are managed through the
-[Mosix Crowdin project](https://crowdin.com/project/mornye).
+[Mosix Crowdin project](@@KEEP_CROWDIN_MOSIX@@).
 The English source strings live in `lib/l10n/arb/app_en.arb`.
 
 ## Toolchain
@@ -203,12 +203,12 @@ Workspace dependencies point only downward:
 
 | Crate | Package | Role | Depends on |
 | --- | --- | --- | --- |
-| `core/` | `mornye-core` | Shared logic without bindings: tags, lyrics parsing and provider config, metadata, filenames, CUE, covers | none |
-| `network/` | `mornye-network` | Shared, cancellable HTTP transport | none |
-| `providers/` | `mornye-providers` | Built-in clients: Deezer, MusicBrainz, platform resolver, lyrics | core, network |
-| `extensions/` | `mornye-extensions` | Extension JavaScript runtime (rquickjs), host functions, manager, repository, and backend operations such as downloads, library scan, and tags | core, network, providers |
-| `mobile/` | `mornye-mobile` | UniFFI API, mostly methods on `ExtensionManager`; built as `cdylib` and `staticlib`; Kotlin package `com.mornye.backend`, Swift module `MosixBackend` | core, network, extensions |
-| `bindgen/` | `mornye-bindgen` | UniFFI bindgen CLI used by `scripts/build_rust_backend.sh` | none |
+| `core/` | `mosix-core` | Shared logic without bindings: tags, lyrics parsing and provider config, metadata, filenames, CUE, covers | none |
+| `network/` | `mosix-network` | Shared, cancellable HTTP transport | none |
+| `providers/` | `mosix-providers` | Built-in clients: Deezer, MusicBrainz, platform resolver, lyrics | core, network |
+| `extensions/` | `mosix-extensions` | Extension JavaScript runtime (rquickjs), host functions, manager, repository, and backend operations such as downloads, library scan, and tags | core, network, providers |
+| `mobile/` | `mosix-mobile` | UniFFI API, mostly methods on `ExtensionManager`; built as `cdylib` and `staticlib`; Kotlin package `com.mosix.backend`, Swift module `MosixBackend` | core, network, extensions |
+| `bindgen/` | `mosix-bindgen` | UniFFI bindgen CLI used by `scripts/build_rust_backend.sh` | none |
 
 ### Native
 

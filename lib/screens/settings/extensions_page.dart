@@ -15,12 +15,12 @@ import 'package:mosix/screens/settings/download_fallback_extensions_page.dart';
 import 'package:mosix/screens/settings/extension_detail_page.dart';
 import 'package:mosix/screens/settings/metadata_provider_priority_page.dart';
 import 'package:mosix/screens/settings/provider_priority_page.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_loading_indicator.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 import 'package:mosix/widgets/settings_group.dart';
 import 'package:mosix/widgets/home_feed_region_setting.dart';
 import 'package:mosix/widgets/app_sliver_header.dart';
@@ -248,7 +248,8 @@ class _ExtensionsPageState extends ConsumerState<ExtensionsPage> {
 
     final hasInvalidFile = selectedFiles.any((file) {
       final lowerName = file.name.toLowerCase();
-      return !lowerName.endsWith('.mornye-ext') &&
+      return !lowerName.endsWith('.mosix-ext') &&
+          !lowerName.endsWith('.mornye-ext') &&
           !lowerName.endsWith('.spotiflac-ext') &&
           !lowerName.endsWith('.sflx');
     });
@@ -273,7 +274,7 @@ class _ExtensionsPageState extends ConsumerState<ExtensionsPage> {
         }
 
         materializedDir ??= await Directory.systemTemp.createTemp(
-          'mornye_extension_import_',
+          'mosix_extension_import_',
         );
         final safeName = p.basename(selectedFile.name);
         final materializedFile = File(

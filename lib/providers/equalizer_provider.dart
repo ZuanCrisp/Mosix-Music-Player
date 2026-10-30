@@ -116,7 +116,7 @@ class EqualizerController extends Notifier<EqualizerState> {
 
   String exportPreset(String name) =>
       const JsonEncoder.withIndent('  ').convert({
-        'format': 'mornye-equalizer',
+        'format': 'mosix-equalizer',
         'version': 1,
         ...EqualizerPreset(name, state.settings).toJson(),
       });
@@ -127,7 +127,7 @@ class EqualizerController extends Notifier<EqualizerState> {
     }
     final decoded = jsonDecode(source);
     if (decoded is! Map ||
-        (decoded['format'] != 'mornye-equalizer' &&
+        (decoded['format'] != 'mosix-equalizer' &&
             decoded['format'] != 'spotiflac-equalizer') ||
         decoded['version'] != 1) {
       throw const FormatException('Unsupported equalizer preset.');

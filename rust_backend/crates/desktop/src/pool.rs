@@ -37,7 +37,7 @@ impl Pool {
         drop(state);
         let shared = Arc::clone(&self.shared);
         let spawned = std::thread::Builder::new()
-            .name("mornye-desktop-call".into())
+            .name("mosix-desktop-call".into())
             .spawn(move || worker(&shared));
         if spawned.is_err() {
             // Thread creation failed (resource limits): an existing worker

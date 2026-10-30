@@ -11,12 +11,12 @@ import 'package:integration_test/integration_test_driver.dart';
 /// animation clocks and frame delivery, invalidating active measurements.
 /// MOSIX_PERFORMANCE_REPORT selects the host JSON output;
 /// screenshots are PNGs beside that report. The aggregate target is
-/// integration_test/mornye_performance_test.dart.
+/// integration_test/mosix_performance_test.dart.
 Future<void> main() => integrationDriver(
   responseDataCallback: (data) async {
     final output = File(
       Platform.environment['MOSIX_PERFORMANCE_REPORT'] ??
-          '/tmp/mornye-performance.json',
+          '/tmp/mosix-performance.json',
     );
     await output.parent.create(recursive: true);
     final screenshots = data?['screenshots'];

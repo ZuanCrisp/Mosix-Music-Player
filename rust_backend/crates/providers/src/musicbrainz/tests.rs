@@ -1,5 +1,5 @@
 use super::*;
-use mornye_core::metadata::musicbrainz::{ArtistCredit, Recording, Release, Tag};
+use mosix_core::metadata::musicbrainz::{ArtistCredit, Recording, Release, Tag};
 use std::sync::atomic::AtomicUsize;
 use std::thread;
 

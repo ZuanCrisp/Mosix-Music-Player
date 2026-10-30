@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:html/dom.dart' as dom;
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/editorial_notes.dart';
 import 'package:mosix/widgets/album_detail_header.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';

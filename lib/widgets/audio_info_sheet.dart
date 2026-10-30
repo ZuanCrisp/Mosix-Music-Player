@@ -14,7 +14,7 @@ import 'package:mosix/services/music_player_service.dart';
 import 'package:mosix/services/platform_bridge.dart';
 import 'package:mosix/services/playback_equalizer.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/int_utils.dart';
 import 'package:mosix/utils/string_utils.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
@@ -245,11 +245,11 @@ class _FactRow extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final tokens = context.tokens;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     // Mosix rows line up with the section header, as in iOS inset lists.
-    final inset = mornye ? 16.0 : tokens.rowPaddingH;
+    final inset = mosix ? 16.0 : tokens.rowPaddingH;
     final valueStyle =
-        (mornye ? theme.textTheme.bodyLarge : theme.textTheme.bodyMedium)
+        (mosix ? theme.textTheme.bodyLarge : theme.textTheme.bodyMedium)
             ?.copyWith(
               color: fact.emphasis ? colors.primary : colors.onSurfaceVariant,
               fontWeight: fact.emphasis ? FontWeight.w600 : null,
@@ -294,8 +294,8 @@ class _FactRow extends StatelessWidget {
             Divider(
               height: 1,
               indent: inset,
-              endIndent: mornye ? 0 : inset,
-              color: mornye
+              endIndent: mosix ? 0 : inset,
+              color: mosix
                   ? MosixTheme.metadataDividerColor(context)
                   : colors.outlineVariant.withValues(alpha: 0.3),
             ),

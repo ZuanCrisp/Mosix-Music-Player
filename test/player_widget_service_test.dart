@@ -282,7 +282,7 @@ void main() {
     player.playbackState.add(
       PlaybackState(
         controls: const PlaybackNotification(
-          mornye: true,
+          mosix: true,
         ).controls(playing: true, item: media),
       ),
     );

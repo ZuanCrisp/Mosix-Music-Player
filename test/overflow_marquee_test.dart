@@ -10,7 +10,7 @@ import 'package:mosix/providers/player_artwork_video_provider.dart';
 import 'package:mosix/providers/player_motion_artwork_provider.dart';
 import 'package:mosix/providers/runtime_profile_provider.dart';
 import 'package:mosix/services/motion_artwork_store.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/audio_quality_badges.dart';
 import 'package:mosix/widgets/mini_player.dart';
 import 'package:mosix/widgets/overflow_marquee.dart';
@@ -331,10 +331,10 @@ void main() {
     );
   }
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final compact in [false, true]) {
       testWidgets(
-        'mini player scrolls title and artist (Mosix: $mornye, compact: $compact)',
+        'mini player scrolls title and artist (Mosix: $mosix, compact: $compact)',
         (tester) async {
           await tester.pumpWidget(
             ProviderScope(
@@ -356,7 +356,7 @@ void main() {
                 backdropBlurEnabledProvider.overrideWithValue(false),
               ],
               child: MaterialApp(
-                theme: mornye
+                theme: mosix
                     ? MosixTheme.build(Brightness.light)
                     : ThemeData(),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,

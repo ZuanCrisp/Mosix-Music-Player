@@ -5,7 +5,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/screens/listening_rewind_screen.dart';
 import 'package:mosix/services/listening_rewind.dart';
 import 'package:mosix/services/listening_statistics.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 import 'support/sqlite_process_database.dart';
 
@@ -263,8 +263,8 @@ void main() {
     );
   });
 
-  for (final mornye in [false, true]) {
-    testWidgets('Rewind story steps through highlights ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('Rewind story steps through highlights ($mosix)', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(1080, 2400);
@@ -278,7 +278,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             // Reduced motion: no auto-advance, so the story waits for taps.
@@ -439,8 +439,8 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  for (final mornye in [false, true]) {
-    testWidgets('yearly slides fit landscape with large text ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('yearly slides fit landscape with large text ($mosix)', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(780, 360);
@@ -466,7 +466,7 @@ void main() {
             listeningRewindProvider.overrideWith((ref, period) async => rewind),
           ],
           child: MaterialApp(
-            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             builder: (context, child) => MediaQuery(

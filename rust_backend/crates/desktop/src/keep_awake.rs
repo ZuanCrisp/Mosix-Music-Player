@@ -175,7 +175,7 @@ mod platform {
         let (stop, stopped) = mpsc::channel::<()>();
         let (started, result) = mpsc::channel::<bool>();
         let handle = std::thread::Builder::new()
-            .name("mornye-keep-awake".into())
+            .name("mosix-keep-awake".into())
             .spawn(move || {
                 // SAFETY: plain Win32 call without pointers.
                 let previous =

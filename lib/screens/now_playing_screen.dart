@@ -17,7 +17,7 @@ import 'package:mosix/screens/downloaded_album_screen.dart';
 import 'package:mosix/screens/local_album_screen.dart';
 import 'package:mosix/screens/equalizer_screen.dart';
 import 'package:mosix/screens/lyrics_share_screen.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/player_artwork_theme.dart';
 import 'package:mosix/utils/clickable_metadata.dart';
 import 'package:mosix/utils/file_access.dart';
@@ -40,16 +40,16 @@ import 'package:mosix/widgets/player_queue_sheet.dart';
 import 'package:mosix/widgets/player_details_sheet.dart';
 import 'package:mosix/widgets/material_player_backdrop.dart';
 import 'package:mosix/widgets/material_player_layout.dart';
-import 'package:mosix/widgets/mornye_player_layout.dart';
+import 'package:mosix/widgets/mosix_player_layout.dart';
 import 'package:mosix/widgets/player_lyrics_controls.dart';
 import 'package:mosix/widgets/player_lyrics_section.dart';
 import 'package:mosix/widgets/playlist_picker_sheet.dart';
 import 'package:mosix/widgets/settings_group.dart';
-import 'package:mosix/widgets/mornye_player_background.dart';
-import 'package:mosix/widgets/mornye_artwork_contrast.dart';
-import 'package:mosix/widgets/mornye_player_actions_sheet.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
-import 'package:mosix/widgets/mornye_player_artwork.dart';
+import 'package:mosix/widgets/mosix_player_background.dart';
+import 'package:mosix/widgets/mosix_artwork_contrast.dart';
+import 'package:mosix/widgets/mosix_player_actions_sheet.dart';
+import 'package:mosix/widgets/mosix_context_menu.dart';
+import 'package:mosix/widgets/mosix_player_artwork.dart';
 import 'package:mosix/providers/player_motion_artwork_provider.dart';
 
 export 'package:mosix/routes/now_playing_route.dart';
@@ -255,8 +255,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     MediaItem? mediaItem, {
     required bool fullScreenCover,
   }) {
-    final mornye = context.isMosix;
-    final colorScheme = mornye
+    final mosix = context.isMosix;
+    final colorScheme = mosix
         ? MosixTheme.fromContext(
             context,
             brightness: Brightness.dark,
@@ -278,7 +278,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
 
     final source = mediaItem.extras?['source']?.toString() ?? '';
     final motionState =
-        mornye &&
+        mosix &&
             ref.watch(settingsProvider.select((s) => s.motionArtworkEnabled)) &&
             !MediaQuery.disableAnimationsOf(context)
         ? ref.watch(
@@ -301,7 +301,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
         motionArtwork == null || (motionRatio != null && motionRatio >= 0.95);
     // Motion artwork is always full-bleed in Mosix; still covers follow the
     // cover style setting through the same layout, as a square video would.
-    final fullBleed = mornye && (motionArtwork != null || fullScreenCover);
+    final fullBleed = mosix && (motionArtwork != null || fullScreenCover);
     final screen = MediaQuery.sizeOf(context);
     // A still cover is cropped at the sides to reach down to the title, as
     // in the Material full-screen style; landscape keeps the square card.
@@ -313,7 +313,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
         : motionRatio;
     // Two-pane landscape keeps its side-by-side cover.
     final materialFullScreen =
-        !mornye &&
+        !mosix &&
         fullScreenCover &&
         MediaQuery.orientationOf(context) == Orientation.portrait;
     final overCover = materialFullScreen && _currentPage != 1;
@@ -350,7 +350,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
       _artworkRoute?.readArtwork = null;
       _artworkRoute = null;
     }
-    if (mornye && route is NowPlayingRoute) {
+    if (mosix && route is NowPlayingRoute) {
       _artworkRoute = route;
       route.readArtwork = () {
         final key = _landscape
@@ -382,7 +382,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
         );
       };
     }
-    final contentOpacity = mornye
+    final contentOpacity = mosix
         ? kAlwaysCompleteAnimation
         : routeAnimation.drive(
             CurveTween(curve: const Interval(0.4, 1.0, curve: Curves.easeOut)),
@@ -390,7 +390,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
 
     // The embedded desktop player keeps a toolbar for its minimize button,
     // which a route reaches by swiping down instead.
-    final double? mornyeToolbarHeight = !mornye
+    final double? mosixToolbarHeight = !mosix
         ? null
         : widget.embedded
         ? 48
@@ -398,23 +398,23 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
         ? 0
         : 36;
     final player = Scaffold(
-      backgroundColor: mornye || materialFullScreen
+      backgroundColor: mosix || materialFullScreen
           ? Colors.transparent
           : colorScheme.surface,
       appBar: _FadingAppBar(
         opacity: contentOpacity,
         child: AppBar(
-          backgroundColor: mornye || materialFullScreen
+          backgroundColor: mosix || materialFullScreen
               ? Colors.transparent
               : colorScheme.surface,
           foregroundColor: overCover ? Colors.white : colorScheme.onSurface,
           surfaceTintColor: Colors.transparent,
-          systemOverlayStyle: mornye || overCover
+          systemOverlayStyle: mosix || overCover
               ? SystemUiOverlayStyle.light
               : null,
-          toolbarHeight: mornyeToolbarHeight ?? kToolbarHeight,
+          toolbarHeight: mosixToolbarHeight ?? kToolbarHeight,
           automaticallyImplyLeading: false,
-          title: mornye
+          title: mosix
               ? MediaQuery.orientationOf(context) == Orientation.landscape ||
                         widget.embedded
                     ? null
@@ -438,16 +438,16 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                       : null,
                 ),
           centerTitle: true,
-          leading: mornye && !widget.embedded
+          leading: mosix && !widget.embedded
               ? null
               : AppIconButton(
                   key: const ValueKey('now-playing-minimize'),
                   tooltip: _minimizeTooltip(context),
-                  color: overCover || mornye ? Colors.white : null,
+                  color: overCover || mosix ? Colors.white : null,
                   icon: const AppIcon(Icons.keyboard_arrow_down),
                   onPressed: _minimize,
                 ),
-          actions: mornye
+          actions: mosix
               ? null
               : [
                   AppIconButton(
@@ -478,7 +478,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
           child: Column(
             children: [
               Expanded(
-                child: mornye
+                child: mosix
                     ? NotificationListener<ScrollUpdateNotification>(
                         onNotification: _onLyricsScroll,
                         child: MosixPlayerLayout(
@@ -492,7 +492,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                           insetArtwork: !fullBleed,
                           artworkTopInset:
                               MediaQuery.paddingOf(context).top +
-                              (widget.embedded ? mornyeToolbarHeight! : 36),
+                              (widget.embedded ? mosixToolbarHeight! : 36),
                           artworkKeys: (
                             header: _artworkHeaderKey,
                             controls: _artworkControlsKey,
@@ -541,7 +541,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (mornye && !_landscape)
+                      if (mosix && !_landscape)
                         FractionallySizedBox(
                           widthFactor: 0.72,
                           child: Row(
@@ -587,7 +587,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                             ],
                           ),
                         )
-                      else if (!mornye)
+                      else if (!mosix)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 28),
                           child: Row(
@@ -624,7 +624,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
         ),
       ),
     );
-    if (!mornye) {
+    if (!mosix) {
       if (!materialFullScreen) return player;
       return Stack(
         fit: StackFit.expand,
@@ -932,7 +932,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     _lyricsIdleTimer?.cancel();
     setState(() => _lyricsOptionsOpen = true);
     try {
-      final anchor = mornyeMenuAnchor(buttonContext);
+      final anchor = mosixMenuAnchor(buttonContext);
       var menuWidth = 240.0;
       for (final (_, label, _) in actions) {
         final painter = TextPainter(

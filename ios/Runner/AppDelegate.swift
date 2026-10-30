@@ -7,7 +7,7 @@ import UniformTypeIdentifiers
 @objc class AppDelegate: FlutterAppDelegate {
     // Widget playback intents can launch the process before any scene exists.
     // Keep one headless-capable engine and attach that same player to the UI.
-    lazy var playerEngine = FlutterEngine(name: "mornye-player", project: nil, allowHeadlessExecution: true)
+    lazy var playerEngine = FlutterEngine(name: "mosix-player", project: nil, allowHeadlessExecution: true)
     private let CHANNEL = "com.zuancrisp.mosix/backend"
     private let DOWNLOAD_PROGRESS_STREAM_CHANNEL = "com.zuancrisp.mosix/download_progress_stream"
     private let LIBRARY_SCAN_PROGRESS_STREAM_CHANNEL = "com.zuancrisp.mosix/library_scan_progress_stream"
@@ -137,7 +137,8 @@ import UniformTypeIdentifiers
     /// - Signed session: mornye://session-grant?grant=...&state=<one_time_nonce>
     @discardableResult
     func handleExtensionOAuthRedirect(url: URL) -> Bool {
-        if url.scheme == "mornye", url.host == "player" {
+        if ["mosix", "mornye"].contains(url.scheme?.lowercased() ?? ""),
+           url.host == "player" {
             Task { _ = await PlayerWidgetBridge.shared.perform("open") }
             return true
         }
@@ -378,7 +379,7 @@ import UniformTypeIdentifiers
             result(false)
             return
         }
-        let scheme = callbackScheme.isEmpty ? "mornye" : callbackScheme
+        let scheme = callbackScheme.isEmpty ? "mosix" : callbackScheme
         let session = ASWebAuthenticationSession(
             url: url,
             callbackURLScheme: scheme

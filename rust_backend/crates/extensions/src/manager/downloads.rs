@@ -383,7 +383,7 @@ fn normalize_decryption(value: &mut Value) {
             }
         }
         let strategy = info.get("strategy").and_then(Value::as_str).unwrap_or("");
-        let strategy = match mornye_core::matching::lowercase(strategy).as_str() {
+        let strategy = match mosix_core::matching::lowercase(strategy).as_str() {
             ""
             | MOV
             | "ffmpeg_mov_key"

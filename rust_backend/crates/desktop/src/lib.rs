@@ -23,7 +23,7 @@ mod watcher;
 
 pub use call::{Args, BYTES_KEY, CallError, Reply};
 pub use ffi::{
-    mornye_call, mornye_cancel, mornye_free, mornye_init, mornye_subscribe, mornye_unsubscribe,
+    mosix_call, mosix_cancel, mosix_free, mosix_init, mosix_subscribe, mosix_unsubscribe,
 };
 pub use runtime::{Config, MosixCallback};
 

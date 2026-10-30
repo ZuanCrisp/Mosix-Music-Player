@@ -1,6 +1,6 @@
 //! One method call: decoded arguments, the reply, errors, and cancellation.
 
-use mornye_mobile::RequestLease;
+use mosix_mobile::RequestLease;
 use serde_json::{Map, Value, json};
 use std::fmt::Display;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -224,12 +224,12 @@ impl<T, E: Display> OrFail<T> for Result<T, E> {
 
 type CancelHook = Box<dyn FnOnce() + Send>;
 
-/// Per-call state shared between the worker and `mornye_cancel`.
+/// Per-call state shared between the worker and `mosix_cancel`.
 #[derive(Default)]
 pub(crate) struct CallState {
     cancelled: AtomicBool,
     hooks: Mutex<Vec<CancelHook>>,
-    /// Lease acquired synchronously by `mornye_call` (native data jobs), so a
+    /// Lease acquired synchronously by `mosix_call` (native data jobs), so a
     /// cancellation that follows the call is never lost.
     pub(crate) lease: Mutex<Option<Arc<RequestLease>>>,
 }

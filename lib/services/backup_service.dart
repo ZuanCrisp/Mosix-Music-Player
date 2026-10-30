@@ -166,7 +166,8 @@ class BackupBundle {
 class BackupService {
   static final _log = AppLogger('BackupService');
 
-  static const String magic = 'mornye-backup';
+  static const String magic = 'mosix-backup';
+  static const String _previousMagic = 'mornye-backup';
   static const String _legacyMagic = 'spotiflac-backup';
   // V3 permits omitted categories. Older readers reject it instead of treating
   // an omitted history as an empty history and clearing existing downloads.
@@ -230,7 +231,7 @@ class BackupService {
     final staging = await Directory(
       p.join(
         tempRoot.path,
-        'mornye_backup_${DateTime.now().microsecondsSinceEpoch}',
+        'mosix_backup_${DateTime.now().microsecondsSinceEpoch}',
       ),
     ).create(recursive: true);
     final historyFile = File(p.join(staging.path, 'history.ndjson'));
@@ -381,7 +382,7 @@ class BackupService {
     final stamp =
         '${now.year}${two(now.month)}${two(now.day)}_'
         '${two(now.hour)}${two(now.minute)}${two(now.second)}';
-    return File(p.join(backupsDir.path, 'mornye_backup_$stamp.$fileExtension'));
+    return File(p.join(backupsDir.path, 'mosix_backup_$stamp.$fileExtension'));
   }
 
   static Future<BackupBundle?> parseFile(
@@ -536,7 +537,7 @@ class BackupService {
     Directory temporary,
   ) async {
     await temporary.create(recursive: true);
-    final staging = await temporary.createTemp('mornye_legacy_backup_');
+    final staging = await temporary.createTemp('mosix_legacy_backup_');
     try {
       final historyPath = p.join(staging.path, 'history.ndjson');
       final metadataPath = p.join(staging.path, 'metadata.json');
@@ -671,7 +672,9 @@ class BackupService {
       if (rootRaw is! Map) return null;
       final root = Map<String, dynamic>.from(rootRaw);
       final version = root['format_version'];
-      if ((root['magic'] != magic && root['magic'] != _legacyMagic) ||
+      if ((root['magic'] != magic &&
+              root['magic'] != _previousMagic &&
+              root['magic'] != _legacyMagic) ||
           (version != 2 && version != formatVersion)) {
         return null;
       }
@@ -685,7 +688,7 @@ class BackupService {
       extractionDir = await Directory(
         p.join(
           temporaryDirectory.path,
-          'mornye_restore_${DateTime.now().microsecondsSinceEpoch}',
+          'mosix_restore_${DateTime.now().microsecondsSinceEpoch}',
         ),
       ).create(recursive: true);
       String? historyPath;
@@ -809,7 +812,9 @@ class BackupService {
     }
     if (decoded is! Map) return null;
     final root = Map<String, dynamic>.from(decoded);
-    if ((root['magic'] != magic && root['magic'] != _legacyMagic) ||
+    if ((root['magic'] != magic &&
+            root['magic'] != _previousMagic &&
+            root['magic'] != _legacyMagic) ||
         root['data'] is! Map) {
       return null;
     }

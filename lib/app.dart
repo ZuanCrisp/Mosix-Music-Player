@@ -20,7 +20,7 @@ import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_snack_bar.dart';
 import 'package:mosix/widgets/desktop/desktop_shortcuts.dart';
 import 'package:mosix/widgets/desktop/library_drop_target.dart';
-import 'package:mosix/widgets/mornye_glass_preparation.dart';
+import 'package:mosix/widgets/mosix_glass_preparation.dart';
 import 'package:mosix/widgets/playback_feedback.dart';
 
 String initialLocationForAppState({

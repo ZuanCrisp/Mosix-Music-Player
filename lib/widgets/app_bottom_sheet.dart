@@ -3,12 +3,12 @@ import 'package:flutter/cupertino.dart'
     show CupertinoButton, CupertinoDynamicColor, kCupertinoModalBarrierColor;
 import 'package:mosix/theme/app_motion.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
+import 'package:mosix/theme/mosix_icons.dart';
 
 /// The drag handle shown at the top of every modal sheet.
 ///
@@ -339,7 +339,7 @@ Future<T?> showAppScrollableBottomSheet<T>({
 ///
 /// Desktop windows present the sheet as a centered dialog instead
 /// ([showAppSheetDialog]) of [dialogSize]; there is no edge to slide from or
-/// drag to. Mosix draws the sheet on overlay glass unless [mornyeGlass] is
+/// drag to. Mosix draws the sheet on overlay glass unless [mosixGlass] is
 /// false for content that brings its own.
 Future<T?> showAppModalBottomSheet<T>({
   required BuildContext context,
@@ -350,7 +350,7 @@ Future<T?> showAppModalBottomSheet<T>({
   bool useRootNavigator = false,
   bool useSafeArea = false,
   bool? showDragHandle,
-  bool mornyeGlass = true,
+  bool mosixGlass = true,
   BoxConstraints? constraints,
   Color? backgroundColor,
   AppDialogSize dialogSize = AppDialogSize.medium,
@@ -362,12 +362,12 @@ Future<T?> showAppModalBottomSheet<T>({
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
       topInset: showDragHandle == true,
-      mornyeGlass: mornyeGlass,
+      mosixGlass: mosixGlass,
       backgroundColor: backgroundColor,
       dialogSize: dialogSize,
     );
   }
-  final mornye = context.isMosix;
+  final mosix = context.isMosix;
   return showModalBottomSheet<T>(
     context: context,
     sheetAnimationStyle: AppMotion.surfaceEntrance(context),
@@ -378,12 +378,12 @@ Future<T?> showAppModalBottomSheet<T>({
     useSafeArea: useSafeArea,
     showDragHandle: showDragHandle,
     constraints: constraints,
-    backgroundColor: mornye ? Colors.transparent : backgroundColor,
-    barrierColor: mornye
+    backgroundColor: mosix ? Colors.transparent : backgroundColor,
+    barrierColor: mosix
         ? CupertinoDynamicColor.resolve(kCupertinoModalBarrierColor, context)
         : null,
-    elevation: mornye ? 0 : null,
-    builder: (context) => mornye && mornyeGlass
+    elevation: mosix ? 0 : null,
+    builder: (context) => mosix && mosixGlass
         ? MosixGlassPanel.overlay(child: Builder(builder: builder))
         : builder(context),
   );
@@ -416,7 +416,7 @@ enum AppDialogSize {
 /// [DraggableScrollableSheet], lays out unchanged: its header stays put and
 /// its body scrolls.
 ///
-/// Mosix draws the dialog on overlay glass unless [mornyeGlass] is false
+/// Mosix draws the dialog on overlay glass unless [mosixGlass] is false
 /// for content that brings its own; Material uses `surfaceContainerHigh`.
 /// [topInset] replaces the space of a drag handle the sheet would show.
 Future<T?> showAppSheetDialog<T>({
@@ -425,21 +425,21 @@ Future<T?> showAppSheetDialog<T>({
   bool isScrollControlled = false,
   bool isDismissible = true,
   bool topInset = false,
-  bool mornyeGlass = true,
+  bool mosixGlass = true,
   Color? backgroundColor,
   AppDialogSize dialogSize = AppDialogSize.medium,
 }) {
-  final mornye = context.isMosix;
+  final mosix = context.isMosix;
   return showDialog<T>(
     context: context,
     barrierDismissible: isDismissible,
-    barrierColor: mornye
+    barrierColor: mosix
         ? CupertinoDynamicColor.resolve(kCupertinoModalBarrierColor, context)
         : null,
     builder: (dialogContext) => AppSheetDialog(
       isScrollControlled: isScrollControlled,
       topInset: topInset,
-      mornyeGlass: mornyeGlass,
+      mosixGlass: mosixGlass,
       backgroundColor: backgroundColor,
       dialogSize: dialogSize,
       child: Builder(builder: builder),
@@ -454,7 +454,7 @@ class AppSheetDialog extends StatelessWidget {
     required this.child,
     this.isScrollControlled = false,
     this.topInset = false,
-    this.mornyeGlass = true,
+    this.mosixGlass = true,
     this.backgroundColor,
     this.dialogSize = AppDialogSize.medium,
   });
@@ -462,19 +462,19 @@ class AppSheetDialog extends StatelessWidget {
   final Widget child;
   final bool isScrollControlled;
   final bool topInset;
-  final bool mornyeGlass;
+  final bool mosixGlass;
   final Color? backgroundColor;
   final AppDialogSize dialogSize;
 
   /// Mosix's sheet token is the 32pt iOS sheet corner; its dialogs keep
   /// the corner they have always had.
-  static const double _mornyeRadius = 28;
+  static const double _mosixRadius = 28;
   static const double _margin = 24;
 
   @override
   Widget build(BuildContext context) {
-    final mornye = context.isMosix;
-    final radius = mornye ? _mornyeRadius : context.tokens.radiusSheet;
+    final mosix = context.isMosix;
+    final radius = mosix ? _mosixRadius : context.tokens.radiusSheet;
     final window = MediaQuery.sizeOf(context);
     final width = (window.width - _margin * 2).clamp(0.0, dialogSize.width);
     final maxHeight =
@@ -488,9 +488,9 @@ class AppSheetDialog extends StatelessWidget {
         child: child,
       ),
     );
-    if (mornye && mornyeGlass) {
+    if (mosix && mosixGlass) {
       content = MosixGlassPanel.overlay(radius: radius, child: content);
-    } else if (!mornye) {
+    } else if (!mosix) {
       // Desktop scrollbars normally fade out when idle. In a dialog the
       // body's bar stays visible, so a cut-off list reads as scrollable.
       content = ScrollbarTheme(
@@ -503,12 +503,12 @@ class AppSheetDialog extends StatelessWidget {
     return Dialog(
       key: const ValueKey('app-sheet-dialog'),
       insetPadding: const EdgeInsets.all(_margin),
-      backgroundColor: mornye
+      backgroundColor: mosix
           ? Colors.transparent
           : backgroundColor ??
                 Theme.of(context).colorScheme.surfaceContainerHigh,
       surfaceTintColor: Colors.transparent,
-      elevation: mornye ? 0 : null,
+      elevation: mosix ? 0 : null,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radius),
       ),
@@ -604,7 +604,7 @@ class AppSheetOption extends StatelessWidget {
       };
       if (icon != null) {
         return Icon(
-          mornyeIconFor(icon),
+          mosixIconFor(icon),
           size: size,
           color: enabled ? color ?? scheme.primary : theme.disabledColor,
         );

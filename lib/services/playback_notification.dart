@@ -2,10 +2,10 @@ import 'package:audio_service/audio_service.dart';
 
 /// Presentation only; every transport action still uses the audio handler.
 class PlaybackNotification {
-  static const favoriteAction = 'mornye.favorite';
-  static const shuffleAction = 'mornye.shuffle';
+  static const favoriteAction = 'mosix.favorite';
+  static const shuffleAction = 'mosix.shuffle';
 
-  final bool mornye;
+  final bool mosix;
   final String? mediaId;
   final String? source;
   final bool loved;
@@ -15,7 +15,7 @@ class PlaybackNotification {
   final String shuffleOffLabel;
 
   const PlaybackNotification({
-    this.mornye = false,
+    this.mosix = false,
     this.mediaId,
     this.source,
     this.loved = false,
@@ -29,7 +29,7 @@ class PlaybackNotification {
 
   PlaybackNotification withFavorite(MediaItem item, bool loved) =>
       PlaybackNotification(
-        mornye: mornye,
+        mosix: mosix,
         mediaId: item.id,
         source: item.extras?['source']?.toString(),
         loved: loved,
@@ -54,19 +54,19 @@ class PlaybackNotification {
             : 'drawable/ic_notification_star',
         label: current && loved ? unfavoriteLabel : favoriteLabel,
       ),
-      mornye
+      mosix
           ? MediaControl.skipToPrevious.copyWith(
               androidIcon: 'drawable/ic_widget_previous',
             )
           : MediaControl.skipToPrevious,
-      mornye
+      mosix
           ? playPause.copyWith(
               androidIcon: playing
                   ? 'drawable/ic_widget_pause'
                   : 'drawable/ic_widget_play',
             )
           : playPause,
-      mornye
+      mosix
           ? MediaControl.skipToNext.copyWith(
               androidIcon: 'drawable/ic_widget_next',
             )

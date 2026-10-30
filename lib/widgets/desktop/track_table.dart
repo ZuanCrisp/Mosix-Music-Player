@@ -5,7 +5,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/theme/app_motion.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/desktop/context_menu.dart';
 import 'package:mosix/widgets/desktop/desktop_selection.dart';

@@ -9,7 +9,7 @@ import 'package:mosix/controllers/player_metadata_controller.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/player_artwork_theme.dart';
 import 'package:mosix/utils/lyrics_parser.dart';
 import 'package:mosix/utils/string_utils.dart';
@@ -21,9 +21,9 @@ import 'package:mosix/widgets/desktop/desktop_commands.dart';
 import 'package:mosix/widgets/desktop/desktop_downloads_button.dart';
 import 'package:mosix/widgets/desktop/desktop_inspector.dart';
 import 'package:mosix/widgets/desktop/desktop_window.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/mornye_playback_button.dart';
-import 'package:mosix/widgets/mornye_player_background.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
+import 'package:mosix/widgets/mosix_playback_button.dart';
+import 'package:mosix/widgets/mosix_player_background.dart';
 import 'package:mosix/widgets/player_artwork.dart';
 import 'package:mosix/widgets/player_lyrics.dart';
 import 'package:mosix/widgets/player_volume_control.dart';
@@ -49,14 +49,14 @@ class DesktopPlayerBar extends ConsumerWidget {
   static const double materialHeight = 80;
 
   /// Height of the Mosix capsule.
-  static const double mornyeHeight = 48;
+  static const double mosixHeight = 48;
 
   /// Space between the Mosix capsule and the bottom of the window.
   static const double floatingMargin = 10;
 
   /// Bottom padding the content pane gives its pages, so their last rows
   /// scroll clear of the floating capsule with a margin above it.
-  static const double floatingInset = mornyeHeight + floatingMargin + 12;
+  static const double floatingInset = mosixHeight + floatingMargin + 12;
 
   /// Width of the Mosix capsule in a content pane [paneWidth] wide: about
   /// 70% of it, as in Music, from 520 to 900 and never closer than 12 to
@@ -158,9 +158,9 @@ class _MosixPlayerBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final loaded = mediaItem != null;
     return SizedBox(
-      height: DesktopPlayerBar.mornyeHeight,
+      height: DesktopPlayerBar.mosixHeight,
       child: MosixGlassPanel(
-        radius: DesktopPlayerBar.mornyeHeight / 2,
+        radius: DesktopPlayerBar.mosixHeight / 2,
         highlightBorder: true,
         child: IconButtonTheme(
           data: IconButtonThemeData(
@@ -497,7 +497,7 @@ class _SeekRow extends ConsumerWidget {
   Widget _buildRow(BuildContext context, WidgetRef ref) {
     final item = mediaItem;
     final colorScheme = Theme.of(context).colorScheme;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final duration = item?.duration ?? Duration.zero;
     final position = item == null
         ? Duration.zero
@@ -513,10 +513,10 @@ class _SeekRow extends ConsumerWidget {
     final slider = SliderTheme(
       data: SliderTheme.of(context).copyWith(
         trackHeight: dense ? 3 : 4,
-        activeTrackColor: mornye
+        activeTrackColor: mosix
             ? colorScheme.onSurface.withValues(alpha: 0.6)
             : colorScheme.primary,
-        inactiveTrackColor: mornye
+        inactiveTrackColor: mosix
             ? colorScheme.onSurface.withValues(alpha: 0.12)
             : colorScheme.secondaryContainer,
         thumbColor: dense ? colorScheme.onSurface : colorScheme.primary,
@@ -541,7 +541,7 @@ class _SeekRow extends ConsumerWidget {
         Expanded(child: slider),
         const SizedBox(width: 8),
         Text(
-          mornye
+          mosix
               ? '-${formatClock(duration.inSeconds - elapsed)}'
               : formatClock(duration.inSeconds),
           style: timeStyle,
@@ -684,14 +684,14 @@ class _TrailingControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
-      mainAxisSize: mornye ? MainAxisSize.min : MainAxisSize.max,
+      mainAxisSize: mosix ? MainAxisSize.min : MainAxisSize.max,
       children: [
-        if (mornye) const DesktopDownloadsButton(),
+        if (mosix) const DesktopDownloadsButton(),
         ValueListenableBuilder<DesktopInspectorPanel?>(
           valueListenable: desktopInspectorPanel,
           builder: (context, panel, _) => Row(
@@ -707,7 +707,7 @@ class _TrailingControls extends StatelessWidget {
                   l10n.nowPlayingTabLyrics,
                   DesktopCommand.lyrics,
                 ),
-                icon: mornye
+                icon: mosix
                     ? CupertinoIcons.quote_bubble
                     : Icons.lyrics_outlined,
               ),
@@ -721,7 +721,7 @@ class _TrailingControls extends StatelessWidget {
                   l10n.nowPlayingUpNext,
                   DesktopCommand.upNext,
                 ),
-                icon: mornye ? CupertinoIcons.list_bullet : Icons.queue_music,
+                icon: mosix ? CupertinoIcons.list_bullet : Icons.queue_music,
               ),
             ],
           ),
@@ -734,15 +734,15 @@ class _TrailingControls extends StatelessWidget {
               l10n.desktopMenuMiniPlayer,
               DesktopCommand.miniPlayer,
             ),
-            color: mornye ? colorScheme.onSurface : null,
+            color: mosix ? colorScheme.onSurface : null,
             icon: AppIcon(
-              mornye
+              mosix
                   ? CupertinoIcons.rectangle_on_rectangle
                   : Icons.picture_in_picture_alt_outlined,
             ),
             onPressed: toggleDesktopMiniPlayer,
           ),
-        if (mornye)
+        if (mosix)
           const _MosixVolumeButton()
         else ...[
           Theme(
@@ -847,15 +847,15 @@ class _InspectorToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final colorScheme = Theme.of(context).colorScheme;
     return AppIconButton(
       tooltip: tooltip,
       isSelected: selected,
-      color: mornye
+      color: mosix
           ? (selected ? colorScheme.primary : colorScheme.onSurface)
           : null,
-      style: mornye && selected
+      style: mosix && selected
           ? IconButton.styleFrom(
               backgroundColor: MosixTheme.controlFill(context),
             )

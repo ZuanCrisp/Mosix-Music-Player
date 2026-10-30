@@ -133,10 +133,10 @@ void main() {
         directory
             .listSync()
             .map((file) => p.basename(file.path))
-            .where((name) => name.startsWith('mornye'))
+            .where((name) => name.startsWith('mosix'))
             .toList()
           ..sort();
-    expect(names, ['mornye.1.log', 'mornye.2.log', 'mornye.log']);
+    expect(names, ['mosix.1.log', 'mosix.2.log', 'mosix.log']);
     expect(diagnostics.logFile.readAsStringSync(), contains('line 11'));
     expect(diagnostics.logFile.lengthSync(), lessThanOrEqualTo(200));
   });

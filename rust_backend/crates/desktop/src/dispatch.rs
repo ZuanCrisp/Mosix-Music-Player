@@ -15,7 +15,7 @@ use crate::call::{Args, CallError, CallResult, CallState, OrFail, Reply};
 use crate::ffmpeg::with_ffmpeg_commands;
 use crate::paths::{self, media_path};
 use crate::runtime::{self, Runtime};
-use mornye_mobile::{ExtensionManager, LyricsRequest, RequestLease};
+use mosix_mobile::{ExtensionManager, LyricsRequest, RequestLease};
 use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
@@ -33,7 +33,7 @@ impl Ctx<'_> {
         self.rt.backend.owner()
     }
 
-    /// Best-effort `mornye_cancel` support for this call.
+    /// Best-effort `mosix_cancel` support for this call.
     fn on_cancel(&self, hook: impl FnOnce(&'static Runtime) + Send + 'static) {
         let rt = self.rt;
         self.state.on_cancel(move || hook(rt));
@@ -158,16 +158,16 @@ pub(crate) static METHODS: &[Entry] = &[
         Ok(Reply::null())
     }),
     pool("buildFilename", |_, a| {
-        text(mornye_mobile::build_filename(
+        text(mosix_mobile::build_filename(
             a.string("template", ""),
             a.string("metadata", "{}"),
         ))
     }),
     pool("sanitizeFilename", |_, a| {
-        Ok(mornye_mobile::sanitize_filename(a.string("filename", "")).into())
+        Ok(mosix_mobile::sanitize_filename(a.string("filename", "")).into())
     }),
     pool("readFileMetadata", |_, a| {
-        text(mornye_mobile::read_file_metadata(
+        text(mosix_mobile::read_file_metadata(
             a.string("file_path", ""),
             a.string("display_name", ""),
             None,
@@ -567,7 +567,7 @@ pub(crate) static METHODS: &[Entry] = &[
     }),
     pool("reEnrichFile", re_enrich_file),
     pool("checkHiResAuthenticity", |_, a| {
-        text(mornye_mobile::check_hires_authenticity(
+        text(mosix_mobile::check_hires_authenticity(
             a.string("file_path", ""),
             a.string("options_json", ""),
             None,
@@ -699,7 +699,7 @@ pub(crate) fn find(method: &str) -> Option<&'static Entry> {
     table().get(method).copied()
 }
 
-/// Work that must happen synchronously in `mornye_call`.
+/// Work that must happen synchronously in `mosix_call`.
 pub(crate) fn prepare(
     rt: &Runtime,
     method: &str,

@@ -11,12 +11,12 @@ import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/settings/playback_settings_page.dart';
 import 'package:mosix/utils/settings_search_catalog.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/settings_group.dart';
 
 void main() {
-  for (final mornye in [false, true]) {
-    testWidgets('personalization switch persists and is searchable ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('personalization switch persists and is searchable ($mosix)', (
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({});
@@ -33,7 +33,7 @@ void main() {
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
-            theme: mornye
+            theme: mosix
                 ? MosixTheme.build(Brightness.dark, accent: MosixAccent.blue)
                 : AppTheme.light(),
             locale: const Locale('en'),

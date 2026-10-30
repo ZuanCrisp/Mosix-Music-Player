@@ -73,7 +73,7 @@ impl Discord {
             let connect = Arc::clone(&self.connect);
             let status = Arc::clone(&self.status);
             let spawned = std::thread::Builder::new()
-                .name("mornye-discord".into())
+                .name("mosix-discord".into())
                 .spawn(move || run(receiver, connect, status));
             if spawned.is_err() {
                 return false;

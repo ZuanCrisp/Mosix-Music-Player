@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 
 /** All calls are serialized on the owning playback worker. */
 internal object NativeAudio {
-    init { System.loadLibrary("mornye_audio") }
+    init { System.loadLibrary("mosix_audio") }
     external fun openOboe(rate: Int, channels: Int, bits: Int, device: Int): Long
     external fun writeOboe(handle: Long, data: ByteBuffer, offset: Int, count: Int): Int
     external fun bitsOboe(handle: Long): Int

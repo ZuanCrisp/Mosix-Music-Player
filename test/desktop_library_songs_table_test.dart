@@ -17,11 +17,11 @@ import 'package:mosix/services/history_database.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/services/playable_media.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/desktop/track_table.dart';
 import 'package:mosix/widgets/library_track_selection_bar.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/mosix_context_menu.dart';
 import 'package:mosix/widgets/track_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -155,7 +155,7 @@ void main() {
   Future<void> pumpLibrary(
     WidgetTester tester, {
     required bool desktop,
-    bool mornye = false,
+    bool mosix = false,
     String viewMode = 'list',
     PlaybackController? playback,
   }) async {
@@ -190,24 +190,24 @@ void main() {
           if (playback != null) playbackProvider.overrideWith(() => playback),
         ],
         child: MaterialApp(
-          theme: mornye
+          theme: mosix
               ? MosixTheme.build(Brightness.light)
               : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           // Mosix opens Songs as a section page from its Library root.
-          home: Scaffold(body: QueueTab(librarySection: mornye ? 'all' : null)),
+          home: Scaffold(body: QueueTab(librarySection: mosix ? 'all' : null)),
         ),
       ),
     );
     await _settle(tester);
   }
 
-  for (final mornye in [false, true]) {
-    testWidgets('desktop Songs list is the songs table (mornye: $mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('desktop Songs list is the songs table (mosix: $mosix)', (
       tester,
     ) async {
-      await pumpLibrary(tester, desktop: true, mornye: mornye);
+      await pumpLibrary(tester, desktop: true, mosix: mosix);
       expect(find.byType(SliverTrackTable), findsOneWidget);
       expect(find.byType(TrackCard), findsNothing);
       expect(find.text('Alpha'), findsOneWidget);
@@ -217,17 +217,17 @@ void main() {
     });
 
     testWidgets('a right-click menu leaves the selection toolbar closed '
-        '(mornye: $mornye)', (tester) async {
+        '(mosix: $mosix)', (tester) async {
       final playback = _Playback();
       await pumpLibrary(
         tester,
         desktop: true,
-        mornye: mornye,
+        mosix: mosix,
         playback: playback,
       );
       final toolbar = find.byType(LibraryTrackSelectionBar);
       Finder menuRow(String label) => find.descendant(
-        of: find.byType(mornye ? MosixContextMenu : MenuItemButton),
+        of: find.byType(mosix ? MosixContextMenu : MenuItemButton),
         matching: find.text(label),
       );
 

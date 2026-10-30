@@ -1,16 +1,22 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:mosix/widgets/app_switch.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/models/library_scan_failure.dart';
+import 'package:mosix/models/library_database_models.dart';
 import 'package:mosix/models/settings.dart';
+import 'package:mosix/models/track.dart';
+import 'package:mosix/models/unified_library_item.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/providers/download_history_provider.dart';
+import 'package:mosix/providers/library_collections_provider.dart';
 import 'package:mosix/providers/local_library_provider.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/services/platform_bridge.dart';
@@ -212,6 +218,97 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
             .read(localLibraryProvider.notifier)
             .startSourceScan(source.id);
       }
+    }
+  }
+
+  Future<void> _createPlaylistFromFolder() async {
+    if (!mounted) return;
+    String? folderPath;
+    String? bookmark;
+    String? volumeId;
+    var isRemovable = false;
+    var displayName = '';
+
+    try {
+      if (Platform.isAndroid && _androidSdkVersion >= 29) {
+        final result = await PlatformBridge.pickSafTree();
+        if (result == null) return;
+        folderPath = result['tree_uri'] as String?;
+        displayName = result['display_name'] as String? ?? '';
+        volumeId = result['volume_id'] as String?;
+        isRemovable = result['is_removable'] == true;
+      } else if (Platform.isIOS) {
+        final picked = await showIosLibraryFolderSheet(context);
+        if (picked == null) return;
+        folderPath = picked.path;
+        bookmark = picked.bookmark;
+        displayName = p.basename(folderPath);
+      } else {
+        if (Platform.isAndroid && !_hasStoragePermission) {
+          if (!await _requestStoragePermission()) return;
+        }
+        folderPath = await FilePicker.getDirectoryPath();
+        if (folderPath == null) return;
+        displayName = p.basename(folderPath);
+      }
+
+      if (folderPath == null || folderPath.trim().isEmpty) return;
+      if (displayName.trim().isEmpty) displayName = _getDisplayPath(folderPath);
+      final library = ref.read(localLibraryProvider.notifier);
+      final source = await library.addSource(
+        path: folderPath,
+        displayName: displayName,
+        bookmark: bookmark,
+        volumeId: volumeId,
+        isRemovable: isRemovable,
+      );
+      await library.startSourceScan(source.id);
+      if (!mounted) return;
+
+      final folderPrefix = folderPath
+          .replaceAll('\\', '/')
+          .replaceAll(RegExp(r'/+$'), '');
+      final rows = await LibraryDatabase.instance.getAll();
+      final tracks = <Track>[];
+      for (final row in rows) {
+        final item = LocalLibraryItem.fromJson(row);
+        final filePath = item.filePath.replaceAll('\\', '/');
+        if (filePath == folderPrefix || filePath.startsWith('$folderPrefix/')) {
+          tracks.add(UnifiedLibraryItem.fromLocalLibrary(item).toTrack());
+        }
+      }
+      if (tracks.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.libraryAutoPlaylistEmpty)),
+        );
+        return;
+      }
+
+      final collections = ref.read(libraryCollectionsProvider.notifier);
+      final playlistId = await collections.createPlaylist(displayName);
+      final result = await collections.addTracksToPlaylist(playlistId, tracks);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.l10n.libraryAutoPlaylistCreated(
+              displayName,
+              result.addedCount,
+            ),
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.l10n.snackbarFolderPickerFailed(
+              context.friendlyError(error),
+            ),
+          ),
+        ),
+      );
     }
   }
 
@@ -659,6 +756,12 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
             child: SettingsGroup(
               connected: true,
               children: [
+                SettingsItem(
+                  icon: Icons.playlist_add,
+                  title: context.l10n.libraryAutoPlaylistTitle,
+                  subtitle: context.l10n.libraryAutoPlaylistSubtitle,
+                  onTap: _createPlaylistFromFolder,
+                ),
                 SettingsSwitchItem(
                   icon: Icons.library_music_outlined,
                   title: context.l10n.libraryEnableLocalLibrary,

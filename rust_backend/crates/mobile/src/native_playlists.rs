@@ -1,7 +1,7 @@
 //! The existing playlist import contract, executed on the native data worker.
 //! CSV remains line-based for compatibility with existing exports/imports.
 use crate::native_library::path_keys::dart_trim as trim;
-use mornye_core::fs::write_atomic;
+use mosix_core::fs::write_atomic;
 use serde_json::{Value, json};
 use std::{
     collections::HashMap,
@@ -43,7 +43,7 @@ pub(crate) fn execute(
             write_atomic(
                 parent,
                 Path::new(path),
-                ".mornye-m3u-",
+                ".mosix-m3u-",
                 |staging| {
                     let mut file = BufWriter::with_capacity(64 * 1024, staging);
                     file.write_all(b"#EXTM3U\n")?;

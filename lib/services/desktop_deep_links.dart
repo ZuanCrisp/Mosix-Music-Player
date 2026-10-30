@@ -23,7 +23,8 @@ class DesktopDeepLinks {
   final Future<bool> Function(String url) _queueCallback;
   StreamSubscription<Uri>? _subscription;
 
-  static bool isAppLink(Uri uri) => uri.scheme.toLowerCase() == 'mornye';
+  static bool isAppLink(Uri uri) =>
+      const {'mosix', 'mornye'}.contains(uri.scheme.toLowerCase());
 
   /// The URL without its query, which carries one time codes and grants.
   static String describe(Uri uri) =>

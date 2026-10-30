@@ -1,6 +1,6 @@
 # Mosix branding
 
-Use the artwork supplied in `mornye-brand-kit.zip` for all new Mosix
+Use the artwork supplied in `mosix-brand-kit.zip` for all new Mosix
 branding, including the app, Reddit community, and Telegram community and
 updates channel. The original vector and raster logo variants are in `logo/`.
 

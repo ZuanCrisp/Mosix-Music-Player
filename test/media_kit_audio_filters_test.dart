@@ -18,8 +18,8 @@ void main() {
     expect(
       chain.spec,
       startsWith(
-        '@mornye_format:format=format=floatp,'
-        '@mornye_dsp:lavfi=[volume@pre=precision=float:volume=0dB,'
+        '@mosix_format:format=format=floatp,'
+        '@mosix_dsp:lavfi=[volume@pre=precision=float:volume=0dB,'
         'equalizer@band0=f=31.25:t=q:w=1.4142:g=0,',
       ),
     );

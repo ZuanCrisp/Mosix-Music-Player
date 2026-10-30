@@ -99,5 +99,5 @@ tag_pattern = "v[0-9].*"
 sort_commits = "newest"
 
 [remote.github]
-owner = "mornyeapp"
+owner = "mosixapp"
 repo = "Mosix"

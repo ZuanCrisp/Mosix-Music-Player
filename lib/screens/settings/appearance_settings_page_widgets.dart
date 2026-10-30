@@ -236,16 +236,16 @@ class _MosixGlassClaritySlider extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final clarity = ref.watch(
-      themeProvider.select((settings) => settings.mornyeGlassClarity),
+      themeProvider.select((settings) => settings.mosixGlassClarity),
     );
     final notifier = ref.read(themeProvider.notifier);
     final theme = Theme.of(context);
     final l10n = context.l10n;
     // Match the renderer's policy without changing the stored clarity value.
     final contrastBlocked = ref.watch(
-      mornyeGlassContrastBlockedProvider(MediaQuery.highContrastOf(context)),
+      mosixGlassContrastBlockedProvider(MediaQuery.highContrastOf(context)),
     );
-    final adjustable = !contrastBlocked && ref.watch(mornyeBlurEnabledProvider);
+    final adjustable = !contrastBlocked && ref.watch(mosixBlurEnabledProvider);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Column(
@@ -267,7 +267,7 @@ class _MosixGlassClaritySlider extends ConsumerWidget {
                   : l10n.appearanceGlassClarityBlurOff(
                       l10n.appearanceForceBlur,
                     ),
-              key: const ValueKey('mornye-glass-clarity-unavailable'),
+              key: const ValueKey('mosix-glass-clarity-unavailable'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -325,7 +325,7 @@ class _MosixGlassClaritySlider extends ConsumerWidget {
           Semantics(
             label: l10n.appearanceGlassClarity,
             child: Slider(
-              key: const ValueKey('mornye-glass-clarity'),
+              key: const ValueKey('mosix-glass-clarity'),
               value: clarity,
               divisions: 20,
               label: '${(clarity * 100).round()}%',
@@ -350,7 +350,7 @@ class _MosixGlassClaritySlider extends ConsumerWidget {
             const SizedBox(height: 8),
             Text(
               l10n.appearanceGlassClearPerformance,
-              key: const ValueKey('mornye-glass-clear-performance'),
+              key: const ValueKey('mosix-glass-clear-performance'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

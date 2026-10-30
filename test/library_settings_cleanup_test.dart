@@ -12,7 +12,7 @@ import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/settings/library_settings_page.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_loading_indicator.dart';
 import 'package:mosix/widgets/settings_group.dart';
 
@@ -78,7 +78,7 @@ Finder get _cleanupRow => find.byWidgetPredicate(
 
 Future<void> _mount(
   WidgetTester tester, {
-  required bool mornye,
+  required bool mosix,
   required _Library library,
   required _History history,
 }) async {
@@ -98,7 +98,7 @@ Future<void> _mount(
         downloadHistoryProvider.overrideWith(() => history),
       ],
       child: MaterialApp(
-        theme: mornye ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
+        theme: mosix ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const LibrarySettingsPage(),
@@ -111,8 +111,8 @@ Future<void> _mount(
 }
 
 void main() {
-  for (final mornye in [false, true]) {
-    testWidgets('source shows the scan failure reason (Mosix: $mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('source shows the scan failure reason (Mosix: $mosix)', (
       tester,
     ) async {
       const error =
@@ -134,7 +134,7 @@ void main() {
       );
       await _mount(
         tester,
-        mornye: mornye,
+        mosix: mosix,
         library: library,
         history: _History(0, () async => 0),
       );
@@ -144,13 +144,13 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('failed load shows saved folder and offers retry ($mornye)', (
+    testWidgets('failed load shows saved folder and offers retry ($mosix)', (
       tester,
     ) async {
       final library = _RetryLibrary();
       await _mount(
         tester,
-        mornye: mornye,
+        mosix: mosix,
         library: library,
         history: _History(0, () async => 0),
       );
@@ -169,7 +169,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('cleanup works for download-only Library ($mornye)', (
+    testWidgets('cleanup works for download-only Library ($mosix)', (
       tester,
     ) async {
       final localDone = Completer<int>();
@@ -178,7 +178,7 @@ void main() {
       var downloadCalls = 0;
       await _mount(
         tester,
-        mornye: mornye,
+        mosix: mosix,
         library: _Library(LocalLibraryState(), () {
           localCalls++;
           return localDone.future;
@@ -213,14 +213,14 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('cleanup reports errors and can retry ($mornye)', (
+    testWidgets('cleanup reports errors and can retry ($mosix)', (
       tester,
     ) async {
       var calls = 0;
       var downloadCalls = 0;
       await _mount(
         tester,
-        mornye: mornye,
+        mosix: mosix,
         library: _Library(LocalLibraryState(totalCount: 1), () async {
           calls++;
           if (calls == 1) throw StateError('cleanup failed');
@@ -247,12 +247,12 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('cleanup stays available for hidden source rows ($mornye)', (
+    testWidgets('cleanup stays available for hidden source rows ($mosix)', (
       tester,
     ) async {
       await _mount(
         tester,
-        mornye: mornye,
+        mosix: mosix,
         library: _Library(
           LocalLibraryState(
             sources: const [
@@ -277,7 +277,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('cleanup cannot race an active scan ($mornye)', (tester) async {
+    testWidgets('cleanup cannot race an active scan ($mosix)', (tester) async {
       var localCalls = 0;
       var downloadCalls = 0;
       final library = _Library(LocalLibraryState(totalCount: 1), () async {
@@ -286,7 +286,7 @@ void main() {
       });
       await _mount(
         tester,
-        mornye: mornye,
+        mosix: mosix,
         library: library,
         history: _History(1, () async {
           downloadCalls++;

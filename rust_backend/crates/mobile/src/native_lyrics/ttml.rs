@@ -186,7 +186,7 @@ pub(super) fn parse_ttml(
     text: &str,
     check: &dyn Fn() -> Result<(), String>,
 ) -> Result<Option<Parsed>, String> {
-    mornye_core::xml::check_depth(text)?;
+    mosix_core::xml::check_depth(text)?;
     let normalized = xml_source(text, true);
     let Ok(doc) = Document::parse_with_options(
         &normalized,
@@ -358,7 +358,7 @@ pub(super) fn xml_source(input: &str, drop_cdata: bool) -> String {
             break;
         }
         if tail.starts_with("<!DOCTYPE") {
-            if let Some(end) = mornye_core::xml::markup_end(tail, true) {
+            if let Some(end) = mosix_core::xml::markup_end(tail, true) {
                 result.push_str(&tail[..end]);
                 index += end;
                 continue;

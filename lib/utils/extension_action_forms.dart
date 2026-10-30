@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 
@@ -238,7 +238,7 @@ class _AccountFormDialogState extends State<_AccountFormDialog> {
     final label = field['label'] as String? ?? key;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final last = index == widget.form.fields.length - 1;
     final secret = field['type'] == 'password' || field['secret'] == true;
     final keyboard = field['type'] == 'number'
@@ -261,7 +261,7 @@ class _AccountFormDialogState extends State<_AccountFormDialog> {
     );
     Widget input;
     if (field['type'] == 'select') {
-      input = mornye
+      input = mosix
           ? CupertinoButton(
               onPressed: () => _chooseOption(field),
               color: MosixTheme.controlFill(context),
@@ -309,7 +309,7 @@ class _AccountFormDialogState extends State<_AccountFormDialog> {
                 ),
               ),
             );
-    } else if (mornye) {
+    } else if (mosix) {
       input = FormField<String>(
         validator: (value) => _validate(field, value),
         builder: (state) => Column(
@@ -370,7 +370,7 @@ class _AccountFormDialogState extends State<_AccountFormDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (mornye) ...[
+          if (mosix) ...[
             Padding(
               padding: const EdgeInsets.only(left: 4, bottom: 6),
               child: Text(

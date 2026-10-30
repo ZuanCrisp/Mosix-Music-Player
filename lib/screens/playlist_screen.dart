@@ -29,9 +29,10 @@ import 'package:mosix/widgets/desktop/track_list_table.dart';
 import 'package:mosix/widgets/track_detail_actions.dart';
 import 'package:mosix/screens/collapsing_header_scroll_mixin.dart';
 import 'package:mosix/widgets/error_card.dart';
+import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/downloadable_cover.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
+import 'package:mosix/theme/mosix_theme.dart';
+import 'package:mosix/widgets/mosix_artist_header.dart';
 
 class PlaylistScreen extends ConsumerStatefulWidget {
   final String playlistName;
@@ -71,8 +72,38 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
   String? _resolvedPlaylistName;
   String? _resolvedCoverUrl;
   String? _resolvedHeaderVideoUrl;
+  String _sortMode = 'playlist';
+  String _filterQuery = '';
 
   List<Track> get _tracks => _fetchedTracks ?? widget.tracks;
+  List<Track> get _displayTracks {
+    final query = _filterQuery.trim().toLowerCase();
+    final indexed = _tracks.indexed.where((entry) {
+      if (query.isEmpty) return true;
+      final track = entry.$2;
+      return track.name.toLowerCase().contains(query) ||
+          track.artistName.toLowerCase().contains(query) ||
+          track.albumName.toLowerCase().contains(query);
+    }).toList();
+    int compareText(String first, String second) =>
+        first.trim().toLowerCase().compareTo(second.trim().toLowerCase());
+    indexed.sort((a, b) {
+      final left = a.$2;
+      final right = b.$2;
+      final compared = switch (_sortMode) {
+        'title-asc' => compareText(left.name, right.name),
+        'title-desc' => compareText(right.name, left.name),
+        'artist-asc' => compareText(left.artistName, right.artistName),
+        'artist-desc' => compareText(right.artistName, left.artistName),
+        'album-asc' => compareText(left.albumName, right.albumName),
+        'album-desc' => compareText(right.albumName, left.albumName),
+        _ => a.$1.compareTo(b.$1),
+      };
+      return compared == 0 ? a.$1.compareTo(b.$1) : compared;
+    });
+    return indexed.map((entry) => entry.$2).toList(growable: false);
+  }
+
   String get _playlistName => _resolvedPlaylistName ?? widget.playlistName;
   String? get _coverUrl => _resolvedCoverUrl ?? widget.coverUrl;
   String? get _headerVideoUrl =>
@@ -83,9 +114,9 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
   String _trackSelectionId(Track track, int index) => '${track.id}#$index';
 
   List<Track> get _selectedTracks => [
-    for (var index = 0; index < _tracks.length; index++)
-      if (selectedIds.contains(_trackSelectionId(_tracks[index], index)))
-        _tracks[index],
+    for (var index = 0; index < _displayTracks.length; index++)
+      if (selectedIds.contains(_trackSelectionId(_displayTracks[index], index)))
+        _displayTracks[index],
   ];
 
   Widget _buildSelectionBottomBar(
@@ -94,7 +125,8 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
     double bottomPadding,
   ) {
     final selectedCount = selectedIds.length;
-    final allSelected = _tracks.isNotEmpty && selectedCount == _tracks.length;
+    final allSelected =
+        _displayTracks.isNotEmpty && selectedCount == _displayTracks.length;
 
     return SelectionBottomBar(
       selectedCount: selectedCount,
@@ -105,8 +137,8 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
           exitSelectionMode();
         } else {
           selectAll([
-            for (var index = 0; index < _tracks.length; index++)
-              _trackSelectionId(_tracks[index], index),
+            for (var index = 0; index < _displayTracks.length; index++)
+              _trackSelectionId(_displayTracks[index], index),
           ]);
         }
       },
@@ -279,8 +311,8 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
         : 0.0;
 
     pruneSelection({
-      for (var index = 0; index < _tracks.length; index++)
-        _trackSelectionId(_tracks[index], index),
+      for (var index = 0; index < _displayTracks.length; index++)
+        _trackSelectionId(_displayTracks[index], index),
     });
 
     return DesktopListScope(
@@ -381,6 +413,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
                 _buildLoveAllButton(),
                 _buildDownloadAllCenterButton(context),
                 _buildAddToPlaylistButton(context),
+                _buildSortButton(context),
               ],
             )
           : context.isMosix
@@ -397,6 +430,8 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
                 ),
                 const SizedBox(width: 16),
                 _buildAddToPlaylistButton(context),
+                const SizedBox(width: 8),
+                _buildSortButton(context),
               ],
             )
           : ExpressiveButtonGroup(
@@ -405,9 +440,100 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
                 _buildLoveAllButton(),
                 _buildDownloadAllCenterButton(context),
                 _buildAddToPlaylistButton(context),
+                _buildSortButton(context),
               ],
             ),
     );
+  }
+
+  Widget _buildSortButton(BuildContext context) => HeaderCircleButton(
+    icon: Icons.sort,
+    tooltip: context.l10n.playlistSortAndFilter,
+    onPressed: _tracks.length < 2 ? null : () => _showSortOptions(context),
+  );
+
+  Future<void> _showSortOptions(BuildContext context) async {
+    final filterController = TextEditingController(text: _filterQuery);
+    var temporaryFilter = _filterQuery;
+    final options = <(String, String)>[
+      ('playlist', context.l10n.playlistTrackOrder),
+      ('title-asc', context.l10n.searchSortTitleAZ),
+      ('title-desc', context.l10n.searchSortTitleZA),
+      ('artist-asc', context.l10n.searchSortArtistAZ),
+      ('artist-desc', context.l10n.searchSortArtistZA),
+      ('album-asc', context.l10n.libraryFilterSortAlbumAsc),
+      ('album-desc', context.l10n.libraryFilterSortAlbumDesc),
+    ];
+    try {
+      await showAppBottomSheet<void>(
+        context: context,
+        title: context.l10n.playlistSortAndFilter,
+        builder: (sheetContext) => StatefulBuilder(
+          builder: (context, setSheetState) => SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: TextField(
+                    controller: filterController,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.playlistFilterTracks,
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: temporaryFilter.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: context.l10n.libraryFilterReset,
+                              onPressed: () {
+                                filterController.clear();
+                                setSheetState(() => temporaryFilter = '');
+                              },
+                              icon: const Icon(Icons.close),
+                            ),
+                    ),
+                    onChanged: (value) =>
+                        setSheetState(() => temporaryFilter = value),
+                  ),
+                ),
+                for (final (mode, label) in options)
+                  ListTile(
+                    title: Text(label),
+                    trailing: _sortMode == mode
+                        ? const Icon(Icons.check)
+                        : null,
+                    onTap: () {
+                      Navigator.of(sheetContext).pop();
+                      if (!mounted) return;
+                      exitSelectionMode();
+                      setState(() {
+                        _sortMode = mode;
+                        _filterQuery = temporaryFilter;
+                      });
+                    },
+                  ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () {
+                        Navigator.of(sheetContext).pop();
+                        if (!mounted) return;
+                        exitSelectionMode();
+                        setState(() => _filterQuery = temporaryFilter);
+                      },
+                      child: Text(context.l10n.libraryFilterApply),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } finally {
+      filterController.dispose();
+    }
   }
 
   Widget _buildPlaylistFooter(BuildContext context, ColorScheme colorScheme) =>
@@ -437,7 +563,8 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
       );
     }
 
-    if (_tracks.isEmpty) {
+    final tracks = _displayTracks;
+    if (tracks.isEmpty) {
       return SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -451,21 +578,19 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
       );
     }
 
-    _historySnapshot.update(_tracks);
+    _historySnapshot.update(tracks);
     final historyLookups = _historySnapshot.lookups;
     final existingHistoryKeys = ref.watch(
       downloadHistoryVisibleBatchExistsProvider(_historySnapshot.request),
     );
     if (isDesktopPlatform) {
       final ids = [
-        for (var i = 0; i < _tracks.length; i++)
-          _trackSelectionId(_tracks[i], i),
+        for (var i = 0; i < tracks.length; i++) _trackSelectionId(tracks[i], i),
       ];
       final inHistory = [
         for (final lookup in historyLookups)
           existingHistoryKeys.contains(lookup.lookupKey),
       ];
-      final tracks = _tracks;
       void activate(int index) => TrackListTile.activate(
         context,
         ref,
@@ -498,7 +623,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
       padding: EdgeInsets.symmetric(horizontal: wideListInset(context)),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
-          final track = _tracks[index];
+          final track = tracks[index];
           final selectionId = _trackSelectionId(track, index);
           final isInHistory = existingHistoryKeys.contains(
             historyLookups[index].lookupKey,

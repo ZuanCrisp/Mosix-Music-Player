@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/cover_palette.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -46,7 +46,7 @@ import 'package:mosix/widgets/selection_bottom_bar.dart';
 import 'package:mosix/widgets/library_selection_playback_actions.dart';
 import 'package:mosix/widgets/disc_separator_chip.dart';
 import 'package:mosix/widgets/album_detail_header.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
+import 'package:mosix/widgets/mosix_artist_header.dart';
 import 'package:mosix/widgets/motion_header_banner.dart';
 import 'package:mosix/widgets/app_loading_indicator.dart';
 

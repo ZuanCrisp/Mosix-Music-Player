@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/playback_seek_preview.dart';
 import 'package:mosix/widgets/expressive_seek_track.dart';
-import 'package:mosix/widgets/mornye_player_slider.dart';
+import 'package:mosix/widgets/mosix_player_slider.dart';
 
 /// Previews scrubbing locally and seeks once when the gesture ends.
 class PlaybackSeekSlider extends StatefulWidget {

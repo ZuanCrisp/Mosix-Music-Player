@@ -15,19 +15,19 @@ import 'package:mosix/providers/track_provider.dart';
 import 'package:mosix/screens/home_tab.dart';
 import 'package:mosix/services/library_search.dart';
 import 'package:mosix/utils/desktop_platform.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/app_theme.dart';
 import 'package:mosix/widgets/animation_utils.dart';
 import 'package:mosix/widgets/app_search_field.dart';
 import 'package:mosix/widgets/lazy_tab_view.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
+import 'package:mosix/widgets/mosix_context_menu.dart';
 
 void main() {
   for (final desktop in [false, true]) {
-    for (final mornye in [false, true]) {
+    for (final mosix in [false, true]) {
       testWidgets('Home keeps its feed layout through slow startup '
-          '(desktop: $desktop, Mosix: $mornye)', (tester) async {
+          '(desktop: $desktop, Mosix: $mosix)', (tester) async {
         debugDesktopPlatformOverride = desktop;
         addTearDown(() => debugDesktopPlatformOverride = null);
         tester.view.physicalSize = desktop
@@ -37,7 +37,7 @@ void main() {
         addTearDown(tester.view.reset);
         final extensions = _StartupExtensions();
         final explore = _StartupExplore();
-        await _pumpStartupHome(tester, extensions, explore, mornye: mornye);
+        await _pumpStartupHome(tester, extensions, explore, mosix: mosix);
 
         expect(find.text('Shortcuts'), findsNothing);
         expect(find.byType(ShimmerLoading), findsOneWidget);
@@ -53,7 +53,7 @@ void main() {
         for (final size in artwork) {
           expect(size.width, size.height);
         }
-        final searchRect = mornye
+        final searchRect = mosix
             ? null
             : tester.getRect(find.byType(TextField));
         await tester.pump(const Duration(seconds: 3));
@@ -185,7 +185,7 @@ void main() {
         tester,
         extensions,
         _StartupExplore(),
-        mornye: false,
+        mosix: false,
         homeVisible: homeVisible,
         pages: pages,
       );
@@ -779,7 +779,7 @@ Future<void> _pumpStartupHome(
   WidgetTester tester,
   _StartupExtensions extensions,
   _StartupExplore explore, {
-  bool mornye = true,
+  bool mosix = true,
   bool feedDisabled = false,
   ValueNotifier<bool>? homeVisible,
   PageController? pages,
@@ -794,11 +794,11 @@ Future<void> _pumpStartupHome(
       trackProvider.overrideWith(_Search.new),
     ],
     child: MaterialApp(
-      theme: mornye ? MosixTheme.build(Brightness.dark) : AppTheme.dark(),
+      theme: mosix ? MosixTheme.build(Brightness.dark) : AppTheme.dark(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: homeVisible == null
-          ? HomeTab(mode: mornye ? HomeTabMode.browse : HomeTabMode.combined)
+          ? HomeTab(mode: mosix ? HomeTabMode.browse : HomeTabMode.combined)
           : ValueListenableBuilder(
               valueListenable: homeVisible,
               builder: (context, visible, _) => PageView(
@@ -808,7 +808,7 @@ Future<void> _pumpStartupHome(
                     enabled: visible,
                     child: HomeTab(
                       key: const ValueKey('home'),
-                      mode: mornye ? HomeTabMode.browse : HomeTabMode.combined,
+                      mode: mosix ? HomeTabMode.browse : HomeTabMode.combined,
                     ),
                   ),
                   const Scaffold(key: ValueKey('other')),

@@ -11,10 +11,10 @@ import 'package:mosix/providers/equalizer_provider.dart';
 import 'package:mosix/screens/equalizer_screen.dart';
 import 'package:mosix/services/playback_equalizer.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_slider.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/mornye_level_slider.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
+import 'package:mosix/widgets/mosix_level_slider.dart';
 
 void main() {
   setUp(() {
@@ -153,11 +153,11 @@ void main() {
     final export = notifier.exportPreset('Portable');
     expect(
       (jsonDecode(export) as Map<String, dynamic>)['format'],
-      'mornye-equalizer',
+      'mosix-equalizer',
     );
     notifier.importPreset(export);
     notifier.importPreset(
-      export.replaceFirst('mornye-equalizer', 'spotiflac-equalizer'),
+      export.replaceFirst('mosix-equalizer', 'spotiflac-equalizer'),
     );
     expect(container.read(equalizerProvider).presets.map((v) => v.name), [
       'Headphones',
@@ -183,9 +183,9 @@ void main() {
     expect(restored.read(equalizerProvider).presets.length, 3);
   });
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'EQ editing and dialogs fit a narrow screen with large text ($mornye)',
+      'EQ editing and dialogs fit a narrow screen with large text ($mosix)',
       (tester) async {
         tester.view.physicalSize = const Size(320, 720);
         tester.view.devicePixelRatio = 1;
@@ -196,7 +196,7 @@ void main() {
           UncontrolledProviderScope(
             container: container,
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.dark)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -213,7 +213,7 @@ void main() {
         );
         await tester.pumpAndSettle();
         final picker = find.byType(
-          mornye ? MosixSegmentedControl : M3EButtonGroup,
+          mosix ? MosixSegmentedControl : M3EButtonGroup,
         );
         await tester.scrollUntilVisible(
           picker,
@@ -228,7 +228,7 @@ void main() {
         expect(container.read(equalizerProvider).settings.gains.length, 31);
         expect(tester.takeException(), isNull);
         // The first slider on the page is the lowest band's fader.
-        final onChanged = mornye
+        final onChanged = mosix
             ? tester
                   .widgetList<MosixLevelSlider>(find.byType(MosixLevelSlider))
                   .first

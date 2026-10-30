@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:mosix/widgets/app_action_button.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -341,16 +341,16 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
 
   Widget _overviewSurface({required Widget child}) {
     final scheme = Theme.of(context).colorScheme;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final content = Padding(padding: const EdgeInsets.all(16), child: child);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: mornye
+          color: mosix
               ? scheme.surfaceContainer
               : scheme.primaryContainer.withValues(alpha: 0.28),
-          borderRadius: BorderRadius.circular(mornye ? 28 : 18),
+          borderRadius: BorderRadius.circular(mosix ? 28 : 18),
         ),
         child: content,
       ),
@@ -360,7 +360,7 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final overview = _overview;
 
     return Scaffold(
@@ -391,7 +391,7 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
                       context.l10n.cacheSummaryTitle,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: mornye
+                        color: mosix
                             ? colorScheme.onSurface
                             : colorScheme.onPrimaryContainer,
                       ),
@@ -402,7 +402,7 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
                         formatBytes(overview.totalKnownDiskCacheBytes),
                       ),
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: mornye
+                        color: mosix
                             ? colorScheme.onSurface
                             : colorScheme.onPrimaryContainer,
                       ),
@@ -411,7 +411,7 @@ class _CacheManagementPageState extends ConsumerState<CacheManagementPage> {
                     Text(
                       context.l10n.cacheSummarySubtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: mornye
+                        color: mosix
                             ? colorScheme.onSurfaceVariant
                             : colorScheme.onPrimaryContainer.withValues(
                                 alpha: 0.85,

@@ -248,7 +248,7 @@ its state to native_download_worker_state.json in `filesDir` for
 
 `android/app/build.gradle.kts` adds `android/app/src/rust/kotlin` as a source
 directory, plus the generated UniFFI Kotlin bindings in
-`rust_backend/target/bindings/kotlin/` (package `com.mornye.backend`) and
+`rust_backend/target/bindings/kotlin/` (package `com.mosix.backend`) and
 the native libraries in `rust_backend/target/android/jniLibs/`. The
 `buildRustBackend` task runs `scripts/build_rust_backend.sh android` before
 `preBuild`.
@@ -261,7 +261,7 @@ the native libraries in `rust_backend/target/android/jniLibs/`. The
 - `android/app/src/rust/kotlin/com/zuancrisp/mosix/NativeDataJobs.kt`:
   `runNativeDataJob` and its cancellation registry.
 
-The generated bindings load `libmornye_mobile.so` through JNA
+The generated bindings load `libmosix_mobile.so` through JNA
 (`Native.register` with the `cdylib_name` from
 `rust_backend/crates/mobile/uniffi.toml`). The app depends on
 `net.java.dev.jna:jna` for this, and `android/app/proguard-rules.pro` keeps
@@ -270,7 +270,7 @@ The generated bindings load `libmornye_mobile.so` through JNA
 ## iOS
 
 `ios/Runner/AppDelegate.swift` registers the same `com.zuancrisp.mosix/backend`
-channel and both progress `EventChannel`s on the `mornye-player` engine.
+channel and both progress `EventChannel`s on the `mosix-player` engine.
 `handleMethodCall` routes in this order:
 
 1. `setScreenAwake` sets `isIdleTimerDisabled`.

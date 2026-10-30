@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/cover_palette.dart';
 import 'package:mosix/screens/track_history_snapshot.dart';
 import 'package:mosix/widgets/collection_scaffold.dart';
@@ -44,7 +44,7 @@ import 'package:mosix/widgets/selection_action_button.dart';
 import 'package:mosix/widgets/selection_bottom_bar.dart';
 import 'package:mosix/widgets/downloadable_cover.dart';
 import 'package:mosix/widgets/disc_separator_chip.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
+import 'package:mosix/widgets/mosix_artist_header.dart';
 
 class _AlbumCache {
   static final _cache = TtlCache<({List<Track> tracks, String? description})>(

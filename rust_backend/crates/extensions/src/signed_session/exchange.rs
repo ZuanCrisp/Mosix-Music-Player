@@ -3,7 +3,7 @@
 use super::coordinator::{Check, Flight, SignedSessionClient};
 use super::protocol::{self, Record};
 use crate::auth::{PendingAuthRequest, callback_state};
-use mornye_network::{query, url::UrlParts};
+use mosix_network::{query, url::UrlParts};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;

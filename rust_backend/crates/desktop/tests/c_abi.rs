@@ -2,9 +2,9 @@
 //! The library keeps process-wide state, so every test shares one
 //! initialization and uses its own call IDs.
 
-use mornye_desktop::{
-    implemented_methods, kind, mornye_call, mornye_cancel, mornye_free, mornye_init,
-    mornye_subscribe, mornye_unsubscribe,
+use mosix_desktop::{
+    implemented_methods, kind, mosix_call, mosix_cancel, mosix_free, mosix_init, mosix_subscribe,
+    mosix_unsubscribe,
 };
 use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
@@ -32,14 +32,14 @@ extern "C" fn callback(id: u64, kind: i32, data: *const u8, len: usize) {
         Vec::new()
     } else {
         // SAFETY: the library passes a buffer of `len` bytes that stays valid
-        // until `mornye_free`.
+        // until `mosix_free`.
         #[allow(unsafe_code)]
         unsafe { std::slice::from_raw_parts(data, len) }.to_vec()
     };
     // Dart copies, then frees.
     #[allow(unsafe_code)]
     unsafe {
-        mornye_free(data.cast_mut(), len)
+        mosix_free(data.cast_mut(), len)
     };
     let inbox = inbox();
     inbox
@@ -84,7 +84,7 @@ fn fixture() -> &'static Fixture {
         .to_string();
         #[allow(unsafe_code)]
         unsafe {
-            mornye_init(Some(callback), config.as_ptr(), config.len())
+            mosix_init(Some(callback), config.as_ptr(), config.len())
         };
     });
     fixture
@@ -124,7 +124,7 @@ fn call_raw(method: &str, args: &str, bytes: Option<&[u8]>) -> (i32, Vec<u8>) {
     let (pointer, len) = bytes.map_or((std::ptr::null(), 0), |bytes| (bytes.as_ptr(), bytes.len()));
     #[allow(unsafe_code)]
     unsafe {
-        mornye_call(id, method.as_ptr(), args.as_ptr(), args.len(), pointer, len)
+        mosix_call(id, method.as_ptr(), args.as_ptr(), args.len(), pointer, len)
     };
     wait_for(id, Duration::from_secs(30))
 }
@@ -142,7 +142,7 @@ fn call(method: &str, args: Value) -> Result<Value, Value> {
 #[test]
 fn sanitize_filename_returns_result_payload() {
     let result = call("sanitizeFilename", json!({"filename": "a/b:c?.flac"})).unwrap();
-    let expected = mornye_mobile::sanitize_filename("a/b:c?.flac".into());
+    let expected = mosix_mobile::sanitize_filename("a/b:c?.flac".into());
     assert_eq!(result, Value::String(expected));
 }
 
@@ -253,13 +253,13 @@ fn owner_methods_require_initialization_then_round_trip_settings() {
 #[test]
 fn library_scan_progress_is_pushed_while_subscribed() {
     fixture();
-    mornye_subscribe(kind::LIBRARY_SCAN_PROGRESS);
-    mornye_subscribe(kind::LIBRARY_SCAN_PROGRESS);
+    mosix_subscribe(kind::LIBRARY_SCAN_PROGRESS);
+    mosix_subscribe(kind::LIBRARY_SCAN_PROGRESS);
     let (event_kind, data) = wait_matching(0, Duration::from_secs(10), |(event_kind, _)| {
         *event_kind == kind::LIBRARY_SCAN_PROGRESS
     });
-    mornye_unsubscribe(kind::LIBRARY_SCAN_PROGRESS);
-    mornye_unsubscribe(kind::LIBRARY_SCAN_PROGRESS);
+    mosix_unsubscribe(kind::LIBRARY_SCAN_PROGRESS);
+    mosix_unsubscribe(kind::LIBRARY_SCAN_PROGRESS);
     assert_eq!(event_kind, kind::LIBRARY_SCAN_PROGRESS);
     let payload: Value = serde_json::from_slice(&data).unwrap();
     assert!(payload.is_object(), "{payload}");
@@ -268,15 +268,15 @@ fn library_scan_progress_is_pushed_while_subscribed() {
 #[test]
 fn cancel_and_free_tolerate_unknown_ids_and_null() {
     fixture();
-    mornye_cancel(u64::MAX);
+    mosix_cancel(u64::MAX);
     #[allow(unsafe_code)]
     unsafe {
-        mornye_free(std::ptr::null_mut(), 0)
+        mosix_free(std::ptr::null_mut(), 0)
     };
     // A second init keeps the first configuration and state.
     #[allow(unsafe_code)]
     unsafe {
-        mornye_init(Some(callback), std::ptr::null(), 0)
+        mosix_init(Some(callback), std::ptr::null(), 0)
     };
     assert!(call("sanitizeFilename", json!({"filename": "x"})).is_ok());
 }

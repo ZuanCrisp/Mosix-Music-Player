@@ -1,7 +1,7 @@
 use super::metadata::host_track;
-use mornye_core::downloads::DownloadRequest;
-use mornye_core::filename::{build_filename_checked, sanitize_filename_preserving_token};
-use mornye_providers::resolver::Check;
+use mosix_core::downloads::DownloadRequest;
+use mosix_core::filename::{build_filename_checked, sanitize_filename_preserving_token};
+use mosix_providers::resolver::Check;
 use serde_json::json;
 use std::path::{Path, PathBuf};
 

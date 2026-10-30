@@ -1212,14 +1212,14 @@ void main() {
       expect(secondDecks.single.outputOptions!.values, everyElement(isTrue));
       final toggled = <String>[];
       first.configureNotification(
-        presentation: const PlaybackNotification(mornye: true),
+        presentation: const PlaybackNotification(mosix: true),
         toggleFavorite: (item) async {
           toggled.add('first:${item.id}');
           return true;
         },
       );
       second.configureNotification(
-        presentation: const PlaybackNotification(mornye: true),
+        presentation: const PlaybackNotification(mosix: true),
         toggleFavorite: (item) async {
           toggled.add('second:${item.id}');
           return false;

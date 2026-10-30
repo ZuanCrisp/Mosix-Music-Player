@@ -4,8 +4,8 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/services/hires_check_service.dart';
 import 'package:mosix/services/audio_analysis_jobs.dart';
 import 'package:mosix/services/network_audio_analysis_input.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 import 'package:mosix/widgets/app_content_card.dart';
 import 'package:mosix/widgets/settings_group.dart';
@@ -94,7 +94,7 @@ class _HiResCheckCardState extends State<HiResCheckCard> {
     final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final result = _result;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
 
     return AppContentCard(
       elevation: 0,
@@ -104,7 +104,7 @@ class _HiResCheckCardState extends State<HiResCheckCard> {
         side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Padding(
-        padding: EdgeInsets.all(mornye ? 20 : 16),
+        padding: EdgeInsets.all(mosix ? 20 : 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -124,11 +124,11 @@ class _HiResCheckCardState extends State<HiResCheckCard> {
                   SizedBox(
                     width: 20,
                     height: 20,
-                    child: mornye
+                    child: mosix
                         ? const CupertinoActivityIndicator()
                         : const AppLoadingIndicator(size: 20, strokeWidth: 2.5),
                   )
-                else if (mornye && (result != null || _error != null))
+                else if (mosix && (result != null || _error != null))
                   Tooltip(
                     message: l10n.audioAnalysisRescan,
                     child: CupertinoButton(
@@ -170,7 +170,7 @@ class _HiResCheckCardState extends State<HiResCheckCard> {
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                child: mornye
+                child: mosix
                     ? AppActionButton(
                         outlined: true,
                         tonal: true,

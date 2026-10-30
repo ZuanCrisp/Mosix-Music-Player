@@ -11,7 +11,7 @@ import 'package:mosix/models/settings.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/settings/files_settings_page.dart';
 import 'package:mosix/screens/setup_screen.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 class _SetupSettings extends SettingsNotifier {
   @override
@@ -47,7 +47,7 @@ void main() {
 
   Future<ProviderContainer> openPicker(
     WidgetTester tester, {
-    bool mornye = false,
+    bool mosix = false,
   }) async {
     picker = Completer<Map<String, String>?>();
     tester.view.physicalSize = const Size(820, 1180);
@@ -65,7 +65,7 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
-          theme: mornye ? MosixTheme.build(Brightness.light) : ThemeData(),
+          theme: mosix ? MosixTheme.build(Brightness.light) : ThemeData(),
           locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -85,11 +85,11 @@ void main() {
     return container;
   }
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'picker failure stays visible after the sheet closes ($mornye)',
+      'picker failure stays visible after the sheet closes ($mosix)',
       (tester) async {
-        final container = await openPicker(tester, mornye: mornye);
+        final container = await openPicker(tester, mosix: mosix);
         picker.completeError(
           PlatformException(code: 'BOOKMARK_FAILED', message: 'Access denied'),
         );

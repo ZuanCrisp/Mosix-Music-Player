@@ -1,5 +1,5 @@
 use image::{DynamicImage, ImageFormat};
-use mornye_core::tags::extract_cover;
+use mosix_core::tags::extract_cover;
 use std::io::Cursor;
 
 fn picture_tag(image: &[u8], version: u8, encoding: u8, description: &[u8]) -> Vec<u8> {

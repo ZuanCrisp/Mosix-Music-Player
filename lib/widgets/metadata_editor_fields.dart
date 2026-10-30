@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_content_card.dart';
 import 'package:mosix/widgets/app_switch.dart';
 import 'package:mosix/widgets/expressive_button.dart';

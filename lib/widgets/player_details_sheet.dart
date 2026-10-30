@@ -4,11 +4,11 @@ import 'package:mosix/controllers/player_metadata_controller.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/theme/app_motion.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/utils/isrc_utils.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/mornye_player_details_sheet.dart';
+import 'package:mosix/widgets/mosix_player_details_sheet.dart';
 import 'package:mosix/widgets/settings_group.dart';
 
 Future<void> showPlayerDetailsSheet(
@@ -50,7 +50,7 @@ Future<void> showPlayerDetailsSheet(
     return showAppSheetDialog<void>(
       context: context,
       isScrollControlled: true,
-      mornyeGlass: false,
+      mosixGlass: false,
       builder: (context) => DraggableScrollableSheet(
         expand: false,
         initialChildSize: 1,

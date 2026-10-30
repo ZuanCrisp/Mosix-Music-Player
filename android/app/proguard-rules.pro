@@ -11,7 +11,7 @@
 # UniFFI/JNA resolves FFI methods and structure fields by their generated names.
 # Preserve the generated Rust bindings used by JNA.
 -keep class com.sun.jna.** { *; }
--keep class com.mornye.backend.** { *; }
+-keep class com.mosix.backend.** { *; }
 # JNA's desktop AWT helpers are unavailable and unused on Android.
 # https://github.com/java-native-access/jna/blob/master/www/FrequentlyAskedQuestions.md#jna-on-android
 -dontwarn java.awt.Component
@@ -41,18 +41,18 @@
 # Android instantiates these components from the manifest. Preserve only their
 # names and constructors; normal reachability can now shrink/optimize helpers,
 # coroutine state machines, and unused members in the rest of the app package.
--keep,allowoptimization class com.zarz.mornye.MainActivity {
+-keep,allowoptimization class com.zuancrisp.mosix.MainActivity {
     public <init>();
 }
--keep,allowoptimization class com.zarz.mornye.DownloadService {
+-keep,allowoptimization class com.zuancrisp.mosix.DownloadService {
     public <init>();
 }
--keep,allowoptimization class com.zarz.mornye.DownloadQueueWidgetProvider {
+-keep,allowoptimization class com.zuancrisp.mosix.DownloadQueueWidgetProvider {
     public <init>();
 }
 
 # Flutter's fragment builders instantiate this class through reflection.
--keep,allowoptimization class com.zarz.mornye.MainActivity$ImpellerAwareFlutterFragment {
+-keep,allowoptimization class com.zuancrisp.mosix.MainActivity$ImpellerAwareFlutterFragment {
     public <init>();
 }
 

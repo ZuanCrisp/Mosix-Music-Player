@@ -3,7 +3,7 @@
 
 use crate::cancellation::RequestLease;
 use crate::manager::{ExtensionManager, ExtensionManagerError};
-use mornye_core::tags;
+use mosix_core::tags;
 use std::collections::BTreeMap;
 use std::fs::{File, OpenOptions};
 use std::sync::Arc;
@@ -100,7 +100,7 @@ impl ExtensionManager {
         let format = tags::library_extension(&audio_path, &hint);
         let mut metadata = serde_json::json!({"coverPath":cover_path});
         if format == "flac" {
-            if let Ok(quality) = mornye_core::media::probe_quality(&mut file, &check) {
+            if let Ok(quality) = mosix_core::media::probe_quality(&mut file, &check) {
                 metadata["bitDepth"] = quality.bit_depth.into();
                 metadata["sampleRate"] = quality.sample_rate.into();
                 if quality.sample_rate > 0 && quality.total_samples > 0 {

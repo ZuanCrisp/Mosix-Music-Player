@@ -104,7 +104,7 @@ void main() {
       final hasExtensions = mask & 8 != 0;
       final output = await Directory('${root.path}/backup-$mask').create();
       final backup = await BackupService.writeBackupArchive(
-        settings: hasSettings ? {'theme': 'mornye'} : null,
+        settings: hasSettings ? {'theme': 'mosix'} : null,
         includeHistory: hasHistory,
         loadHistoryPage: (_, _) async =>
             throw StateError('Native history export must bypass Dart loader'),
@@ -224,7 +224,7 @@ void main() {
         },
       ]) {
         final archiveFile = await BackupService.writeBackupArchive(
-          settings: const {'theme': 'mornye', 'nil': null},
+          settings: const {'theme': 'mosix', 'nil': null},
           includeHistory: false,
           loadHistoryPage: (_, _) async =>
               throw StateError('Disabled history must not be loaded'),

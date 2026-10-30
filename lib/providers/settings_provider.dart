@@ -23,7 +23,7 @@ const _migrationVersionKey = 'settings_migration_version';
 const _currentMigrationVersion = 15;
 
 /// Marked the removed rebrand tour as seen.
-const _retiredUpgradeIntroSeenKey = 'upgrade_intro_mornye_seen';
+const _retiredUpgradeIntroSeenKey = 'upgrade_intro_mosix_seen';
 const _legacyDefaultLyricsProviders = ['apple_music', 'lrclib'];
 const _spotifyClientSecretKey = 'spotify_client_secret';
 const _retiredBuiltInProviderIds = {'deezer', 'qobuz', 'tidal', 'youtube'};

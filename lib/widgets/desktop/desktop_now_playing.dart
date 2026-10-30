@@ -10,16 +10,16 @@ import 'package:mosix/controllers/player_metadata_controller.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/theme/app_motion.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/player_artwork_theme.dart';
 import 'package:mosix/utils/playback_seek_preview.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/desktop/desktop_inspector.dart';
 import 'package:mosix/widgets/desktop/desktop_window.dart';
 import 'package:mosix/widgets/material_player_backdrop.dart';
-import 'package:mosix/widgets/mornye_player_background.dart';
-import 'package:mosix/widgets/mornye_player_favorite_button.dart';
-import 'package:mosix/widgets/mornye_player_queue.dart';
+import 'package:mosix/widgets/mosix_player_background.dart';
+import 'package:mosix/widgets/mosix_player_favorite_button.dart';
+import 'package:mosix/widgets/mosix_player_queue.dart';
 import 'package:mosix/widgets/no_scrollbars.dart';
 import 'package:mosix/widgets/player_artwork.dart';
 import 'package:mosix/widgets/player_lyrics_section.dart';
@@ -91,8 +91,8 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
   }
 
   Widget _buildPlayer(BuildContext context, MediaItem? mediaItem) {
-    final mornye = context.isMosix;
-    final theme = mornye
+    final mosix = context.isMosix;
+    final theme = mosix
         ? MosixTheme.fromContext(context, brightness: Brightness.dark)
         : Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -103,7 +103,7 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (mornye)
+            if (mosix)
               MosixPlayerBackground(artUri: mediaItem?.artUri)
             else if (mediaItem != null)
               MaterialPlayerBackdrop(
@@ -148,7 +148,7 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
               child: _RoundButton(
                 key: const ValueKey('desktop-now-playing-close'),
                 tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-                icon: mornye ? CupertinoIcons.xmark : Icons.close,
+                icon: mosix ? CupertinoIcons.xmark : Icons.close,
                 onPressed: closeDesktopNowPlaying,
               ),
             ),
@@ -158,7 +158,7 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
               width: 260,
               child: _Capsule(
                 child: PlayerVolumeControl(
-                  foreground: mornye ? Colors.white : colorScheme.onSurface,
+                  foreground: mosix ? Colors.white : colorScheme.onSurface,
                 ),
               ),
             ),
@@ -173,7 +173,7 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
                     children: [
                       _RoundButton(
                         tooltip: context.l10n.nowPlayingTabLyrics,
-                        icon: mornye
+                        icon: mosix
                             ? CupertinoIcons.quote_bubble
                             : Icons.lyrics_outlined,
                         selected: panel == DesktopInspectorPanel.lyrics,
@@ -184,7 +184,7 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
                       const SizedBox(width: 4),
                       _RoundButton(
                         tooltip: context.l10n.nowPlayingUpNext,
-                        icon: mornye
+                        icon: mosix
                             ? CupertinoIcons.list_bullet
                             : Icons.queue_music,
                         selected: panel == DesktopInspectorPanel.upNext,
@@ -386,9 +386,9 @@ class _PlayerColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final textTheme = Theme.of(context).textTheme;
-    final corners = BorderRadius.circular(mornye ? 12 : 28);
+    final corners = BorderRadius.circular(mosix ? 12 : 28);
     final artwork = PlayerArtwork(
       artUri: mediaItem.artUri?.toString(),
       colorScheme: colorScheme,
@@ -416,7 +416,7 @@ class _PlayerColumn extends StatelessWidget {
                 ),
               ],
             ),
-            child: mornye
+            child: mosix
                 ? ClipRSuperellipse(borderRadius: corners, child: artwork)
                 : ClipRRect(borderRadius: corners, child: artwork),
           ),
@@ -432,7 +432,7 @@ class _PlayerColumn extends StatelessWidget {
                     mediaItem: mediaItem,
                     metadata: metadata,
                     style:
-                        (mornye ? textTheme.titleMedium : textTheme.titleLarge)
+                        (mosix ? textTheme.titleMedium : textTheme.titleLarge)
                             ?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: colorScheme.onSurface,
@@ -446,13 +446,13 @@ class _PlayerColumn extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style:
-                          (mornye ? textTheme.bodyMedium : textTheme.titleSmall)
+                          (mosix ? textTheme.bodyMedium : textTheme.titleSmall)
                               ?.copyWith(color: colorScheme.onSurfaceVariant),
                     ),
                 ],
               ),
             ),
-            if (mornye)
+            if (mosix)
               MosixPlayerFavoriteButton(
                 mediaItem: mediaItem,
                 color: colorScheme.onSurface,

@@ -1,7 +1,7 @@
 use crate::host::decode_go_utf8;
 use crate::runtime::{Control, ExtensionServices};
 use base64::Engine;
-use mornye_network::{HttpRequest, HttpResponse};
+use mosix_network::{HttpRequest, HttpResponse};
 use rquickjs::{Array, Ctx, Function, Object, TypedArray, Value};
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -92,7 +92,7 @@ pub(crate) fn register<'js>(
 }
 
 fn parse_json<'js>(ctx: &Ctx<'js>, text: &str) -> rquickjs::Result<Value<'js>> {
-    let text = mornye_core::normalize_json_surrogates(text);
+    let text = mosix_core::normalize_json_surrogates(text);
     let bytes = text.as_bytes();
     let (mut position, mut depth) = (0, 0usize);
     // Go validates every float64 before overwriting duplicate object keys.

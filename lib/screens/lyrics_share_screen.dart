@@ -151,7 +151,7 @@ class _LyricsShareScreenState extends State<LyricsShareScreen> {
       final file = await captureBoundaryToPngFile(
         _cardKey,
         pixelRatio: 3,
-        fileName: 'mornye_lyrics.png',
+        fileName: 'mosix_lyrics.png',
       );
       if (file == null) throw StateError('Card could not be captured');
       await SharePlus.instance.share(

@@ -8,17 +8,17 @@ import 'package:mosix/providers/runtime_profile_provider.dart';
 import 'package:mosix/providers/theme_provider.dart';
 import 'package:mosix/screens/settings/appearance_settings_page.dart';
 import 'package:mosix/theme/dynamic_color_wrapper.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 void main() {
   test(
     'old themes retain outlines and new themes serialize the preference',
     () {
-      expect(ThemeSettings.fromJson({}).mornyeGlassOutlines, isTrue);
-      const settings = ThemeSettings(mornyeGlassOutlines: false);
+      expect(ThemeSettings.fromJson({}).mosixGlassOutlines, isTrue);
+      const settings = ThemeSettings(mosixGlassOutlines: false);
       expect(ThemeSettings.fromJson(settings.toJson()), settings);
       expect(
-        settings.copyWith(mornyeGlassClarity: 1).mornyeGlassOutlines,
+        settings.copyWith(mosixGlassClarity: 1).mosixGlassOutlines,
         isFalse,
       );
       expect(settings, isNot(const ThemeSettings()));
@@ -26,7 +26,7 @@ void main() {
   );
   test('glass clarity restores safely from old and invalid settings', () {
     expect(
-      ThemeSettings.fromJson({}).mornyeGlassClarity,
+      ThemeSettings.fromJson({}).mosixGlassClarity,
       kDefaultMosixGlassClarity,
     );
     for (final (saved, expected) in [
@@ -37,7 +37,7 @@ void main() {
       (double.nan, kDefaultMosixGlassClarity),
     ]) {
       final settings = ThemeSettings.fromJson({kMosixGlassClarityKey: saved});
-      expect(settings.mornyeGlassClarity, expected);
+      expect(settings.mosixGlassClarity, expected);
       expect(ThemeSettings.fromJson(settings.toJson()), settings);
     }
   });
@@ -133,7 +133,7 @@ void main() {
     );
     final before = tester.state(find.byKey(const ValueKey('app-state')));
 
-    await container.read(themeProvider.notifier).setStyle(AppThemeStyle.mornye);
+    await container.read(themeProvider.notifier).setStyle(AppThemeStyle.mosix);
     await tester.pumpAndSettle();
     expect(tester.state(find.byKey(const ValueKey('app-state'))), before);
 
@@ -149,12 +149,12 @@ void main() {
       'glass outlines toggle survives restart and local themes ($mode)',
       (tester) async {
         SharedPreferences.setMockInitialValues({
-          kThemeStyleKey: 'mornye',
+          kThemeStyleKey: 'mosix',
           kThemeModeKey: mode.name,
         });
         final prefs = await SharedPreferences.getInstance();
         await openSettings(tester, prefs);
-        final toggle = find.byKey(const ValueKey('mornye-glass-outlines'));
+        final toggle = find.byKey(const ValueKey('mosix-glass-outlines'));
         await tester.ensureVisible(toggle);
         await tester.pumpAndSettle();
         await tester.tap(find.text('Glass outlines'));
@@ -187,12 +187,12 @@ void main() {
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({
-        kThemeStyleKey: 'mornye',
+        kThemeStyleKey: 'mosix',
         kThemeModeKey: mode.name,
       });
       final prefs = await SharedPreferences.getInstance();
       await openSettings(tester, prefs);
-      final slider = find.byKey(const ValueKey('mornye-glass-clarity'));
+      final slider = find.byKey(const ValueKey('mosix-glass-clarity'));
       await tester.ensureVisible(slider);
       await tester.pumpAndSettle();
       await tester.drag(slider, const Offset(160, 0));
@@ -202,7 +202,7 @@ void main() {
       final context = tester.element(slider);
       expect(MosixTheme.glassClarityOf(context), 1);
       expect(
-        find.byKey(const ValueKey('mornye-glass-clear-performance')),
+        find.byKey(const ValueKey('mosix-glass-clear-performance')),
         findsOneWidget,
       );
       expect(
@@ -222,7 +222,7 @@ void main() {
       expect(tester.widget<Slider>(slider).value, 0);
       expect(prefs.getDouble(kMosixGlassClarityKey), 0);
       expect(
-        find.byKey(const ValueKey('mornye-glass-clear-performance')),
+        find.byKey(const ValueKey('mosix-glass-clear-performance')),
         findsNothing,
       );
       expect(tester.takeException(), isNull);
@@ -232,20 +232,20 @@ void main() {
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({
-        kThemeStyleKey: 'mornye',
+        kThemeStyleKey: 'mosix',
         kThemeModeKey: mode.name,
       });
       final prefs = await SharedPreferences.getInstance();
       await openSettings(tester, prefs, lowEnd: true);
-      final slider = find.byKey(const ValueKey('mornye-glass-clarity'));
+      final slider = find.byKey(const ValueKey('mosix-glass-clarity'));
       final hint = find.byKey(
-        const ValueKey('mornye-glass-clarity-unavailable'),
+        const ValueKey('mosix-glass-clarity-unavailable'),
       );
       await tester.ensureVisible(slider);
       await tester.pumpAndSettle();
       expect(tester.widget<Slider>(slider).onChanged, isNull);
       expect(
-        find.byKey(const ValueKey('mornye-glass-clear-performance')),
+        find.byKey(const ValueKey('mosix-glass-clear-performance')),
         findsNothing,
       );
       expect(
@@ -291,19 +291,19 @@ void main() {
         tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
       );
       SharedPreferences.setMockInitialValues({
-        kThemeStyleKey: 'mornye',
+        kThemeStyleKey: 'mosix',
         kThemeModeKey: mode.name,
       });
       final prefs = await SharedPreferences.getInstance();
       await openSettings(tester, prefs);
-      final slider = find.byKey(const ValueKey('mornye-glass-clarity'));
+      final slider = find.byKey(const ValueKey('mosix-glass-clarity'));
       await tester.ensureVisible(slider);
       await tester.pumpAndSettle();
       expect(tester.widget<Slider>(slider).onChanged, isNull);
       expect(
         tester
             .widget<Text>(
-              find.byKey(const ValueKey('mornye-glass-clarity-unavailable')),
+              find.byKey(const ValueKey('mosix-glass-clarity-unavailable')),
             )
             .data,
         'Your system requests increased contrast, so glass stays opaque. '
@@ -327,7 +327,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.widget<Slider>(slider).onChanged, isNotNull);
       expect(
-        find.byKey(const ValueKey('mornye-glass-clarity-unavailable')),
+        find.byKey(const ValueKey('mosix-glass-clarity-unavailable')),
         findsNothing,
       );
       expect(MediaQuery.highContrastOf(tester.element(slider)), isTrue);
@@ -349,7 +349,7 @@ void main() {
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({
-        kThemeStyleKey: 'mornye',
+        kThemeStyleKey: 'mosix',
         kThemeModeKey: mode.name,
         kSeedColorKey: 0xff123456,
       });
@@ -429,7 +429,7 @@ void main() {
         expect(systemFamily, isNot('Inter'));
         expect(systemFamily, isNot('Google Sans Flex'));
         expect(prefs.getBool(kUseSystemFontKey), isTrue);
-        if (style == AppThemeStyle.mornye) {
+        if (style == AppThemeStyle.mosix) {
           final overlay = MosixTheme.fromContext(
             tester.element(page),
             brightness: Brightness.dark,

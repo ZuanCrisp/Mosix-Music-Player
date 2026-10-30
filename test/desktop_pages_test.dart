@@ -17,7 +17,7 @@ import 'package:mosix/screens/settings/settings_tab.dart';
 import 'package:mosix/services/app_remote_config_service.dart';
 import 'package:mosix/services/shell_navigation_service.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/desktop/desktop_commands.dart';
@@ -66,8 +66,8 @@ DownloadItem _download(
 
 const _track = MediaItem(id: 'track', title: 'A song', artist: 'An artist');
 
-ThemeData _theme(bool mornye) =>
-    mornye ? MosixTheme.build(Brightness.light) : AppTheme.light();
+ThemeData _theme(bool mosix) =>
+    mosix ? MosixTheme.build(Brightness.light) : AppTheme.light();
 
 void main() {
   setUp(() {
@@ -94,7 +94,7 @@ void main() {
   }
 
   Widget app({
-    required bool mornye,
+    required bool mosix,
     required Widget home,
     List<Override> overrides = const [],
     GlobalKey<NavigatorState>? navigatorKey,
@@ -102,7 +102,7 @@ void main() {
     overrides: overrides,
     child: MaterialApp(
       navigatorKey: navigatorKey,
-      theme: _theme(mornye),
+      theme: _theme(mosix),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: navigatorKey == null
@@ -113,8 +113,8 @@ void main() {
     ),
   );
 
-  for (final mornye in [false, true]) {
-    final style = mornye ? 'Mosix' : 'Material';
+  for (final mosix in [false, true]) {
+    final style = mosix ? 'Mosix' : 'Material';
 
     group('$style settings', () {
       testWidgets('shows categories beside the selected page', (tester) async {
@@ -122,7 +122,7 @@ void main() {
         await setWindow(tester, 1400);
         await tester.pumpWidget(
           app(
-            mornye: mornye,
+            mosix: mosix,
             home: Scaffold(
               body: SettingsTab(
                 remoteConfigService: AppRemoteConfigService(
@@ -166,7 +166,7 @@ void main() {
         await setWindow(tester, 600);
         await tester.pumpWidget(
           app(
-            mornye: mornye,
+            mosix: mosix,
             home: Scaffold(
               body: SettingsTab(
                 remoteConfigService: AppRemoteConfigService(
@@ -206,7 +206,7 @@ void main() {
         final navigatorKey = GlobalKey<NavigatorState>();
         await tester.pumpWidget(
           app(
-            mornye: mornye,
+            mosix: mosix,
             navigatorKey: navigatorKey,
             overrides: playerOverrides(),
             home: Scaffold(
@@ -420,7 +420,7 @@ void main() {
         handler: requested.add,
         // Like the shell: only the Mosix sidebar has Library links.
         libraryLinkHandler: (id) {
-          if (!mornye) return false;
+          if (!mosix) return false;
           links.add(id);
           return true;
         },
@@ -430,7 +430,7 @@ void main() {
       );
       await tester.pumpWidget(
         app(
-          mornye: mornye,
+          mosix: mosix,
           overrides: [downloadQueueProvider.overrideWith(() => queue)],
           home: const Scaffold(body: Center(child: DesktopDownloadsButton())),
         ),
@@ -459,8 +459,8 @@ void main() {
       await tester.pumpAndSettle();
       // Mosix opens its Downloads page, not whichever Library page was
       // open last.
-      expect(requested, mornye ? isEmpty : [ShellTab.library]);
-      expect(links, mornye ? ['downloads'] : isEmpty);
+      expect(requested, mosix ? isEmpty : [ShellTab.library]);
+      expect(links, mosix ? ['downloads'] : isEmpty);
       expect(popover, findsNothing);
     });
 
@@ -472,7 +472,7 @@ void main() {
           await setWindow(tester, 1200);
           await tester.pumpWidget(
             app(
-              mornye: mornye,
+              mosix: mosix,
               home: Scaffold(
                 body: Builder(
                   builder: (context) => Center(

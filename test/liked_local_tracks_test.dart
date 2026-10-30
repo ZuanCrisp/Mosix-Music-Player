@@ -16,7 +16,7 @@ import 'package:mosix/screens/library_tracks_folder_screen.dart';
 import 'package:mosix/services/library_collections_database.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/track_card.dart';
 
@@ -63,8 +63,8 @@ class _History extends DownloadHistoryNotifier {
 }
 
 void main() {
-  for (final mornye in [false, true]) {
-    testWidgets('Liked Songs reopens with local artwork (Mosix: $mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('Liked Songs reopens with local artwork (Mosix: $mosix)', (
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({});
@@ -135,7 +135,7 @@ void main() {
           UncontrolledProviderScope(
             container: container,
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.light)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -1,9 +1,7 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:mosix/constants/app_info.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/user_profile_provider.dart';
@@ -13,7 +11,6 @@ import 'package:mosix/screens/settings/app_settings_page.dart';
 import 'package:mosix/screens/settings/appearance_settings_page.dart';
 import 'package:mosix/screens/settings/backup_restore_page.dart';
 import 'package:mosix/screens/settings/cache_management_page.dart';
-import 'package:mosix/screens/settings/donate_page.dart';
 import 'package:mosix/screens/settings/download_settings_page.dart';
 import 'package:mosix/screens/settings/extensions_page.dart';
 import 'package:mosix/screens/settings/files_settings_page.dart';
@@ -25,10 +22,9 @@ import 'package:mosix/screens/settings/lyrics_settings_page.dart';
 import 'package:mosix/screens/settings/metadata_settings_page.dart';
 import 'package:mosix/screens/settings/playback_settings_page.dart';
 import 'package:mosix/utils/settings_search_catalog.dart';
-import 'package:mosix/services/app_remote_config_service.dart';
 import 'package:mosix/services/shell_navigation_service.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/utils/nav_bar_inset.dart';
@@ -51,7 +47,6 @@ class _Destination {
     required this.pageBuilder,
     this.keywords = const [],
     this.searchEntries = const [],
-    this.showDonationProgress = false,
   });
 
   final IconData icon;
@@ -59,7 +54,6 @@ class _Destination {
   final String title;
   final String subtitle;
   final Widget Function() pageBuilder;
-  final bool showDonationProgress;
 
   /// Extra search terms for things the title does not spell out (e.g. "SAF"
   /// for the Files page), so a user can find a page by what it does.
@@ -86,10 +80,9 @@ class _Group {
 }
 
 class SettingsTab extends ConsumerStatefulWidget {
-  const SettingsTab({super.key, this.asPage = false, this.remoteConfigService});
+  const SettingsTab({super.key, this.asPage = false});
 
   final bool asPage;
-  final AppRemoteConfigService? remoteConfigService;
 
   @override
   ConsumerState<SettingsTab> createState() => _SettingsTabState();
@@ -101,11 +94,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
   AppLocalizations? _cachedLocalizations;
   List<_Group>? _cachedGroups;
   String _query = '';
-  bool _hasRequestedDonationGoal = false;
-  MonthlyDonationGoal? _monthlyGoal;
-  String? _activeDonationJson;
-  late final AppRemoteConfigService _remoteConfigService =
-      widget.remoteConfigService ?? AppRemoteConfigService();
 
   /// Desktop list-detail: the selected category ([_profileSelection] for the
   /// profile), the setting a search result points at, and the detail pane's
@@ -127,35 +115,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
         navigator: () => _detailNavigatorKey.currentState,
       );
     }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_hasRequestedDonationGoal) return;
-    _hasRequestedDonationGoal = true;
-    unawaited(_loadDonationGoal());
-  }
-
-  Future<void> _loadDonationGoal({bool refresh = true}) async {
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final cached = await _remoteConfigService.readCachedConfig();
-    if (!mounted) return;
-    if (cached != null) _applyDonationGoal(cached);
-    if (!refresh) return;
-    final refreshed = await _remoteConfigService.fetchConfigSnapshot(
-      locale: locale,
-    );
-    if (!mounted || refreshed == null) return;
-    _applyDonationGoal(refreshed);
-  }
-
-  void _applyDonationGoal(RemoteConfigSnapshot snapshot) {
-    if (_activeDonationJson == snapshot.rawJson) return;
-    setState(() {
-      _activeDonationJson = snapshot.rawJson;
-      _monthlyGoal = snapshot.config.donate.monthlyGoal;
-    });
   }
 
   @override
@@ -189,16 +148,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
             keywords: const ['plugin', 'provider', 'priority', 'store'],
             searchEntries: searchCatalog.extensions,
             pageBuilder: () => const ExtensionsPage(),
-          ),
-          _Destination(
-            icon: Icons.favorite_outline,
-            iconColor: Colors.pink,
-            title: l10n.settingsDonate,
-            subtitle: l10n.settingsDonateSubtitle,
-            keywords: const ['support', 'ko-fi', 'sponsor'],
-            pageBuilder: () =>
-                DonatePage(remoteConfigService: _remoteConfigService),
-            showDonationProgress: true,
           ),
           _Destination(
             icon: Icons.palette_outlined,
@@ -397,10 +346,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     ).push(slidePageRoute<void>(page: MosixSettingsTheme(child: destination)));
     if (!mounted) return;
 
-    if (page is DonatePage) {
-      unawaited(_loadDonationGoal(refresh: false));
-    }
-
     // A route's focus scope remembers its previously focused child. Keep the
     // search field out of that restoration cycle while the child page is open,
     // then re-enable it without requesting focus when Settings becomes active.
@@ -419,16 +364,12 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       : Theme.of(context).colorScheme.onSurfaceVariant;
 
   Widget _itemFor(_Destination destination, {required bool showDivider}) {
-    final goal = _monthlyGoal;
     return SettingsItem(
       icon: destination.icon,
       iconColor: _iconColorFor(destination),
       showIconInMosix: true,
       title: destination.title,
       subtitle: context.isMosix ? null : destination.subtitle,
-      footer: destination.showDonationProgress && goal?.isVisible == true
-          ? _DonationGoalProgress(goal: goal!)
-          : null,
       showDivider: showDivider,
       onTap: () => _navigateTo(context, destination.pageBuilder()),
     );
@@ -519,7 +460,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
   /// follows the M3 list-detail layout; Mosix follows the System Settings
   /// sidebar.
   Widget _buildListDetail(BuildContext context) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     return MosixSettingsTheme(
       child: Builder(
         builder: (context) {
@@ -529,15 +470,15 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
             children: [
               SizedBox(
                 key: const ValueKey('settings-category-list'),
-                width: mornye ? 260 : 320,
+                width: mosix ? 260 : 320,
                 child: Material(
-                  color: mornye
+                  color: mosix
                       ? theme.scaffoldBackgroundColor
                       : theme.colorScheme.surfaceContainerLow,
                   child: _buildCategoryList(context),
                 ),
               ),
-              if (mornye)
+              if (mosix)
                 VerticalDivider(
                   width: 1,
                   thickness: 1,
@@ -586,13 +527,11 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
   }
 
   Widget _buildCategoryList(BuildContext context) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final theme = Theme.of(context);
     final query = SettingsSearchQuery(_query);
     final groups = _groups(context);
     final destinations = [for (final group in groups) ...group.destinations];
-    final goal = _monthlyGoal;
-
     Widget categoryRow(
       _Destination destination, {
       bool first = true,
@@ -609,16 +548,13 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
           selected: index == _selected,
         ),
         title: destination.title,
-        footer: destination.showDonationProgress && goal?.isVisible == true
-            ? _DonationGoalProgress(goal: goal!)
-            : null,
         selected: index == _selected,
         onTap: () => _select(index),
       );
     }
 
     final children = <Widget>[
-      if (!mornye)
+      if (!mosix)
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 20, 12, 12),
           child: Semantics(
@@ -630,7 +566,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
           ),
         ),
       Padding(
-        padding: EdgeInsets.only(top: mornye ? 12 : 0, bottom: 12),
+        padding: EdgeInsets.only(top: mosix ? 12 : 0, bottom: 12),
         child: AppSearchField(
           controller: _searchController,
           focusNode: _searchFocusNode,
@@ -650,7 +586,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
             leading: ProfileAvatar(
               name: profile?.name ?? '',
               photoPath: profile?.photoPath,
-              size: mornye ? 36 : 40,
+              size: mosix ? 36 : 40,
             ),
             title: named ? profile!.name : context.l10n.profileSetUp,
             subtitle: context.l10n.profileEdit,
@@ -663,7 +599,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
 
     if (query.isEmpty) {
       for (final group in groups) {
-        children.add(SizedBox(height: mornye ? 16 : 12));
+        children.add(SizedBox(height: mosix ? 16 : 12));
         final last = group.destinations.length - 1;
         for (final (index, destination) in group.destinations.indexed) {
           children.add(
@@ -877,46 +813,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
   }
 }
 
-class _DonationGoalProgress extends StatelessWidget {
-  const _DonationGoalProgress({required this.goal});
-
-  final MonthlyDonationGoal goal;
-
-  @override
-  Widget build(BuildContext context) {
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final percentage =
-        '${NumberFormat('0.#', locale).format(goal.progressPercent)}%';
-    return Row(
-      children: [
-        Expanded(
-          child: AppProgressIndicator.linear(
-            wavy: false,
-            value: goal.progressRatio,
-            minHeight: 4,
-            borderRadius: BorderRadius.circular(2),
-            semanticsLabel: goal.title,
-            semanticsValue: goal.showPercentage ? percentage : null,
-          ),
-        ),
-        if (goal.showPercentage) ...[
-          const SizedBox(width: 8),
-          // The progress bar already reads the percentage as its value.
-          ExcludeSemantics(
-            child: Text(
-              percentage,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
 /// A category in the desktop settings list. Material lays each group out as
 /// an expressive connected list, like the settings pages beside it, and
 /// marks the selected row with a fully rounded `secondaryContainer` tile;
@@ -949,10 +845,10 @@ class _CategoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final radius = mornye
+    final radius = mosix
         ? BorderRadius.circular(8)
         : selected
         ? BorderRadius.circular(context.tokens.radiusCard)
@@ -960,36 +856,36 @@ class _CategoryRow extends StatelessWidget {
     // Mosix selects with the app sidebar's quiet gray fill, so the colored
     // category tiles keep their own color.
     final dark = colorScheme.brightness == Brightness.dark;
-    final mornyeFill = colorScheme.onSurface.withValues(
+    final mosixFill = colorScheme.onSurface.withValues(
       alpha: dark ? 0.12 : 0.08,
     );
-    final foreground = selected && !mornye
+    final foreground = selected && !mosix
         ? colorScheme.onSecondaryContainer
         : colorScheme.onSurface;
     final secondary = selected
         ? foreground.withValues(alpha: 0.8)
         : colorScheme.onSurfaceVariant;
     return Padding(
-      padding: EdgeInsets.only(bottom: mornye || !last ? 2 : 0),
+      padding: EdgeInsets.only(bottom: mosix || !last ? 2 : 0),
       child: Semantics(
         button: true,
         selected: selected,
         child: Material(
           color: selected
-              ? (mornye ? mornyeFill : colorScheme.secondaryContainer)
-              : (mornye ? Colors.transparent : settingsGroupColor(context)),
+              ? (mosix ? mosixFill : colorScheme.secondaryContainer)
+              : (mosix ? Colors.transparent : settingsGroupColor(context)),
           borderRadius: radius,
           child: InkWell(
             borderRadius: radius,
-            hoverColor: mornye
+            hoverColor: mosix
                 ? colorScheme.onSurface.withValues(alpha: 0.05)
                 : null,
             onTap: onTap,
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: mornye ? 36 : 56),
+              constraints: BoxConstraints(minHeight: mosix ? 36 : 56),
               child: Padding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: mornye ? 8 : 16,
+                  horizontal: mosix ? 8 : 16,
                   vertical: 4,
                 ),
                 child: Row(
@@ -998,7 +894,7 @@ class _CategoryRow extends StatelessWidget {
                       data: IconThemeData(color: foreground),
                       child: leading,
                     ),
-                    SizedBox(width: mornye ? 10 : 12),
+                    SizedBox(width: mosix ? 10 : 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1007,13 +903,13 @@ class _CategoryRow extends StatelessWidget {
                           Text(
                             title,
                             style:
-                                (mornye
+                                (mosix
                                         ? textTheme.bodyMedium
                                         : textTheme.labelLarge)
                                     ?.copyWith(
                                       color: foreground,
                                       fontWeight: selected
-                                          ? (mornye
+                                          ? (mosix
                                                 ? FontWeight.w600
                                                 : FontWeight.w700)
                                           : null,

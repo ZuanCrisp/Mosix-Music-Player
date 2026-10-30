@@ -35,7 +35,7 @@ Future<Directory> appDatabaseDirectory() async {
 }
 
 Future<bool>? _trigramFts5Capability;
-const _trigramFts5ProbeTable = 'mornye_trigram_fts5_probe';
+const _trigramFts5ProbeTable = 'mosix_trigram_fts5_probe';
 
 /// Caches an asynchronously-created value while also coalescing concurrent
 /// callers onto the same in-flight initialization.

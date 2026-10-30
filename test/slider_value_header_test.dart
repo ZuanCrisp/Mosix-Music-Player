@@ -6,7 +6,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/models/settings.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_slider.dart';
 import 'package:mosix/widgets/automix_settings.dart';
 import 'package:mosix/widgets/music_haptics_settings.dart';
@@ -19,7 +19,7 @@ void main() {
   Future<ProviderContainer> pump(
     WidgetTester tester,
     Widget child, {
-    bool mornye = false,
+    bool mosix = false,
   }) async {
     final container = ProviderContainer(
       overrides: [
@@ -38,7 +38,7 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
-          theme: mornye
+          theme: mosix
               ? MosixTheme.build(Brightness.light)
               : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -92,7 +92,7 @@ void main() {
     await pump(
       tester,
       const SliderValueHeader(title: 'Strength', value: '40%'),
-      mornye: true,
+      mosix: true,
     );
     expect(find.text('40%'), findsOneWidget);
     expect(pill(tester, '40%'), isNull);
@@ -133,7 +133,7 @@ void main() {
           AutoMixSettings(),
         ],
       ),
-      mornye: true,
+      mosix: true,
     );
     expect(find.text('Sensitivity: 50%'), findsOneWidget);
     expect(find.text('Pre-amp: 0 dB (target -18 LUFS)'), findsOneWidget);

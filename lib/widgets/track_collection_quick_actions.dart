@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:flutter/services.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +14,7 @@ import 'package:mosix/controllers/local_playback.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/desktop/context_menu.dart';
 import 'package:mosix/widgets/playlist_picker_sheet.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/mosix_context_menu.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
@@ -280,7 +280,7 @@ class _TrackOptionsSheet extends ConsumerWidget {
           ),
           MosixMenuAction(
             icon: CupertinoIcons.star_fill,
-            label: isLoved ? l10n.mornyeFavorited : l10n.mornyeFavorite,
+            label: isLoved ? l10n.mosixFavorited : l10n.mosixFavorite,
             selected: isLoved,
             onPressed: () => _toggleCollection(context, ref, wishlist: false),
           ),
@@ -289,7 +289,7 @@ class _TrackOptionsSheet extends ConsumerWidget {
             label: l10n.trackMetadataShare,
             onPressed: () {
               final origin =
-                  mornyeMenuAnchor(context) ??
+                  mosixMenuAnchor(context) ??
                   Rect.fromCenter(
                     center: MediaQuery.sizeOf(context).center(Offset.zero),
                     width: 1,

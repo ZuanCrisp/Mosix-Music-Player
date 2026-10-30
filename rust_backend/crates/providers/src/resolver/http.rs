@@ -1,5 +1,5 @@
 use super::{Check, ResolverError, check_active};
-use mornye_network::{HttpRequest, NetworkService, NetworkSession, url::UrlParts};
+use mosix_network::{HttpRequest, NetworkService, NetworkSession, url::UrlParts};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -125,7 +125,7 @@ impl ResolverHttp {
                     user_agent: if language.is_some() {
                         "Go-http-client/1.1".into()
                     } else {
-                        mornye_network::random_user_agent()
+                        mosix_network::random_user_agent()
                     },
                 },
                 self.timeout,

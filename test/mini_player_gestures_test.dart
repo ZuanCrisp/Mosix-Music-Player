@@ -8,7 +8,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/providers/runtime_profile_provider.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/mini_player.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -36,9 +36,9 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   for (final configuration in [
-    (name: 'Material', mornye: false, compact: false),
-    (name: 'Mosix', mornye: true, compact: false),
-    (name: 'Mosix compact', mornye: true, compact: true),
+    (name: 'Material', mosix: false, compact: false),
+    (name: 'Mosix', mosix: true, compact: false),
+    (name: 'Mosix compact', mosix: true, compact: true),
   ]) {
     Future<_Controller> pumpPlayer(
       WidgetTester tester, {
@@ -62,11 +62,11 @@ void main() {
             ),
             playbackStateProvider.overrideWith((ref) => const Stream.empty()),
             musicPlayerControllerProvider.overrideWithValue(controller),
-            mornyeLiquidGlassProvider.overrideWithValue(false),
+            mosixLiquidGlassProvider.overrideWithValue(false),
             backdropBlurEnabledProvider.overrideWithValue(false),
           ],
           child: MaterialApp(
-            theme: configuration.mornye
+            theme: configuration.mosix
                 ? MosixTheme.build(Brightness.light)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,

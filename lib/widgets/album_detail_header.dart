@@ -11,9 +11,9 @@ import 'package:mosix/theme/app_motion.dart';
 import 'package:mosix/theme/app_tokens.dart';
 import 'package:mosix/theme/cover_palette.dart';
 import 'package:mosix/theme/material_expressive.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/theme/mosix_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
 import 'package:mosix/widgets/expressive_button.dart';
@@ -775,7 +775,7 @@ class HeaderFilledButton extends StatelessWidget {
     final scheme = HeaderPalette.of(context);
     if (context.isMosix) {
       return _MosixHeaderButton(
-        icon: mornyeIconFor(icon),
+        icon: mosixIconFor(icon),
         label: label,
         onPressed: onPressed,
         prominent: !tonal,
@@ -842,7 +842,7 @@ class HeaderCircleButton extends ConsumerWidget {
       return IconButton(
         onPressed: onPressed,
         tooltip: tooltip,
-        icon: AppIcon(mornyeIconFor(icon), size: iconSize),
+        icon: AppIcon(mosixIconFor(icon), size: iconSize),
         style: IconButton.styleFrom(
           minimumSize: Size.square(buttonSize ?? 36),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -865,7 +865,7 @@ class HeaderCircleButton extends ConsumerWidget {
               ),
               onPressed: onPressed,
               child: AppIcon(
-                mornyeIconFor(icon),
+                mosixIconFor(icon),
                 size: iconSize,
                 color: onPressed == null
                     ? scheme.onSurfaceVariant
@@ -875,11 +875,11 @@ class HeaderCircleButton extends ConsumerWidget {
           ),
         );
       }
-      final blurEnabled = ref.watch(mornyeBlurEnabledProvider);
+      final blurEnabled = ref.watch(mosixBlurEnabledProvider);
       final button = IconButton(
         onPressed: onPressed,
         tooltip: tooltip,
-        icon: AppIcon(mornyeIconFor(icon), size: iconSize),
+        icon: AppIcon(mosixIconFor(icon), size: iconSize),
         style: IconButton.styleFrom(
           minimumSize: Size.square(buttonSize ?? 44),
           // Keep the glass circle at the button's size for the pointer.

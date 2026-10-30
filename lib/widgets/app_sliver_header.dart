@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
 import 'package:mosix/utils/adaptive_layout.dart';

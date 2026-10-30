@@ -8,7 +8,7 @@ import 'package:mosix/screens/settings/download_fallback_extensions_page.dart';
 import 'package:mosix/screens/settings/extensions_page.dart';
 import 'package:mosix/screens/settings/metadata_provider_priority_page.dart';
 import 'package:mosix/screens/settings/provider_priority_page.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/settings_group.dart';
 
 import 'support/fixed_settings.dart';
@@ -47,7 +47,7 @@ void main() {
       DownloadFallbackExtensionsPage,
     ),
   ];
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final (enabled, download, metadata) in [
       (true, true, true),
       (false, true, true),
@@ -55,7 +55,7 @@ void main() {
       (true, true, false),
     ]) {
       for (final (title, subtitle, destination) in rows) {
-        testWidgets('$title ($mornye, $enabled, $download, $metadata)', (
+        testWidgets('$title ($mosix, $enabled, $download, $metadata)', (
           tester,
         ) async {
           final available =
@@ -78,7 +78,7 @@ void main() {
                 ),
               ],
               child: MaterialApp(
-                theme: mornye
+                theme: mosix
                     ? MosixTheme.build(Brightness.dark)
                     : ThemeData(),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,

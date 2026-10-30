@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/screens/network_storage_screen.dart';
 import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 import 'package:mosix/widgets/settings_group.dart';
@@ -40,13 +40,13 @@ void main() {
     TargetPlatform.windows,
     TargetPlatform.linux,
   ]) {
-    for (final mornye in [false, true]) {
+    for (final mosix in [false, true]) {
       for (final largeText in [false, true]) {
         final mobile =
             platform == TargetPlatform.android ||
             platform == TargetPlatform.iOS;
         testWidgets(
-          'Subsonic form and browsing on $platform Mosix=$mornye largeText=$largeText',
+          'Subsonic form and browsing on $platform Mosix=$mosix largeText=$largeText',
           (tester) async {
             tester.view.physicalSize = mobile
                 ? const Size(360, 800)
@@ -59,7 +59,7 @@ void main() {
             addTearDown(() => debugDesktopPlatformOverride = null);
             addTearDown(service.dispose);
             final theme =
-                (mornye
+                (mosix
                         ? MosixTheme.build(Brightness.dark)
                         : ThemeData.dark(useMaterial3: true))
                     .copyWith(platform: platform);

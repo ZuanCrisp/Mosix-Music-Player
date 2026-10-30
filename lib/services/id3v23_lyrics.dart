@@ -68,7 +68,7 @@ class Id3v23Lyrics {
       await input.close();
     }
 
-    final staging = await file.parent.createTemp('.mornye-lyrics-');
+    final staging = await file.parent.createTemp('.mosix-lyrics-');
     try {
       final output = File('${staging.path}${Platform.pathSeparator}audio.mp3');
       final sink = output.openWrite();

@@ -8,14 +8,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/lyrics_parser.dart';
 import 'package:mosix/widgets/player_lyrics.dart';
 
 void main() {
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final speed in [1.0, 1.5]) {
-      testWidgets('late lyric timers catch up to playback ($mornye, $speed)', (
+      testWidgets('late lyric timers catch up to playback ($mosix, $speed)', (
         tester,
       ) async {
         var now = DateTime(2026);
@@ -24,7 +24,7 @@ void main() {
           final preview = ValueNotifier<Duration?>(null);
           addTearDown(playback.close);
           addTearDown(preview.dispose);
-          final theme = mornye
+          final theme = mosix
               ? MosixTheme.build(Brightness.dark)
               : AppTheme.dark();
           final lyrics = LyricsParser.parse('''

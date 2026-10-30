@@ -376,13 +376,13 @@ void main() {
     test('prefers the environment override', () {
       expect(
         desktopBackendLibraryCandidates(
-          environment: {'MOSIX_DESKTOP_LIB': '/dev/libmornye_desktop.dylib'},
+          environment: {'MOSIX_DESKTOP_LIB': '/dev/libmosix_desktop.dylib'},
           operatingSystem: 'macos',
           executable: '/Applications/Mosix.app/Contents/MacOS/Mosix',
         ),
         [
-          '/dev/libmornye_desktop.dylib',
-          '/Applications/Mosix.app/Contents/Frameworks/libmornye_desktop.dylib',
+          '/dev/libmosix_desktop.dylib',
+          '/Applications/Mosix.app/Contents/Frameworks/libmosix_desktop.dylib',
         ],
       );
     });
@@ -392,17 +392,17 @@ void main() {
         desktopBackendLibraryCandidates(
           environment: const {},
           operatingSystem: 'windows',
-          executable: r'C:\Program Files\Mosix\mornye.exe',
+          executable: r'C:\Program Files\Mosix\mosix.exe',
         ),
-        [r'C:\Program Files\Mosix\mornye_desktop.dll'],
+        [r'C:\Program Files\Mosix\mosix_desktop.dll'],
       );
       expect(
         desktopBackendLibraryCandidates(
           environment: const {},
           operatingSystem: 'linux',
-          executable: '/opt/mornye/mornye',
+          executable: '/opt/mosix/mosix',
         ),
-        ['/opt/mornye/lib/libmornye_desktop.so'],
+        ['/opt/mosix/lib/libmosix_desktop.so'],
       );
     });
   });

@@ -10,12 +10,12 @@ use crate::storage::{
     ExtensionStore, StorageError, StorageMasterKey, StoreKind, valid_extension_id,
 };
 use crate::{ExtensionError, ExtensionRuntime, ExtensionServices, RuntimeLimits};
-use mornye_core::app_version::AppVersion;
-use mornye_core::cancellation::{CancellationDomain, CancellationRegistry};
-use mornye_core::downloads::DownloadState;
-use mornye_core::progress::ProgressRegistry;
-use mornye_network::{NetworkService, policy::NetworkPermissions};
-use mornye_providers::lyrics::{CallGraph, CallNode, LyricsService};
+use mosix_core::app_version::AppVersion;
+use mosix_core::cancellation::{CancellationDomain, CancellationRegistry};
+use mosix_core::downloads::DownloadState;
+use mosix_core::progress::ProgressRegistry;
+use mosix_network::{NetworkService, policy::NetworkPermissions};
+use mosix_providers::lyrics::{CallGraph, CallNode, LyricsService};
 use serde_json::{Map, Value};
 use std::cmp::Ordering as Comparison;
 use std::collections::BTreeMap;
@@ -79,7 +79,7 @@ struct State {
 pub struct ExtensionEnvironment {
     logs: Arc<crate::logging::LogBuffer>,
     ffmpeg: Arc<crate::ffmpeg::CommandRegistry>,
-    downloads: Arc<mornye_core::downloads::DownloadState>,
+    downloads: Arc<mosix_core::downloads::DownloadState>,
     data_directory: PathBuf,
     data_directory_alias: PathBuf,
     master_key: Arc<StorageMasterKey>,
@@ -88,7 +88,7 @@ pub struct ExtensionEnvironment {
     auth: Arc<AuthRegistry>,
     sessions: Arc<SignedRegistry>,
     files: Arc<crate::files::FileRegistry>,
-    isrc: Arc<mornye_core::isrc::IndexCache>,
+    isrc: Arc<mosix_core::isrc::IndexCache>,
     closed: Arc<AtomicBool>,
     state: Mutex<State>,
     idle: Condvar,
@@ -155,7 +155,7 @@ impl ExtensionEnvironment {
             auth,
             sessions,
             files: Arc::new(crate::files::FileRegistry::default()),
-            isrc: Arc::new(mornye_core::isrc::IndexCache::default()),
+            isrc: Arc::new(mosix_core::isrc::IndexCache::default()),
             closed: Arc::new(AtomicBool::new(false)),
             state: Mutex::default(),
             idle: Condvar::new(),
@@ -297,7 +297,7 @@ impl ExtensionEnvironment {
         source: &str,
         limits: RuntimeLimits,
         mode: LoadMode,
-        lease: Option<Arc<mornye_core::cancellation::RequestLease>>,
+        lease: Option<Arc<mosix_core::cancellation::RequestLease>>,
     ) -> Result<Arc<ExtensionRuntime>, EnvironmentError> {
         self.load_internal(manifest_json, source, limits, mode, None, lease)
     }
@@ -326,7 +326,7 @@ impl ExtensionEnvironment {
         limits: RuntimeLimits,
         load_mode: LoadMode,
         primary: Option<&ExtensionRuntime>,
-        startup_lease: Option<Arc<mornye_core::cancellation::RequestLease>>,
+        startup_lease: Option<Arc<mosix_core::cancellation::RequestLease>>,
     ) -> Result<Arc<ExtensionRuntime>, EnvironmentError> {
         let _operation = self.enter()?;
         if manifest_json.len() > 1024 * 1024 {
@@ -588,7 +588,7 @@ impl ExtensionEnvironment {
         Arc::clone(&self.ffmpeg)
     }
 
-    pub fn download_state(&self) -> Arc<mornye_core::downloads::DownloadState> {
+    pub fn download_state(&self) -> Arc<mosix_core::downloads::DownloadState> {
         Arc::clone(&self.downloads)
     }
 

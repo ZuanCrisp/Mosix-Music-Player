@@ -1,5 +1,5 @@
 [package]
-name = "mornye-mobile"
+name = "mosix-mobile"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -10,10 +10,10 @@ publish.workspace = true
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [dependencies]
-mornye-core.workspace = true
-mornye-network.workspace = true
+mosix-core.workspace = true
+mosix-network.workspace = true
 base64.workspace = true
-mornye-extensions.workspace = true
+mosix-extensions.workspace = true
 thiserror.workspace = true
 uniffi.workspace = true
 serde_json.workspace = true

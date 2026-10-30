@@ -4,13 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:mosix/theme/material_symbols.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
 
-Widget _host(Widget child, {bool mornye = false, bool reduceMotion = false}) {
+Widget _host(Widget child, {bool mosix = false, bool reduceMotion = false}) {
   return MaterialApp(
-    theme: ThemeData(extensions: [if (mornye) const MosixTheme()]),
+    theme: ThemeData(extensions: [if (mosix) const MosixTheme()]),
     home: MediaQuery(
       data: MediaQueryData(disableAnimations: reduceMotion),
       child: Scaffold(body: Center(child: child)),
@@ -61,12 +61,12 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      _host(const AppIcon(Icons.favorite_border), mornye: true),
+      _host(const AppIcon(Icons.favorite_border), mosix: true),
     );
     expect(_drawnIcon(tester).icon, Icons.favorite_border);
 
     await tester.pumpWidget(
-      _host(const AppIcon.adaptive(Icons.favorite), mornye: true),
+      _host(const AppIcon.adaptive(Icons.favorite), mosix: true),
     );
     await tester.pumpAndSettle();
     expect(_drawnIcon(tester).icon, CupertinoIcons.heart_fill);
@@ -114,7 +114,7 @@ void main() {
     expect(find.byType(M3EIconButton), findsNothing);
 
     // MaterialApp animates theme changes; settle before reading the theme.
-    await tester.pumpWidget(_host(button(), mornye: true));
+    await tester.pumpWidget(_host(button(), mosix: true));
     await tester.pumpAndSettle();
     expect(find.byType(IconButton), findsOneWidget);
     expect(_drawnIcon(tester).icon, Icons.close);

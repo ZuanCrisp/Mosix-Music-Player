@@ -7,11 +7,11 @@ import 'package:mosix/providers/extension_provider.dart';
 import 'package:mosix/theme/app_tokens.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 
 class DownloadServicePicker extends ConsumerStatefulWidget {
   final String? trackName;
@@ -41,16 +41,16 @@ class DownloadServicePicker extends ConsumerStatefulWidget {
     String? recommendedService,
     required void Function(String quality, String service) onSelect,
   }) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
 
     showAppModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
-      showDragHandle: !mornye,
+      showDragHandle: !mosix,
       // Phones float the glass above the home indicator; the desktop dialog
       // draws its own glass around the picker.
-      mornyeGlass: isDesktopPlatform,
+      mosixGlass: isDesktopPlatform,
       // Explicit constraints replace the theme's, so repeat its tablet width.
       constraints: BoxConstraints(
         maxWidth: 640,
@@ -349,7 +349,7 @@ class _QualityOption extends StatelessWidget {
             SizedBox(
               width: 24,
               child: Icon(
-                mornyeIconFor(icon),
+                mosixIconFor(icon),
                 color: colorScheme.primary,
                 size: 22,
               ),

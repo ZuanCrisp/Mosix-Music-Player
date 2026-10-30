@@ -5,14 +5,14 @@ mod cache;
 mod extended;
 
 use crate::resolver::{Check, ResolverError, http::ResolverHttp};
-use mornye_core::{
+use mosix_core::{
     lyrics,
     metadata::{
         TrackMetadata,
         deezer::{Track, Tracks},
     },
 };
-use mornye_network::NetworkService;
+use mosix_network::NetworkService;
 use serde::de::DeserializeOwned;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};

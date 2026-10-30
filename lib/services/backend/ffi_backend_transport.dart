@@ -65,14 +65,14 @@ List<String> desktopBackendLibraryCandidates({
         context.join(
           context.dirname(executableDir),
           'Frameworks',
-          'libmornye_desktop.dylib',
+          'libmosix_desktop.dylib',
         ),
       );
     case 'windows':
-      candidates.add(context.join(executableDir, 'mornye_desktop.dll'));
+      candidates.add(context.join(executableDir, 'mosix_desktop.dll'));
     case 'linux':
       candidates.add(
-        context.join(executableDir, 'lib', 'libmornye_desktop.so'),
+        context.join(executableDir, 'lib', 'libmosix_desktop.so'),
       );
   }
   return candidates;
@@ -101,18 +101,18 @@ DynamicLibrary _openDesktopBackendLibrary() {
 }
 
 /// [NativeBackendTransport] over the exported C functions of
-/// `mornye_desktop`.
+/// `mosix_desktop`.
 final class FfiBackendTransport implements NativeBackendTransport {
   FfiBackendTransport._(DynamicLibrary library)
-    : _init = library.lookupFunction<_InitNative, _InitDart>('mornye_init'),
-      _call = library.lookupFunction<_CallNative, _CallDart>('mornye_call'),
+    : _init = library.lookupFunction<_InitNative, _InitDart>('mosix_init'),
+      _call = library.lookupFunction<_CallNative, _CallDart>('mosix_call'),
       _subscribe = library.lookupFunction<_KindNative, _KindDart>(
-        'mornye_subscribe',
+        'mosix_subscribe',
       ),
       _unsubscribe = library.lookupFunction<_KindNative, _KindDart>(
-        'mornye_unsubscribe',
+        'mosix_unsubscribe',
       ),
-      _free = library.lookupFunction<_FreeNative, _FreeDart>('mornye_free');
+      _free = library.lookupFunction<_FreeNative, _FreeDart>('mosix_free');
 
   /// Opens the library from [desktopBackendLibraryEnvironmentKey] or the
   /// bundled location. Throws when it cannot be loaded.

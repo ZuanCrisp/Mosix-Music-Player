@@ -10,7 +10,7 @@ import 'package:mosix/providers/download_queue_provider.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/network_storage_screen.dart';
 import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 
 class _Storage extends NetworkStorageService {
@@ -87,10 +87,10 @@ void main() {
       expect(DownloadItem.fromJson(legacy).networkDownloadFolder, '');
     },
   );
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final fail in [false, true]) {
       testWidgets(
-        'download folder checks write access before saving ($mornye, $fail)',
+        'download folder checks write access before saving ($mosix, $fail)',
         (tester) async {
           final events = <String>[];
           await tester.pumpWidget(
@@ -99,7 +99,7 @@ void main() {
                 settingsProvider.overrideWith(() => _Settings(events)),
               ],
               child: MaterialApp(
-                theme: mornye
+                theme: mosix
                     ? MosixTheme.build(Brightness.dark)
                     : ThemeData(),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,

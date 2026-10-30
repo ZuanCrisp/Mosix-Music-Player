@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/ZuanCrisp/Mosix-Music-Player#readme
     about: Check the README for setup instructions and FAQ
   - name: Extension Development Guide
-    url: https://mornye.com/docs
+    url: https://mosix.com/docs
     about: Documentation for building Mosix extensions

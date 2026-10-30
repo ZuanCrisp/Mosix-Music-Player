@@ -3,7 +3,7 @@
 use super::Backend;
 use crate::files::ExtensionFiles;
 use cap_std::fs::{File, OpenOptions};
-use mornye_core::tags::{
+use mosix_core::tags::{
     embed_flac_metadata, rewrite_ac4_config, rewrite_ac4_metadata, rewrite_audio_tags,
     rewrite_flac_tags_if_changed, rewrite_m4a_freeform,
 };

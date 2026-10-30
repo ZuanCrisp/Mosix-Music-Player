@@ -11,11 +11,39 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test(
+    'legacy Mornye appearance preferences migrate to Mosix fields',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        kThemeStyleKey: 'mornye',
+        kLegacyMosixAccentKey: 'blue',
+        kLegacyMosixGlassClarityKey: 0.3,
+        kLegacyMosixGlassOutlinesKey: false,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final settings = loadBootstrapThemeSettings(prefs);
+
+      expect(settings.style, AppThemeStyle.mosix);
+      expect(settings.mosixAccent, MosixAccent.blue);
+      expect(settings.mosixGlassClarity, 0.3);
+      expect(settings.mosixGlassOutlines, isFalse);
+      expect(
+        ThemeSettings.fromJson({
+          'theme_style': 'mornye',
+          'mornye_accent': 'blue',
+          'mornye_glass_clarity': 0.3,
+          'mornye_glass_outlines': false,
+        }),
+        settings,
+      );
+    },
+  );
+
+  test(
     'early theme edits preserve untouched saved settings and await saving',
     () async {
       SharedPreferences.setMockInitialValues({
         kThemeModeKey: 'dark',
-        kThemeStyleKey: 'mornye',
+        kThemeStyleKey: 'mosix',
         kSeedColorKey: 0xff123456,
         kUseDynamicColorKey: false,
         kUseAmoledKey: true,
@@ -42,16 +70,16 @@ void main() {
       unawaited(savingAccent.then((_) => saved = true));
       await Future<void>.delayed(Duration.zero);
       expect(saved, isFalse);
-      expect(container.read(themeProvider).mornyeGlassClarity, 0.8);
+      expect(container.read(themeProvider).mosixGlassClarity, 0.8);
       expect(prefs.getString(kThemeModeKey), 'dark');
 
       releaseLoad.complete(prefs);
       await Future.wait([savingMode, savingAccent]);
       final state = container.read(themeProvider);
       expect(state.themeMode, ThemeMode.system);
-      expect(state.mornyeAccent, MosixAccent.red);
-      expect(state.mornyeGlassClarity, 0.8);
-      expect(state.style, AppThemeStyle.mornye);
+      expect(state.mosixAccent, MosixAccent.red);
+      expect(state.mosixGlassClarity, 0.8);
+      expect(state.style, AppThemeStyle.mosix);
       expect(state.seedColorValue, 0xff123456);
       expect(state.useDynamicColor, isFalse);
       expect(state.useAmoled, isTrue);
@@ -77,15 +105,15 @@ void main() {
     );
     addTearDown(container.dispose);
     container.listen(themeProvider, (_, next) {
-      if (next.mornyeAccent == MosixAccent.blue) loaded.complete();
+      if (next.mosixAccent == MosixAccent.blue) loaded.complete();
     });
     await container
         .read(themeProvider.notifier)
         .setMosixGlassClarity(0.8, persist: false);
-    expect(container.read(themeProvider).mornyeGlassClarity, 0.8);
+    expect(container.read(themeProvider).mosixGlassClarity, 0.8);
     releaseLoad.complete(prefs);
     await loaded.future;
-    expect(container.read(themeProvider).mornyeGlassClarity, 0.8);
+    expect(container.read(themeProvider).mosixGlassClarity, 0.8);
     expect(prefs.getDouble(kMosixGlassClarityKey), 0.2);
   });
 

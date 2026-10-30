@@ -5,7 +5,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/settings/files_settings_page.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/settings_group.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,8 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'support/fixed_settings.dart';
 
 void main() {
-  for (final mornye in [false, true]) {
-    testWidgets('Files scrolls its last row above floating chrome ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('Files scrolls its last row above floating chrome ($mosix)', (
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({});
@@ -28,7 +28,7 @@ void main() {
         ProviderScope(
           overrides: [settingsProvider.overrideWith(FixedSettingsNotifier.new)],
           child: MaterialApp(
-            theme: mornye
+            theme: mosix
                 ? MosixTheme.build(Brightness.dark)
                 : AppTheme.dark(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,

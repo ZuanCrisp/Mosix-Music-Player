@@ -5,7 +5,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/models/download_item.dart';
 import 'package:mosix/providers/download_queue_provider.dart';
 import 'package:mosix/services/shell_navigation_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
 import 'package:mosix/widgets/app_progress_indicator.dart';
@@ -53,7 +53,7 @@ class _DesktopDownloadsButtonState
 
   @override
   Widget build(BuildContext context) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final colorScheme = Theme.of(context).colorScheme;
     final active = activeDesktopDownloads(
       ref.watch(downloadQueueProvider.select((state) => state.items)),
@@ -65,13 +65,13 @@ class _DesktopDownloadsButtonState
       style: MenuStyle(
         padding: const WidgetStatePropertyAll(EdgeInsets.zero),
         backgroundColor: WidgetStatePropertyAll(
-          mornye
+          mosix
               ? colorScheme.surfaceContainerHigh
               : colorScheme.surfaceContainer,
         ),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(mornye ? 14 : 16),
+            borderRadius: BorderRadius.circular(mosix ? 14 : 16),
           ),
         ),
       ),
@@ -92,11 +92,11 @@ class _DesktopDownloadsButtonState
         child: AppIconButton(
           key: const ValueKey('desktop-downloads-button'),
           tooltip: label,
-          color: mornye ? colorScheme.onSurface : null,
+          color: mosix ? colorScheme.onSurface : null,
           onPressed: _toggle,
           // Mosix sizes it with the other glyphs in the player capsule.
           icon: SizedBox.square(
-            dimension: mornye ? 20 : 24,
+            dimension: mosix ? 20 : 24,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -106,17 +106,17 @@ class _DesktopDownloadsButtonState
                       key: const ValueKey('desktop-downloads-progress'),
                       wavy: false,
                       value: desktopDownloadsProgress(active),
-                      strokeWidth: mornye ? 2 : 2.5,
+                      strokeWidth: mosix ? 2 : 2.5,
                       strokeCap: StrokeCap.round,
                     ),
                   ),
                 AppIcon(
-                  mornye
+                  mosix
                       ? (active.isEmpty
                             ? CupertinoIcons.arrow_down_circle
                             : CupertinoIcons.arrow_down)
                       : Icons.download_rounded,
-                  size: switch ((mornye, active.isEmpty)) {
+                  size: switch ((mosix, active.isEmpty)) {
                     (true, true) => 18,
                     (true, false) => 11,
                     (false, true) => 24,
@@ -224,7 +224,7 @@ class _DownloadRow extends ConsumerWidget {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final progress = item.progress.clamp(0.0, 1.0);
     final status = switch (item.status) {
       DownloadStatus.queued => l10n.desktopDownloadsQueued,
@@ -243,7 +243,7 @@ class _DownloadRow extends ConsumerWidget {
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(mornye ? 6 : 8),
+            borderRadius: BorderRadius.circular(mosix ? 6 : 8),
             child: SizedBox.square(
               dimension: 40,
               child: PlayerArtwork(
@@ -296,7 +296,7 @@ class _DownloadRow extends ConsumerWidget {
             tooltip: l10n.desktopDownloadsCancel,
             color: colorScheme.onSurfaceVariant,
             icon: AppIcon(
-              mornye ? CupertinoIcons.xmark_circle_fill : Icons.close,
+              mosix ? CupertinoIcons.xmark_circle_fill : Icons.close,
               size: 20,
             ),
             onPressed: () =>

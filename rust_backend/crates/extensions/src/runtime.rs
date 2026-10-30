@@ -1,6 +1,6 @@
 //! Extension runtime: loads extension sources into a worker VM and runs calls under resource limits.
 
-use mornye_core::cancellation::{CancellationError, RequestLease};
+use mosix_core::cancellation::{CancellationError, RequestLease};
 use std::sync::atomic::AtomicBool;
 use std::sync::mpsc::{self, SyncSender, TrySendError};
 use std::sync::{Arc, Condvar, Mutex, OnceLock, Weak};
@@ -32,24 +32,24 @@ pub(crate) enum LoadMode {
 #[derive(Clone)]
 pub struct ExtensionServices {
     pub legacy_backend: bool,
-    pub(crate) lyrics: Weak<mornye_providers::lyrics::LyricsService>,
-    pub(crate) lyrics_node: mornye_providers::lyrics::CallNode,
-    pub(crate) lyrics_parent: Option<mornye_providers::lyrics::CallNode>,
+    pub(crate) lyrics: Weak<mosix_providers::lyrics::LyricsService>,
+    pub(crate) lyrics_node: mosix_providers::lyrics::CallNode,
+    pub(crate) lyrics_parent: Option<mosix_providers::lyrics::CallNode>,
     pub legacy_files: Option<Arc<crate::files::ExtensionFiles>>,
-    pub isrc: Arc<mornye_core::isrc::IndexCache>,
+    pub isrc: Arc<mosix_core::isrc::IndexCache>,
     pub logs: Arc<crate::logging::LogBuffer>,
     pub extension_id: String,
     pub ffmpeg: Arc<crate::ffmpeg::CommandRegistry>,
     pub raw_ffmpeg_stub: bool,
-    pub downloads: Arc<mornye_core::downloads::DownloadState>,
+    pub downloads: Arc<mosix_core::downloads::DownloadState>,
     pub storage: Option<Arc<crate::storage::ExtensionStore>>,
     pub files: Option<Arc<crate::files::ExtensionFiles>>,
     pub transfer_policy: crate::transfer_policy::DownloadTransferPolicy,
-    pub network: Option<Arc<mornye_network::NetworkSession>>,
+    pub network: Option<Arc<mosix_network::NetworkSession>>,
     pub auth: Option<Arc<crate::auth::ExtensionAuth>>,
     pub(crate) auth_registry: Option<Arc<crate::auth::AuthRegistry>>,
     pub session: Option<Arc<crate::signed_session::SignedSessionClient>>,
-    pub app_version: mornye_core::app_version::AppVersion,
+    pub app_version: mosix_core::app_version::AppVersion,
     pub(crate) parent_closed: Option<Arc<AtomicBool>>,
     pub(crate) startup_lease: Option<Arc<RequestLease>>,
     pub(crate) initialize_empty_settings: bool,
@@ -62,15 +62,15 @@ impl Default for ExtensionServices {
         Self {
             legacy_backend: false,
             lyrics: Weak::new(),
-            lyrics_node: mornye_providers::lyrics::CallGraph::default().node(),
+            lyrics_node: mosix_providers::lyrics::CallGraph::default().node(),
             lyrics_parent: None,
             legacy_files: None,
-            isrc: Arc::new(mornye_core::isrc::IndexCache::default()),
+            isrc: Arc::new(mosix_core::isrc::IndexCache::default()),
             logs: Arc::new(crate::logging::LogBuffer::default()),
             extension_id: String::new(),
             ffmpeg: Arc::new(crate::ffmpeg::CommandRegistry::default()),
             raw_ffmpeg_stub: false,
-            downloads: Arc::new(mornye_core::downloads::DownloadState::default()),
+            downloads: Arc::new(mosix_core::downloads::DownloadState::default()),
             storage: None,
             files: None,
             transfer_policy: crate::transfer_policy::DownloadTransferPolicy::default(),
@@ -186,15 +186,15 @@ enum Command {
 /// rather than letting pending callbacks escape into a subsequent request.
 pub struct ExtensionRuntime {
     pub(crate) compiled_source: Arc<CompiledSource>,
-    lyrics_node: mornye_providers::lyrics::CallNode,
-    lyrics_parent: Option<mornye_providers::lyrics::CallNode>,
-    downloads: Arc<mornye_core::downloads::DownloadState>,
+    lyrics_node: mosix_providers::lyrics::CallNode,
+    lyrics_parent: Option<mosix_providers::lyrics::CallNode>,
+    downloads: Arc<mosix_core::downloads::DownloadState>,
     sender: SyncSender<Command>,
     control: Arc<Control>,
     worker: Mutex<Option<JoinHandle<()>>>,
     limits: RuntimeLimits,
     session: Option<Arc<crate::signed_session::SignedSessionClient>>,
-    network: Option<Arc<mornye_network::NetworkSession>>,
+    network: Option<Arc<mosix_network::NetworkSession>>,
     native_calls: Mutex<usize>,
     native_idle: Condvar,
 }
@@ -411,7 +411,7 @@ impl ExtensionRuntime {
         )
     }
 
-    pub(crate) fn network_session(&self) -> Option<Arc<mornye_network::NetworkSession>> {
+    pub(crate) fn network_session(&self) -> Option<Arc<mosix_network::NetworkSession>> {
         self.network.clone()
     }
 
@@ -474,7 +474,7 @@ impl ExtensionRuntime {
         )
     }
 
-    pub fn download_state(&self) -> Arc<mornye_core::downloads::DownloadState> {
+    pub fn download_state(&self) -> Arc<mosix_core::downloads::DownloadState> {
         Arc::clone(&self.downloads)
     }
 

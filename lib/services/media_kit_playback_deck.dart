@@ -474,7 +474,7 @@ class MediaKitPlaybackDeck implements PlaybackDeck {
   /// first deck probes once while it has no source.
   Future<void> _probeFilters() => _probe ??= () async {
     for (final name in MpvAudioFilterChain.optionalFilters) {
-      if (await _engine.setProperty('af', '@mornye_probe:lavfi-$name') < 0) {
+      if (await _engine.setProperty('af', '@mosix_probe:lavfi-$name') < 0) {
         _missingFilters.add(name);
       }
     }

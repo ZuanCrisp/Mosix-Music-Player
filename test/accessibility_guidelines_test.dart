@@ -9,7 +9,7 @@ import 'package:mosix/screens/settings/download_settings_page.dart';
 import 'package:mosix/screens/settings/lyrics_settings_page.dart';
 import 'package:mosix/screens/settings/playback_settings_page.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 void main() {
   final pages = <String, Widget Function()>{
@@ -36,14 +36,14 @@ void main() {
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.reset);
         final handle = tester.ensureSemantics();
-        final mornye = theme.key.startsWith('Mosix');
+        final mosix = theme.key.startsWith('Mosix');
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
               theme: theme.value(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              home: mornye
+              home: mosix
                   ? MosixSettingsTheme(child: page.value())
                   : page.value(),
             ),

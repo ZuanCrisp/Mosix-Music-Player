@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/editorial_notes.dart';
 import 'package:mosix/widgets/album_description.dart';
 
@@ -43,11 +43,11 @@ void main() {
     },
   );
 
-  for (final style in ['mornye-light', 'mornye-dark', 'material']) {
+  for (final style in ['mosix-light', 'mosix-dark', 'material']) {
     testWidgets('short album notes have no More action ($style)', (
       tester,
     ) async {
-      final mornye = style.startsWith('mornye');
+      final mosix = style.startsWith('mosix');
       tester.view.physicalSize = const Size(393, 700);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
@@ -58,7 +58,7 @@ void main() {
       ]) {
         await tester.pumpWidget(
           MaterialApp(
-            theme: mornye
+            theme: mosix
                 ? MosixTheme.build(
                     style.endsWith('light')
                         ? Brightness.light
@@ -71,7 +71,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.text(mornye ? 'MORE' : 'More'), findsNothing);
+        expect(find.text(mosix ? 'MORE' : 'More'), findsNothing);
         final tap = tester.widget<InkWell>(find.byType(InkWell));
         expect(tap.onTap, isNull);
         expect(tester.takeException(), isNull);
@@ -81,7 +81,7 @@ void main() {
     testWidgets('More responds to album preview width and text size ($style)', (
       tester,
     ) async {
-      final mornye = style.startsWith('mornye');
+      final mosix = style.startsWith('mosix');
       final scale = ValueNotifier(1.0);
       addTearDown(scale.dispose);
       tester.view.physicalSize = const Size(393, 700);
@@ -89,7 +89,7 @@ void main() {
       addTearDown(tester.view.reset);
       await tester.pumpWidget(
         MaterialApp(
-          theme: mornye
+          theme: mosix
               ? MosixTheme.build(
                   style.endsWith('light') ? Brightness.light : Brightness.dark,
                 )
@@ -112,7 +112,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final more = find.text(mornye ? 'MORE' : 'More');
+      final more = find.text(mosix ? 'MORE' : 'More');
       expect(more, findsNothing);
       tester.view.physicalSize = const Size(180, 700);
       await tester.pumpAndSettle();
@@ -131,11 +131,11 @@ void main() {
     ) async {
       await tester.binding.setSurfaceSize(const Size(393, 700));
       addTearDown(() => tester.binding.setSurfaceSize(null));
-      final mornye = style.startsWith('mornye');
+      final mosix = style.startsWith('mosix');
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: mornye
+            theme: mosix
                 ? MosixTheme.build(
                     style.endsWith('light')
                         ? Brightness.light
@@ -196,7 +196,7 @@ void main() {
         isTrue,
       );
 
-      await tester.tap(find.text(mornye ? 'MORE' : 'More'));
+      await tester.tap(find.text(mosix ? 'MORE' : 'More'));
       await tester.pumpAndSettle();
       expect(find.text('Example Album'), findsOneWidget);
       expect(find.byType(SelectionArea), findsOneWidget);

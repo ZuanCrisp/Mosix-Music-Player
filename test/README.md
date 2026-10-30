@@ -20,8 +20,8 @@ Test files sit directly in `test/`; only shared code has subfolders.
   `test/album_completeness_test.dart`. Roughly half of the suites follow this.
 - Otherwise prefix by feature area and describe the behavior, for example
   `download_queue_persistence_test.dart`, `library_partial_scan_test.dart`,
-  `mornye_bottom_bar_test.dart`, `network_storage_service_test.dart`. The
-  common prefixes are `download_`, `library_`, `mornye_`, `network_`,
+  `mosix_bottom_bar_test.dart`, `network_storage_service_test.dart`. The
+  common prefixes are `download_`, `library_`, `mosix_`, `network_`,
   `track_`, `native_` and `extension_`.
 - Put a fake used by more than one suite in `test/support/`, not in a copy per
   file.

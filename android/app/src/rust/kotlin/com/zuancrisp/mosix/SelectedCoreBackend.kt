@@ -2,13 +2,13 @@ package com.zuancrisp.mosix
 
 import android.content.Context
 import android.net.Uri
-import com.mornye.backend.CancellationDomain
-import com.mornye.backend.CancellationRegistry
-import com.mornye.backend.DownloadState
-import com.mornye.backend.ExtensionManager
-import com.mornye.backend.ExtensionRepository
-import com.mornye.backend.LyricsRequest
-import com.mornye.backend.RequestLease
+import com.mosix.backend.CancellationDomain
+import com.mosix.backend.CancellationRegistry
+import com.mosix.backend.DownloadState
+import com.mosix.backend.ExtensionManager
+import com.mosix.backend.ExtensionRepository
+import com.mosix.backend.LyricsRequest
+import com.mosix.backend.RequestLease
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.Dispatchers
@@ -143,7 +143,7 @@ internal object RustCoreBackend : CoreBackend {
 
     internal fun runDataJob(request: JSONObject, bytes: ByteArray, lease: RequestLease): String {
         if (request.optString("operation") != "library_scan_incremental") {
-            return com.mornye.backend.runNativeDataJob(request.toString(), bytes, lease)
+            return com.mosix.backend.runNativeDataJob(request.toString(), bytes, lease)
         }
         val folder = request.getString("folder_path")
         return withLibraryDirectories(listOf(folder)) { current ->
@@ -258,10 +258,10 @@ internal object RustCoreBackend : CoreBackend {
     override fun fileMetadataImplementation(path: String): String = "rust"
 
     override fun readFileMetadata(path: String, hint: String): String =
-        com.mornye.backend.readFileMetadata(path, hint, null)
+        com.mosix.backend.readFileMetadata(path, hint, null)
 
     override fun checkHiResAuthenticity(path: String, optionsJson: String): String =
-        com.mornye.backend.checkHiresAuthenticity(path, optionsJson, null)
+        com.mosix.backend.checkHiresAuthenticity(path, optionsJson, null)
 
     override fun readAudioMetadata(path: String, hint: String, cacheKey: String): String {
         val descriptor = path.removePrefix("/proc/self/fd/").toIntOrNull()
@@ -275,7 +275,7 @@ internal object RustCoreBackend : CoreBackend {
                 listOf(File(directory, "cover_$hash.jpg"), File(directory, "cover_$hash.png"))
                     .firstOrNull { it.isFile }
             } else null
-            val result = com.mornye.backend.readLibraryMetadataFromDescriptor(
+            val result = com.mosix.backend.readLibraryMetadataFromDescriptor(
                 descriptor, hint, java.time.Instant.now().toString(),
                 directory != null && hash != null && cached == null, null,
             )
@@ -436,7 +436,7 @@ internal object RustCoreBackend : CoreBackend {
             audioPath.removePrefix("/proc/self/fd/").toIntOrNull()
         } else null
         if (descriptor != null) {
-            val artwork = com.mornye.backend.extractCoverFromDescriptor(
+            val artwork = com.mosix.backend.extractCoverFromDescriptor(
                 descriptor, hint, null,
             )
             check(artwork.isNotEmpty()) { "No embedded artwork" }
@@ -574,8 +574,8 @@ internal object RustCoreBackend : CoreBackend {
     override fun invokeApplication(method: String, arguments: Any?): Any? = dispatchApplication(method, arguments)
 
     override fun buildFilename(template: String, metadataJson: String): String =
-        com.mornye.backend.buildFilename(template, metadataJson)
+        com.mosix.backend.buildFilename(template, metadataJson)
 
     override fun sanitizeFilename(filename: String): String =
-        com.mornye.backend.sanitizeFilename(filename)
+        com.mosix.backend.sanitizeFilename(filename)
 }

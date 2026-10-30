@@ -303,7 +303,7 @@ class _FilterChip extends ConsumerWidget {
       onTap: onTap,
       child: MosixGlass(
         radius: 22,
-        blurEnabled: ref.watch(mornyeBlurEnabledProvider),
+        blurEnabled: ref.watch(mosixBlurEnabledProvider),
         child: Material(
           color: Colors.transparent,
           child: InkWell(

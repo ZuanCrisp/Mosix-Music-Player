@@ -15,7 +15,7 @@ import 'package:mosix/services/library_database.dart';
 import 'package:mosix/services/library_search.dart';
 import 'package:mosix/services/local_track_batch_actions.dart';
 import 'package:mosix/services/local_track_redownload_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_choice_chip.dart';
 import 'package:mosix/widgets/cached_cover_image.dart';
 import 'package:mosix/widgets/desktop/context_menu.dart';

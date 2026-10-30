@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 
 /// Builds a horizontal list that scrolls with [controller].
@@ -87,11 +87,11 @@ class _DesktopScrollArrowsState extends State<DesktopScrollArrows> {
 
   Widget _arrow(BuildContext context, {required bool forward}) {
     final l10n = context.l10n;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final colorScheme = Theme.of(context).colorScheme;
     final icon = forward
-        ? (mornye ? CupertinoIcons.forward : Icons.chevron_right)
-        : (mornye ? CupertinoIcons.back : Icons.chevron_left);
+        ? (mosix ? CupertinoIcons.forward : Icons.chevron_right)
+        : (mosix ? CupertinoIcons.back : Icons.chevron_left);
     return PositionedDirectional(
       start: forward ? null : 8,
       end: forward ? 8 : null,
@@ -101,7 +101,7 @@ class _DesktopScrollArrowsState extends State<DesktopScrollArrows> {
         child: Tooltip(
           message: forward ? l10n.desktopScrollForward : l10n.desktopScrollBack,
           child: Material(
-            color: mornye
+            color: mosix
                 ? colorScheme.surface.withValues(alpha: 0.86)
                 : colorScheme.secondaryContainer,
             shape: const CircleBorder(),
@@ -114,8 +114,8 @@ class _DesktopScrollArrowsState extends State<DesktopScrollArrows> {
                 dimension: 40,
                 child: Icon(
                   icon,
-                  size: mornye ? 20 : 24,
-                  color: mornye
+                  size: mosix ? 20 : 24,
+                  color: mosix
                       ? colorScheme.onSurface
                       : colorScheme.onSecondaryContainer,
                 ),

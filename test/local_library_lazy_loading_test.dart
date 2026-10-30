@@ -20,7 +20,7 @@ import 'package:mosix/services/history_database.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/services/library_search.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 class _Settings extends SettingsNotifier {
   @override
@@ -213,9 +213,9 @@ void main() {
     addTearDown(() => messenger.setMockMethodCallHandler(sqlite, null));
   });
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'playlist download confirms one grouped enqueue (Mosix: $mornye)',
+      'playlist download confirms one grouped enqueue (Mosix: $mosix)',
       (tester) async {
         tester.view.physicalSize = const Size(800, 1200);
         tester.view.devicePixelRatio = 1;
@@ -241,7 +241,7 @@ void main() {
               ),
             ],
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.dark)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -292,7 +292,7 @@ void main() {
       },
     );
 
-    testWidgets('playlist selection confirms one deletion (Mosix: $mornye)', (
+    testWidgets('playlist selection confirms one deletion (Mosix: $mosix)', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(800, 1200);
@@ -311,7 +311,7 @@ void main() {
             downloadQueueProvider.overrideWith(_Queue.new),
           ],
           child: MaterialApp(
-            theme: mornye
+            theme: mosix
                 ? MosixTheme.build(Brightness.dark)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,

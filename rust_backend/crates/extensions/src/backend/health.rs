@@ -3,12 +3,12 @@
 use super::Backend;
 use crate::manager::ExtensionManager;
 use crate::manifest::{ExtensionManifest, HealthCheck};
-use mornye_core::app_version::AppVersion;
-use mornye_network::{
+use mosix_core::app_version::AppVersion;
+use mosix_network::{
     HttpRequest, NetworkService, policy::NetworkPermissions, policy::private_literal_or_local,
     url::UrlParts,
 };
-use mornye_providers::resolver::Check;
+use mosix_providers::resolver::Check;
 use serde::Serialize;
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -540,7 +540,7 @@ mod tests {
     use crate::RuntimeLimits;
     use crate::backend::MetadataOptions;
     use crate::environment::ExtensionEnvironment;
-    use mornye_network::{Lookup, LookupFuture, NetworkOptions};
+    use mosix_network::{Lookup, LookupFuture, NetworkOptions};
     use serde_json::json;
     use std::sync::atomic::AtomicUsize;
 

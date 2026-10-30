@@ -9,14 +9,14 @@ import 'package:mosix/controllers/player_metadata_controller.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/theme/app_motion.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/playback_seek_preview.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
 import 'package:mosix/widgets/desktop/desktop_window.dart'
     show desktopWindowFullScreen;
-import 'package:mosix/widgets/mornye_player_background.dart';
-import 'package:mosix/widgets/mornye_player_queue.dart';
+import 'package:mosix/widgets/mosix_player_background.dart';
+import 'package:mosix/widgets/mosix_player_queue.dart';
 import 'package:mosix/widgets/player_lyrics_section.dart';
 import 'package:mosix/widgets/player_queue_sheet.dart';
 import 'package:mosix/widgets/no_scrollbars.dart';
@@ -137,7 +137,7 @@ class DesktopInspector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final l10n = context.l10n;
     final mediaItem = ref.watch(currentMediaItemProvider).value;
     final title = switch (panel) {
@@ -168,7 +168,7 @@ class DesktopInspector extends ConsumerWidget {
               key: const ValueKey('desktop-inspector-close'),
               tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
               color: colorScheme.onSurfaceVariant,
-              icon: AppIcon(mornye ? CupertinoIcons.xmark : Icons.close),
+              icon: AppIcon(mosix ? CupertinoIcons.xmark : Icons.close),
               onPressed: () => desktopInspectorPanel.value = null,
             ),
           ],
@@ -194,7 +194,7 @@ class DesktopInspector extends ConsumerWidget {
             colorScheme: colorScheme,
           ),
           DesktopInspectorPanel.upNext =>
-            mornye
+            mosix
                 ? MosixPlayerQueue(colorScheme: colorScheme)
                 : DesktopMaterialQueue(colorScheme: colorScheme),
         };
@@ -209,7 +209,7 @@ class DesktopInspector extends ConsumerWidget {
     }
 
     final Widget panelSurface;
-    if (mornye) {
+    if (mosix) {
       // Lyrics and Up Next keep the player's dark artwork backdrop, as the
       // full player draws them in white over it.
       final theme = MosixTheme.fromContext(
@@ -238,7 +238,7 @@ class DesktopInspector extends ConsumerWidget {
     }
 
     final divider = BorderSide(
-      color: mornye
+      color: mosix
           ? MosixTheme.metadataDividerColor(context)
           : Theme.of(context).colorScheme.outlineVariant,
     );

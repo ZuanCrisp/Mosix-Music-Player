@@ -193,7 +193,7 @@ fn windows_network_share_directory_operations() {
     let share = std::env::var_os("MOSIX_TEST_SMB_ROOT")
         .expect("set MOSIX_TEST_SMB_ROOT to a writable UNC path or mapped drive");
     let root = tempfile::Builder::new()
-        .prefix("mornye-smb-test-")
+        .prefix("mosix-smb-test-")
         .tempdir_in(share)
         .unwrap();
     // Exercise both the supplied spelling and the verbatim path obtained

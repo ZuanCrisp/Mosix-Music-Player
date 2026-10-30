@@ -6,8 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/local_library_provider.dart';
 import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/audio_format_utils.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 
@@ -125,7 +125,7 @@ class _DropOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     return IgnorePointer(
       child: ColoredBox(
         color: colorScheme.surface.withValues(alpha: 0.9),
@@ -134,15 +134,15 @@ class _DropOverlay extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               border: Border.all(color: colorScheme.primary, width: 2),
-              borderRadius: BorderRadius.circular(mornye ? 16 : 28),
+              borderRadius: BorderRadius.circular(mosix ? 16 : 28),
             ),
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    mornye
-                        ? mornyeIconFor(Icons.library_add_outlined)
+                    mosix
+                        ? mosixIconFor(Icons.library_add_outlined)
                         : Icons.library_add_outlined,
                     size: 48,
                     color: colorScheme.primary,

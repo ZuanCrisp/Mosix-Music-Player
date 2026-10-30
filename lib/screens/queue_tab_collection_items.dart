@@ -469,7 +469,7 @@ extension _QueueTabCollectionItemWidgets on _QueueTabState {
 
     final card = AppContentCard(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      mornyeSurface: false,
+      mosixSurface: false,
       onTap: onTap,
       onLongPress: onLongPress,
       child: Padding(

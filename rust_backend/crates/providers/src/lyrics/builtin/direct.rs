@@ -7,7 +7,7 @@ use base64::{
     engine::general_purpose::{GeneralPurpose, GeneralPurposeConfig},
 };
 use html5ever::tendril::TendrilSink;
-use mornye_core::lyrics::lrc;
+use mosix_core::lyrics::lrc;
 use scraper::{Html, HtmlTreeSink, Node};
 
 fn base64_text(text: &str, raw: bool) -> Result<String, LyricsError> {

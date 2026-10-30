@@ -9,8 +9,8 @@ import android.os.ProxyFileDescriptorCallback
 import android.os.storage.StorageManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.mornye.backend.readFileMetadata
-import com.mornye.backend.readLibraryMetadataFromDescriptor
+import com.mosix.backend.readFileMetadata
+import com.mosix.backend.readLibraryMetadataFromDescriptor
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.io.File

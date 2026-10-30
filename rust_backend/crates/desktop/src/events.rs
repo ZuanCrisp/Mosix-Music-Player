@@ -6,7 +6,7 @@
 
 use crate::kind;
 use crate::runtime::{self, Runtime};
-use mornye_mobile::DownloadProgressSubscription;
+use mosix_mobile::DownloadProgressSubscription;
 use serde_json::Value;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -94,19 +94,19 @@ impl Events {
     }
 }
 
-/// `mornye_subscribe`. Idempotent; unknown kinds are ignored.
+/// `mosix_subscribe`. Idempotent; unknown kinds are ignored.
 pub(crate) fn subscribe(runtime: &'static Runtime, event: i32) {
     match event {
         kind::DOWNLOAD_PROGRESS => {
             if let Some(generation) = runtime.events.download.start() {
-                spawn("mornye-download-progress", move || {
+                spawn("mosix-download-progress", move || {
                     download_loop(runtime, generation)
                 });
             }
         }
         kind::LIBRARY_SCAN_PROGRESS => {
             if let Some(generation) = runtime.events.scan.start() {
-                spawn("mornye-scan-progress", move || {
+                spawn("mosix-scan-progress", move || {
                     scan_loop(runtime, generation)
                 });
             }
@@ -116,7 +116,7 @@ pub(crate) fn subscribe(runtime: &'static Runtime, event: i32) {
     }
 }
 
-/// `mornye_unsubscribe`. Idempotent; unknown kinds are ignored.
+/// `mosix_unsubscribe`. Idempotent; unknown kinds are ignored.
 pub(crate) fn unsubscribe(runtime: &Runtime, event: i32) {
     match event {
         kind::DOWNLOAD_PROGRESS => runtime.events.download.stop(),

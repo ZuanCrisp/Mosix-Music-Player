@@ -6,7 +6,7 @@
 use crate::call::{Args, CallError, OrFail};
 use crate::paths::{self, RemoveOnDrop};
 use crate::runtime::Config;
-use mornye_mobile::{
+use mosix_mobile::{
     CancellationDomain, CancellationRegistry, DownloadDirectoryScope, DownloadProgressSubscription,
     ExtensionManager, ExtensionRepository, RequestLease,
 };
@@ -83,7 +83,7 @@ fn overlaps(path: &Path, storage: &Path) -> bool {
 impl Backend {
     pub(crate) fn new(config: &Config) -> Self {
         Self {
-            root: config.temp_dir.join("mornye-rust-core"),
+            root: config.temp_dir.join("mosix-rust-core"),
             app_version: config.app_version.clone(),
             owner: Mutex::new(Owner::default()),
             data_jobs: CancellationRegistry::new(CancellationDomain::ExtensionRequest),
@@ -591,8 +591,7 @@ impl Backend {
         }
         let bytes = args.bytes("bytes").unwrap_or_default().to_vec();
         if request["operation"].as_str() != Some("library_scan_incremental") {
-            return mornye_mobile::run_native_data_job(raw.to_owned(), bytes, Some(lease))
-                .or_fail();
+            return mosix_mobile::run_native_data_job(raw.to_owned(), bytes, Some(lease)).or_fail();
         }
         let folder = request["folder_path"]
             .as_str()

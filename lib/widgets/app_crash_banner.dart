@@ -60,7 +60,7 @@ class _AppCrashBannerState extends ConsumerState<AppCrashBanner> {
         elevation: 0,
         margin: EdgeInsets.zero,
         color: colorScheme.errorContainer,
-        mornyeSurface: false,
+        mosixSurface: false,
         shape: RoundedRectangleBorder(borderRadius: tokens.borderRadiusCard),
         child: Padding(
           padding: EdgeInsets.all(tokens.gapLg),

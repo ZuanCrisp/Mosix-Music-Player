@@ -340,7 +340,7 @@ void main() {
     );
     configurePlaybackNotification(
       presentation: const PlaybackNotification(
-        mornye: true,
+        mosix: true,
         mediaId: 'one',
         source: '/one.flac',
         loved: true,
@@ -401,7 +401,7 @@ void main() {
       ),
     );
     configurePlaybackNotification(
-      presentation: const PlaybackNotification(mornye: true),
+      presentation: const PlaybackNotification(mosix: true),
       toggleFavorite: (_) async => false,
     );
     expect(
@@ -639,7 +639,7 @@ void main() {
       final save = Completer<void>();
       final selected = <String>[];
       configurePlaybackNotification(
-        presentation: const PlaybackNotification(mornye: true),
+        presentation: const PlaybackNotification(mosix: true),
         toggleFavorite: (item) async {
           selected.add(item.id);
           await save.future;
@@ -708,7 +708,7 @@ void main() {
 
   test('failed favorite save leaves the notification icon unchanged', () async {
     configurePlaybackNotification(
-      presentation: const PlaybackNotification(mornye: true),
+      presentation: const PlaybackNotification(mosix: true),
       toggleFavorite: (_) async => throw StateError('Save failed'),
     );
     handler.mediaItem.add(_tracks.first.toMediaItem());

@@ -14,7 +14,7 @@ import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 import 'package:mosix/widgets/app_loading_indicator.dart';
 import 'package:mosix/widgets/app_progress_indicator.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 class UpdateDialog extends StatefulWidget {
   final UpdateInfo updateInfo;

@@ -10,7 +10,7 @@ import 'package:mosix/providers/download_queue_provider.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/queue_tab.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
 
 import 'support/fixed_settings.dart';
@@ -35,7 +35,7 @@ class _Queue extends DownloadQueueNotifier {
 }
 
 void main() {
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final failure in [
       (
         name: 'typed SAF grant failure',
@@ -80,7 +80,7 @@ void main() {
         reselect: false,
       ),
     ]) {
-      testWidgets('${failure.name} (Mosix: $mornye)', (tester) async {
+      testWidgets('${failure.name} (Mosix: $mosix)', (tester) async {
         tester.view.physicalSize = const Size(430, 1000);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.reset);
@@ -115,7 +115,7 @@ void main() {
             ],
             child: MaterialApp(
               locale: const Locale('es', 'ES'),
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.dark)
                   : AppTheme.dark(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -6,7 +6,7 @@ import 'package:mosix/providers/library_collections_provider.dart';
 import 'package:mosix/screens/artist_screen.dart';
 import 'package:mosix/screens/weekly_releases_screen.dart';
 import 'package:mosix/services/cover_cache_manager.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/utils/nav_bar_inset.dart';
 import 'package:mosix/widgets/animation_utils.dart';

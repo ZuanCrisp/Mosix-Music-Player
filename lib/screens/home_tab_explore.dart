@@ -409,7 +409,7 @@ extension _HomeTabExploreUI on _HomeTabState {
           groups: [
             [
               MosixMenuAction(
-                icon: mornyeIconFor(Icons.download),
+                icon: mosixIconFor(Icons.download),
                 label: menuContext.l10n.downloadTitle,
                 onPressed: () {
                   Navigator.pop(menuContext);
@@ -417,7 +417,7 @@ extension _HomeTabExploreUI on _HomeTabState {
                 },
               ),
               MosixMenuAction(
-                icon: mornyeIconFor(Icons.album),
+                icon: mosixIconFor(Icons.album),
                 label: menuContext.l10n.homeGoToAlbum,
                 onPressed: () {
                   Navigator.pop(menuContext);

@@ -10,9 +10,9 @@
 # follows the host (`uname -m`); set MOSIX_PACKAGE_ARCH to x86_64 or aarch64
 # to override it.
 #
-# Both formats install the bundle under usr/lib/mornye with usr/bin/mornye
+# Both formats install the bundle under usr/lib/mosix with usr/bin/mosix
 # pointing at it, plus linux/packaging: the desktop entry (which registers
-# x-scheme-handler/mornye), the AppStream metainfo and hicolor icons.
+# x-scheme-handler/mosix), the AppStream metainfo and hicolor icons.
 #
 # The AppImage is built with a pinned appimagetool and type2 runtime that are
 # checked against SHA-256 sums. It uses the host's GTK 3, GLib and
@@ -25,7 +25,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 PACKAGING_DIR="$PROJECT_DIR/linux/packaging"
 APP_ID="com.zuancrisp.mosix"
-BINARY_NAME="mornye"
+BINARY_NAME="mosix"
 
 # Pinned packaging tools (AppImage/appimagetool 1.9.1, type2-runtime 20251108).
 APPIMAGETOOL_VERSION="1.9.1"
@@ -79,7 +79,7 @@ for required in "$BINARY_NAME" lib/libapp.so lib/libflutter_linux_gtk.so data/fl
   fi
 done
 
-WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mornye-package.XXXXXX")"
+WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mosix-package.XXXXXX")"
 trap 'rm -rf "$WORK_DIR"' EXIT
 
 sha256_of() {
@@ -109,12 +109,12 @@ install_tree() {
 
   local size
   for size in 128 256; do
-    install -Dm644 "$PACKAGING_DIR/icons/mornye-$size.png" \
+    install -Dm644 "$PACKAGING_DIR/icons/mosix-$size.png" \
       "$share/icons/hicolor/${size}x${size}/apps/$APP_ID.png"
   done
-  install -Dm644 "$PROJECT_DIR/assets/brand/logo/png/mornye-badge@1x.png" \
+  install -Dm644 "$PROJECT_DIR/assets/brand/logo/png/mosix-badge@1x.png" \
     "$share/icons/hicolor/512x512/apps/$APP_ID.png"
-  install -Dm644 "$PROJECT_DIR/assets/brand/logo/svg/mornye-badge.svg" \
+  install -Dm644 "$PROJECT_DIR/assets/brand/logo/svg/mosix-badge.svg" \
     "$share/icons/hicolor/scalable/apps/$APP_ID.svg"
 
   install -Dm644 "$PROJECT_DIR/LICENSE" "$share/doc/$BINARY_NAME/copyright"
@@ -144,7 +144,7 @@ build_appimage() {
   cat > "$appdir/AppRun" <<'APPRUN'
 #!/bin/sh
 HERE="$(dirname "$(readlink -f "$0")")"
-exec "$HERE/usr/lib/mornye/mornye" "$@"
+exec "$HERE/usr/lib/mosix/mosix" "$@"
 APPRUN
   chmod 755 "$appdir/AppRun"
   cp "$appdir/usr/share/applications/$APP_ID.desktop" "$appdir/$APP_ID.desktop"

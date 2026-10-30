@@ -14,11 +14,11 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, OnceLock, RwLock};
 
-/// `mornye_callback`: `(id, kind, data, len)`. Every non-null `data` buffer
-/// must be released with `mornye_free`.
+/// `mosix_callback`: `(id, kind, data, len)`. Every non-null `data` buffer
+/// must be released with `mosix_free`.
 pub type MosixCallback = extern "C" fn(id: u64, kind: i32, data: *const u8, len: usize);
 
-/// Paths Dart passes to `mornye_init`.
+/// Paths Dart passes to `mosix_init`.
 #[derive(Debug, Clone, Default)]
 pub struct Config {
     pub app_support_dir: PathBuf,
@@ -105,7 +105,7 @@ pub(crate) fn get() -> Option<&'static Runtime> {
 }
 
 /// Hands `data` to the callback. The buffer is leaked here and reclaimed by
-/// `mornye_free`; without a callback it is dropped.
+/// `mosix_free`; without a callback it is dropped.
 pub(crate) fn emit(id: u64, kind: i32, data: Vec<u8>) {
     let Some(callback) = *CALLBACK.read().expect("callback lock") else {
         return;

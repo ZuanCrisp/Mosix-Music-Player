@@ -62,7 +62,7 @@ final class CoreFFmpegExecution {
 private enum CoreFFmpegStaging {
     static let lock = NSLock()
     static var directories = Set<String>()
-    static let prefix = ".mornye-ffmpeg-\(Bundle.main.bundleIdentifier ?? "mornye")-"
+    static let prefix = ".mosix-ffmpeg-\(Bundle.main.bundleIdentifier ?? "mosix")-"
 
     static func create(for target: URL) throws -> URL {
         let directory = target.deletingLastPathComponent().resolvingSymlinksInPath()

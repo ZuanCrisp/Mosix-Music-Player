@@ -10,7 +10,7 @@ import 'package:mosix/services/shell_navigation_service.dart';
 import 'package:mosix/services/user_profile_store.dart';
 import 'package:mosix/theme/app_motion.dart';
 import 'package:mosix/theme/material_expressive.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
 import 'package:mosix/widgets/desktop/desktop_commands.dart';

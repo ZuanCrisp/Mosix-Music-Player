@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mosix/controllers/player_metadata_controller.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/lyrics_parser.dart';
 import 'package:mosix/utils/playback_seek_preview.dart';
 import 'package:mosix/widgets/app_icon.dart';
@@ -132,7 +132,7 @@ class PlayerLyricsSection extends ConsumerWidget {
           ),
           if (options != null)
             PositionedDirectional(
-              start: context.isMosix ? mornyeLyricsContentInset : 24,
+              start: context.isMosix ? mosixLyricsContentInset : 24,
               bottom: 8,
               child: options!,
             ),

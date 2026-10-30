@@ -63,7 +63,7 @@ fn depth_guard_ignores_opaque_markup_and_quoted_tag_boundaries() {
     let raw = format!(
         "<?xml version=\"1.0\"?><!DOCTYPE tt [<!-- ]> {opaque} --> <!ENTITY markup \"{opaque}\">]><tt><!--{opaque}--><body><p begin='1s' end='2s' data=\">\"><![CDATA[{opaque}]]><span data='>'>Line</span></p></body></tt>"
     );
-    mornye_core::xml::check_depth(&raw).unwrap();
+    mosix_core::xml::check_depth(&raw).unwrap();
     let parsed = execute(&serde_json::json!({"raw":raw}), None, &|| Ok(())).unwrap();
     assert_eq!(parsed["plainText"], "Line");
 }

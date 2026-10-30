@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:mosix/widgets/app_checkbox.dart';
 import 'package:mosix/widgets/app_content_card.dart';
@@ -228,7 +228,7 @@ void main() {
     expect(editable.scrollPadding, const EdgeInsets.only(bottom: 120));
   });
 
-  for (final variant in ['expressive', 'reduced', 'mornye']) {
+  for (final variant in ['expressive', 'reduced', 'mosix']) {
     testWidgets(
       'playlist dialog validates and submits with the keyboard ($variant)',
       (tester) async {
@@ -276,7 +276,7 @@ void main() {
                 child: const Text('Open playlist'),
               ),
             ),
-            theme: variant == 'mornye'
+            theme: variant == 'mosix'
                 ? MosixTheme.build(Brightness.dark)
                 : null,
             reduceMotion: variant == 'reduced',

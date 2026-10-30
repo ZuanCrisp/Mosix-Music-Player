@@ -1288,7 +1288,7 @@
   "@snackbarFileNotFound": {
     "description": "Snackbar - file doesn't exist"
   },
-  "snackbarSelectExtFile": "Harap pilih file .mornye-ext",
+  "snackbarSelectExtFile": "Harap pilih file .mosix-ext",
   "@snackbarSelectExtFile": {
     "description": "Snackbar - wrong file type selected"
   },
@@ -2214,7 +2214,7 @@
   "@extensionsNoExtensions": {
     "description": "Empty state - no extensions"
   },
-  "extensionsNoExtensionsSubtitle": "Pasang file .mornye-ext untuk menambahkan provider baru",
+  "extensionsNoExtensionsSubtitle": "Pasang file .mosix-ext untuk menambahkan provider baru",
   "@extensionsNoExtensionsSubtitle": {
     "description": "Empty state subtitle"
   },
@@ -2792,6 +2792,28 @@
     "description": "Toggle to enable library scanning"
   },
   "libraryEnableLocalLibrarySubtitle": "Pindai seluruh musik di perangkat Anda",
+  "libraryAutoPlaylistTitle": "Buat playlist dari folder",
+  "libraryAutoPlaylistSubtitle": "Pilih folder musik untuk membuat playlist dari lagu-lagunya",
+  "libraryAutoPlaylistEmpty": "Tidak ada lagu yang ditemukan di folder ini.",
+  "libraryAutoPlaylistCreated": "Playlist \"{name}\" dibuat dengan {count} lagu",
+  "@libraryAutoPlaylistCreated": {
+    "placeholders": {
+      "name": {},
+      "count": {"type": "int"}
+    }
+  },
+  "playlistTrackOrder": "Urutan playlist",
+  "@playlistTrackOrder": {
+    "description": "Opsi urutan yang mempertahankan urutan lagu asli di playlist"
+  },
+  "playlistSortAndFilter": "Urutkan dan filter lagu",
+  "@playlistSortAndFilter": {
+    "description": "Judul opsi pengurutan dan filter lagu dalam playlist"
+  },
+  "playlistFilterTracks": "Filter judul, artis, atau album",
+  "@playlistFilterTracks": {
+    "description": "Label kolom pencarian untuk memfilter lagu dalam playlist"
+  },
   "@libraryEnableLocalLibrarySubtitle": {
     "description": "Subtitle for enable toggle"
   },
@@ -7095,8 +7117,8 @@
   "@metadataCopyField": {
     "description": "Metadata menu action that copies the selected key and value"
   },
-  "mornyeSearch": "Telusuri",
-  "mornyeContinuePlaying": "Lanjut Memutar",
+  "mosixSearch": "Telusuri",
+  "mosixContinuePlaying": "Lanjut Memutar",
   "metadataCopyAll": "Salin semua metadata",
   "@metadataCopyAll": {
     "description": "Metadata menu action that copies every visible key and value"
@@ -7109,13 +7131,13 @@
   "@optionsEmbeddedCoverSizeDescription": {
     "description": "Description shown in the embedded cover size picker"
   },
-  "mornyeFavorite": "Favorit",
-  "mornyeGoToArtist": "Buka Artis",
-  "@mornyeFavorite": {
+  "mosixFavorite": "Favorit",
+  "mosixGoToArtist": "Buka Artis",
+  "@mosixFavorite": {
     "description": "Compact context menu action that adds a track to Loved"
   },
-  "mornyeFavorited": "Terfavorit",
-  "@mornyeFavorited": {
+  "mosixFavorited": "Terfavorit",
+  "@mosixFavorited": {
     "description": "Selected state of the compact favorite action"
   },
   "autoMixDescription": "Padukan musik dengan pencocokan bit dan penyesuaian tempo. Menggunakan crossfade bila beat tidak dapat dicocokkan.",

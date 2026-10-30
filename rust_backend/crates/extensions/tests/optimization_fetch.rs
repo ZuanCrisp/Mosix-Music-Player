@@ -1,5 +1,5 @@
-use mornye_extensions::RuntimeLimits;
-use mornye_extensions::environment::ExtensionEnvironment;
+use mosix_extensions::RuntimeLimits;
+use mosix_extensions::environment::ExtensionEnvironment;
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 use std::io::{Read, Write};

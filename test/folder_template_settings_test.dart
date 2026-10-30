@@ -13,7 +13,7 @@ import 'package:mosix/screens/settings/files_settings_page.dart';
 import 'package:mosix/services/backend/native_backend_transport.dart';
 import 'package:mosix/services/backend/rust_ffi_backend.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -103,9 +103,9 @@ void main() {
     },
   );
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      '${mornye ? 'Mosix' : 'Material'} edits, validates and previews folder templates',
+      '${mosix ? 'Mosix' : 'Material'} edits, validates and previews folder templates',
       (tester) async {
         final desktop = const {
           TargetPlatform.windows,
@@ -141,7 +141,7 @@ void main() {
           UncontrolledProviderScope(
             container: container,
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.light)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,

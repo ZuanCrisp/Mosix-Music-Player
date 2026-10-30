@@ -79,7 +79,7 @@ void main() {
 
   setUp(transport.calls.clear);
 
-  test('only mornye URLs are app links, logged without the query', () {
+  test('only mosix URLs are app links, logged without the query', () {
     expect(DesktopDeepLinks.isAppLink(Uri.parse('MOSIX://callback')), true);
     expect(DesktopDeepLinks.isAppLink(Uri.parse('https://example.com')), false);
     expect(
@@ -120,7 +120,7 @@ void main() {
     },
   );
 
-  test('a non-callback mornye URL is reported as not queued', () async {
+  test('a non-callback mosix URL is reported as not queued', () async {
     final deepLinks = DesktopDeepLinks();
     expect(await deepLinks.handle(Uri.parse('mornye://test')), false);
     expect(transport.calls.single.$1, 'queueExtensionCallbackUrl');

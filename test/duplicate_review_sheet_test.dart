@@ -6,7 +6,7 @@ import 'package:mosix/providers/local_library_provider.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/duplicate_review_sheet.dart';
 
@@ -61,17 +61,17 @@ void main() {
       debugPrint = previousDebugPrint;
     });
 
-    for (final mornye in [false, true]) {
+    for (final mosix in [false, true]) {
       for (final brightness in Brightness.values) {
         testWidgets(
-          'duplicate rows render on $platform ($mornye, $brightness)',
+          'duplicate rows render on $platform ($mosix, $brightness)',
           (tester) async {
             debugDesktopPlatformOverride = true;
             addTearDown(() => debugDesktopPlatformOverride = null);
             tester.view.physicalSize = const Size(1280, 720);
             tester.view.devicePixelRatio = 1;
             addTearDown(tester.view.reset);
-            final theme = mornye
+            final theme = mosix
                 ? MosixTheme.build(brightness)
                 : brightness == Brightness.dark
                 ? AppTheme.dark()

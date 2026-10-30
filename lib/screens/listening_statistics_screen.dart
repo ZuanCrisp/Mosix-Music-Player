@@ -8,7 +8,7 @@ import 'package:mosix/screens/listening_rewind_screen.dart';
 import 'package:mosix/services/listening_statistics.dart';
 import 'package:mosix/theme/app_motion.dart';
 import 'package:mosix/theme/material_expressive.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/widgets/animation_utils.dart' show SkeletonBox;
 import 'package:mosix/widgets/app_alert_dialog.dart';
@@ -212,19 +212,19 @@ class _ListeningStatisticsScreenState
   }
 
   Widget _summarySkeleton(BuildContext context) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     return ExcludeSemantics(
       child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: AppContentCard(
-              mornyeSurface: false,
-              color: mornye
+              mosixSurface: false,
+              color: mosix
                   ? null
                   : Theme.of(context).colorScheme.primaryContainer,
               child: Padding(
-                padding: EdgeInsets.all(mornye ? 20 : 24),
+                padding: EdgeInsets.all(mosix ? 20 : 24),
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -308,7 +308,7 @@ class _ListeningStatisticsScreenState
 
   List<Widget> _summarySlivers(BuildContext context, ListeningSummary data) {
     final colors = Theme.of(context).colorScheme;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final artists = data.artists.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     final topArtists = artists.take(10).toList();
@@ -328,11 +328,11 @@ class _ListeningStatisticsScreenState
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: AppContentCard(
-            mornyeSurface: false,
+            mosixSurface: false,
             // Material leads with the total as an emphasized hero figure.
-            color: mornye ? null : colors.primaryContainer,
+            color: mosix ? null : colors.primaryContainer,
             child: Padding(
-              padding: EdgeInsets.all(mornye ? 20 : 24),
+              padding: EdgeInsets.all(mosix ? 20 : 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -340,7 +340,7 @@ class _ListeningStatisticsScreenState
                     context.l10n.listeningStatsMinutes(
                       (data.milliseconds / 60000).round(),
                     ),
-                    style: mornye
+                    style: mosix
                         ? textTheme.headlineMedium
                         : textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.w700,
@@ -354,7 +354,7 @@ class _ListeningStatisticsScreenState
                       data.tracks.length,
                       data.days.length,
                     ),
-                    style: mornye
+                    style: mosix
                         ? null
                         : textTheme.bodyLarge?.copyWith(
                             color: colors.onPrimaryContainer,

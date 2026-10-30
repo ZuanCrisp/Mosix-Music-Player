@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 
 void main() {
   for (final brightness in Brightness.values) {
@@ -89,15 +89,15 @@ void main() {
     }
   }
 
-  for (final mornye in [true, false]) {
+  for (final mosix in [true, false]) {
     testWidgets(
-      'confirmation preserves cancel and confirm results (Mosix: $mornye)',
+      'confirmation preserves cancel and confirm results (Mosix: $mosix)',
       (tester) async {
         bool? result;
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+              theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
               home: Builder(
                 builder: (context) => Scaffold(
                   body: TextButton(
@@ -135,13 +135,13 @@ void main() {
         await tester.pumpAndSettle();
         expect(
           find.byType(MosixGlassPanel),
-          mornye ? findsOneWidget : findsNothing,
+          mosix ? findsOneWidget : findsNothing,
         );
         expect(
           find.byType(AlertDialog),
-          mornye ? findsNothing : findsOneWidget,
+          mosix ? findsNothing : findsOneWidget,
         );
-        if (mornye) {
+        if (mosix) {
           final remove = find.widgetWithText(CupertinoButton, 'Remove');
           final cancel = find.widgetWithText(CupertinoButton, 'Cancel');
           expect(

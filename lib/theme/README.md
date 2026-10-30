@@ -1,7 +1,7 @@
 # Theme Layer
 
 The app has two visual styles, chosen in Appearance settings and stored as
-`AppThemeStyle { material, mornye }` (`lib/models/theme_settings.dart`,
+`AppThemeStyle { material, mosix }` (`lib/models/theme_settings.dart`,
 preference key `theme_style`, loaded by `lib/providers/theme_provider.dart`):
 
 - **Material**: Material 3 with dynamic color or a seed color, optional AMOLED
@@ -22,8 +22,8 @@ replacing them.
 | `lib/theme/dynamic_color_wrapper.dart` | `DynamicColorWrapper`, used by `lib/app.dart`. Builds the light and dark `ThemeData` for the selected style |
 | `lib/theme/app_theme.dart` | `AppTheme.light` and `AppTheme.dark`: Material 3 component themes over a `ColorScheme` |
 | `lib/theme/app_tokens.dart` | `AppTokens`, a `ThemeExtension` with the shared radii, spacing, cover sizes and header metrics |
-| `lib/theme/mornye_theme.dart` | `MosixTheme`: the Mosix `ThemeExtension`, its `ThemeData` builder, `context.isMosix`, `MosixSettingsTheme` |
-| `lib/theme/mornye_icons.dart` | `mornyeIconFor` (Material icon to Cupertino icon) and `context.adaptiveIcon` |
+| `lib/theme/mosix_theme.dart` | `MosixTheme`: the Mosix `ThemeExtension`, its `ThemeData` builder, `context.isMosix`, `MosixSettingsTheme` |
+| `lib/theme/mosix_icons.dart` | `mosixIconFor` (Material icon to Cupertino icon) and `context.adaptiveIcon` |
 | `lib/theme/material_symbols.dart` | Material Symbols Rounded counterparts of `Icons.*` for the Material style |
 | `lib/theme/material_expressive.dart` | `materialExpressiveEnabled` and `MaterialExpressiveScope`, the bridge to the Material UI and Material 3 Expressive packages |
 | `lib/theme/app_motion.dart` | `AppMotionSpec`, `SpringCurve` and `AppMotion` spring presets |
@@ -63,7 +63,7 @@ user's Mosix preferences.
   a `MosixTheme` extension. Because it follows the nearest `Theme`, a
   subtree can be switched by wrapping it in another theme.
 - Keep `Icons.*` at call sites and pass them through `context.adaptiveIcon`;
-  Mosix then shows the Cupertino glyph from `mornyeIconFor`.
+  Mosix then shows the Cupertino glyph from `mosixIconFor`.
 - Gate Material 3 Expressive motion with `materialExpressiveEnabled` (false
   for Mosix and when the OS asks for reduced motion). `AppMotion` presets
   return the call site's fallback spec in those cases.
@@ -73,12 +73,12 @@ user's Mosix preferences.
 ## Mosix Outside This Folder
 
 - Glass rendering level: `MosixGlassLevel` (`flat`, `frosted`, `liquid`) and
-  `mornyeGlassLevelProvider` in `lib/providers/runtime_profile_provider.dart`
+  `mosixGlassLevelProvider` in `lib/providers/runtime_profile_provider.dart`
   choose how much glass a device renders.
-- Mosix widgets live in `lib/widgets/mornye_*.dart`, for example `MosixGlass`
-  in `lib/widgets/mornye_chrome.dart`. Mosix-only screens are
-  `lib/screens/mornye_library_screen.dart` and
-  `lib/screens/track_metadata_mornye.dart`; most other screens branch on
+- Mosix widgets live in `lib/widgets/mosix_*.dart`, for example `MosixGlass`
+  in `lib/widgets/mosix_chrome.dart`. Mosix-only screens are
+  `lib/screens/mosix_library_screen.dart` and
+  `lib/screens/track_metadata_mosix.dart`; most other screens branch on
   `context.isMosix`.
 
 ## Tests
@@ -86,4 +86,4 @@ user's Mosix preferences.
 `test/design_system_test.dart` checks that `AppTokens` is registered on the
 Material themes (`AppTokens.standard`) and on Mosix (`MosixTheme.tokens`),
 the Mosix dark accent, and Mosix's font families and letter spacing. Mosix
-widgets have their own `test/mornye_*_test.dart` suites.
+widgets have their own `test/mosix_*_test.dart` suites.

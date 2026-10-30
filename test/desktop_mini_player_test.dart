@@ -12,7 +12,7 @@ import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/services/shell_navigation_service.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/utils/lyrics_parser.dart';
 import 'package:mosix/widgets/desktop/desktop_commands.dart';
@@ -230,8 +230,8 @@ void main() {
     );
   });
 
-  for (final mornye in [false, true]) {
-    final style = mornye ? 'Mosix' : 'Material';
+  for (final mosix in [false, true]) {
+    final style = mosix ? 'Mosix' : 'Material';
 
     testWidgets(
       '$style TTML words follow pause and seeks during panel resizing',
@@ -260,7 +260,7 @@ void main() {
               playbackStateProvider.overrideWith((ref) => playback.stream),
             ],
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.light)
                   : AppTheme.light(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -333,7 +333,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: mornye
+            theme: mosix
                 ? MosixTheme.build(Brightness.light)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -458,7 +458,7 @@ void main() {
             playbackStateProvider.overrideWith((ref) => playback.stream),
           ],
           child: MaterialApp(
-            theme: mornye
+            theme: mosix
                 ? MosixTheme.build(Brightness.light)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,

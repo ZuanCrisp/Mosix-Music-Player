@@ -1301,7 +1301,7 @@
   "@snackbarFileNotFound": {
     "description": "Snackbar - file doesn't exist"
   },
-  "snackbarSelectExtFile": "Please select a .mornye-ext file",
+  "snackbarSelectExtFile": "Please select a .mosix-ext file",
   "@snackbarSelectExtFile": {
     "description": "Snackbar - wrong file type selected"
   },
@@ -2255,7 +2255,7 @@
   "@extensionsNoExtensions": {
     "description": "Empty state - no extensions"
   },
-  "extensionsNoExtensionsSubtitle": "Install .mornye-ext files to add new providers",
+  "extensionsNoExtensionsSubtitle": "Install .mosix-ext files to add new providers",
   "@extensionsNoExtensionsSubtitle": {
     "description": "Empty state subtitle"
   },
@@ -2833,6 +2833,28 @@
     "description": "Toggle to enable library scanning"
   },
   "libraryEnableLocalLibrarySubtitle": "Scan and track your existing music",
+  "libraryAutoPlaylistTitle": "Create playlist from folder",
+  "libraryAutoPlaylistSubtitle": "Choose a music folder and build a playlist from its tracks",
+  "libraryAutoPlaylistEmpty": "No music tracks were found in this folder.",
+  "libraryAutoPlaylistCreated": "Created playlist \"{name}\" with {count} tracks",
+  "@libraryAutoPlaylistCreated": {
+    "placeholders": {
+      "name": {},
+      "count": {"type": "int"}
+    }
+  },
+  "playlistTrackOrder": "Playlist order",
+  "@playlistTrackOrder": {
+    "description": "Sort option that keeps tracks in their original playlist order"
+  },
+  "playlistSortAndFilter": "Sort and filter tracks",
+  "@playlistSortAndFilter": {
+    "description": "Title of playlist track sort and filter options"
+  },
+  "playlistFilterTracks": "Filter by title, artist, or album",
+  "@playlistFilterTracks": {
+    "description": "Search field label that filters tracks in a playlist"
+  },
   "@libraryEnableLocalLibrarySubtitle": {
     "description": "Subtitle for enable toggle"
   },
@@ -7216,8 +7238,8 @@
   "@metadataCopyField": {
     "description": "Metadata menu action that copies the selected key and value"
   },
-  "mornyeSearch": "Search",
-  "mornyeContinuePlaying": "Continue Playing",
+  "mosixSearch": "Search",
+  "mosixContinuePlaying": "Continue Playing",
   "metadataCopyAll": "Copy all metadata",
   "@metadataCopyAll": {
     "description": "Metadata menu action that copies every visible key and value"
@@ -7230,13 +7252,13 @@
   "@optionsEmbeddedCoverSizeDescription": {
     "description": "Description shown in the embedded cover size picker"
   },
-  "mornyeFavorite": "Favorite",
-  "mornyeGoToArtist": "Go to Artist",
-  "@mornyeFavorite": {
+  "mosixFavorite": "Favorite",
+  "mosixGoToArtist": "Go to Artist",
+  "@mosixFavorite": {
     "description": "Compact context menu action that adds a track to Loved"
   },
-  "mornyeFavorited": "Favorited",
-  "@mornyeFavorited": {
+  "mosixFavorited": "Favorited",
+  "@mosixFavorited": {
     "description": "Selected state of the compact favorite action"
   },
   "autoMixDescription": "Blend songs with beat matching and pitch-preserving tempo adjustment. Uses crossfade when beats cannot be matched.",

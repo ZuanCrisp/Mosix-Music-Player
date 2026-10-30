@@ -140,7 +140,7 @@ class _RewindStoryState extends State<_RewindStory>
       final file = await captureBoundaryToPngFile(
         _captureKey,
         pixelRatio: pixelRatio,
-        fileName: 'mornye_rewind.png',
+        fileName: 'mosix_rewind.png',
       );
       if (file == null) return;
       await SharePlus.instance.share(

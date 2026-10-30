@@ -26,17 +26,19 @@ void main() {
   });
 
   group('default theme style', () {
-    test('stays Material on mobile', () {
-      for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
-        debugDefaultTargetPlatformOverride = platform;
-        expect(defaultAppThemeStyle(), AppThemeStyle.material);
-        expect(themeStyleFromString(null), AppThemeStyle.material);
-      }
+    test('uses Mosix on Android and Material on iOS', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      expect(defaultAppThemeStyle(), AppThemeStyle.mosix);
+      expect(themeStyleFromString(null), AppThemeStyle.mosix);
+
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      expect(defaultAppThemeStyle(), AppThemeStyle.material);
+      expect(themeStyleFromString(null), AppThemeStyle.material);
     });
 
     test('is Mosix on macOS and Material on Windows and Linux', () {
       simulateDesktop(TargetPlatform.macOS);
-      expect(themeStyleFromString(null), AppThemeStyle.mornye);
+      expect(themeStyleFromString(null), AppThemeStyle.mosix);
       simulateDesktop(TargetPlatform.windows);
       expect(themeStyleFromString(null), AppThemeStyle.material);
       simulateDesktop(TargetPlatform.linux);
@@ -47,7 +49,7 @@ void main() {
       simulateDesktop(TargetPlatform.macOS);
       SharedPreferences.setMockInitialValues({});
       var prefs = await SharedPreferences.getInstance();
-      expect(loadBootstrapThemeSettings(prefs).style, AppThemeStyle.mornye);
+      expect(loadBootstrapThemeSettings(prefs).style, AppThemeStyle.mosix);
 
       SharedPreferences.setMockInitialValues({kThemeStyleKey: 'material'});
       prefs = await SharedPreferences.getInstance();

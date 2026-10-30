@@ -1,5 +1,5 @@
 use super::{EnvironmentError, ExtensionEnvironment};
-use mornye_core::isrc::{IndexCache, NativeFiles};
+use mosix_core::isrc::{IndexCache, NativeFiles};
 use std::sync::atomic::Ordering;
 
 type Check<'a> = &'a (dyn Fn() -> Result<(), String> + Sync);

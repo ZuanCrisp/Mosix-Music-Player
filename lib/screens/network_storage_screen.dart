@@ -13,7 +13,7 @@ import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/utils/nav_bar_inset.dart';
 import 'package:mosix/widgets/app_sliver_header.dart';
 import 'package:mosix/widgets/app_search_field.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/app_tokens.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 import 'package:mosix/widgets/app_loading_indicator.dart';

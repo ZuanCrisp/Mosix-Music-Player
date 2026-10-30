@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 
 /// Keeps touch-first tablets on the bottom navigation used by phones. A rail

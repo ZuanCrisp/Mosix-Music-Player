@@ -22,14 +22,14 @@ void main() {
     SharedPreferences.setMockInitialValues({
       'app_settings': jsonEncode(const AppSettings().toJson()),
       'settings_migration_version': 14,
-      'upgrade_intro_mornye_seen': true,
+      'upgrade_intro_mosix_seen': true,
     });
     final container = ProviderContainer();
     addTearDown(container.dispose);
     await container.read(settingsProvider.notifier).ensureLoaded();
 
     final preferences = await SharedPreferences.getInstance();
-    expect(preferences.containsKey('upgrade_intro_mornye_seen'), isFalse);
+    expect(preferences.containsKey('upgrade_intro_mosix_seen'), isFalse);
     expect(preferences.getInt('settings_migration_version'), 15);
   });
 }

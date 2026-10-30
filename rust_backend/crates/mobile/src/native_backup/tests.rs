@@ -275,7 +275,7 @@ fn legacy_split_accepts_current_app_marker() {
     let input = fixture.dir.path().join("backup.json");
     let history = fixture.dir.path().join("legacy.ndjson");
     let metadata = fixture.dir.path().join("legacy.json");
-    fs::write(&input, r#"{"magic":"mornye-backup","data":{"history":[]}}"#).unwrap();
+    fs::write(&input, r#"{"magic":"mosix-backup","data":{"history":[]}}"#).unwrap();
     let request = json!({
         "operation": "backup_split_legacy", "input_path": input,
         "ndjson_path": history, "metadata_path": metadata,

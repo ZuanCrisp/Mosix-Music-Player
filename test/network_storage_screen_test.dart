@@ -10,7 +10,7 @@ import 'package:mosix/screens/network_storage_screen.dart';
 import 'package:mosix/services/local_network_access.dart';
 import 'package:mosix/services/network_certificate.dart';
 import 'package:mosix/services/network_storage_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 
 void main() {
@@ -101,8 +101,8 @@ void main() {
     expect(find.textContaining('private-host'), findsNothing);
     expect(await service.connections(), isEmpty);
   });
-  for (final mornye in [false, true]) {
-    testWidgets('local permission denial can be retried (Mosix: $mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('local permission denial can be retried (Mosix: $mosix)', (
       tester,
     ) async {
       final service = _NetworkFixture()
@@ -110,7 +110,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: mornye
+            theme: mosix
                 ? MosixTheme.build(Brightness.dark)
                 : ThemeData(useMaterial3: true),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -141,7 +141,7 @@ void main() {
     });
 
     testWidgets(
-      'certificate trust requires a tap and stays on its server (Mosix: $mornye)',
+      'certificate trust requires a tap and stays on its server (Mosix: $mosix)',
       (tester) async {
         const certificate = NetworkCertificateException(
           origin: 'https://nas.test:6008',
@@ -151,7 +151,7 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.dark)
                   : ThemeData(useMaterial3: true),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -207,7 +207,7 @@ void main() {
       },
     );
     testWidgets(
-      'saved networks open their own browser and retry (Mosix: $mornye)',
+      'saved networks open their own browser and retry (Mosix: $mosix)',
       (tester) async {
         final service = _NetworkFixture();
         await service.save(
@@ -221,7 +221,7 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.dark)
                   : ThemeData(useMaterial3: true),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -254,7 +254,7 @@ void main() {
       },
     );
     testWidgets(
-      'connection form saves in the selected theme (Mosix: $mornye)',
+      'connection form saves in the selected theme (Mosix: $mosix)',
       (tester) async {
         tester.view.physicalSize = const Size(390, 844);
         tester.view.devicePixelRatio = 1;
@@ -264,7 +264,7 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.light)
                   : ThemeData(useMaterial3: true),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -278,11 +278,11 @@ void main() {
         await tester.pumpAndSettle();
         expect(
           find.byType(CupertinoTextFormFieldRow),
-          mornye ? findsWidgets : findsNothing,
+          mosix ? findsWidgets : findsNothing,
         );
         expect(
           find.byType(TextFormField),
-          mornye ? findsNothing : findsWidgets,
+          mosix ? findsNothing : findsWidgets,
         );
         await tester.enterText(
           find.descendant(

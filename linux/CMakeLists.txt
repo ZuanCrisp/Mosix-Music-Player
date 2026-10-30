@@ -3,7 +3,7 @@ project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "mornye")
+set(BINARY_NAME "mosix")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
 set(APPLICATION_ID "com.zuancrisp.mosix")
@@ -92,8 +92,8 @@ install(FILES "${FLUTTER_ICU_DATA_FILE}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}
   COMPONENT Runtime)
 
 # Window icon loaded by my_application.cc. Packaging adds the desktop entry.
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../assets/brand/logo/png/mornye-badge@1x.png"
-  DESTINATION "${INSTALL_BUNDLE_DATA_DIR}" RENAME "mornye.png"
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../assets/brand/logo/png/mosix-badge@1x.png"
+  DESTINATION "${INSTALL_BUNDLE_DATA_DIR}" RENAME "mosix.png"
   COMPONENT Runtime)
 
 install(FILES "${FLUTTER_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
@@ -108,7 +108,7 @@ endforeach(bundled_library)
 # Rust desktop backend, loaded by dart:ffi from the bundle's lib/ directory.
 # It is prebuilt by `bash scripts/build_rust_backend.sh desktop`.
 set(MOSIX_DESKTOP_LIBRARY
-  "${CMAKE_CURRENT_SOURCE_DIR}/../rust_backend/target/desktop/linux/libmornye_desktop.so")
+  "${CMAKE_CURRENT_SOURCE_DIR}/../rust_backend/target/desktop/linux/libmosix_desktop.so")
 if(NOT EXISTS "${MOSIX_DESKTOP_LIBRARY}")
   message(FATAL_ERROR
     "The Rust desktop backend was not built: ${MOSIX_DESKTOP_LIBRARY} "

@@ -141,7 +141,7 @@ class NativeDownloadContainerTest {
                     assertEquals(height, bounds.outHeight)
                     assertTrue(descriptor.statSize > 0)
                     if (width == 3000) {
-                        val preview = com.mornye.backend.readLibraryMetadataFromDescriptor(
+                        val preview = com.mosix.backend.readLibraryMetadataFromDescriptor(
                             descriptor.fd, input.name, "2026-10-09T00:00:00Z", true, null,
                         ).coverBytes
                         android.graphics.BitmapFactory.decodeByteArray(preview, 0, preview.size, bounds)

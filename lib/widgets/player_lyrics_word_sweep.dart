@@ -333,8 +333,8 @@ class _WordHighlightedLyricLineState
     bool lift = true,
   }) {
     final highlightedColor = widget.colorScheme.onSurface;
-    final mornye = context.isMosix;
-    final pendingColor = mornye
+    final mosix = context.isMosix;
+    final pendingColor = mosix
         ? Colors.white.withValues(alpha: 0.4)
         : widget.colorScheme.onSurfaceVariant.withValues(alpha: 0.6);
     return _SweepingTimedLyricText(
@@ -351,7 +351,7 @@ class _WordHighlightedLyricLineState
       pendingColor: pendingColor,
       highlightedColor: highlightedColor,
       semanticsLabel: text,
-      liftEnabled: lift && mornye && !MediaQuery.disableAnimationsOf(context),
+      liftEnabled: lift && mosix && !MediaQuery.disableAnimationsOf(context),
       maxLines: widget.maxLines,
     );
   }

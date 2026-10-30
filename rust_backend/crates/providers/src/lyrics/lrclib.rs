@@ -1,6 +1,6 @@
 use super::{Check, LyricsError, LyricsFetcher, SearchRequest};
-use mornye_core::lyrics::{LyricsResponse, decode_response, errors, lrclib, matching};
-use mornye_network::{HttpRequest, NetworkService, NetworkSession};
+use mosix_core::lyrics::{LyricsResponse, decode_response, errors, lrclib, matching};
+use mosix_network::{HttpRequest, NetworkService, NetworkSession};
 use serde::de::DeserializeOwned;
 use std::collections::BTreeMap;
 use std::sync::Arc;

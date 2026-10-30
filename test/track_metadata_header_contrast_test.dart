@@ -11,9 +11,9 @@ import 'package:mosix/screens/track_metadata_screen.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/widgets/album_detail_header.dart';
 import 'package:mosix/widgets/audio_quality_badges.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/mornye_metadata_row.dart';
+import 'package:mosix/theme/mosix_theme.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
+import 'package:mosix/widgets/mosix_metadata_row.dart';
 
 void main() {
   for (final useFileUri in [false, true]) {

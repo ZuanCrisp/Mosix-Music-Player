@@ -20,7 +20,7 @@ import 'package:mosix/providers/user_profile_provider.dart';
 import 'package:mosix/providers/preview_player_provider.dart';
 import 'package:mosix/screens/home_tab.dart';
 import 'package:mosix/screens/library_tracks_folder_screen.dart';
-import 'package:mosix/screens/mornye_library_screen.dart';
+import 'package:mosix/screens/mosix_library_screen.dart';
 import 'package:mosix/screens/repo_tab.dart';
 import 'package:mosix/screens/queue_tab.dart';
 import 'package:mosix/screens/settings/profile_settings_page.dart';
@@ -44,11 +44,11 @@ import 'package:mosix/widgets/settings_group.dart';
 import 'package:mosix/widgets/mini_player.dart';
 import 'package:mosix/widgets/lazy_tab_view.dart';
 import 'package:mosix/widgets/expressive_navigation_bar.dart';
-import 'package:mosix/widgets/mornye_bottom_bar.dart';
+import 'package:mosix/widgets/mosix_bottom_bar.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_loading_indicator.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/selection_bottom_bar.dart';
 import 'package:mosix/widgets/desktop/desktop_commands.dart';
 import 'package:mosix/widgets/desktop/desktop_inspector.dart';
@@ -66,13 +66,13 @@ final _log = AppLogger('MainShell');
 @visibleForTesting
 ShellTab shellTabAt(
   int index, {
-  required bool mornye,
+  required bool mosix,
   required bool showStore,
 }) {
   if (index == 0) return ShellTab.home;
   if (index == 1) return ShellTab.library;
   if (showStore && index == 2) return ShellTab.repository;
-  if (mornye && index == (showStore ? 3 : 2)) return ShellTab.search;
+  if (mosix && index == (showStore ? 3 : 2)) return ShellTab.search;
   return ShellTab.settings;
 }
 
@@ -81,7 +81,7 @@ ShellTab shellTabAt(
 @visibleForTesting
 int? shellIndexOfTab(
   ShellTab tab, {
-  required bool mornye,
+  required bool mosix,
   required bool showStore,
   required bool desktop,
 }) => switch (tab) {
@@ -89,10 +89,10 @@ int? shellIndexOfTab(
   ShellTab.library => 1,
   ShellTab.repository => showStore ? 2 : null,
   // Material searches from Home.
-  ShellTab.search => mornye ? (showStore ? 3 : 2) : 0,
+  ShellTab.search => mosix ? (showStore ? 3 : 2) : 0,
   // Mosix phones open Settings as a page, not a destination.
   ShellTab.settings =>
-    !mornye
+    !mosix
         ? (showStore ? 3 : 2)
         : desktop
         ? (showStore ? 4 : 3)
@@ -109,7 +109,7 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   int _currentIndex = 0;
-  final _mornyeChrome = MosixChromeController();
+  final _mosixChrome = MosixChromeController();
   // Preserves the tab view element (and its kept-alive tabs) when the body
   // structure swaps between rail and bottom-bar layouts on rotation.
   final GlobalKey _pageViewKey = GlobalKey();
@@ -159,22 +159,22 @@ class _MainShellState extends ConsumerState<MainShell>
   /// styles keeps the same tab rather than the same index (Settings would
   /// otherwise become Mosix's Search).
   void _keepTabAcrossStyles() {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final previous = _indexStyleMosix;
-    _indexStyleMosix = mornye;
-    if (previous == null || previous == mornye) return;
+    _indexStyleMosix = mosix;
+    if (previous == null || previous == mosix) return;
     final showStore = ref.read(
       settingsProvider.select((s) => s.showExtensionStore),
     );
     final tab = shellTabAt(
       _currentIndex,
-      mornye: previous,
+      mosix: previous,
       showStore: showStore,
     );
     final index =
         shellIndexOfTab(
           tab,
-          mornye: mornye,
+          mosix: mosix,
           showStore: showStore,
           desktop: isDesktopPlatform,
         ) ??
@@ -370,7 +370,7 @@ class _MainShellState extends ConsumerState<MainShell>
     _pageController.dispose();
     _tabJumpOpacity.dispose();
     _tabJumpTransitionController.dispose();
-    _mornyeChrome.dispose();
+    _mosixChrome.dispose();
     _libraryDepthObserver.dispose();
     super.dispose();
   }
@@ -390,7 +390,7 @@ class _MainShellState extends ConsumerState<MainShell>
 
   /// Mosix desktop windows show Settings as a destination after Search, in
   /// the content pane. Phones and tablets open it as a page instead.
-  bool get _mornyeSettingsTab => context.isMosix && isDesktopPlatform;
+  bool get _mosixSettingsTab => context.isMosix && isDesktopPlatform;
 
   int _settingsIndex(bool showStore) =>
       context.isMosix ? (showStore ? 4 : 3) : (showStore ? 3 : 2);
@@ -398,7 +398,7 @@ class _MainShellState extends ConsumerState<MainShell>
   void _onShellTabRequested(ShellTab tab) {
     // Picking a destination returns from Now Playing to the content pane.
     if (isDesktopPlatform) desktopNowPlayingOpen.value = false;
-    if (tab == ShellTab.settings && context.isMosix && !_mornyeSettingsTab) {
+    if (tab == ShellTab.settings && context.isMosix && !_mosixSettingsTab) {
       unawaited(_openProfileSettings());
       return;
     }
@@ -437,7 +437,7 @@ class _MainShellState extends ConsumerState<MainShell>
     final showStore = ref.read(
       settingsProvider.select((s) => s.showExtensionStore),
     );
-    _mornyeChrome.expand();
+    _mosixChrome.expand();
     if (index == 0 && resetHome && (context.isMosix || _currentIndex == 0)) {
       _resetHomeToMain();
     }
@@ -480,7 +480,7 @@ class _MainShellState extends ConsumerState<MainShell>
   }
 
   void _onPageChanged(int index) {
-    _mornyeChrome.expand();
+    _mosixChrome.expand();
     if (_currentIndex != index) {
       ref.read(previewPlayerProvider.notifier).stop();
       setState(() => _currentIndex = index);
@@ -589,7 +589,7 @@ class _MainShellState extends ConsumerState<MainShell>
     if (index == 0) return ShellTab.home;
     if (index == 1) return ShellTab.library;
     if (showStore && index == 2) return ShellTab.repository;
-    if (_mornyeSettingsTab && index == _settingsIndex(showStore)) {
+    if (_mosixSettingsTab && index == _settingsIndex(showStore)) {
       return ShellTab.settings;
     }
     return context.isMosix ? ShellTab.search : ShellTab.settings;
@@ -601,25 +601,25 @@ class _MainShellState extends ConsumerState<MainShell>
     required int repoUpdatesCount,
   }) {
     final l10n = context.l10n;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     return [
       for (final tab in desktopDestinationTabs(
-        mornye: mornye,
+        mosix: mosix,
         showStore: showStore,
       ))
         switch (tab) {
           ShellTab.home => DesktopDestination(
             tab: tab,
-            icon: mornye ? CupertinoIcons.house : Icons.home_outlined,
-            selectedIcon: mornye ? CupertinoIcons.house_fill : Icons.home,
+            icon: mosix ? CupertinoIcons.house : Icons.home_outlined,
+            selectedIcon: mosix ? CupertinoIcons.house_fill : Icons.home,
             label: l10n.navHome,
           ),
           ShellTab.library => DesktopDestination(
             tab: tab,
-            icon: mornye
+            icon: mosix
                 ? CupertinoIcons.square_stack
                 : Icons.library_music_outlined,
-            selectedIcon: mornye
+            selectedIcon: mosix
                 ? CupertinoIcons.square_stack_fill
                 : Icons.library_music,
             label: l10n.navLibrary,
@@ -627,10 +627,10 @@ class _MainShellState extends ConsumerState<MainShell>
           ),
           ShellTab.repository => DesktopDestination(
             tab: tab,
-            icon: mornye
+            icon: mosix
                 ? CupertinoIcons.square_grid_2x2
                 : Icons.extension_outlined,
-            selectedIcon: mornye
+            selectedIcon: mosix
                 ? CupertinoIcons.square_grid_2x2_fill
                 : Icons.extension,
             label: l10n.navStore,
@@ -640,12 +640,12 @@ class _MainShellState extends ConsumerState<MainShell>
             tab: tab,
             icon: CupertinoIcons.search,
             selectedIcon: CupertinoIcons.search,
-            label: l10n.mornyeSearch,
+            label: l10n.mosixSearch,
           ),
           ShellTab.settings => DesktopDestination(
             tab: tab,
-            icon: mornye ? CupertinoIcons.gear_alt : Icons.settings_outlined,
-            selectedIcon: mornye
+            icon: mosix ? CupertinoIcons.gear_alt : Icons.settings_outlined,
+            selectedIcon: mosix
                 ? CupertinoIcons.gear_alt_fill
                 : Icons.settings,
             label: l10n.navSettings,
@@ -866,7 +866,7 @@ class _MainShellState extends ConsumerState<MainShell>
           heroAnimationsEnabled: heroAnimationsEnabled,
           child: const HomeTab(mode: HomeTabMode.search),
         ),
-      if (_mornyeSettingsTab) const SettingsTab(key: ValueKey('tab-settings')),
+      if (_mosixSettingsTab) const SettingsTab(key: ValueKey('tab-settings')),
     ];
 
     final l10n = context.l10n;
@@ -940,7 +940,7 @@ class _MainShellState extends ConsumerState<MainShell>
       if (context.isMosix)
         NavigationDestination(
           icon: const Icon(CupertinoIcons.search),
-          label: l10n.mornyeSearch,
+          label: l10n.mosixSearch,
         ),
     ];
 
@@ -979,7 +979,7 @@ class _MainShellState extends ConsumerState<MainShell>
         NotificationListener<ScrollNotification>(
           onNotification: (notification) {
             if (canMinimizeChrome && index == _currentIndex) {
-              return _mornyeChrome.handleScroll(notification);
+              return _mosixChrome.handleScroll(notification);
             }
             return false;
           },
@@ -1027,12 +1027,12 @@ class _MainShellState extends ConsumerState<MainShell>
     if (isDesktopPlatform) {
       // Desktop windows: a rail (Material) or source-list sidebar (Mosix)
       // with a persistent player; no bottom tabs or touch gestures.
-      final mornye = context.isMosix;
+      final mosix = context.isMosix;
       final selectedTab = _tabForIndex(selectedDestination, showStore);
       final destinations = _desktopDestinations(
         showStore: showStore,
         // Mosix shows the queue on its Downloads link instead.
-        queueCount: mornye ? 0 : queueState,
+        queueCount: mosix ? 0 : queueState,
         repoUpdatesCount: repoUpdatesCount,
       );
       return DownloadQueueFeedback(
@@ -1041,11 +1041,11 @@ class _MainShellState extends ConsumerState<MainShell>
             destinations: destinations,
             selected: selectedTab,
             onSelected: _onShellTabRequested,
-            libraryLinks: mornye
+            libraryLinks: mosix
                 ? _desktopLibraryLinks(queueCount: queueState)
                 : const [],
-            onOpenLibraryLink: mornye ? _openDesktopLibraryLink : null,
-            onOpenProfile: mornye ? _openDesktopProfile : null,
+            onOpenLibraryLink: mosix ? _openDesktopLibraryLink : null,
+            onOpenProfile: mosix ? _openDesktopProfile : null,
             // The selection bar floats over the pages, not the sidebar.
             body: SelectionOverlayHost(child: pageView),
           ),
@@ -1136,7 +1136,7 @@ class _MainShellState extends ConsumerState<MainShell>
                         child: useNavigationRail
                             ? const MiniPlayer()
                             : ValueListenableBuilder<bool>(
-                                valueListenable: _mornyeChrome,
+                                valueListenable: _mosixChrome,
                                 builder: (context, collapsed, _) =>
                                     MosixBottomBar(
                                       collapsed: canMinimizeChrome && collapsed,
@@ -1147,7 +1147,7 @@ class _MainShellState extends ConsumerState<MainShell>
                                       onSearch:
                                           ShellNavigationService.requestSearch,
                                       blurEnabled: ref.watch(
-                                        mornyeBlurEnabledProvider,
+                                        mosixBlurEnabledProvider,
                                       ),
                                     ),
                               ),

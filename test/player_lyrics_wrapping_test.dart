@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/utils/lyrics_parser.dart';
 import 'package:mosix/widgets/player_lyrics.dart';
@@ -25,10 +25,10 @@ void main() {
   tearDown(() => debugDesktopPlatformOverride = null);
 
   for (final desktop in [false, true]) {
-    for (final mornye in [false, true]) {
+    for (final mosix in [false, true]) {
       for (final timed in [false, true]) {
         final platform = desktop ? 'desktop' : 'mobile';
-        final style = mornye ? 'Mosix' : 'Material';
+        final style = mosix ? 'Mosix' : 'Material';
         final format = timed ? 'TTML' : 'LRC';
         testWidgets('$platform $style $format preserves active line wrapping', (
           tester,
@@ -40,7 +40,7 @@ void main() {
           addTearDown(tester.view.resetDevicePixelRatio);
           final preview = ValueNotifier<Duration?>(const Duration(seconds: 1));
           addTearDown(preview.dispose);
-          final theme = mornye
+          final theme = mosix
               ? MosixTheme.build(Brightness.dark)
               : AppTheme.dark();
           final lyrics = ParsedLyrics(

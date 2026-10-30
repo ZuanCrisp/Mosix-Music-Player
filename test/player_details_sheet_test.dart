@@ -6,10 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mosix/controllers/player_metadata_controller.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
-import 'package:mosix/widgets/mornye_player_details_sheet.dart';
+import 'package:mosix/widgets/mosix_player_details_sheet.dart';
 import 'package:mosix/widgets/player_details_sheet.dart';
 
 const _item = MediaItem(
@@ -24,7 +24,7 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
   tearDown(() => debugDesktopPlatformOverride = null);
 
-  Future<void> open(WidgetTester tester, {required bool mornye}) async {
+  Future<void> open(WidgetTester tester, {required bool mosix}) async {
     final metadata = PlayerMetadataController(
       readMetadata: (_) async => const {},
     );
@@ -32,7 +32,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: mornye
+          theme: mosix
               ? MosixTheme.build(Brightness.light)
               : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -60,7 +60,7 @@ void main() {
   testWidgets('Material phones open the shared sheet with its handle', (
     tester,
   ) async {
-    await open(tester, mornye: false);
+    await open(tester, mosix: false);
     final sheet = tester.widget<BottomSheet>(find.byType(BottomSheet));
     expect(sheet.showDragHandle, isNot(true));
     expect(find.byType(AppSheetHandle), findsOneWidget);
@@ -73,7 +73,7 @@ void main() {
 
   testWidgets('Material desktop opens the details as a dialog', (tester) async {
     debugDesktopPlatformOverride = true;
-    await open(tester, mornye: false);
+    await open(tester, mosix: false);
     final dialog = find.byKey(const ValueKey('app-sheet-dialog'));
     expect(dialog, findsOneWidget);
     expect(find.byType(BottomSheet), findsNothing);
@@ -94,7 +94,7 @@ void main() {
       'Mosix keeps its glass details on ${desktop ? 'desktop' : 'phones'}',
       (tester) async {
         debugDesktopPlatformOverride = desktop;
-        await open(tester, mornye: true);
+        await open(tester, mosix: true);
         expect(find.byType(MosixPlayerDetailsSheet), findsOneWidget);
         expect(find.byType(AppBottomSheet), findsNothing);
         expect(find.byType(AppSheetHandle), findsOneWidget);

@@ -1052,7 +1052,7 @@
   "@snackbarFileNotFound": {
     "description": "Snackbar - file doesn't exist"
   },
-  "snackbarSelectExtFile": "Будь ласка, виберіть файл.mornye-ext",
+  "snackbarSelectExtFile": "Будь ласка, виберіть файл.mosix-ext",
   "@snackbarSelectExtFile": {
     "description": "Snackbar - wrong file type selected"
   },
@@ -1969,7 +1969,7 @@
   "@optionsArtistTagModeJoined": {
     "description": "Artist tag mode option that joins multiple artists into one value"
   },
-  "extensionsNoExtensionsSubtitle": "Встановіть файли.mornye-ext, щоб додати нових провайдерів",
+  "extensionsNoExtensionsSubtitle": "Встановіть файли.mosix-ext, щоб додати нових провайдерів",
   "@extensionsNoExtensionsSubtitle": {
     "description": "Empty state subtitle"
   },
@@ -6742,8 +6742,8 @@
   "@metadataCopyField": {
     "description": "Metadata menu action that copies the selected key and value"
   },
-  "mornyeSearch": "Пошук",
-  "mornyeContinuePlaying": "Продовжити відтворювання",
+  "mosixSearch": "Пошук",
+  "mosixContinuePlaying": "Продовжити відтворювання",
   "metadataCopyAll": "Копіювати всі метадані",
   "@metadataCopyAll": {
     "description": "Metadata menu action that copies every visible key and value"
@@ -6756,13 +6756,13 @@
   "@optionsEmbeddedCoverSizeDescription": {
     "description": "Description shown in the embedded cover size picker"
   },
-  "mornyeFavorite": "Обране",
-  "mornyeGoToArtist": "Перейти до виконавця",
-  "@mornyeFavorite": {
+  "mosixFavorite": "Обране",
+  "mosixGoToArtist": "Перейти до виконавця",
+  "@mosixFavorite": {
     "description": "Compact context menu action that adds a track to Loved"
   },
-  "mornyeFavorited": "Додано до обраного",
-  "@mornyeFavorited": {
+  "mosixFavorited": "Додано до обраного",
+  "@mosixFavorited": {
     "description": "Selected state of the compact favorite action"
   },
   "autoMixDescription": "Поєднуйте композиції за допомогою синхронізації ритму та зміни темпу зі збереженням висоти тону. Використовує плавний перехід crossfade, якщо синхронізація ритму неможлива.",

@@ -516,14 +516,14 @@ class _BandFader extends StatelessWidget {
     final colors = theme.colorScheme;
     final tokens = context.tokens;
     final active = gain != 0;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final hz = _frequency(frequency);
     final valueStyle = theme.textTheme.labelMedium?.copyWith(
       fontWeight: FontWeight.w600,
       fontFeatures: const [FontFeature.tabularFigures()],
       color: !active
           ? colors.onSurfaceVariant
-          : mornye
+          : mosix
           ? colors.primary
           : colors.onSecondaryContainer,
     );
@@ -539,7 +539,7 @@ class _BandFader extends StatelessWidget {
             child: Center(
               child: Material(
                 // iOS shows the gain as plain tinted text, Material as a badge.
-                color: active && !mornye
+                color: active && !mosix
                     ? colors.secondaryContainer
                     : Colors.transparent,
                 shape: const StadiumBorder(),
@@ -565,7 +565,7 @@ class _BandFader extends StatelessWidget {
         const SizedBox(height: 4),
         SizedBox(
           height: height,
-          child: mornye
+          child: mosix
               ? MosixLevelSlider(
                   vertical: true,
                   value: gain,
@@ -654,13 +654,13 @@ class _SliderTile extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final tokens = context.tokens;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final content = Padding(
       padding: EdgeInsetsDirectional.fromSTEB(
-        tokens.rowPaddingH + (indented && !mornye ? 24 + tokens.rowIconGap : 0),
+        tokens.rowPaddingH + (indented && !mosix ? 24 + tokens.rowIconGap : 0),
         tokens.rowPaddingVCompact,
         tokens.rowPaddingH,
-        mornye ? 0 : tokens.gapXs,
+        mosix ? 0 : tokens.gapXs,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -670,7 +670,7 @@ class _SliderTile extends StatelessWidget {
             subtitle: subtitle,
             value: _format(value),
             // Mosix rows, like iOS Settings, carry no leading glyphs.
-            leading: icon == null || mornye
+            leading: icon == null || mosix
                 ? null
                 : AppIcon.adaptive(
                     icon!,
@@ -678,7 +678,7 @@ class _SliderTile extends StatelessWidget {
                     size: 24,
                   ),
           ),
-          if (mornye)
+          if (mosix)
             MosixLevelSlider(
               value: value.clamp(min, max),
               min: min,
@@ -704,7 +704,7 @@ class _SliderTile extends StatelessWidget {
     );
     return SettingsSearchTarget(
       label: title,
-      child: mornye && !last
+      child: mosix && !last
           ? Column(
               mainAxisSize: MainAxisSize.min,
               children: [

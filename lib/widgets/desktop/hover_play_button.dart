@@ -5,8 +5,8 @@ import 'package:mosix/models/download_history.dart';
 import 'package:mosix/providers/playback_provider.dart';
 import 'package:mosix/services/history_database.dart';
 import 'package:mosix/services/library_database.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 
 /// A play button that appears over artwork while the pointer is on it, on
@@ -41,14 +41,14 @@ class _DesktopHoverPlayButtonState extends State<DesktopHoverPlayButton> {
       return const SizedBox.shrink();
     }
     final colorScheme = Theme.of(context).colorScheme;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final visible = _hovered || _focused;
     // Mosix follows Apple Music's light disc; Material uses its primary FAB
     // colors.
-    final background = mornye
+    final background = mosix
         ? Colors.white.withValues(alpha: 0.92)
         : colorScheme.primaryContainer;
-    final foreground = mornye ? Colors.black : colorScheme.onPrimaryContainer;
+    final foreground = mosix ? Colors.black : colorScheme.onPrimaryContainer;
     return Positioned.fill(
       child: MouseRegion(
         opaque: false,
@@ -93,8 +93,8 @@ class _DesktopHoverPlayButtonState extends State<DesktopHoverPlayButton> {
                         ],
                       ),
                       child: Icon(
-                        mornye
-                            ? mornyeIconFor(Icons.play_arrow)
+                        mosix
+                            ? mosixIconFor(Icons.play_arrow)
                             : Icons.play_arrow_rounded,
                         size: 22,
                         color: foreground,

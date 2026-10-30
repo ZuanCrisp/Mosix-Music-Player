@@ -7,7 +7,7 @@ import 'package:mosix/models/theme_settings.dart';
 import 'package:mosix/providers/theme_provider.dart';
 import 'package:mosix/theme/app_theme.dart';
 import 'package:mosix/theme/dynamic_color_wrapper.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/desktop/context_menu.dart';
 import 'package:mosix/widgets/settings_group.dart';
 import 'package:shared_preferences/shared_preferences.dart';

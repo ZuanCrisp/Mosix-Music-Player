@@ -5,9 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/models/artist_concert.dart';
 import 'package:mosix/screens/artist_concerts_screen.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/artist_concerts_button.dart';
-import 'package:mosix/widgets/mornye_artist_header.dart';
+import 'package:mosix/widgets/mosix_artist_header.dart';
 
 Map<String, dynamic> event({
   String id = 'event-1',
@@ -22,10 +22,10 @@ Map<String, dynamic> event({
   'url': 'https://example.com/events/$id',
 };
 
-Widget app(Widget child, {bool mornye = true, String language = 'en'}) =>
+Widget app(Widget child, {bool mosix = true, String language = 'en'}) =>
     ProviderScope(
       child: MaterialApp(
-        theme: mornye ? MosixTheme.build(Brightness.light) : ThemeData(),
+        theme: mosix ? MosixTheme.build(Brightness.light) : ThemeData(),
         locale: Locale(language),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -97,9 +97,9 @@ void main() {
     );
   });
 
-  for (final mornye in [true, false]) {
+  for (final mosix in [true, false]) {
     testWidgets(
-      'concert badge opens a generic schedule and back restores artist ($mornye)',
+      'concert badge opens a generic schedule and back restores artist ($mosix)',
       (tester) async {
         final concerts = ArtistConcert.parseList([event()]);
         await tester.pumpWidget(
@@ -112,7 +112,7 @@ void main() {
                 ),
               ),
             ),
-            mornye: mornye,
+            mosix: mosix,
           ),
         );
         await tester.tap(find.text('Upcoming Concerts'));

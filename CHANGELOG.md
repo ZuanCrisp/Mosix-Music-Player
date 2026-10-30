@@ -1,5 +1,27 @@
 # Changelog
 
+## Mosix local update - 2026-10-30
+
+### Added
+
+- Added a Local Library action that scans a chosen folder and creates a playlist from its music tracks.
+- Added playlist track filtering by title, artist, or album, plus sorting by original order, title, artist, and album.
+- Added a persistent sort and filter button to the local playlist action row beside Download, Play, and Shuffle; it opens title, artist, and album filters plus playlist/title/artist/album ordering.
+- New backups use the `mosix_backup_` filename and `mosix-backup` archive marker. Restore remains compatible with existing Mornye and Spotiflac backup markers.
+- Renamed app-owned Dart, Rust, native, asset, and packaging identifiers to Mosix. Existing callback schemes, extension package suffixes, backup markers, provider IDs, and request user-agent values remain compatible.
+- Set Mosix Theme as the default for fresh Android installs.
+- Added the private `READMEFORME` project guide for future maintenance and selective upstream updates.
+
+### Changed
+
+- Renamed the Mosix appearance option to "Mosix Theme" and removed its Beta badge.
+- Removed Support Development from Settings and removed the Social section from About.
+- Changed new extension packages to use `.mosix-ext`; installation still accepts `.mornye-ext` and older package formats.
+- Kept the Apizarzmoe/Zarz API endpoints, request payloads, and auth callback value unchanged while registering both Mosix and legacy callback schemes.
+- Built an arm64 release APK for device testing; the APK and this changelog are copied to the local `Ready To Upload` folder outside the Git repository.
+
+---
+
 ## [4.9.6] - 2026-09-07
 
 ### Added

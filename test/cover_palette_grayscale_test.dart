@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_color_utilities/hct/hct.dart';
 import 'package:mosix/theme/app_theme.dart';
 import 'package:mosix/theme/cover_palette.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 double _chroma(Color color) => Hct.fromInt(color.toARGB32()).chroma;
 

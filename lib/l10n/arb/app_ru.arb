@@ -1065,7 +1065,7 @@
   "@snackbarFileNotFound": {
     "description": "Snackbar - file doesn't exist"
   },
-  "snackbarSelectExtFile": "Пожалуйста, выберите .mornye-ext-файл",
+  "snackbarSelectExtFile": "Пожалуйста, выберите .mosix-ext-файл",
   "@snackbarSelectExtFile": {
     "description": "Snackbar - wrong file type selected"
   },
@@ -1982,7 +1982,7 @@
   "@extensionsNoExtensions": {
     "description": "Empty state - no extensions"
   },
-  "extensionsNoExtensionsSubtitle": "Установите .mornye-ext файлы для добавления новых провайдеров",
+  "extensionsNoExtensionsSubtitle": "Установите .mosix-ext файлы для добавления новых провайдеров",
   "@extensionsNoExtensionsSubtitle": {
     "description": "Empty state subtitle"
   },
@@ -6742,8 +6742,8 @@
   "@metadataCopyField": {
     "description": "Metadata menu action that copies the selected key and value"
   },
-  "mornyeSearch": "Поиск",
-  "mornyeContinuePlaying": "Продолжить воспроизведение",
+  "mosixSearch": "Поиск",
+  "mosixContinuePlaying": "Продолжить воспроизведение",
   "metadataCopyAll": "Скопировать все метаданные",
   "@metadataCopyAll": {
     "description": "Metadata menu action that copies every visible key and value"
@@ -6756,13 +6756,13 @@
   "@optionsEmbeddedCoverSizeDescription": {
     "description": "Description shown in the embedded cover size picker"
   },
-  "mornyeFavorite": "В избранное",
-  "mornyeGoToArtist": "Перейти к исполнителю",
-  "@mornyeFavorite": {
+  "mosixFavorite": "В избранное",
+  "mosixGoToArtist": "Перейти к исполнителю",
+  "@mosixFavorite": {
     "description": "Compact context menu action that adds a track to Loved"
   },
-  "mornyeFavorited": "Избранное",
-  "@mornyeFavorited": {
+  "mosixFavorited": "Избранное",
+  "@mosixFavorited": {
     "description": "Selected state of the compact favorite action"
   },
   "autoMixDescription": "Плавный переход с подгонкой темпа и сохранением тональности. При невозможности синхронизации битов применяется кроссфейд.",

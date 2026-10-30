@@ -1,5 +1,5 @@
 use super::{Check, DeezerClient, MetadataLookup, ResolverError, cache::Value, context};
-use mornye_core::metadata::{
+use mosix_core::metadata::{
     AlbumExtendedMetadata, TrackMetadata,
     deezer::{FullAlbum, Track},
 };
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn known_album_skips_track_lookup_and_invalid_album_uses_existing_fallback() {
-        let network = mornye_network::NetworkService::new().unwrap();
+        let network = mosix_network::NetworkService::new().unwrap();
         let client = DeezerClient::with_endpoint(&network, "https://127.0.0.1:1").unwrap();
         let known = Arc::new(AlbumExtendedMetadata::default());
         let fallback = Arc::new(AlbumExtendedMetadata::default());

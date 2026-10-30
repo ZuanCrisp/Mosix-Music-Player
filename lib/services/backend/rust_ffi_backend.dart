@@ -26,7 +26,7 @@ final _jsonBytesDecoder = const Utf8Decoder().fuse(const JsonDecoder());
 Object? _decodeJsonBytes(Uint8List data) =>
     data.isEmpty ? null : _jsonBytesDecoder.convert(data);
 
-/// The JSON config passed once to `mornye_init`.
+/// The JSON config passed once to `mosix_init`.
 @immutable
 class DesktopBackendConfig {
   const DesktopBackendConfig({
@@ -83,7 +83,7 @@ class DesktopBackendConfig {
   };
 }
 
-/// Encodes MethodChannel arguments for `mornye_call`.
+/// Encodes MethodChannel arguments for `mosix_call`.
 ///
 /// A top-level [Uint8List] map value travels as raw bytes: it is removed from
 /// the map and its key is recorded under [backendBytesKey]. More than one such

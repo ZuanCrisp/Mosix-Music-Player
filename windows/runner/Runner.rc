@@ -94,7 +94,7 @@ BEGIN
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "com.zuancrisp.mosix" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 zarz. All rights reserved." "\0"
-            VALUE "OriginalFilename", "mornye.exe" "\0"
+            VALUE "OriginalFilename", "mosix.exe" "\0"
             VALUE "ProductName", "Mosix" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END

@@ -8,9 +8,9 @@ import 'package:mosix/theme/material_expressive.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_switch.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/theme/mosix_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 import 'package:mosix/utils/adaptive_layout.dart';
 
 /// The neutral grouped fill used in Settings, including AMOLED themes.
@@ -414,8 +414,8 @@ class SliverSettingsGroup extends StatelessWidget {
       itemBuilder: (context, index) {
         final first = index == 0;
         final last = index == itemCount - 1;
-        final mornye = context.isMosix;
-        final radius = mornye
+        final mosix = context.isMosix;
+        final radius = mosix
             ? BorderRadius.vertical(
                 top: first ? const Radius.circular(28) : Radius.zero,
                 bottom: last ? const Radius.circular(28) : Radius.zero,
@@ -427,7 +427,7 @@ class SliverSettingsGroup extends StatelessWidget {
           borderRadius: radius,
           child: itemBuilder(context, index),
         );
-        return mornye
+        return mosix
             ? row
             : Padding(
                 padding: EdgeInsets.only(top: first ? 0 : 2),
@@ -1022,29 +1022,29 @@ class SettingsInfoCard extends StatelessWidget {
 
     // Material uses the solid container with its paired on-color, so the
     // text keeps its contrast; Mosix keeps its softer fills.
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final (background, foreground) = switch (tone) {
       SettingsInfoTone.neutral => (
-        mornye
+        mosix
             ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
             : colorScheme.surfaceContainerHigh,
         colorScheme.onSurfaceVariant,
       ),
       SettingsInfoTone.warning => (
-        mornye
+        mosix
             ? colorScheme.tertiaryContainer.withValues(alpha: 0.5)
             : colorScheme.tertiaryContainer,
         colorScheme.onTertiaryContainer,
       ),
       SettingsInfoTone.error => (
-        mornye
+        mosix
             ? colorScheme.errorContainer.withValues(alpha: 0.6)
             : colorScheme.errorContainer,
         colorScheme.onErrorContainer,
       ),
     };
 
-    final useGlass = glass && mornye;
+    final useGlass = glass && mosix;
     final textColor = useGlass ? colorScheme.onSurface : foreground;
     final content = Padding(
       padding: EdgeInsets.all(tokens.gapLg),
@@ -1053,7 +1053,7 @@ class SettingsInfoCard extends StatelessWidget {
         children: [
           if (icon != null) ...[
             AppIcon(
-              useGlass ? mornyeIconFor(icon!) : icon,
+              useGlass ? mosixIconFor(icon!) : icon,
               size: 20,
               color: useGlass ? colorScheme.primary : foreground,
             ),

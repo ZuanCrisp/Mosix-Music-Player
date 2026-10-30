@@ -1,8 +1,8 @@
 //! Extension manager metadata operations: availability checks, track enrichment, and provider search.
 
 use super::*;
-use mornye_core::cancellation::RequestLease;
-use mornye_core::matching::{lowercase, uppercase};
+use mosix_core::cancellation::RequestLease;
+use mosix_core::matching::{lowercase, uppercase};
 use serde::Deserialize;
 use std::collections::BTreeSet;
 

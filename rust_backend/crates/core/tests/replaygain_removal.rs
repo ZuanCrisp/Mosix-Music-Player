@@ -1,4 +1,4 @@
-use mornye_core::tags::{extract_cover, read_audio_tags, rewrite_audio_tags, rewrite_m4a_freeform};
+use mosix_core::tags::{extract_cover, read_audio_tags, rewrite_audio_tags, rewrite_m4a_freeform};
 use std::collections::BTreeMap;
 use std::io::Cursor;
 

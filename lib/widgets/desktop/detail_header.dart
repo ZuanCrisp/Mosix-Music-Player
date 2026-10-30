@@ -4,14 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mosix/providers/runtime_profile_provider.dart';
 import 'package:mosix/theme/app_tokens.dart';
 import 'package:mosix/theme/cover_palette.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/player_artwork_theme.dart';
 import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/widgets/album_detail_header.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
 import 'package:mosix/widgets/desktop/context_menu.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 
 /// Space below a desktop detail page, so its last rows clear the floating
 /// player.
@@ -72,7 +72,7 @@ List<Widget> desktopDetailHeaderSlivers(
   Color? backgroundColor,
 }) {
   final theme = Theme.of(context);
-  final mornye = context.isMosix;
+  final mosix = context.isMosix;
   // Lines the artwork up with the description and track table below.
   final inset = wideListInset(context) + 20;
   final more = moreMenu == null ? null : _MoreButton(groups: moreMenu);
@@ -85,9 +85,9 @@ List<Widget> desktopDetailHeaderSlivers(
       0.0,
       double.infinity,
     );
-    final radius = circularArtwork ? side / 2 : (mornye ? 12.0 : 20.0);
+    final radius = circularArtwork ? side / 2 : (mosix ? 12.0 : 20.0);
     // Mosix draws Apple's continuous corner, as Music does on its covers.
-    final continuous = mornye && !circularArtwork;
+    final continuous = mosix && !circularArtwork;
     final corners = BorderRadius.circular(radius);
     final shadows = [
       BoxShadow(
@@ -104,7 +104,7 @@ List<Widget> desktopDetailHeaderSlivers(
           title,
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
-          style: mornye
+          style: mosix
               ? const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
@@ -178,7 +178,7 @@ List<Widget> desktopDetailHeaderSlivers(
   final back =
       leading ??
       (Navigator.canPop(context)
-          ? (mornye
+          ? (mosix
                 ? HeaderCircleButton(
                     icon: CupertinoIcons.back,
                     tooltip: MaterialLocalizations.of(
@@ -199,17 +199,17 @@ List<Widget> desktopDetailHeaderSlivers(
     SliverLayoutBuilder(
       builder: (context, constraints) {
         final showTitle =
-            appBarTitle != null || (!mornye && constraints.scrollOffset > 200);
+            appBarTitle != null || (!mosix && constraints.scrollOffset > 200);
         return SliverAppBar(
           pinned: true,
           automaticallyImplyLeading: false,
           toolbarHeight: _toolbarHeight,
           // Mosix controls float over the pane, as in Apple Music.
-          backgroundColor: mornye
+          backgroundColor: mosix
               ? Colors.transparent
               : backgroundColor ?? theme.colorScheme.surface,
           surfaceTintColor: Colors.transparent,
-          scrolledUnderElevation: mornye ? 0 : null,
+          scrolledUnderElevation: mosix ? 0 : null,
           titleSpacing: 0,
           title: AnimatedOpacity(
             opacity: showTitle ? 1 : 0,
@@ -233,7 +233,7 @@ List<Widget> desktopDetailHeaderSlivers(
           actionsPadding: const EdgeInsetsDirectional.only(end: 16),
           actions: trailing.isEmpty
               ? null
-              : mornye
+              : mosix
               ? [_ActionCapsule(children: trailing)]
               : trailing,
         );
@@ -242,7 +242,7 @@ List<Widget> desktopDetailHeaderSlivers(
     SliverToBoxAdapter(
       child: Padding(
         padding: EdgeInsets.fromLTRB(inset, 4, inset, 28),
-        child: mornye
+        child: mosix
             ? LayoutBuilder(builder: details)
             // Kept without a source too, so artwork that arrives later
             // moves the scheme instead of rebuilding the header.
@@ -275,7 +275,7 @@ class _ActionCapsule extends ConsumerWidget {
         radius: 18,
         tintColor: dark ? Colors.black : Colors.white,
         tintOpacity: dark ? 0.45 : 0.55,
-        blurEnabled: ref.watch(mornyeBlurEnabledProvider),
+        blurEnabled: ref.watch(mosixBlurEnabledProvider),
         child: HeaderActionGroup(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2),

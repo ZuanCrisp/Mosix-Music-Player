@@ -7,6 +7,6 @@ pub enum FilenameError {
 
 #[uniffi::export]
 pub fn build_filename(template: String, metadata_json: String) -> Result<String, FilenameError> {
-    mornye_core::filename::build_filename_json(&template, &metadata_json)
+    mosix_core::filename::build_filename_json(&template, &metadata_json)
         .map_err(|message| FilenameError::Invalid { message })
 }

@@ -7,8 +7,8 @@ import 'package:mosix/providers/repo_provider.dart';
 import 'package:mosix/providers/extension_provider.dart';
 import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/utils/nav_bar_inset.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mosix_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
 import 'package:mosix/widgets/extension_repo_card.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
@@ -153,7 +153,7 @@ class _ExtensionDetailsScreenState
       color: colorScheme.surfaceContainerHighest,
       child: Icon(
         context.isMosix
-            ? mornyeIconFor(_getCategoryIcon(ext.category))
+            ? mosixIconFor(_getCategoryIcon(ext.category))
             : _getCategoryIcon(ext.category),
         size: size,
         color: colorScheme.onSurfaceVariant,

@@ -300,10 +300,9 @@ static void window_method_call_cb(FlMethodChannel* channel,
   fl_method_call_respond(method_call, response, nullptr);
 }
 
-// Only the deb installs a desktop entry for mornye://, so the browser cannot
-// hand an extension callback back to a zip or AppImage copy. Points the
-// per-user handler at this copy unless the current one already starts it.
-static void register_url_scheme() {
+// A deb installs the Mosix desktop entry, but a zip or AppImage copy still
+// needs a per-user handler for both current and legacy extension callbacks.
+static void register_url_scheme(const gchar* scheme) {
   // An AppImage runs from a new mount on every launch; its file stays put.
   const gchar* appimage = g_getenv("APPIMAGE");
   g_autofree gchar* self_path =
@@ -313,7 +312,7 @@ static void register_url_scheme() {
   g_autofree gchar* self_real = realpath(self_path, nullptr);
 
   g_autoptr(GAppInfo) current =
-      g_app_info_get_default_for_uri_scheme("mornye");
+      g_app_info_get_default_for_uri_scheme(scheme);
   if (current != nullptr && self_real != nullptr) {
     const char* executable = g_app_info_get_executable(current);
     g_autofree gchar* found =
@@ -327,11 +326,12 @@ static void register_url_scheme() {
   g_autofree gchar* commandline = g_shell_quote(self_path);
   g_autoptr(GError) error = nullptr;
   g_autoptr(GAppInfo) handler = g_app_info_create_from_commandline(
-      commandline, "Mornye", G_APP_INFO_CREATE_SUPPORTS_URIS, &error);
+      commandline, "Mosix", G_APP_INFO_CREATE_SUPPORTS_URIS, &error);
+  g_autofree gchar* mime_type =
+      g_strdup_printf("x-scheme-handler/%s", scheme);
   if (handler == nullptr ||
-      !g_app_info_set_as_default_for_type(handler, "x-scheme-handler/mornye",
-                                          &error)) {
-    g_warning("Could not register the mornye:// handler: %s",
+      !g_app_info_set_as_default_for_type(handler, mime_type, &error)) {
+    g_warning("Could not register the %s:// handler: %s", scheme,
               error != nullptr ? error->message : "unknown error");
   }
 }
@@ -350,7 +350,8 @@ static void my_application_activate(GApplication* application) {
     return;
   }
 
-  register_url_scheme();
+  register_url_scheme("mosix");
+  register_url_scheme("mornye");
 
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
@@ -375,12 +376,12 @@ static void my_application_activate(GApplication* application) {
   if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "Mornye");
+    gtk_header_bar_set_title(header_bar, "Mosix");
     gtk_header_bar_set_show_close_button(header_bar, TRUE);
     gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
     self->header_bar = GTK_WIDGET(header_bar);
   } else {
-    gtk_window_set_title(window, "Mornye");
+    gtk_window_set_title(window, "Mosix");
   }
 
   gtk_window_set_default_size(window, 1280, 800);
@@ -390,7 +391,7 @@ static void my_application_activate(GApplication* application) {
   if (executable != nullptr) {
     g_autofree gchar* bundle_dir = g_path_get_dirname(executable);
     g_autofree gchar* icon_path =
-        g_build_filename(bundle_dir, "data", "mornye.png", nullptr);
+        g_build_filename(bundle_dir, "data", "mosix.png", nullptr);
     gtk_window_set_icon_from_file(window, icon_path, nullptr);
   }
 
@@ -419,7 +420,7 @@ static void my_application_activate(GApplication* application) {
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
   self->window_channel = fl_method_channel_new(
       fl_engine_get_binary_messenger(fl_view_get_engine(view)),
-      "com.zarz.mornye/window", FL_METHOD_CODEC(codec));
+      "com.zarz.mosix/window", FL_METHOD_CODEC(codec));
   fl_method_channel_set_method_call_handler(
       self->window_channel, window_method_call_cb, self, nullptr);
 
@@ -495,7 +496,7 @@ MyApplication* my_application_new() {
   g_set_prgname(APPLICATION_ID);
 
   // Unique on the session bus: later launches (for example a mornye://
-  // callback from the browser, `Exec=mornye %u`) forward their whole command
+  // callback from the browser, `Exec=mosix %u`) forward their whole command
   // line to this process. URLs arrive as arguments, so "open" is not used.
   return MY_APPLICATION(g_object_new(
       my_application_get_type(), "application-id", APPLICATION_ID, "flags",

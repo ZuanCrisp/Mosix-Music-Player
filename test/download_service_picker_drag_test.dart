@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/providers/extension_provider.dart';
 import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/download_service_picker.dart';
 
 import 'support/fixed_settings.dart';
@@ -89,14 +89,14 @@ class _Extensions extends ExtensionNotifier {
 }
 
 void main() {
-  for (final (qualityCount, mornye) in [
+  for (final (qualityCount, mosix) in [
     (3, false),
     (16, false),
     (3, true),
     (16, true),
   ]) {
     testWidgets(
-      'picker fits $qualityCount options and dismisses (Mosix=$mornye)',
+      'picker fits $qualityCount options and dismisses (Mosix=$mosix)',
       (tester) async {
         tester.view.physicalSize = const Size(320, 780);
         tester.view.devicePixelRatio = 1;
@@ -109,7 +109,7 @@ void main() {
               settingsProvider.overrideWith(FixedSettingsNotifier.new),
             ],
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.dark)
                   : ThemeData(platform: TargetPlatform.iOS),
               localizationsDelegates: AppLocalizations.localizationsDelegates,

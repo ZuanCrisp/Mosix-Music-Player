@@ -179,8 +179,8 @@ void main() {
         useDynamicColor: false,
         seedColorValue: 0xff123456,
         useAmoled: true,
-        style: AppThemeStyle.mornye,
-        mornyeAccent: MosixAccent.blue,
+        style: AppThemeStyle.mosix,
+        mosixAccent: MosixAccent.blue,
         useSystemFont: true,
       );
 
@@ -192,15 +192,15 @@ void main() {
       expect(decoded.seedColor, const Color(0xff123456));
       expect(copied.themeMode, ThemeMode.light);
       expect(copied.useAmoled, isTrue);
-      expect(decoded.style, AppThemeStyle.mornye);
-      expect(decoded.mornyeAccent, MosixAccent.blue);
-      expect(copied.mornyeAccent, MosixAccent.blue);
+      expect(decoded.style, AppThemeStyle.mosix);
+      expect(decoded.mosixAccent, MosixAccent.blue);
+      expect(copied.mosixAccent, MosixAccent.blue);
       expect(decoded.useSystemFont, isTrue);
       expect(copied.useSystemFont, isTrue);
       expect(ThemeSettings.fromJson({}).useSystemFont, isFalse);
-      expect(ThemeSettings.fromJson({}).mornyeAccent, MosixAccent.red);
+      expect(ThemeSettings.fromJson({}).mosixAccent, MosixAccent.red);
       expect(
-        ThemeSettings.fromJson({kMosixAccentKey: 'unknown'}).mornyeAccent,
+        ThemeSettings.fromJson({kMosixAccentKey: 'unknown'}).mosixAccent,
         MosixAccent.red,
       );
       expect(

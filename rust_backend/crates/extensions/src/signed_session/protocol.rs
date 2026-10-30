@@ -3,8 +3,8 @@
 use crate::manifest::SignedSession;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use hmac::{Hmac, KeyInit, Mac};
-use mornye_core::lower_hex as hex;
-use mornye_network::{HttpResponse, query, url::UrlParts};
+use mosix_core::lower_hex as hex;
+use mosix_network::{HttpResponse, query, url::UrlParts};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};

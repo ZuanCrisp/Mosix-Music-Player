@@ -31,13 +31,13 @@ class MprisAudioService extends NoOpAudioService {
       final client = _connect();
       await client.registerObject(player);
       final reply = await client.requestName(
-        'org.mpris.MediaPlayer2.mornye',
+        'org.mpris.MediaPlayer2.mosix',
         flags: {DBusRequestNameFlag.doNotQueue},
       );
       if (reply != DBusRequestNameReply.primaryOwner) {
         // A second instance still gets controls, under its own name.
         await client.requestName(
-          'org.mpris.MediaPlayer2.mornye.instance$pid',
+          'org.mpris.MediaPlayer2.mosix.instance$pid',
           flags: {DBusRequestNameFlag.doNotQueue},
         );
       }

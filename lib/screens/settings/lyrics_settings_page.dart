@@ -10,7 +10,7 @@ import 'package:mosix/widgets/app_text_field.dart';
 import 'package:mosix/widgets/app_sliver_header.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/lyrics_provider_names.dart';
 import 'package:mosix/utils/nav_bar_inset.dart';
 import 'package:mosix/widgets/lyrics_size_setting.dart';

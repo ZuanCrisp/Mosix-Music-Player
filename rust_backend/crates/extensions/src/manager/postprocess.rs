@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::files::clean;
-use mornye_core::matching::lowercase;
+use mosix_core::matching::lowercase;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Deserialize, Serialize)]

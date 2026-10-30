@@ -1,14 +1,14 @@
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mosix_icons.dart';
 
 void main() {
   test('Mosix directional icons mirror in right-to-left layouts', () {
     for (final icon in [
-      mornyeIconFor(Icons.arrow_back),
-      mornyeIconFor(Icons.chevron_left),
-      mornyeArrowForward,
+      mosixIconFor(Icons.arrow_back),
+      mosixIconFor(Icons.chevron_left),
+      mosixArrowForward,
       CupertinoIcons.back,
       CupertinoIcons.forward,
       CupertinoIcons.right_chevron,
@@ -24,6 +24,6 @@ void main() {
       CupertinoIcons.forward.codePoint,
       CupertinoIcons.chevron_forward.codePoint,
     );
-    expect(mornyeArrowForward.codePoint, CupertinoIcons.arrow_right.codePoint);
+    expect(mosixArrowForward.codePoint, CupertinoIcons.arrow_right.codePoint);
   });
 }

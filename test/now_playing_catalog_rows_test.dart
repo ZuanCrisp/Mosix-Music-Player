@@ -15,7 +15,7 @@ import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/library_tracks_folder_screen.dart';
 import 'package:mosix/services/library_search.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/desktop/track_list_table.dart';
 import 'package:mosix/widgets/library_search_results.dart';
@@ -120,7 +120,7 @@ List<Override> _overrides({MediaItem? current, required bool identified}) => [
 
 Widget _app(
   Widget home, {
-  bool mornye = false,
+  bool mosix = false,
   MediaItem? current,
   bool identified = true,
   List<Override> overrides = const [],
@@ -130,7 +130,7 @@ Widget _app(
     ...overrides,
   ],
   child: MaterialApp(
-    theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
+    theme: mosix ? MosixTheme.build(Brightness.light) : AppTheme.light(),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: home,
@@ -204,7 +204,7 @@ void main() {
     });
 
     testWidgets('Mosix rows show no current-track state', (tester) async {
-      await tester.pumpWidget(_app(list(), mornye: true));
+      await tester.pumpWidget(_app(list(), mosix: true));
       await _pumpFor(tester);
       expect(_card(tester, 'Current song').isCurrent, isFalse);
       expect(find.byType(NowPlayingIndicator), findsNothing);
@@ -261,7 +261,7 @@ void main() {
       tester.view.physicalSize = const Size(1200, 800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(_app(table(), mornye: true));
+      await tester.pumpWidget(_app(table(), mosix: true));
       await _pumpFor(tester);
       expect(find.byType(NowPlayingIndicator), findsNothing);
     });
@@ -364,7 +364,7 @@ void main() {
       await tester.pumpWidget(
         _app(
           results(),
-          mornye: true,
+          mosix: true,
           current: current,
           overrides: searchOverrides,
         ),

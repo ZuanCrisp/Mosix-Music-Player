@@ -1,4 +1,4 @@
-use mornye_core::tags::{embed_flac_metadata, extract_cover, read_audio_tags, rewrite_audio_tags};
+use mosix_core::tags::{embed_flac_metadata, extract_cover, read_audio_tags, rewrite_audio_tags};
 use std::collections::BTreeMap;
 use std::io::Cursor;
 
@@ -140,7 +140,7 @@ fn download_embed_honors_separators_and_primary_artist_mode() {
 
 #[test]
 fn separator_preferences_decode_without_changing_download_names() {
-    let request = mornye_core::downloads::DownloadRequest::parse(
+    let request = mosix_core::downloads::DownloadRequest::parse(
         r#"{"artist_name":"A, B","metadata_separators":{"artist":" / ","genre":"; "}}"#,
     )
     .unwrap();
@@ -150,11 +150,11 @@ fn separator_preferences_decode_without_changing_download_names() {
         " / "
     );
     let restored =
-        mornye_core::downloads::DownloadRequest::parse(&serde_json::to_string(&request).unwrap())
+        mosix_core::downloads::DownloadRequest::parse(&serde_json::to_string(&request).unwrap())
             .unwrap();
     assert_eq!(restored.metadata_separators, request.metadata_separators);
     assert!(
-        mornye_core::downloads::DownloadRequest::parse("{}")
+        mosix_core::downloads::DownloadRequest::parse("{}")
             .unwrap()
             .metadata_separators
             .is_none()

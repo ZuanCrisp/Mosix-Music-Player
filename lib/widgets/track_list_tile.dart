@@ -5,7 +5,7 @@ import 'package:mosix/providers/download_queue_provider.dart';
 import 'package:mosix/providers/local_library_provider.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/clickable_metadata.dart';
 import 'package:mosix/controllers/local_playback.dart';
 import 'package:mosix/widgets/audio_quality_badges.dart';

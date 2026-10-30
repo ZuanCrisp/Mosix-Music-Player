@@ -160,7 +160,7 @@ pub fn source_uses_proxy(source: &str) -> bool {
         && ![
             "lrclib",
             "zarz-lrc",
-            "mornye lyrics",
+            "mosix lyrics",
             // Retain credits embedded before the provider was renamed.
             "spotiflac-mobile lyrics",
             "kugou direct",

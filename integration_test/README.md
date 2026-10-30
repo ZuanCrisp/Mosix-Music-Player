@@ -27,14 +27,14 @@ report on the host, run the suite through
 `integration_test/performance_driver.dart`:
 
 ```bash
-MOSIX_PERFORMANCE_REPORT=build/perf/mornye.json \
+MOSIX_PERFORMANCE_REPORT=build/perf/mosix.json \
   flutter drive --profile --keep-app-running -d emulator-5554 \
   --driver=integration_test/performance_driver.dart \
-  --target=integration_test/mornye_performance_test.dart
+  --target=integration_test/mosix_performance_test.dart
 ```
 
 - `MOSIX_PERFORMANCE_REPORT` (host environment variable) selects the
-  JSON output; the default is `/tmp/mornye-performance.json`.
+  JSON output; the default is `/tmp/mosix-performance.json`.
   Screenshots are written as PNG files beside it.
 - Use `--profile` on Android and `--debug` on iOS simulators.
 - Pass `--keep-app-running`; otherwise `flutter drive` uninstalls the app
@@ -69,14 +69,14 @@ MOSIX_PERFORMANCE_REPORT=build/perf/mornye.json \
 | `SMB_TEST_URL` | `network_audio_analysis_test.dart` | Analyse a file on SMB; when empty, a local FFmpeg-made FLAC is used |
 | `TEST_SMB_ADDRESS` | `network_smb_file_actions_test.dart` | SMB address of `smb2_fixture_server.py --deletion`; skipped when empty |
 | `REPLAYGAIN_COMPLETION_BASELINE` | `album_replaygain_completion_test.dart` | Records a baseline run and skips the album-gain assertions |
-| `GLASS_PREVIEW` | `mornye_liquid_glass_test.dart` | Holds the Home screen for 25 s for manual viewing |
-| `MOSIX_GLASS_FOCUS` | `mornye_rendering_performance_test.dart` | Measures only clarity 0.6 and 1.0 |
-| `MOSIX_GLASS_FLAT_BACKDROP` | `mornye_glass_visual_test.dart` | Flat surfaces instead of the generated stripes and grid |
-| `DOWNLOAD_GLASS_LEVEL` | `mornye_download_picker_test.dart` | Forces `flat`, `frosted` or `liquid` |
-| `DOWNLOAD_BRIGHTNESS` | `mornye_download_picker_test.dart` | Runs only `light` or `dark` |
-| `DOWNLOAD_QUALITY_COUNT` | `mornye_download_picker_test.dart` | Number of fixture quality options (default 16) |
-| `DOWNLOAD_PRELOAD_GLASS`, `DOWNLOAD_WARMUP_GLASS` (default true), `DOWNLOAD_SHELL_GLASS` | `mornye_download_picker_test.dart` | Glass preload, warm-up and shell glass toggles |
-| `DOWNLOAD_TRACE_FIRST_OPEN`, `DOWNLOAD_FIRST_OPEN_ONLY` | `mornye_download_picker_test.dart` | Trace the first opening; stop after it |
+| `GLASS_PREVIEW` | `mosix_liquid_glass_test.dart` | Holds the Home screen for 25 s for manual viewing |
+| `MOSIX_GLASS_FOCUS` | `mosix_rendering_performance_test.dart` | Measures only clarity 0.6 and 1.0 |
+| `MOSIX_GLASS_FLAT_BACKDROP` | `mosix_glass_visual_test.dart` | Flat surfaces instead of the generated stripes and grid |
+| `DOWNLOAD_GLASS_LEVEL` | `mosix_download_picker_test.dart` | Forces `flat`, `frosted` or `liquid` |
+| `DOWNLOAD_BRIGHTNESS` | `mosix_download_picker_test.dart` | Runs only `light` or `dark` |
+| `DOWNLOAD_QUALITY_COUNT` | `mosix_download_picker_test.dart` | Number of fixture quality options (default 16) |
+| `DOWNLOAD_PRELOAD_GLASS`, `DOWNLOAD_WARMUP_GLASS` (default true), `DOWNLOAD_SHELL_GLASS` | `mosix_download_picker_test.dart` | Glass preload, warm-up and shell glass toggles |
+| `DOWNLOAD_TRACE_FIRST_OPEN`, `DOWNLOAD_FIRST_OPEN_ONLY` | `mosix_download_picker_test.dart` | Trace the first opening; stop after it |
 
 ## Suite Index
 
@@ -85,7 +85,7 @@ Aggregates (each runs other suites as groups):
 | File | Runs |
 | --- | --- |
 | `collection_batch_write_test.dart` | `playlist_batch_write_test.dart`, `loved_batch_write_test.dart` |
-| `mornye_performance_test.dart` | The rendering, screens, artwork and lyrics Mosix performance suites; driver target |
+| `mosix_performance_test.dart` | The rendering, screens, artwork and lyrics Mosix performance suites; driver target |
 | `material_performance_test.dart` | Material lyrics/artwork and shared seek scenarios in both styles; driver target |
 | `player_performance_test.dart` | Shared lyrics, artwork and seek scenarios for Material and Mosix; driver target |
 | `remaining_optimization_test.dart` | Collection restore, history staging, library staging, cache maintenance, collection workers, queue workers, backup archive |
@@ -119,14 +119,14 @@ Suites:
 | `loved_batch_write_test.dart` | Love All add and remove on real SQLite |
 | `lyrics_file_access_test.dart` | Embedding, sidecar and export of lyrics outside Downloads |
 | `lyrics_timing_test.dart` | Native lyrics parser timing cases |
-| `mornye_artwork_performance_test.dart` | Mosix player panel transitions and artwork cache (performance) |
-| `mornye_download_picker_test.dart` | Mosix download picker glass and queue feedback (performance) |
-| `mornye_glass_visual_test.dart` | Native Mosix glass poses and layers, with screenshots |
-| `mornye_liquid_glass_test.dart` | Liquid glass lens and drag behavior |
-| `mornye_lyrics_performance_test.dart` | Word-synced lyrics and manual scrolling (performance) |
-| `mornye_menu_presentation_test.dart` | Anchored glass menu presentation (performance) |
-| `mornye_rendering_performance_test.dart` | Mosix rendering at several glass clarities (performance) |
-| `mornye_screens_performance_test.dart` | Mosix screens with 2000-track data (performance) |
+| `mosix_artwork_performance_test.dart` | Mosix player panel transitions and artwork cache (performance) |
+| `mosix_download_picker_test.dart` | Mosix download picker glass and queue feedback (performance) |
+| `mosix_glass_visual_test.dart` | Native Mosix glass poses and layers, with screenshots |
+| `mosix_liquid_glass_test.dart` | Liquid glass lens and drag behavior |
+| `mosix_lyrics_performance_test.dart` | Word-synced lyrics and manual scrolling (performance) |
+| `mosix_menu_presentation_test.dart` | Anchored glass menu presentation (performance) |
+| `mosix_rendering_performance_test.dart` | Mosix rendering at several glass clarities (performance) |
+| `mosix_screens_performance_test.dart` | Mosix screens with 2000-track data (performance) |
 | `native_backup_archive_test.dart` | Native ZIP backup routes, old archive formats, compression parity |
 | `native_cache_maintenance_test.dart` | Native cover cache budget, pruning and sweep |
 | `native_collection_restore_test.dart` | Native collection restore, exact rows, atomic rejection |

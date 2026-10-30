@@ -19,7 +19,7 @@ void main() {
 
   test('APK updater resumes a matching partial and verifies SHA-256', () async {
     final directory = await Directory.systemTemp.createTemp(
-      'mornye-updater-test-',
+      'mosix-updater-test-',
     );
     addTearDown(() async {
       if (await directory.exists()) await directory.delete(recursive: true);
@@ -81,7 +81,7 @@ void main() {
     'native hashing verifies the completed partial before publishing',
     () async {
       final directory = await Directory.systemTemp.createTemp(
-        'mornye-native-updater-test-',
+        'mosix-native-updater-test-',
       );
       addTearDown(() => directory.delete(recursive: true));
       final payload = <int>[0x50, 0x4b, 0x03, 0x04, 1, 2, 3];

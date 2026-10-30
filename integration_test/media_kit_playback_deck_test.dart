@@ -251,7 +251,7 @@ void main() {
       ).withToneOf(bassBoost.settings);
       await Future<void>.delayed(const Duration(milliseconds: 500));
       final af = await mpv.debugProperty('af');
-      expect(af, contains('@mornye_dsp:lavfi'));
+      expect(af, contains('@mosix_dsp:lavfi'));
       expect(af, contains('equalizer@band0=f=31.25:t=q:w=1.4142:g=6'));
       expect(playbackEqualizerError.value, isNull);
       // media_kit's macOS audio build has no volume filter, so the preamp

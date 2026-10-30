@@ -4,13 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/screens/track_metadata_screen.dart';
 import 'package:mosix/services/library_database.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 void main() {
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final (width, twoColumns) in [(1400.0, true), (800.0, false)]) {
       testWidgets('metadata cards at ${width.toInt()} wide use '
-          '${twoColumns ? 'two columns' : 'one column'} (Mosix=$mornye)', (
+          '${twoColumns ? 'two columns' : 'one column'} (Mosix=$mosix)', (
         tester,
       ) async {
         tester.view.physicalSize = Size(width, 1000);
@@ -27,7 +27,7 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(
-              theme: mornye
+              theme: mosix
                   ? MosixTheme.build(Brightness.dark)
                   : ThemeData.dark(useMaterial3: true),
               localizationsDelegates: AppLocalizations.localizationsDelegates,

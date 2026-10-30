@@ -19,9 +19,9 @@ import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/utils/nav_bar_inset.dart';
 import 'package:mosix/providers/runtime_profile_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/theme/mosix_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 import 'package:mosix/widgets/extension_repo_card.dart';
 import 'package:mosix/widgets/app_choice_chip.dart';
 import 'package:mosix/widgets/expressive_button.dart';
@@ -752,7 +752,7 @@ class _CategoryChip extends ConsumerWidget {
         // Scrolls with the list over the plain page: see ExtensionRepoCard.
         child: MosixGlass.navigation(
           radius: 24,
-          blurEnabled: ref.watch(mornyeBlurEnabledProvider),
+          blurEnabled: ref.watch(mosixBlurEnabledProvider),
           samplesBackdrop: false,
           child: Material(
             color: Colors.transparent,
@@ -772,7 +772,7 @@ class _CategoryChip extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      mornyeIconFor(icon),
+                      mosixIconFor(icon),
                       size: 18,
                       color: isSelected
                           ? colorScheme.primary
@@ -946,7 +946,7 @@ class _ExtensionItem extends StatelessWidget {
       avatar: ExtensionAvatar(
         imageUrl: extension.iconUrl,
         fallbackIcon: context.isMosix
-            ? mornyeIconFor(_getCategoryIcon(extension.category))
+            ? mosixIconFor(_getCategoryIcon(extension.category))
             : _getCategoryIcon(extension.category),
         background: extension.isInstalled
             ? colorScheme.primaryContainer

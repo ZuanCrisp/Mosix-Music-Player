@@ -12,7 +12,7 @@ import 'package:mosix/screens/settings/about_page.dart';
 import 'package:mosix/screens/settings/settings_tab.dart';
 import 'package:mosix/services/app_remote_config_service.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_progress_indicator.dart';
 import 'package:mosix/widgets/settings_group.dart';
 
@@ -63,8 +63,8 @@ void main() {
     },
   };
 
-  for (final mornye in [false, true]) {
-    testWidgets('support row updates cached progress after refresh ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('support row updates cached progress after refresh ($mosix)', (
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({
@@ -77,7 +77,7 @@ void main() {
       await pumpSettings(
         tester,
         service: service,
-        theme: mornye ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
+        theme: mosix ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
       );
       final support = find.byWidgetPredicate(
         (widget) =>
@@ -142,13 +142,13 @@ void main() {
     );
   });
 
-  for (final mornye in [false, true]) {
-    testWidgets('broad search builds only visible grouped results ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('broad search builds only visible grouped results ($mosix)', (
       tester,
     ) async {
       await pumpSettings(
         tester,
-        theme: mornye ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
+        theme: mosix ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
       );
       await tester.enterText(find.byType(TextField), 'a');
       await tester.pump();

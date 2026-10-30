@@ -5,7 +5,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/models/unified_library_item.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/services/library_database.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/library_selection_playback_actions.dart';
 import 'package:mosix/widgets/library_track_selection_bar.dart';
 
@@ -24,9 +24,9 @@ class _Controller extends MusicPlayerController {
 }
 
 void main() {
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final size in [const Size(390, 844), const Size(844, 390)]) {
-      testWidgets('batch playback preserves selection order ($mornye, $size)', (
+      testWidgets('batch playback preserves selection order ($mosix, $size)', (
         tester,
       ) async {
         tester.view.physicalSize = size;
@@ -53,7 +53,7 @@ void main() {
               musicPlayerControllerProvider.overrideWithValue(controller),
             ],
             child: MaterialApp(
-              theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+              theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(

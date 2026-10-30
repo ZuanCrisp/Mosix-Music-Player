@@ -179,12 +179,12 @@ extension _ArtistScreenSections on _ArtistScreenState {
     required String? listenersText,
     required bool isFavoriteArtist,
   }) {
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final placeholder = ColoredBox(
       color: colorScheme.surfaceContainerHighest,
       child: Center(
         child: Icon(
-          mornye ? CupertinoIcons.person : Icons.person,
+          mosix ? CupertinoIcons.person : Icons.person,
           size: 64,
           color: colorScheme.onSurfaceVariant,
         ),
@@ -234,11 +234,11 @@ extension _ArtistScreenSections on _ArtistScreenState {
                     HeaderCircleButton(
                       tonal: true,
                       icon: isFavoriteArtist
-                          ? (mornye ? CupertinoIcons.star_fill : Icons.favorite)
-                          : (mornye
+                          ? (mosix ? CupertinoIcons.star_fill : Icons.favorite)
+                          : (mosix
                                 ? CupertinoIcons.star
                                 : Icons.favorite_border),
-                      iconColor: isFavoriteArtist && !mornye
+                      iconColor: isFavoriteArtist && !mosix
                           ? headerScheme.error
                           : headerScheme.primary,
                       tooltip: isFavoriteArtist
@@ -249,7 +249,7 @@ extension _ArtistScreenSections on _ArtistScreenState {
                     if (hasDiscography && !_isLoadingDiscography)
                       HeaderCircleButton(
                         tonal: true,
-                        icon: mornye
+                        icon: mosix
                             ? CupertinoIcons.arrow_down
                             : Icons.download_rounded,
                         iconColor: headerScheme.primary,
@@ -268,7 +268,7 @@ extension _ArtistScreenSections on _ArtistScreenState {
           ? const []
           : [
               HeaderCircleButton(
-                icon: mornye
+                icon: mosix
                     ? CupertinoIcons.square_arrow_up
                     : Icons.open_in_new_rounded,
                 tooltip: context.l10n.openInOtherServices,

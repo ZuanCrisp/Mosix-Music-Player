@@ -18,7 +18,7 @@ struct Fixture {
     std::vector<int32_t> input;
     const unsigned frames = 15000;
     Fixture(unsigned bits, unsigned rate, unsigned channels) {
-        path = (std::filesystem::temp_directory_path() / "mornye-flac-XXXXXX").string();
+        path = (std::filesystem::temp_directory_path() / "mosix-flac-XXXXXX").string();
         const int fd = mkstemp(path.data());
         check(fd >= 0, "create fixture");
         close(fd);

@@ -12,7 +12,7 @@ import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/downloaded_album_screen.dart';
 import 'package:mosix/services/downloaded_embedded_cover_resolver.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/album_track_tile.dart';
 import 'package:mosix/widgets/now_playing_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,8 +28,8 @@ class _History extends DownloadHistoryNotifier {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  for (final mornye in [false, true]) {
-    testWidgets('downloaded album rows follow playback (mornye: $mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('downloaded album rows follow playback (mosix: $mosix)', (
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({});
@@ -85,7 +85,7 @@ void main() {
             playbackLoadingProvider.overrideWith((ref) => false),
           ],
           child: MaterialApp(
-            theme: mornye
+            theme: mosix
                 ? MosixTheme.build(Brightness.light)
                 : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -126,13 +126,13 @@ void main() {
           of: row('Second'),
           matching: find.byType(NowPlayingIndicator),
         ),
-        mornye ? findsNothing : findsOneWidget,
+        mosix ? findsNothing : findsOneWidget,
       );
       expect(
         find.descendant(
           of: row('Second'),
           matching: findAppIcon(
-            mornye ? CupertinoIcons.pause_fill : Icons.pause,
+            mosix ? CupertinoIcons.pause_fill : Icons.pause,
           ),
         ),
         findsOneWidget,

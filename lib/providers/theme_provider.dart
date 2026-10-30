@@ -14,17 +14,24 @@ ThemeSettings loadBootstrapThemeSettings(SharedPreferences prefs) {
     seedColorValue: prefs.getInt(kSeedColorKey) ?? kDefaultSeedColor,
     useAmoled: prefs.getBool(kUseAmoledKey) ?? false,
     style: themeStyleFromString(prefs.getString(kThemeStyleKey)),
-    mornyeAccent: mornyeAccentFromString(prefs.getString(kMosixAccentKey)),
+    mosixAccent: mosixAccentFromString(
+      prefs.getString(kMosixAccentKey) ??
+          prefs.getString(kLegacyMosixAccentKey),
+    ),
     useSystemFont: prefs.getBool(kUseSystemFontKey) ?? false,
     customFontId: prefs.getString(kCustomFontIdKey) ?? '',
     customFontName: prefs.getString(kCustomFontNameKey) ?? '',
     lyricsTextScale: normalizeLyricsTextScale(
       prefs.getDouble(kLyricsTextScaleKey),
     ),
-    mornyeGlassClarity: normalizeMosixGlassClarity(
-      prefs.getDouble(kMosixGlassClarityKey),
+    mosixGlassClarity: normalizeMosixGlassClarity(
+      prefs.getDouble(kMosixGlassClarityKey) ??
+          prefs.getDouble(kLegacyMosixGlassClarityKey),
     ),
-    mornyeGlassOutlines: prefs.getBool(kMosixGlassOutlinesKey) ?? true,
+    mosixGlassOutlines:
+        prefs.getBool(kMosixGlassOutlinesKey) ??
+        prefs.getBool(kLegacyMosixGlassOutlinesKey) ??
+        true,
   );
 }
 
@@ -80,19 +87,16 @@ class ThemeNotifier extends Notifier<ThemeSettings> {
       await prefs.setInt(kSeedColorKey, snapshot.seedColorValue);
       await prefs.setBool(kUseAmoledKey, snapshot.useAmoled);
       await prefs.setString(kThemeStyleKey, snapshot.style.name);
-      await prefs.setString(kMosixAccentKey, snapshot.mornyeAccent.name);
+      await prefs.setString(kMosixAccentKey, snapshot.mosixAccent.name);
       await prefs.setBool(kUseSystemFontKey, snapshot.useSystemFont);
       await prefs.setString(kCustomFontIdKey, snapshot.customFontId);
       await prefs.setString(kCustomFontNameKey, snapshot.customFontName);
       await prefs.setDouble(kLyricsTextScaleKey, snapshot.lyricsTextScale);
-      await prefs.setDouble(
-        kMosixGlassClarityKey,
-        snapshot.mornyeGlassClarity,
-      );
-      await prefs.setBool(
-        kMosixGlassOutlinesKey,
-        snapshot.mornyeGlassOutlines,
-      );
+      await prefs.setDouble(kMosixGlassClarityKey, snapshot.mosixGlassClarity);
+      await prefs.setBool(kMosixGlassOutlinesKey, snapshot.mosixGlassOutlines);
+      await prefs.remove(kLegacyMosixAccentKey);
+      await prefs.remove(kLegacyMosixGlassClarityKey);
+      await prefs.remove(kLegacyMosixGlassOutlinesKey);
     } catch (e) {
       debugPrint('Error saving theme settings: $e');
     }
@@ -124,7 +128,7 @@ class ThemeNotifier extends Notifier<ThemeSettings> {
   }
 
   Future<void> setMosixAccent(MosixAccent accent) async {
-    _editState((current) => current.copyWith(mornyeAccent: accent));
+    _editState((current) => current.copyWith(mosixAccent: accent));
     await _saveToStorage();
   }
 
@@ -145,16 +149,13 @@ class ThemeNotifier extends Notifier<ThemeSettings> {
     if (persist) await _saveToStorage();
   }
 
-  Future<void> setMosixGlassClarity(
-    double value, {
-    bool persist = true,
-  }) async {
-    _editState((current) => current.copyWith(mornyeGlassClarity: value));
+  Future<void> setMosixGlassClarity(double value, {bool persist = true}) async {
+    _editState((current) => current.copyWith(mosixGlassClarity: value));
     if (persist) await _saveToStorage();
   }
 
   Future<void> setMosixGlassOutlines(bool value) async {
-    _editState((current) => current.copyWith(mornyeGlassOutlines: value));
+    _editState((current) => current.copyWith(mosixGlassOutlines: value));
     await _saveToStorage();
   }
 }

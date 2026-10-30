@@ -7,7 +7,8 @@ const String kUseDynamicColorKey = 'use_dynamic_color';
 const String kSeedColorKey = 'seed_color';
 const String kUseAmoledKey = 'use_amoled';
 const String kThemeStyleKey = 'theme_style';
-const String kMosixAccentKey = 'mornye_accent';
+const String kMosixAccentKey = 'mosix_accent';
+const String kLegacyMosixAccentKey = 'mornye_accent';
 const String kUseSystemFontKey = 'use_system_font';
 const String kCustomFontIdKey = 'custom_font_id';
 const String kCustomFontNameKey = 'custom_font_name';
@@ -15,34 +16,41 @@ const String kLyricsTextScaleKey = 'lyrics_text_scale';
 
 double normalizeLyricsTextScale(num? value) =>
     value != null && value.isFinite ? value.toDouble().clamp(0.8, 1.4) : 1.0;
-const String kMosixGlassClarityKey = 'mornye_glass_clarity';
-const String kMosixGlassOutlinesKey = 'mornye_glass_outlines';
+const String kMosixGlassClarityKey = 'mosix_glass_clarity';
+const String kMosixGlassOutlinesKey = 'mosix_glass_outlines';
+const String kLegacyMosixGlassClarityKey = 'mornye_glass_clarity';
+const String kLegacyMosixGlassOutlinesKey = 'mornye_glass_outlines';
 const double kDefaultMosixGlassClarity = 0.75;
 
-double normalizeMosixGlassClarity(num? value) =>
-    value != null && value.isFinite
+double normalizeMosixGlassClarity(num? value) => value != null && value.isFinite
     ? value.toDouble().clamp(0.0, 1.0)
     : kDefaultMosixGlassClarity;
 
-enum AppThemeStyle { material, mornye }
+enum AppThemeStyle { material, mosix }
 
 enum MosixAccent { red, orange, green, teal, blue, purple, pink }
 
-MosixAccent mornyeAccentFromString(String? value) =>
+MosixAccent mosixAccentFromString(String? value) =>
     MosixAccent.values.firstWhere(
       (accent) => accent.name == value,
       orElse: () => MosixAccent.red,
     );
 
-/// Style used until the person picks one: Mosix on macOS, Material on
-/// Windows, Linux and mobile.
+/// Style used until the person picks one: Mosix on Android and macOS,
+/// Material on Windows, Linux and other mobile platforms.
 AppThemeStyle defaultAppThemeStyle() =>
-    isDesktopPlatform && defaultTargetPlatform == TargetPlatform.macOS
-    ? AppThemeStyle.mornye
+    (defaultTargetPlatform == TargetPlatform.android ||
+        (isDesktopPlatform && defaultTargetPlatform == TargetPlatform.macOS))
+    ? AppThemeStyle.mosix
     : AppThemeStyle.material;
 
-AppThemeStyle themeStyleFromString(String? value) => AppThemeStyle.values
-    .firstWhere((style) => style.name == value, orElse: defaultAppThemeStyle);
+AppThemeStyle themeStyleFromString(String? value) {
+  if (value == 'mornye') return AppThemeStyle.mosix;
+  return AppThemeStyle.values.firstWhere(
+    (style) => style.name == value,
+    orElse: defaultAppThemeStyle,
+  );
+}
 
 /// Default Spotify green color for fallback
 const int kDefaultSeedColor = 0xFF1DB954;
@@ -53,13 +61,13 @@ class ThemeSettings {
   final int seedColorValue;
   final bool useAmoled;
   final AppThemeStyle style;
-  final MosixAccent mornyeAccent;
+  final MosixAccent mosixAccent;
   final bool useSystemFont;
   final String customFontId;
   final String customFontName;
   final double lyricsTextScale;
-  final double mornyeGlassClarity;
-  final bool mornyeGlassOutlines;
+  final double mosixGlassClarity;
+  final bool mosixGlassOutlines;
 
   const ThemeSettings({
     this.themeMode = ThemeMode.system,
@@ -67,13 +75,13 @@ class ThemeSettings {
     this.seedColorValue = kDefaultSeedColor,
     this.useAmoled = false,
     this.style = AppThemeStyle.material,
-    this.mornyeAccent = MosixAccent.red,
+    this.mosixAccent = MosixAccent.red,
     this.useSystemFont = false,
     this.customFontId = '',
     this.customFontName = '',
     this.lyricsTextScale = 1,
-    this.mornyeGlassClarity = kDefaultMosixGlassClarity,
-    this.mornyeGlassOutlines = true,
+    this.mosixGlassClarity = kDefaultMosixGlassClarity,
+    this.mosixGlassOutlines = true,
   });
 
   Color get seedColor => Color(seedColorValue);
@@ -84,13 +92,13 @@ class ThemeSettings {
     int? seedColorValue,
     bool? useAmoled,
     AppThemeStyle? style,
-    MosixAccent? mornyeAccent,
+    MosixAccent? mosixAccent,
     bool? useSystemFont,
     String? customFontId,
     String? customFontName,
     double? lyricsTextScale,
-    double? mornyeGlassClarity,
-    bool? mornyeGlassOutlines,
+    double? mosixGlassClarity,
+    bool? mosixGlassOutlines,
   }) {
     return ThemeSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -98,17 +106,17 @@ class ThemeSettings {
       seedColorValue: seedColorValue ?? this.seedColorValue,
       useAmoled: useAmoled ?? this.useAmoled,
       style: style ?? this.style,
-      mornyeAccent: mornyeAccent ?? this.mornyeAccent,
+      mosixAccent: mosixAccent ?? this.mosixAccent,
       useSystemFont: useSystemFont ?? this.useSystemFont,
       customFontId: customFontId ?? this.customFontId,
       customFontName: customFontName ?? this.customFontName,
       lyricsTextScale: normalizeLyricsTextScale(
         lyricsTextScale ?? this.lyricsTextScale,
       ),
-      mornyeGlassClarity: normalizeMosixGlassClarity(
-        mornyeGlassClarity ?? this.mornyeGlassClarity,
+      mosixGlassClarity: normalizeMosixGlassClarity(
+        mosixGlassClarity ?? this.mosixGlassClarity,
       ),
-      mornyeGlassOutlines: mornyeGlassOutlines ?? this.mornyeGlassOutlines,
+      mosixGlassOutlines: mosixGlassOutlines ?? this.mosixGlassOutlines,
     );
   }
 
@@ -118,13 +126,13 @@ class ThemeSettings {
     kSeedColorKey: seedColorValue,
     kUseAmoledKey: useAmoled,
     kThemeStyleKey: style.name,
-    kMosixAccentKey: mornyeAccent.name,
+    kMosixAccentKey: mosixAccent.name,
     kUseSystemFontKey: useSystemFont,
     kCustomFontIdKey: customFontId,
     kCustomFontNameKey: customFontName,
     kLyricsTextScaleKey: lyricsTextScale,
-    kMosixGlassClarityKey: mornyeGlassClarity,
-    kMosixGlassOutlinesKey: mornyeGlassOutlines,
+    kMosixGlassClarityKey: mosixGlassClarity,
+    kMosixGlassOutlinesKey: mosixGlassOutlines,
   };
 
   factory ThemeSettings.fromJson(Map<String, dynamic> json) {
@@ -134,17 +142,23 @@ class ThemeSettings {
       seedColorValue: json[kSeedColorKey] as int? ?? kDefaultSeedColor,
       useAmoled: json[kUseAmoledKey] as bool? ?? false,
       style: themeStyleFromString(json[kThemeStyleKey] as String?),
-      mornyeAccent: mornyeAccentFromString(json[kMosixAccentKey] as String?),
+      mosixAccent: mosixAccentFromString(
+        (json[kMosixAccentKey] ?? json[kLegacyMosixAccentKey]) as String?,
+      ),
       useSystemFont: json[kUseSystemFontKey] as bool? ?? false,
       customFontId: json[kCustomFontIdKey] as String? ?? '',
       customFontName: json[kCustomFontNameKey] as String? ?? '',
       lyricsTextScale: normalizeLyricsTextScale(
         json[kLyricsTextScaleKey] as num?,
       ),
-      mornyeGlassClarity: normalizeMosixGlassClarity(
-        json[kMosixGlassClarityKey] as num?,
+      mosixGlassClarity: normalizeMosixGlassClarity(
+        (json[kMosixGlassClarityKey] ?? json[kLegacyMosixGlassClarityKey])
+            as num?,
       ),
-      mornyeGlassOutlines: json[kMosixGlassOutlinesKey] as bool? ?? true,
+      mosixGlassOutlines:
+          (json[kMosixGlassOutlinesKey] ?? json[kLegacyMosixGlassOutlinesKey])
+              as bool? ??
+          true,
     );
   }
 
@@ -157,13 +171,13 @@ class ThemeSettings {
         other.seedColorValue == seedColorValue &&
         other.useAmoled == useAmoled &&
         other.style == style &&
-        other.mornyeAccent == mornyeAccent &&
+        other.mosixAccent == mosixAccent &&
         other.useSystemFont == useSystemFont &&
         other.customFontId == customFontId &&
         other.customFontName == customFontName &&
         other.lyricsTextScale == lyricsTextScale &&
-        other.mornyeGlassClarity == mornyeGlassClarity &&
-        other.mornyeGlassOutlines == mornyeGlassOutlines;
+        other.mosixGlassClarity == mosixGlassClarity &&
+        other.mosixGlassOutlines == mosixGlassOutlines;
   }
 
   @override
@@ -173,13 +187,13 @@ class ThemeSettings {
       seedColorValue.hashCode ^
       useAmoled.hashCode ^
       style.hashCode ^
-      mornyeAccent.hashCode ^
+      mosixAccent.hashCode ^
       useSystemFont.hashCode ^
       customFontId.hashCode ^
       customFontName.hashCode ^
       lyricsTextScale.hashCode ^
-      mornyeGlassClarity.hashCode ^
-      mornyeGlassOutlines.hashCode;
+      mosixGlassClarity.hashCode ^
+      mosixGlassOutlines.hashCode;
 }
 
 ThemeMode themeModeFromString(String? value) {

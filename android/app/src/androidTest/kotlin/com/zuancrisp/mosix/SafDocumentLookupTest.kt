@@ -19,7 +19,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SafDocumentLookupTest {
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
-    private val authority = "com.mornye.test.documents.lookup"
+    private val authority = "com.mosix.test.documents.lookup"
     private val controlUri = Uri.parse("content://$authority.control")
     private val treeUri = DocumentsContract.buildTreeDocumentUri(authority, "root")
 

@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/providers/settings_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/controllers/extension_action_forms.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 
@@ -22,13 +22,13 @@ void main() {
   Future<void> showHost(
     WidgetTester tester,
     Future<void> Function(BuildContext) action, {
-    bool mornye = false,
+    bool mosix = false,
   }) {
     return tester.pumpWidget(
       ProviderScope(
         overrides: [settingsProvider.overrideWith(FixedSettingsNotifier.new)],
         child: MaterialApp(
-          theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+          theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
@@ -44,8 +44,8 @@ void main() {
     );
   }
 
-  for (final mornye in [false, true]) {
-    testWidgets('empty cancel action allows account setup ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('empty cancel action allows account setup ($mosix)', (
       tester,
     ) async {
       final actions = <String>[];
@@ -103,13 +103,13 @@ void main() {
           'example.account',
           'connectAccount',
         );
-      }, mornye: mornye);
+      }, mosix: mosix);
       await tester.tap(find.text('Connect'));
       await tester.pumpAndSettle();
       expect(find.text('Connect your account'), findsOneWidget);
       expect(result, isNull);
 
-      final fields = find.byType(mornye ? CupertinoTextField : TextFormField);
+      final fields = find.byType(mosix ? CupertinoTextField : TextFormField);
       await tester.enterText(fields.first, 'invalid');
       await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
@@ -119,7 +119,7 @@ void main() {
 
       await tester.enterText(fields.first, '443');
       await tester.enterText(fields.last, 'fixture-password');
-      if (mornye) {
+      if (mosix) {
         final text = tester.widget<CupertinoTextField>(fields.last);
         expect(text.obscureText, isTrue);
         expect(text.enableIMEPersonalizedLearning, isFalse);

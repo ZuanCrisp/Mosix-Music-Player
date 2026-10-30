@@ -13,7 +13,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/providers/runtime_profile_provider.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/utils/lyrics_parser.dart';
 import 'package:mosix/utils/lyrics_timeline.dart';
@@ -22,19 +22,19 @@ import 'package:mosix/widgets/aligned_lyric_pronunciation.dart';
 import 'package:mosix/widgets/lyric_supplement_transition.dart';
 import 'package:mosix/widgets/lyric_scroll_motion.dart';
 import 'package:mosix/widgets/lyric_gap_indicator.dart';
-import 'package:mosix/widgets/mornye_player_slider.dart';
+import 'package:mosix/widgets/mosix_player_slider.dart';
 import 'package:mosix/widgets/lyrics_text_scale.dart';
 
 part 'player_lyrics_line_style.dart';
 part 'player_lyrics_word_sweep.dart';
 
-const _mornyeLyricFontSize = 34.0;
+const _mosixLyricFontSize = 34.0;
 
 /// Material lyric sizes on desktop, where the lyrics panel is far wider than
 /// a phone. Null keeps the text theme's size (phones and tablets).
 double? get _materialLyricFontSize => isDesktopPlatform ? 32 : null;
 double get _materialBackgroundLyricFontSize => isDesktopPlatform ? 24 : 18;
-const mornyeLyricsContentInset = 28.0 + MosixPlayerSlider.horizontalInset;
+const mosixLyricsContentInset = 28.0 + MosixPlayerSlider.horizontalInset;
 
 /// How much of the lyrics area's bottom the player's controls cover. The
 /// Mosix phone player lays lyrics out under its controls so they can grow
@@ -860,13 +860,13 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     final loading = _visible
         ? ref.watch(playbackLoadingProvider)
         : ref.read(playbackLoadingProvider);
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final highContrast = MediaQuery.highContrastOf(context);
     final blurLyrics =
-        mornye &&
+        mosix &&
         !highContrast &&
         // Every defocused line is filtered again on each playback frame.
-        ref.watch(mornyeLiquidGlassProvider);
+        ref.watch(mosixLiquidGlassProvider);
     // Line emphasis eases over most of the scroll, so the new line brightens
     // as it arrives instead of switching ahead of the movement.
     final motion = MediaQuery.disableAnimationsOf(context)
@@ -903,7 +903,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final inset = mornye ? mornyeLyricsContentInset : 24.0;
+          final inset = mosix ? mosixLyricsContentInset : 24.0;
           final contentWidth = (constraints.maxWidth - inset * 2).clamp(
             0.0,
             double.infinity,
@@ -915,10 +915,10 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
             0.0,
             double.infinity,
           );
-          final lyricScale = mornye && layoutWidth > 0
+          final lyricScale = mosix && layoutWidth > 0
               ? contentWidth / layoutWidth
               : 1.0;
-          if (mornye) {
+          if (mosix) {
             final previousExtents = _lineExtents;
             final previousScrollAnchor =
                 previousExtents != null && _scroll.hasClients
@@ -998,7 +998,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
               }
             });
           }
-          final topPadding = mornye
+          final topPadding = mosix
               ? _focusInset
               : syncedLyricsCenterPadding(
                   viewportDimension: constraints.maxHeight,
@@ -1006,7 +1006,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                 );
           // Leave enough trailing space for the final line to reach the same
           // upper focus position as every other line.
-          final bottomPadding = mornye && _lineExtents!.isNotEmpty
+          final bottomPadding = mosix && _lineExtents!.isNotEmpty
               ? (constraints.maxHeight - _lineExtents!.last - topPadding).clamp(
                   topPadding,
                   double.infinity,
@@ -1014,7 +1014,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
               : topPadding;
           final list = ListView.builder(
             controller: _scroll,
-            itemExtentBuilder: mornye
+            itemExtentBuilder: mosix
                 ? (index, _) => index < lines.length
                       ? _lineExtents![index]
                       : widget.credits!.heightFor(context, contentWidth)
@@ -1037,7 +1037,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
               final isActive = _activeLines.contains(index);
               final isPast = index < active;
 
-              final color = mornye
+              final color = mosix
                   ? Colors.white
                   : isActive
                   ? widget.colorScheme.onSurface
@@ -1057,7 +1057,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                     child: SizedBox(
                       height: 24,
                       child: Align(
-                        alignment: mornye
+                        alignment: mosix
                             ? AlignmentDirectional.centerStart
                             : Alignment.center,
                         child:
@@ -1094,7 +1094,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                   initialPosition: _activeTransitionPosition,
                   seekPreview: widget.seekPreview,
                   supplementVisibility: visibility,
-                  pronunciationLayout: mornye
+                  pronunciationLayout: mosix
                       ? _pronunciationLayouts[index]
                       : null,
                   textAlign: textAlign,
@@ -1114,7 +1114,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                   content,
                   color,
                   visibility: visibility,
-                  pronunciationLayout: mornye
+                  pronunciationLayout: mosix
                       ? _pronunciationLayouts[index]
                       : null,
                   textAlign: textAlign,
@@ -1130,7 +1130,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                   child: SizedBox(width: double.infinity, child: content),
                 ),
               );
-              if (mornye) {
+              if (mosix) {
                 final activeLead = active < 0 ? -1 : _focus;
                 final distance = activeLead < 0
                     ? row + 1
@@ -1192,7 +1192,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                       // Focus changes paint scale, never font metrics or
                       // wrapping shared by the plain and word-timed line.
                       scale: isActive ? 1.0 : 0.96,
-                      alignment: !mornye
+                      alignment: !mosix
                           ? Alignment.center
                           : (textAlign == TextAlign.end
                                     ? AlignmentDirectional.centerEnd
@@ -1201,7 +1201,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                       duration: motion,
                       curve: Curves.easeOutCubic,
                       child: AnimatedOpacity(
-                        opacity: mornye
+                        opacity: mosix
                             ? (isActive || highContrast ? 1 : 0.48)
                             : (isActive ? 1.0 : (isPast ? 0.55 : 0.85)),
                         duration: motion,

@@ -1065,7 +1065,7 @@
   "@snackbarFileNotFound": {
     "description": "Snackbar - file doesn't exist"
   },
-  "snackbarSelectExtFile": ".mornye-ext ファイルを選択してください",
+  "snackbarSelectExtFile": ".mosix-ext ファイルを選択してください",
   "@snackbarSelectExtFile": {
     "description": "Snackbar - wrong file type selected"
   },
@@ -1982,7 +1982,7 @@
   "@extensionsNoExtensions": {
     "description": "Empty state - no extensions"
   },
-  "extensionsNoExtensionsSubtitle": "新しいプロバイダーを追加するには .mornye-ext ファイルをインストールします",
+  "extensionsNoExtensionsSubtitle": "新しいプロバイダーを追加するには .mosix-ext ファイルをインストールします",
   "@extensionsNoExtensionsSubtitle": {
     "description": "Empty state subtitle"
   },
@@ -6742,8 +6742,8 @@
   "@metadataCopyField": {
     "description": "Metadata menu action that copies the selected key and value"
   },
-  "mornyeSearch": "Search",
-  "mornyeContinuePlaying": "Continue Playing",
+  "mosixSearch": "Search",
+  "mosixContinuePlaying": "Continue Playing",
   "metadataCopyAll": "Copy all metadata",
   "@metadataCopyAll": {
     "description": "Metadata menu action that copies every visible key and value"
@@ -6756,13 +6756,13 @@
   "@optionsEmbeddedCoverSizeDescription": {
     "description": "Description shown in the embedded cover size picker"
   },
-  "mornyeFavorite": "Favorite",
-  "mornyeGoToArtist": "Go to Artist",
-  "@mornyeFavorite": {
+  "mosixFavorite": "Favorite",
+  "mosixGoToArtist": "Go to Artist",
+  "@mosixFavorite": {
     "description": "Compact context menu action that adds a track to Loved"
   },
-  "mornyeFavorited": "Favorited",
-  "@mornyeFavorited": {
+  "mosixFavorited": "Favorited",
+  "@mosixFavorited": {
     "description": "Selected state of the compact favorite action"
   },
   "autoMixDescription": "Blend songs with beat matching and pitch-preserving tempo adjustment. Uses crossfade when beats cannot be matched.",

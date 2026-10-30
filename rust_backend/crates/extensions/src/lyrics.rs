@@ -1,10 +1,10 @@
 //! Lyrics service adapter for installed providers and the shared built-in clients.
 
 use crate::manager::ExtensionManager;
-use mornye_core::cancellation::{CancellationDomain, CancellationRegistry};
-use mornye_core::lyrics::LyricsResponse;
-use mornye_core::matching::lowercase;
-use mornye_providers::lyrics::{
+use mosix_core::cancellation::{CancellationDomain, CancellationRegistry};
+use mosix_core::lyrics::LyricsResponse;
+use mosix_core::matching::lowercase;
+use mosix_providers::lyrics::{
     CallGraph, Check, LyricsError, LyricsFetcher, SearchRequest, builtin::BuiltinLyricsClient,
 };
 use serde_json::json;

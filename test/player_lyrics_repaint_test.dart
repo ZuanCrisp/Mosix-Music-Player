@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/providers/music_player_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/lyrics_parser.dart';
 import 'package:mosix/widgets/player_lyrics.dart';
 
@@ -67,15 +67,15 @@ Future<List<int>> _pixels(WidgetTester tester) async {
 }
 
 void main() {
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'playing lyrics retain their painter and refresh stopped highlights ($mornye)',
+      'playing lyrics retain their painter and refresh stopped highlights ($mosix)',
       (tester) async {
         final playback = StreamController<PlaybackState>.broadcast();
         final preview = ValueNotifier<Duration?>(null);
         addTearDown(playback.close);
         addTearDown(preview.dispose);
-        final theme = mornye
+        final theme = mosix
             ? MosixTheme.build(Brightness.dark)
             : ThemeData.dark();
         await tester.pumpWidget(
@@ -143,7 +143,7 @@ void main() {
 
         await report(4, playing: true, state: AudioProcessingState.buffering);
         await tester.pumpAndSettle();
-        if (mornye) {
+        if (mosix) {
           expect(_paint, findsNothing);
         } else {
           final buffered = await _pixels(tester);

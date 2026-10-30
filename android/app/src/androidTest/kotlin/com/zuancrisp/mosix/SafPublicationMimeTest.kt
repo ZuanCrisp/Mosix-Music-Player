@@ -17,7 +17,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SafPublicationMimeTest {
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
-    private val authority = "com.mornye.test.documents.lookup"
+    private val authority = "com.mosix.test.documents.lookup"
     private val treeUri = DocumentsContract.buildTreeDocumentUri(authority, "root")
 
     private fun reset(): DocumentFile {

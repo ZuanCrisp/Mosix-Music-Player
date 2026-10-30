@@ -11,12 +11,12 @@ import 'package:mosix/providers/playback_provider.dart';
 import 'package:mosix/screens/local_album_screen.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/album_track_tile.dart';
 import 'package:mosix/widgets/desktop/desktop_selection.dart';
 import 'package:mosix/widgets/desktop/track_table.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/mosix_context_menu.dart';
 import 'package:mosix/widgets/selection_bottom_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,7 +51,7 @@ final _tracks = [
     ),
 ];
 
-Future<_Playback> _pumpAlbum(WidgetTester tester, {bool mornye = false}) async {
+Future<_Playback> _pumpAlbum(WidgetTester tester, {bool mosix = false}) async {
   SharedPreferences.setMockInitialValues({});
   tester.view.physicalSize = const Size(1280, 900);
   tester.view.devicePixelRatio = 1;
@@ -69,7 +69,7 @@ Future<_Playback> _pumpAlbum(WidgetTester tester, {bool mornye = false}) async {
         playbackProvider.overrideWith(() => playback),
       ],
       child: MaterialApp(
-        theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
+        theme: mosix ? MosixTheme.build(Brightness.light) : AppTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         navigatorKey: navigator,
@@ -111,12 +111,12 @@ void main() {
     expect(find.byType(SliverTrackTable), findsNothing);
   });
 
-  for (final mornye in [false, true]) {
-    testWidgets('desktop album lists songs in a table (mornye: $mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('desktop album lists songs in a table (mosix: $mosix)', (
       tester,
     ) async {
       debugDesktopPlatformOverride = true;
-      final playback = await _pumpAlbum(tester, mornye: mornye);
+      final playback = await _pumpAlbum(tester, mosix: mosix);
       expect(find.byType(AlbumTrackTile), findsNothing);
       expect(find.byType(SliverTrackTable), findsOneWidget);
 
@@ -124,7 +124,7 @@ void main() {
       // a menu on the row, without the bar under it.
       await _click(tester, find.text('Charlie'), buttons: kSecondaryButton);
       await tester.pumpAndSettle();
-      final menu = mornye
+      final menu = mosix
           ? find.byType(MosixContextMenu)
           : find.ancestor(
               of: find.byType(MenuItemButton).first,
@@ -144,7 +144,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
       expect(
-        find.byType(mornye ? MosixContextMenu : MenuItemButton),
+        find.byType(mosix ? MosixContextMenu : MenuItemButton),
         findsNothing,
       );
       expect(find.byType(SelectionBottomBar), findsNothing);
@@ -163,7 +163,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(
         find.descendant(
-          of: find.byType(mornye ? MosixContextMenu : MenuItemButton),
+          of: find.byType(mosix ? MosixContextMenu : MenuItemButton),
           matching: find.text('Play'),
         ),
       );
@@ -172,11 +172,11 @@ void main() {
       expect(find.byType(SelectionBottomBar), findsNothing);
     });
 
-    testWidgets('desktop selection bar stays bounded (mornye: $mornye)', (
+    testWidgets('desktop selection bar stays bounded (mosix: $mosix)', (
       tester,
     ) async {
       debugDesktopPlatformOverride = true;
-      await _pumpAlbum(tester, mornye: mornye);
+      await _pumpAlbum(tester, mosix: mosix);
 
       final toggle = defaultTargetPlatform == TargetPlatform.macOS
           ? LogicalKeyboardKey.metaLeft
@@ -200,11 +200,11 @@ void main() {
       expect(selectAll.right, lessThanOrEqualTo(1280 / 2 + 320));
     });
 
-    testWidgets('desktop album header and rows are compact (mornye: $mornye)', (
+    testWidgets('desktop album header and rows are compact (mosix: $mosix)', (
       tester,
     ) async {
       debugDesktopPlatformOverride = true;
-      final playback = await _pumpAlbum(tester, mornye: mornye);
+      final playback = await _pumpAlbum(tester, mosix: mosix);
 
       // No hero: the back control sits at the top of the pane and the
       // details start beside the artwork, at the list's left edge.
@@ -240,7 +240,7 @@ void main() {
 
       final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
       addTearDown(mouse.removePointer);
-      if (mornye) {
+      if (mosix) {
         // Album rows of Apple Music: 46pt, no column headers, the number
         // turns into a play button under the pointer and "More" shows.
         expect(find.text('#'), findsNothing);

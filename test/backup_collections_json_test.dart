@@ -105,7 +105,7 @@ void main() {
         },
       ]) {
         final archiveFile = await BackupService.writeBackupArchive(
-          settings: const {'theme': 'mornye'},
+          settings: const {'theme': 'mosix'},
           collections: const {},
           collectionsJson: jsonEncode(collections),
           playlistCoverFiles: const {},

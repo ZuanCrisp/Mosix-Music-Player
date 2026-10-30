@@ -67,17 +67,17 @@ downloads on Windows, instead of depending on filesystem hard-link support.
 It gets both verbatim paths from the opened parent directory and retains the
 existing cancellation, collision, and staging cleanup behavior.
 
-Run `cargo test -p mornye-extensions --test windows_path_prefix` on any host for
+Run `cargo test -p mosix-extensions --test windows_path_prefix` on any host for
 the production prefix conversion tests, and
-`cargo test -p mornye-extensions --lib files::tests` for file lifecycle tests.
+`cargo test -p mosix-extensions --lib files::tests` for file lifecycle tests.
 Windows additionally exercises paths beyond `MAX_PATH`. For a real SMB share,
 run these commands in PowerShell from `rust_backend`:
 
 ```powershell
-$env:MORNYE_TEST_SMB_ROOT = '\\server\share\writable-test-folder'
-cargo test -p mornye-extensions windows_network_share_directory_operations -- --ignored
-$env:MORNYE_TEST_SMB_ROOT = 'Z:\writable-test-folder'
-cargo test -p mornye-extensions windows_network_share_directory_operations -- --ignored
+$env:MOSIX_TEST_SMB_ROOT = '\\server\share\writable-test-folder'
+cargo test -p mosix-extensions windows_network_share_directory_operations -- --ignored
+$env:MOSIX_TEST_SMB_ROOT = 'Z:\writable-test-folder'
+cargo test -p mosix-extensions windows_network_share_directory_operations -- --ignored
 ```
 
 The test creates and removes its own temporary directory within the supplied
@@ -86,6 +86,6 @@ checks require Windows with access to that share; host tests do not establish
 SMB compatibility. Check upstream before removing this patch during an upgrade.
 
 References:
-- [Reported desktop issue](https://github.com/mornyeapp/Mornye-Desktop/issues/3)
+- [Reported desktop issue](@@KEEP_GITHUB_MOSIX@@-Desktop/issues/3)
 - [Upstream get_path](https://github.com/bytecodealliance/cap-std/blob/main/cap-primitives/src/windows/fs/get_path.rs)
 - [MoveFileExW](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw)

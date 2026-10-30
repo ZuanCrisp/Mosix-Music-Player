@@ -5,7 +5,7 @@ import 'dart:ui' as ui;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/services/audio_analysis_jobs.dart';
 import 'package:mosix/services/audio_analysis_cache.dart';
 import 'package:mosix/services/audio_analysis_ffmpeg.dart';

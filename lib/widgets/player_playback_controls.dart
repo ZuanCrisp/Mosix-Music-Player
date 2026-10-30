@@ -7,7 +7,7 @@ import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/music_player_provider.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/theme/material_expressive.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/playback_seek_preview.dart';
 import 'package:mosix/utils/string_utils.dart';
 import 'package:mosix/widgets/app_icon.dart';
@@ -16,12 +16,12 @@ import 'package:mosix/widgets/audio_info_sheet.dart';
 import 'package:mosix/widgets/automix_status_badge.dart';
 import 'package:mosix/widgets/expressive_icon_button.dart';
 import 'package:mosix/widgets/expressive_playback_transport.dart';
-import 'package:mosix/widgets/mornye_playback_button.dart';
-import 'package:mosix/widgets/mornye_playback_time.dart';
-import 'package:mosix/widgets/mornye_player_slider.dart';
+import 'package:mosix/widgets/mosix_playback_button.dart';
+import 'package:mosix/widgets/mosix_playback_time.dart';
+import 'package:mosix/widgets/mosix_player_slider.dart';
 import 'package:mosix/widgets/playback_seek_slider.dart';
 
-const _mornyeTimelinePadding = 28.0;
+const _mosixTimelinePadding = 28.0;
 
 class PlayerPlaybackControls extends ConsumerWidget {
   final String mediaId;
@@ -52,7 +52,7 @@ class PlayerPlaybackControls extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(musicPlayerControllerProvider);
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final isPlaying = ref.watch(playbackPlayingProvider);
     final isLoading = ref.watch(playbackLoadingProvider);
     final playPauseSize = compact
@@ -78,8 +78,8 @@ class PlayerPlaybackControls extends ConsumerWidget {
                   padding: EdgeInsets.symmetric(
                     horizontal: edgeAligned
                         ? 0
-                        : mornye
-                        ? _mornyeTimelinePadding
+                        : mosix
+                        ? _mosixTimelinePadding
                         : 16,
                   ),
                   child: Column(
@@ -87,15 +87,15 @@ class PlayerPlaybackControls extends ConsumerWidget {
                       SliderTheme(
                         data: SliderThemeData(
                           trackHeight: 4,
-                          activeTrackColor: mornye
+                          activeTrackColor: mosix
                               ? colorScheme.onSurface
                               : colorScheme.primary,
                           // Material matches the volume slider's M3 inactive
                           // track below it.
-                          inactiveTrackColor: mornye
+                          inactiveTrackColor: mosix
                               ? colorScheme.onSurface.withValues(alpha: 0.18)
                               : colorScheme.secondaryContainer,
-                          thumbColor: mornye
+                          thumbColor: mosix
                               ? colorScheme.onSurface
                               : colorScheme.primary,
                           // A 7dp thumb was hard to grab; 10dp with a 24dp overlay
@@ -117,18 +117,18 @@ class PlayerPlaybackControls extends ConsumerWidget {
                           edgeAligned: edgeAligned,
                         ),
                       ),
-                      if (!mornye) const SizedBox(height: 8),
+                      if (!mosix) const SizedBox(height: 8),
                       Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: edgeAligned
                               ? 0
-                              : mornye
+                              : mosix
                               ? MosixPlayerSlider.horizontalInset
                               : 12,
                         ),
                         child: Row(
                           children: [
-                            if (mornye)
+                            if (mosix)
                               MosixPlaybackTime(
                                 key: ValueKey('elapsed:$mediaId'),
                                 seconds: elapsedSeconds,
@@ -140,7 +140,7 @@ class PlayerPlaybackControls extends ConsumerWidget {
                                 style: timeStyle,
                               ),
                             Expanded(child: Center(child: quality)),
-                            if (mornye)
+                            if (mosix)
                               MosixPlaybackTime(
                                 key: ValueKey('remaining:$mediaId'),
                                 // Subtract whole seconds so both labels roll together,
@@ -172,9 +172,9 @@ class PlayerPlaybackControls extends ConsumerWidget {
             ),
           ),
           SizedBox(
-            height: compact ? 8 : transportTopPadding + (mornye ? 0 : 8),
+            height: compact ? 8 : transportTopPadding + (mosix ? 0 : 8),
           ),
-          if (!mornye && materialExpressiveEnabled(context))
+          if (!mosix && materialExpressiveEnabled(context))
             Padding(
               padding: EdgeInsets.symmetric(horizontal: edgeAligned ? 0 : 16),
               child: ExpressivePlaybackTransport(
@@ -205,21 +205,21 @@ class PlayerPlaybackControls extends ConsumerWidget {
           else
             Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: mornye && !edgeAligned ? (compact ? 16 : 32) : 0,
+                horizontal: mosix && !edgeAligned ? (compact ? 16 : 32) : 0,
               ),
               child: Row(
                 // Edge to edge, the shuffle and repeat buttons line up with
                 // the timeline's ends.
-                mainAxisAlignment: edgeAligned && !mornye
+                mainAxisAlignment: edgeAligned && !mosix
                     ? MainAxisAlignment.spaceBetween
                     : MainAxisAlignment.spaceEvenly,
                 children: [
-                  if (!mornye)
+                  if (!mosix)
                     PlayerPlaybackModeButton(
                       mode: PlayerPlaybackMode.shuffle,
                       colorScheme: colorScheme,
                     ),
-                  if (mornye)
+                  if (mosix)
                     MosixPlaybackButton(
                       icon: CupertinoIcons.backward_fill,
                       color: colorScheme.onSurface,
@@ -234,7 +234,7 @@ class PlayerPlaybackControls extends ConsumerWidget {
                       icon: const Icon(Icons.skip_previous),
                       onPressed: controller.previous,
                     ),
-                  if (mornye)
+                  if (mosix)
                     MosixPlaybackButton(
                       icon: isPlaying
                           ? CupertinoIcons.pause_fill
@@ -269,7 +269,7 @@ class PlayerPlaybackControls extends ConsumerWidget {
                           ? null
                           : () => controller.togglePlayPause(isPlaying),
                     ),
-                  if (mornye)
+                  if (mosix)
                     MosixPlaybackButton(
                       icon: CupertinoIcons.forward_fill,
                       color: colorScheme.onSurface,
@@ -284,7 +284,7 @@ class PlayerPlaybackControls extends ConsumerWidget {
                       icon: const Icon(Icons.skip_next),
                       onPressed: controller.next,
                     ),
-                  if (!mornye)
+                  if (!mosix)
                     PlayerPlaybackModeButton(
                       mode: PlayerPlaybackMode.repeat,
                       colorScheme: colorScheme,
@@ -394,14 +394,14 @@ class _QualityBadge extends StatelessWidget {
   Widget _buildBadge(BuildContext context) {
     final text = metadata.qualityLabel;
     if (text == null || text.isEmpty) return const SizedBox.shrink();
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final radius = BorderRadius.circular(20);
     final badge = Container(
       padding: EdgeInsets.symmetric(
-        horizontal: mornye ? 8 : 10,
-        vertical: mornye ? 2 : 5,
+        horizontal: mosix ? 8 : 10,
+        vertical: mosix ? 2 : 5,
       ),
-      decoration: mornye
+      decoration: mosix
           ? null
           : BoxDecoration(
               color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
@@ -412,17 +412,17 @@ class _QualityBadge extends StatelessWidget {
         children: [
           AppIcon(
             Icons.graphic_eq,
-            size: mornye ? 11 : 14,
+            size: mosix ? 11 : 14,
             color: colorScheme.onSurfaceVariant,
           ),
-          SizedBox(width: mornye ? 5 : 6),
+          SizedBox(width: mosix ? 5 : 6),
           Flexible(
             child: Text(
               text,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontSize: mornye ? 10.5 : 12,
+                fontSize: mosix ? 10.5 : 12,
                 color: colorScheme.onSurfaceVariant,
                 letterSpacing: 0.2,
               ),

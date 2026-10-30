@@ -16,7 +16,7 @@ import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/library_tracks_folder_screen.dart';
 import 'package:mosix/services/music_player_service.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/album_detail_header.dart';
 import 'package:mosix/widgets/track_card.dart';
 
@@ -222,11 +222,11 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  for (final mornye in [false, true]) {
-    testWidgets('large local playlist renders and scrolls ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('large local playlist renders and scrolls ($mosix)', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(400, 850);
+      tester.view.physicalSize = const Size(360, 780);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       await tester.pumpWidget(
@@ -247,9 +247,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: mornye
-                ? MosixTheme.build(Brightness.dark)
-                : AppTheme.light(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const LibraryTracksFolderScreen(
@@ -261,6 +259,25 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('620 tracks'), findsOneWidget);
+      final filterButton = find.byKey(const ValueKey('playlist-filter-button'));
+      expect(filterButton, findsOneWidget);
+      final filterRect = tester.getRect(filterButton);
+      final shuffleRect = tester.getRect(
+        find.byKey(const ValueKey('collection-shuffle')),
+      );
+      expect(filterRect.center.dy, closeTo(shuffleRect.center.dy, 0.5));
+      expect(filterRect.left, greaterThan(shuffleRect.left));
+      expect(filterRect.left, greaterThanOrEqualTo(0));
+      expect(filterRect.right, lessThanOrEqualTo(360));
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(LibraryTracksFolderScreen)),
+      );
+      await tester.tap(filterButton);
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.playlistFilterTracks), findsOneWidget);
+      expect(find.text(l10n.playlistTrackOrder), findsOneWidget);
+      await tester.tap(find.text(l10n.libraryFilterApply));
+      await tester.pumpAndSettle();
       expect(find.text('Local song 0'), findsOneWidget);
       await tester.scrollUntilVisible(
         find.text('Local song 619'),
@@ -271,7 +288,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Wishlist enqueues one selection (Mosix: $mornye)', (
+    testWidgets('Wishlist enqueues one selection (Mosix: $mosix)', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(800, 1100);
@@ -306,9 +323,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: mornye
-                ? MosixTheme.build(Brightness.dark)
-                : AppTheme.light(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const LibraryTracksFolderScreen(
@@ -341,9 +356,9 @@ void main() {
   }
 
   for (final mode in LibraryTracksFolderMode.values) {
-    for (final mornye in [false, true]) {
+    for (final mosix in [false, true]) {
       testWidgets(
-        'selection dispatches one ${mode.name} removal (Mosix: $mornye)',
+        'selection dispatches one ${mode.name} removal (Mosix: $mosix)',
         (tester) async {
           final calls = <(String, List<String>)>[];
           await tester.pumpWidget(
@@ -370,7 +385,7 @@ void main() {
                 ),
               ],
               child: MaterialApp(
-                theme: mornye
+                theme: mosix
                     ? MosixTheme.build(Brightness.dark)
                     : AppTheme.light(),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -409,8 +424,8 @@ void main() {
     }
   }
 
-  for (final mornye in [false, true]) {
-    testWidgets('playlist row queues its neighbors (Mosix: $mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('playlist row queues its neighbors (Mosix: $mosix)', (
       tester,
     ) async {
       final player = _Player();
@@ -437,9 +452,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: mornye
-                ? MosixTheme.build(Brightness.dark)
-                : AppTheme.light(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const LibraryTracksFolderScreen(
@@ -469,7 +482,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('playlist header shuffles every song (Mosix: $mornye)', (
+    testWidgets('playlist header shuffles every song (Mosix: $mosix)', (
       tester,
     ) async {
       // A narrow phone, so Play, Shuffle and Download all must share it.
@@ -494,9 +507,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: mornye
-                ? MosixTheme.build(Brightness.dark)
-                : AppTheme.light(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const LibraryTracksFolderScreen(
@@ -521,7 +532,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('playlist header mirrors in Arabic (Mosix: $mornye)', (
+    testWidgets('playlist header mirrors in Arabic (Mosix: $mosix)', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(360, 780);
@@ -545,9 +556,7 @@ void main() {
           ],
           child: MaterialApp(
             locale: const Locale('ar'),
-            theme: mornye
-                ? MosixTheme.build(Brightness.dark)
-                : AppTheme.light(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const LibraryTracksFolderScreen(

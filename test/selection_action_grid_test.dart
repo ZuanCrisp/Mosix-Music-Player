@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/library_track_selection_bar.dart';
 import 'package:mosix/widgets/selection_action_button.dart';
 
-Widget _app(bool mornye, Widget child) => ProviderScope(
+Widget _app(bool mosix, Widget child) => ProviderScope(
   child: MaterialApp(
-    theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+    theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
@@ -19,13 +19,13 @@ Widget _app(bool mornye, Widget child) => ProviderScope(
 );
 
 void main() {
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final (width, columns, itemWidth) in [
       (360.0, 2, 176.0),
       (960.0, 3, 944 / 3),
       (1280.0, 4, 314.0),
     ]) {
-      testWidgets('selection grid geometry ($mornye, $columns columns)', (
+      testWidgets('selection grid geometry ($mosix, $columns columns)', (
         tester,
       ) async {
         tester.view.physicalSize = Size(width, 800);
@@ -34,7 +34,7 @@ void main() {
         var tapped = -1;
         await tester.pumpWidget(
           _app(
-            mornye,
+            mosix,
             Builder(
               builder: (context) => SelectionActionGrid(
                 children: [
@@ -71,7 +71,7 @@ void main() {
       });
     }
 
-    testWidgets('selection grid retains conditional actions ($mornye)', (
+    testWidgets('selection grid retains conditional actions ($mosix)', (
       tester,
     ) async {
       var queued = false;
@@ -86,7 +86,7 @@ void main() {
         converted = false;
         await tester.pumpWidget(
           _app(
-            mornye,
+            mosix,
             LibraryTrackSelectionBar(
               selectedCount: selectedCount,
               allSelected: false,
@@ -130,7 +130,7 @@ void main() {
       }
     });
 
-    testWidgets('desktop delete leads the Remove RG row ($mornye)', (
+    testWidgets('desktop delete leads the Remove RG row ($mosix)', (
       tester,
     ) async {
       debugDesktopPlatformOverride = true;
@@ -141,7 +141,7 @@ void main() {
       var deleted = false;
       await tester.pumpWidget(
         _app(
-          mornye,
+          mosix,
           Align(
             alignment: Alignment.bottomCenter,
             child: LibraryTrackSelectionBar(

@@ -11,7 +11,7 @@ import 'package:material_ui/material_ui.dart' as material_ui;
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/theme/app_theme.dart';
 import 'package:mosix/theme/material_expressive.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_action_button.dart';
 import 'package:mosix/widgets/app_choice_chip.dart';
 import 'package:mosix/widgets/app_content_card.dart';

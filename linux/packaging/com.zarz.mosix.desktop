@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.4
+Name=Mosix
+GenericName=Music Player
+Comment=Play, organize and download your music library
+Exec=mosix %U
+Icon=com.zarz.mosix
+Terminal=false
+StartupNotify=true
+StartupWMClass=com.zarz.mosix
+Categories=AudioVideo;Audio;Player;Music;
+Keywords=music;player;audio;flac;library;
+MimeType=x-scheme-handler/mosix;x-scheme-handler/mornye;

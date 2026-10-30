@@ -16,8 +16,8 @@ import 'package:mosix/theme/app_tokens.dart';
 import 'package:mosix/widgets/track_card.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/app_snack_bar.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mosix_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
 import 'package:share_plus/share_plus.dart' show ShareParams, SharePlus, XFile;
 import 'package:mosix/widgets/album_detail_header.dart';
 import 'package:mosix/widgets/cached_cover_image.dart';
@@ -79,6 +79,135 @@ class _LibraryTracksFolderScreenState
         CollapsingHeaderScrollMixin<LibraryTracksFolderScreen> {
   UserPlaylistCollection? playlist;
   final _folderData = LibraryTracksFolderData();
+  String _playlistFilterQuery = '';
+  String _playlistSortMode = 'playlist';
+
+  List<CollectionTrackEntry> _visibleEntries(
+    List<CollectionTrackEntry> entries,
+  ) {
+    if (widget.mode != LibraryTracksFolderMode.playlist) return entries;
+    final query = _playlistFilterQuery.trim().toLowerCase();
+    final filtered = entries.where((entry) {
+      if (query.isEmpty) return true;
+      final track = entry.track;
+      return track.name.toLowerCase().contains(query) ||
+          track.artistName.toLowerCase().contains(query) ||
+          track.albumName.toLowerCase().contains(query);
+    }).toList();
+    int compareText(String first, String second) =>
+        first.trim().toLowerCase().compareTo(second.trim().toLowerCase());
+    if (_playlistSortMode != 'playlist') {
+      final order = Map<CollectionTrackEntry, int>.identity();
+      for (var index = 0; index < entries.length; index++) {
+        order[entries[index]] = index;
+      }
+      filtered.sort((first, second) {
+        final compared = switch (_playlistSortMode) {
+          'title-asc' => compareText(first.track.name, second.track.name),
+          'title-desc' => compareText(second.track.name, first.track.name),
+          'artist-asc' => compareText(
+            first.track.artistName,
+            second.track.artistName,
+          ),
+          'artist-desc' => compareText(
+            second.track.artistName,
+            first.track.artistName,
+          ),
+          'album-asc' => compareText(
+            first.track.albumName,
+            second.track.albumName,
+          ),
+          'album-desc' => compareText(
+            second.track.albumName,
+            first.track.albumName,
+          ),
+          _ => 0,
+        };
+        return compared == 0
+            ? order[first]!.compareTo(order[second]!)
+            : compared;
+      });
+    }
+    return filtered;
+  }
+
+  Future<void> _showPlaylistFilterSheet(BuildContext context) async {
+    final controller = TextEditingController(text: _playlistFilterQuery);
+    var filterQuery = _playlistFilterQuery;
+    var sortMode = _playlistSortMode;
+    final sortOptions = <(String, String)>[
+      ('playlist', context.l10n.playlistTrackOrder),
+      ('title-asc', context.l10n.searchSortTitleAZ),
+      ('title-desc', context.l10n.searchSortTitleZA),
+      ('artist-asc', context.l10n.searchSortArtistAZ),
+      ('artist-desc', context.l10n.searchSortArtistZA),
+      ('album-asc', context.l10n.libraryFilterSortAlbumAsc),
+      ('album-desc', context.l10n.libraryFilterSortAlbumDesc),
+    ];
+    try {
+      await showAppBottomSheet<void>(
+        context: context,
+        title: context.l10n.playlistSortAndFilter,
+        maxHeightFactor: 0.9,
+        builder: (sheetContext) => StatefulBuilder(
+          builder: (context, setSheetState) => SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.playlistFilterTracks,
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: filterQuery.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: context.l10n.libraryFilterReset,
+                              onPressed: () {
+                                controller.clear();
+                                setSheetState(() => filterQuery = '');
+                              },
+                              icon: const Icon(Icons.close),
+                            ),
+                    ),
+                    onChanged: (value) =>
+                        setSheetState(() => filterQuery = value),
+                  ),
+                ),
+                for (final (mode, label) in sortOptions)
+                  ListTile(
+                    dense: true,
+                    title: Text(label),
+                    trailing: sortMode == mode ? const Icon(Icons.check) : null,
+                    onTap: () => setSheetState(() => sortMode = mode),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      if (!mounted) return;
+                      exitSelectionMode();
+                      setState(() {
+                        _playlistFilterQuery = filterQuery;
+                        _playlistSortMode = sortMode;
+                      });
+                    },
+                    child: Text(context.l10n.libraryFilterApply),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } finally {
+      controller.dispose();
+    }
+  }
 
   @override
   void initState() {
@@ -283,7 +412,8 @@ class _LibraryTracksFolderScreenState
         break;
     }
 
-    _folderData.update(entries);
+    final visibleEntries = _visibleEntries(entries);
+    _folderData.update(visibleEntries);
     pruneSelection(_folderData.keys);
 
     final title = switch (widget.mode) {
@@ -330,7 +460,7 @@ class _LibraryTracksFolderScreenState
       selectionBar: _buildSelectionBottomBar(
         context,
         colorScheme,
-        entries,
+        visibleEntries,
         bottomPadding,
       ),
       appBar: _buildAppBar(context, colorScheme, title, entries, playlist),
@@ -343,20 +473,25 @@ class _LibraryTracksFolderScreenState
               subtitle: emptySubtitle,
             ),
           )
+        else if (visibleEntries.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: Text(context.l10n.errorNoTracksFound)),
+          )
         else if (isDesktopPlatform)
           TrackListTable(
             tracks: folderTracks,
-            ids: [for (final entry in entries) entry.key],
+            ids: [for (final entry in visibleEntries) entry.key],
             isInHistory: inHistory,
             selectedIds: selectedIds,
             onSelect: applyDesktopClick,
             onActivate: (index) =>
-                _activateEntry(entries, folderTracks, inHistory, index),
+                _activateEntry(visibleEntries, folderTracks, inHistory, index),
             onContextMenu: (index, position) => showSelectionMenu(
-              entries[index].key,
+              visibleEntries[index].key,
               () => _showEntryMenu(
                 context,
-                entries,
+                visibleEntries,
                 folderTracks,
                 inHistory,
                 index,
@@ -371,7 +506,7 @@ class _LibraryTracksFolderScreenState
             padding: EdgeInsets.symmetric(horizontal: wideListInset(context)),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
-                final entry = entries[index];
+                final entry = visibleEntries[index];
                 final isSelected = selectedIds.contains(entry.key);
                 final isInHistory = existingHistoryKeys.contains(
                   historyLookups[index].lookupKey,
@@ -398,23 +533,23 @@ class _LibraryTracksFolderScreenState
                     ),
                   ),
                 );
-              }, childCount: entries.length),
+              }, childCount: visibleEntries.length),
             ),
           ),
       ],
     );
     return DesktopListScope(
-      onSelectAll: entries.isEmpty
+      onSelectAll: visibleEntries.isEmpty
           ? null
-          : () => selectAll(entries.map((entry) => entry.key)),
+          : () => selectAll(visibleEntries.map((entry) => entry.key)),
       onClearSelection: isSelectionMode ? exitSelectionMode : null,
-      onDelete: isSelectionMode ? () => _removeSelected(entries) : null,
+      onDelete: isSelectionMode ? () => _removeSelected(visibleEntries) : null,
       onActivate: () {
-        final index = entries.indexWhere(
+        final index = visibleEntries.indexWhere(
           (entry) => entry.key == selectionAnchorId,
         );
         if (index >= 0) {
-          _activateEntry(entries, folderTracks, inHistory, index);
+          _activateEntry(visibleEntries, folderTracks, inHistory, index);
         }
       },
       child: scaffold,
@@ -610,7 +745,7 @@ class _LibraryTracksFolderScreenState
       var sourcePath = picked.path;
       if (sourcePath == null || sourcePath.isEmpty) {
         materializedDir = await Directory.systemTemp.createTemp(
-          'mornye_playlist_cover_',
+          'mosix_playlist_cover_',
         );
         final pickedExtension = p.extension(picked.name);
         final materializedFile = File(
@@ -778,6 +913,14 @@ class _LibraryTracksFolderScreenState
                     entries.map((e) => e.track).toList(growable: false),
                   ),
                 ),
+                if (isPlaylistMode)
+                  HeaderCircleButton(
+                    key: const ValueKey('playlist-filter-button'),
+                    icon: Icons.filter_list,
+                    tooltip: context.l10n.playlistSortAndFilter,
+                    tonal: true,
+                    onPressed: () => _showPlaylistFilterSheet(context),
+                  ),
               ],
             )
           : null,
@@ -952,7 +1095,7 @@ class _LibraryTracksFolderScreenState
               ),
               leading: context.isMosix
                   ? Icon(
-                      mornyeIconFor(Icons.image_outlined),
+                      mosixIconFor(Icons.image_outlined),
                       color: colorScheme.primary,
                     )
                   : Container(
@@ -981,7 +1124,7 @@ class _LibraryTracksFolderScreenState
                 ),
                 leading: context.isMosix
                     ? Icon(
-                        mornyeIconFor(Icons.delete_outline),
+                        mosixIconFor(Icons.delete_outline),
                         color: colorScheme.primary,
                       )
                     : Container(

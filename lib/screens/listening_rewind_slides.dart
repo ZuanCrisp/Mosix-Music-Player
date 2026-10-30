@@ -490,7 +490,7 @@ class _RewindBackdropState extends State<_RewindBackdrop>
           final blend = page - from;
           final t = _ambient.value * 2 * math.pi;
           return context.isMosix
-              ? _mornye(from, to, blend, t)
+              ? _mosix(from, to, blend, t)
               : _material(from, to, blend, page, t);
         },
       ),
@@ -579,7 +579,7 @@ class _RewindBackdropState extends State<_RewindBackdrop>
     );
   }
 
-  Widget _mornye(int from, int to, double blend, double t) {
+  Widget _mosix(int from, int to, double blend, double t) {
     Widget artwork(String? uri, double opacity) => uri == null || opacity <= 0
         ? const SizedBox.shrink()
         : Opacity(

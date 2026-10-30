@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/playback_seek_slider.dart';
 
-import 'mornye_artwork_performance_test.dart' as artwork;
-import 'mornye_lyrics_performance_test.dart' as lyrics;
+import 'mosix_artwork_performance_test.dart' as artwork;
+import 'mosix_lyrics_performance_test.dart' as lyrics;
 import 'performance_probe.dart';
 
 void main() {
   final binding = PerformanceTestBinding.ensureInitialized();
-  lyrics.runLyricsPerformanceTests(mornye: false);
-  artwork.runArtworkPerformanceTests(mornye: false);
-  for (final mornye in [false, true]) {
-    final style = mornye ? 'mornye' : 'material';
+  lyrics.runLyricsPerformanceTests(mosix: false);
+  artwork.runArtworkPerformanceTests(mosix: false);
+  for (final mosix in [false, true]) {
+    final style = mosix ? 'mosix' : 'material';
     testWidgets('$style production seek track playback, drag and idle', (
       tester,
     ) async {
@@ -23,7 +23,7 @@ void main() {
       addTearDown(playing.dispose);
       await tester.pumpWidget(
         MaterialApp(
-          theme: mornye ? MosixTheme.build(Brightness.dark) : AppTheme.dark(),
+          theme: mosix ? MosixTheme.build(Brightness.dark) : AppTheme.dark(),
           home: Scaffold(
             body: Center(
               child: ValueListenableBuilder<bool>(

@@ -8,7 +8,7 @@ import 'package:mosix/models/track.dart';
 import 'package:mosix/providers/track_provider.dart';
 import 'package:mosix/screens/artist_screen.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/animation_utils.dart';
 import 'package:mosix/widgets/desktop/desktop_scroll_arrows.dart';
@@ -30,7 +30,7 @@ final _albums = [
 
 Future<void> _pumpArtist(
   WidgetTester tester, {
-  required bool mornye,
+  required bool mosix,
   List<ArtistAlbum>? albums,
 }) async {
   SharedPreferences.setMockInitialValues({});
@@ -44,7 +44,7 @@ Future<void> _pumpArtist(
   await tester.pumpWidget(
     ProviderScope(
       child: MaterialApp(
-        theme: mornye ? MosixTheme.build(Brightness.light) : AppTheme.light(),
+        theme: mosix ? MosixTheme.build(Brightness.light) : AppTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: ArtistScreen(
@@ -113,14 +113,14 @@ void main() {
     debugDesktopPlatformOverride = null;
   });
 
-  for (final mornye in [false, true]) {
-    final style = mornye ? 'Mosix' : 'Material';
+  for (final mosix in [false, true]) {
+    final style = mosix ? 'Mosix' : 'Material';
     for (final platform in [TargetPlatform.windows, TargetPlatform.macOS]) {
       testWidgets(
         '$style $platform: modifier clicks select albums and keyboard clears them',
         (tester) async {
           debugDesktopPlatformOverride = true;
-          await _pumpArtist(tester, mornye: mornye);
+          await _pumpArtist(tester, mosix: mosix);
           final modifier = platform == TargetPlatform.macOS
               ? LogicalKeyboardKey.metaLeft
               : LogicalKeyboardKey.controlLeft;
@@ -159,7 +159,7 @@ void main() {
       tester,
     ) async {
       debugDesktopPlatformOverride = true;
-      await _pumpArtist(tester, mornye: mornye);
+      await _pumpArtist(tester, mosix: mosix);
       await _click(tester, 2, secondary: true);
       expect(find.byType(SelectionBottomBar), findsNothing);
       expect(find.byType(AnimatedSelectionCheckbox), findsNothing);
@@ -200,7 +200,7 @@ void main() {
             artists: 'Example Artist',
           ),
       ];
-      await _pumpArtist(tester, mornye: mornye, albums: albums);
+      await _pumpArtist(tester, mosix: mosix, albums: albums);
       final shelf = find.byType(DesktopScrollArrows);
       final list = find.descendant(of: shelf, matching: find.byType(ListView));
       final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
@@ -242,7 +242,7 @@ void main() {
       tester,
     ) async {
       debugDesktopPlatformOverride = false;
-      await _pumpArtist(tester, mornye: mornye);
+      await _pumpArtist(tester, mosix: mosix);
       await tester.longPress(_card(2));
       await tester.pumpAndSettle();
       _expectSelection(tester, {2});

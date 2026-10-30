@@ -21,8 +21,8 @@ use crate::manifest::ExtensionManifest;
 use crate::package::{ExtensionPackage, is_package_path};
 use crate::runtime::{LoadMode, lifecycle_result};
 use crate::{ExtensionError, ExtensionRuntime, RuntimeLimits};
-use mornye_core::cancellation::RequestLease;
-use mornye_core::fs::{DirBuilderPortableExt, OpenOptionsPortableExt};
+use mosix_core::cancellation::RequestLease;
+use mosix_core::fs::{DirBuilderPortableExt, OpenOptionsPortableExt};
 use serde_json::{Map, Value, json};
 use std::cmp::Ordering as Comparison;
 use std::collections::BTreeMap;
@@ -297,7 +297,7 @@ impl ExtensionManager {
         id: &str,
         method: &str,
         arguments: &str,
-        lease: Option<Arc<mornye_core::cancellation::RequestLease>>,
+        lease: Option<Arc<mosix_core::cancellation::RequestLease>>,
         timeout_ms: u64,
     ) -> Result<String, ManagerError> {
         let entry = self.get(id)?;

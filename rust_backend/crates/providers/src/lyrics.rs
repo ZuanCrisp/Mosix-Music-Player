@@ -8,7 +8,7 @@ mod service;
 pub use calls::{CallGraph, CallNode, CallWait};
 pub use service::{LyricsFetcher, LyricsService, SearchRequest};
 
-use mornye_core::lyrics::errors::ErrorKind;
+use mosix_core::lyrics::errors::ErrorKind;
 
 pub type Check<'a> = dyn Fn() -> Result<(), String> + Sync + 'a;
 

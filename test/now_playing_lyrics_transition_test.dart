@@ -28,7 +28,7 @@ import 'package:mosix/services/network_storage_service.dart';
 import 'package:video_player/video_player.dart';
 import 'package:mosix/screens/now_playing_screen.dart';
 import 'package:mosix/screens/lyrics_share_screen.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/app_theme.dart';
 import 'package:mosix/utils/lyrics_parser.dart';
 import 'package:mosix/widgets/expressive_icon_button.dart';
@@ -36,21 +36,21 @@ import 'package:mosix/widgets/expressive_playback_transport.dart';
 import 'package:mosix/widgets/expressive_seek_track.dart';
 import 'package:mosix/widgets/player_volume_control.dart';
 import 'package:mosix/widgets/lyric_gap_indicator.dart';
-import 'package:mosix/widgets/mornye_player_queue.dart';
-import 'package:mosix/widgets/mornye_playback_button.dart';
-import 'package:mosix/widgets/mornye_playback_time.dart';
-import 'package:mosix/widgets/mornye_player_actions_sheet.dart';
-import 'package:mosix/widgets/mornye_player_favorite_button.dart';
-import 'package:mosix/widgets/mornye_player_details_sheet.dart';
-import 'package:mosix/widgets/mornye_metadata_row.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
-import 'package:mosix/widgets/mornye_player_background.dart';
-import 'package:mosix/widgets/mornye_player_artwork.dart';
-import 'package:mosix/widgets/mornye_artwork_contrast.dart';
+import 'package:mosix/widgets/mosix_player_queue.dart';
+import 'package:mosix/widgets/mosix_playback_button.dart';
+import 'package:mosix/widgets/mosix_playback_time.dart';
+import 'package:mosix/widgets/mosix_player_actions_sheet.dart';
+import 'package:mosix/widgets/mosix_player_favorite_button.dart';
+import 'package:mosix/widgets/mosix_player_details_sheet.dart';
+import 'package:mosix/widgets/mosix_metadata_row.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
+import 'package:mosix/widgets/mosix_player_background.dart';
+import 'package:mosix/widgets/mosix_player_artwork.dart';
+import 'package:mosix/widgets/mosix_artwork_contrast.dart';
 import 'package:mosix/widgets/mini_player.dart';
 import 'package:mosix/widgets/material_player_layout.dart';
 import 'package:mosix/widgets/material_player_backdrop.dart';
-import 'package:mosix/widgets/mornye_player_layout.dart';
+import 'package:mosix/widgets/mosix_player_layout.dart';
 import 'package:mosix/widgets/player_metadata_title.dart';
 import 'package:mosix/widgets/playback_seek_slider.dart';
 import 'package:mosix/widgets/player_artwork.dart';
@@ -267,13 +267,13 @@ void main() {
     return frames;
   }
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'late duration refreshes the open player without reopening ($mornye)',
+      'late duration refreshes the open player without reopening ($mosix)',
       (tester) async {
         await pumpNowPlaying(
           tester,
-          theme: mornye ? MosixTheme.build(Brightness.dark) : null,
+          theme: mosix ? MosixTheme.build(Brightness.dark) : null,
           playback: PlaybackState(
             processingState: AudioProcessingState.ready,
             updatePosition: const Duration(seconds: 30),
@@ -303,7 +303,7 @@ void main() {
               ),
             )
             .value!;
-        if (!mornye) expect(miniProgress(), 0);
+        if (!mosix) expect(miniProgress(), 0);
         final readsBefore = metadataReads.length;
 
         mediaItems.add(initial.copyWith(duration: const Duration(minutes: 3)));
@@ -318,7 +318,7 @@ void main() {
               .duration,
           const Duration(minutes: 3),
         );
-        if (!mornye) expect(miniProgress(), closeTo(1 / 6, 0.001));
+        if (!mosix) expect(miniProgress(), closeTo(1 / 6, 0.001));
         expect(metadataReads.length, readsBefore);
         expect(tester.takeException(), isNull);
       },
@@ -363,13 +363,13 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  for (final mornye in [false, true]) {
-    testWidgets('cover style switches live and survives rotation ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('cover style switches live and survives rotation ($mosix)', (
       tester,
     ) async {
       await pumpNowPlaying(
         tester,
-        theme: mornye ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
+        theme: mosix ? MosixTheme.build(Brightness.dark) : AppTheme.light(),
         size: const Size(390, 844),
       );
       mediaItems.add(item('first'));
@@ -381,7 +381,7 @@ void main() {
           .read(settingsProvider.notifier)
           .setPlayerCoverStyle('fullscreen');
       await settlePlayer(tester);
-      if (mornye) {
+      if (mosix) {
         expect(
           tester
               .widget<MosixPlayerLayout>(find.byType(MosixPlayerLayout))
@@ -407,7 +407,7 @@ void main() {
       }
       tester.view.physicalSize = const Size(844, 390);
       await settlePlayer(tester);
-      if (!mornye) {
+      if (!mosix) {
         expect(find.byType(MaterialPlayerBackdrop), findsNothing);
         expect(
           tester
@@ -422,7 +422,7 @@ void main() {
       container.read(settingsProvider.notifier).setPlayerCoverStyle('default');
       await settlePlayer(tester);
       expect(find.byType(MaterialPlayerBackdrop), findsNothing);
-      if (mornye) {
+      if (mosix) {
         expect(
           tester
               .widget<MosixPlayerLayout>(find.byType(MosixPlayerLayout))
@@ -2767,12 +2767,12 @@ void main() {
     }
   }
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets('swiping up the mini player opens the player '
-        '(Mosix: $mornye)', (tester) async {
+        '(Mosix: $mosix)', (tester) async {
       await pumpNowPlaying(
         tester,
-        theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+        theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
         size: const Size(393, 852),
         // Paused, so the Material progress bar lets the frames settle.
         wrapPlayer: (_) => const Scaffold(
@@ -3496,9 +3496,9 @@ void main() {
     );
   }
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'TTML V3 without group metadata keeps the primary side ($mornye)',
+      'TTML V3 without group metadata keeps the primary side ($mosix)',
       (tester) async {
         metadataOverrides['lyrics'] = '''
 <tt xmlns="http://www.w3.org/ns/ttml" xmlns:m="http://www.w3.org/ns/ttml#metadata">
@@ -3509,13 +3509,13 @@ void main() {
         addTearDown(playback.close);
         await pumpNowPlaying(
           tester,
-          theme: mornye ? MosixTheme.build(Brightness.dark) : null,
+          theme: mosix ? MosixTheme.build(Brightness.dark) : null,
           size: const Size(390, 1100),
           playbackEvents: playback.stream,
         );
         mediaItems.add(item('first'));
         await settlePlayer(tester);
-        if (mornye) {
+        if (mosix) {
           await tester.tap(findAppIcon(CupertinoIcons.quote_bubble));
         } else {
           await tester.tap(
@@ -3547,7 +3547,7 @@ void main() {
 
     for (final ttml in [false, true]) {
       testWidgets(
-        'backing vocals stay smaller under the lead with independent timing (Mosix: $mornye, TTML: $ttml)',
+        'backing vocals stay smaller under the lead with independent timing (Mosix: $mosix, TTML: $ttml)',
         (tester) async {
           metadataOverrides['lyrics'] = ttml
               ? '''
@@ -3564,13 +3564,13 @@ void main() {
           addTearDown(playback.close);
           await pumpNowPlaying(
             tester,
-            theme: mornye ? MosixTheme.build(Brightness.dark) : null,
+            theme: mosix ? MosixTheme.build(Brightness.dark) : null,
             size: const Size(390, 1100),
             playbackEvents: playback.stream,
           );
           mediaItems.add(item('first'));
           await settlePlayer(tester);
-          if (mornye) {
+          if (mosix) {
             await tester.tap(findAppIcon(CupertinoIcons.quote_bubble));
           } else {
             await tester.tap(
@@ -3645,7 +3645,7 @@ void main() {
             lessThan(lead.style!.fontSize! * 0.85),
           );
           expect(backing.textAlign, TextAlign.end);
-          if (mornye) {
+          if (mosix) {
             // Inactive vocals shrink around their center. Check the row gap
             // before that paint transform, rather than the scaled text bounds.
             Finder lyricScale(Finder content) => find
@@ -3667,7 +3667,7 @@ void main() {
     }
 
     testWidgets(
-      'simultaneous wrapped lyrics stay inside the viewport ($mornye)',
+      'simultaneous wrapped lyrics stay inside the viewport ($mosix)',
       (tester) async {
         const lead =
             'The first singer has a long line that wraps across several rows';
@@ -3678,14 +3678,14 @@ void main() {
         addTearDown(playback.close);
         await pumpNowPlaying(
           tester,
-          theme: mornye ? MosixTheme.build(Brightness.dark) : null,
+          theme: mosix ? MosixTheme.build(Brightness.dark) : null,
           size: const Size(390, 1100),
           playbackEvents: playback.stream,
         );
         mediaItems.add(item('first'));
         await settlePlayer(tester);
         await tester.tap(
-          mornye
+          mosix
               ? findAppIcon(CupertinoIcons.quote_bubble)
               : find.byKey(const ValueKey('material-lyrics-toggle')),
         );
@@ -3721,7 +3721,7 @@ void main() {
     );
 
     testWidgets(
-      'singers keep their side before and during overlapping vocals ($mornye)',
+      'singers keep their side before and during overlapping vocals ($mosix)',
       (tester) async {
         metadataOverrides['lyrics'] =
             '[x-romaji:2000:${base64.encode(utf8.encode('Guest reading'))}]\n'
@@ -3732,13 +3732,13 @@ void main() {
         addTearDown(playback.close);
         await pumpNowPlaying(
           tester,
-          theme: mornye ? MosixTheme.build(Brightness.dark) : null,
+          theme: mosix ? MosixTheme.build(Brightness.dark) : null,
           size: const Size(390, 1100),
           playbackEvents: playback.stream,
         );
         mediaItems.add(item('first'));
         await settlePlayer(tester);
-        if (mornye) {
+        if (mosix) {
           await tester.tap(findAppIcon(CupertinoIcons.quote_bubble));
         } else {
           await tester.tap(
@@ -3838,7 +3838,7 @@ void main() {
       },
     );
 
-    testWidgets('player shows original, romanization and English ($mornye)', (
+    testWidgets('player shows original, romanization and English ($mosix)', (
       tester,
     ) async {
       metadataOverrides['lyrics'] =
@@ -3847,12 +3847,12 @@ void main() {
           '[00:01.01]Original text';
       await pumpNowPlaying(
         tester,
-        theme: mornye ? MosixTheme.build(Brightness.dark) : null,
+        theme: mosix ? MosixTheme.build(Brightness.dark) : null,
         size: const Size(390, 844),
       );
       mediaItems.add(item('first'));
       await settlePlayer(tester);
-      if (mornye) {
+      if (mosix) {
         await tester.tap(findAppIcon(CupertinoIcons.quote_bubble));
       } else {
         await tester.tap(find.byKey(const ValueKey('material-lyrics-toggle')));
@@ -3861,7 +3861,7 @@ void main() {
       for (final text in ['Original text', 'Romanized text', 'English text']) {
         expect(find.text(text), findsOneWidget);
       }
-      if (mornye) {
+      if (mosix) {
         final pronunciation = tester.widget<Text>(find.text('Romanized text'));
         final translation = tester.widget<Text>(find.text('English text'));
         expect(pronunciation.style?.fontSize, 22);
@@ -3880,7 +3880,7 @@ void main() {
     });
 
     testWidgets(
-      'lyric language toggles fade, resize and remember choices ($mornye)',
+      'lyric language toggles fade, resize and remember choices ($mosix)',
       (tester) async {
         metadataOverrides['lyrics'] =
             '[x-romaji:1009:${base64.encode(utf8.encode('Romanized text'))}]\n'
@@ -3889,7 +3889,7 @@ void main() {
         Future<void> openPlayer(String id) async {
           await pumpNowPlaying(
             tester,
-            theme: mornye ? MosixTheme.build(Brightness.dark) : null,
+            theme: mosix ? MosixTheme.build(Brightness.dark) : null,
             size: const Size(390, 844),
             playback: PlaybackState(
               processingState: AudioProcessingState.ready,
@@ -3898,7 +3898,7 @@ void main() {
           );
           mediaItems.add(item(id));
           await settlePlayer(tester);
-          if (mornye) {
+          if (mosix) {
             await tester.tap(findAppIcon(CupertinoIcons.quote_bubble));
           } else {
             await tester.tap(
@@ -3969,7 +3969,7 @@ void main() {
       },
     );
 
-    testWidgets('finished lyric stays bright until the next lead ($mornye)', (
+    testWidgets('finished lyric stays bright until the next lead ($mosix)', (
       tester,
     ) async {
       metadataOverrides['lyrics'] =
@@ -3979,14 +3979,14 @@ void main() {
       addTearDown(playback.close);
       await pumpNowPlaying(
         tester,
-        theme: mornye ? MosixTheme.build(Brightness.dark) : null,
+        theme: mosix ? MosixTheme.build(Brightness.dark) : null,
         size: const Size(390, 844),
         playbackEvents: playback.stream,
       );
       mediaItems.add(item('first'));
       await settlePlayer(tester);
       await tester.tap(
-        mornye
+        mosix
             ? findAppIcon(CupertinoIcons.quote_bubble)
             : find.byKey(const ValueKey('material-lyrics-toggle')),
       );
@@ -4021,7 +4021,7 @@ void main() {
     });
 
     testWidgets('an unfinished line holds the view while the next starts '
-        '($mornye)', (tester) async {
+        '($mosix)', (tester) async {
       metadataOverrides['lyrics'] =
           '[00:01.00]<00:01.00>Long <00:02.00>held<00:06.00>\n'
           '[00:04.00]<00:04.00>Next<00:05.00>\n'
@@ -4030,14 +4030,14 @@ void main() {
       addTearDown(playback.close);
       await pumpNowPlaying(
         tester,
-        theme: mornye ? MosixTheme.build(Brightness.dark) : null,
+        theme: mosix ? MosixTheme.build(Brightness.dark) : null,
         size: const Size(390, 844),
         playbackEvents: playback.stream,
       );
       mediaItems.add(item('first'));
       await settlePlayer(tester);
       await tester.tap(
-        mornye
+        mosix
             ? findAppIcon(CupertinoIcons.quote_bubble)
             : find.byKey(const ValueKey('material-lyrics-toggle')),
       );
@@ -4075,7 +4075,7 @@ void main() {
     });
 
     testWidgets(
-      'original and romanization follow word timing and pauses ($mornye)',
+      'original and romanization follow word timing and pauses ($mosix)',
       (tester) async {
         final romanizationWords = base64.encode(
           utf8.encode(
@@ -4094,13 +4094,13 @@ void main() {
         addTearDown(playback.close);
         await pumpNowPlaying(
           tester,
-          theme: mornye ? MosixTheme.build(Brightness.dark) : null,
+          theme: mosix ? MosixTheme.build(Brightness.dark) : null,
           size: const Size(390, 844),
           playbackEvents: playback.stream,
         );
         mediaItems.add(item('first'));
         await settlePlayer(tester);
-        if (mornye) {
+        if (mosix) {
           await tester.tap(findAppIcon(CupertinoIcons.quote_bubble));
         } else {
           await tester.tap(
@@ -4119,7 +4119,7 @@ void main() {
           );
           await settlePlayer(tester);
           final pixels = <int>[];
-          for (final phrase in mornye ? text.split(' ') : [text]) {
+          for (final phrase in mosix ? text.split(' ') : [text]) {
             final paint = find.descendant(
               of: find.byWidgetPredicate(
                 (widget) =>
@@ -4158,7 +4158,7 @@ void main() {
 
         for (final text in ['First second', 'Firsu secondu']) {
           final singingFirst = await pixelsAt(1100, text);
-          final moves = mornye && text == 'First second';
+          final moves = mosix && text == 'First second';
           final firstEnded = await pixelsAt(moves ? 1800 : 1307, text);
           expect(firstEnded, isNot(orderedEquals(singingFirst)));
           if (moves) {
@@ -4177,7 +4177,7 @@ void main() {
         }
         final originalPixels = await pixelsAt(1100, 'First second');
         final options = find.byKey(const ValueKey('lyrics-language-options'));
-        if (mornye && options.hitTestable().evaluate().isEmpty) {
+        if (mosix && options.hitTestable().evaluate().isEmpty) {
           final bounds = tester.getRect(find.byType(ListView));
           await tester.tapAt(Offset(bounds.right - 6, bounds.top + 10));
           await settlePlayer(tester);

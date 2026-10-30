@@ -1,7 +1,7 @@
 FFmpeg
 Copyright (c) the FFmpeg developers. https://ffmpeg.org/
 
-Mornye uses FFmpeg for audio conversion, tagging, analysis and artwork
+Mosix uses FFmpeg for audio conversion, tagging, analysis and artwork
 handling. Desktop builds ship unmodified, separately executable `ffmpeg` and
 `ffprobe` programs built without GPL or nonfree components. They also contain
 LAME (LGPL 2.0 or later), the SoX Resampler library (LGPL 2.1 or later) and
@@ -26,9 +26,9 @@ A PARTICULAR PURPOSE. See the GNU Lesser General Public License below for
 more details.
 
 Source code offer: the complete corresponding source code of the FFmpeg
-version shipped with Mornye, together with the scripts and configuration used
+version shipped with Mosix, together with the scripts and configuration used
 to build it, is available from https://ffmpeg.org/download.html and from the
-Mornye project. On request, the Mornye maintainers will provide a copy of
+Mosix project. On request, the Mosix maintainers will provide a copy of
 that source code for at least three years after the release that included it,
 for no more than the cost of physically performing the distribution. Each
 desktop build also includes SOURCE.txt next to the FFmpeg programs, naming the

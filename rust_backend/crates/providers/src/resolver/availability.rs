@@ -3,8 +3,8 @@
 mod cache;
 use super::{Check, Metadata, PlatformResolverService, ResolverError};
 pub use cache::AvailabilityService;
-use mornye_core::metadata::TrackMetadata;
-use mornye_network::{query, url::UrlParts};
+use mosix_core::metadata::TrackMetadata;
+use mosix_network::{query, url::UrlParts};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -137,9 +137,9 @@ pub fn youtube_id_from_url(value: &str) -> String {
         .and_then(|values| values.first())
         && !id.is_empty()
     {
-        return mornye_core::lyrics::text_from_bytes(id);
+        return mosix_core::lyrics::text_from_bytes(id);
     }
-    let path = mornye_core::lyrics::text_from_bytes(&url.path);
+    let path = mosix_core::lyrics::text_from_bytes(&url.path);
     path.split("/embed/")
         .nth(1)
         .unwrap_or_default()

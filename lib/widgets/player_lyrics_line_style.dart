@@ -35,7 +35,7 @@ TextStyle _primaryLyricStyle(BuildContext context, {bool background = false}) =>
     DefaultTextStyle.of(context).style.merge(
       (Theme.of(context).textTheme.headlineSmall ?? const TextStyle()).copyWith(
         fontSize: context.isMosix
-            ? _mornyeLyricFontSize * (background ? 0.68 : 1)
+            ? _mosixLyricFontSize * (background ? 0.68 : 1)
             : background
             ? _materialBackgroundLyricFontSize
             : _materialLyricFontSize,

@@ -4,7 +4,7 @@ use super::{
     Check, DeezerClient, ResolverError,
     cache::{Bucket, Value},
 };
-use mornye_core::metadata::{
+use mosix_core::metadata::{
     AlbumInfoMetadata, AlbumResponsePayload, AlbumTrackMetadata, ArtistAlbumMetadata,
     ArtistInfoMetadata, ArtistResponsePayload, PlaylistInfoMetadata, PlaylistOwner,
     PlaylistResponsePayload, PlaylistTrackCount,

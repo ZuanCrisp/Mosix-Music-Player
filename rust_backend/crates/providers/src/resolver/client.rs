@@ -5,8 +5,8 @@ use super::{
 };
 use super::{http::ResolverHttp, rate::RateLimiter};
 use html5ever::tendril::TendrilSink;
-use mornye_core::{lyrics, resolver as models};
-use mornye_network::{NetworkService, url::UrlParts};
+use mosix_core::{lyrics, resolver as models};
+use mosix_network::{NetworkService, url::UrlParts};
 use scraper::{Html, HtmlTreeSink};
 use serde::de::DeserializeOwned;
 use std::collections::BTreeMap;

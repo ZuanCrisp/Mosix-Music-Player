@@ -1,5 +1,5 @@
 [package]
-name = "mornye-desktop"
+name = "mosix-desktop"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -7,12 +7,12 @@ license.workspace = true
 publish.workspace = true
 
 [lib]
-name = "mornye_desktop"
+name = "mosix_desktop"
 # cdylib for dart:ffi; rlib so integration tests can call the C ABI in-process.
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-mornye-mobile = { path = "../mobile" }
+mosix-mobile = { path = "../mobile" }
 chrono.workspace = true
 getrandom.workspace = true
 notify.workspace = true

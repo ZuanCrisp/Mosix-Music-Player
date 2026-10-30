@@ -17,7 +17,7 @@ if Path(sys.argv[0]).name == 'fvm':
     assert args.pop(0) in ('flutter', 'dart')
 with open(os.environ['BUILD_TEST_LOG'], 'a') as log:
     log.write(json.dumps({'tool': Path(sys.argv[0]).name, 'args': args,
-        'sdk': os.environ.get('MORNYE_DISCORD_SDK', '1')}) + '\\n')
+        'sdk': os.environ.get('MOSIX_DISCORD_SDK', '1')}) + '\\n')
 if args == ['scripts/prepare_flutter_sdk.dart']:
     sys.exit(int(os.environ.get('BUILD_TEST_PATCH_FAIL', '0')))
 elif args == ['--version', '--machine']:
@@ -26,7 +26,7 @@ else:
     assert args[:2] == ['build', 'apk']
     output = Path('build/app/outputs/flutter-apk')
     output.mkdir(parents=True, exist_ok=True)
-    for abi in os.environ['MORNYE_RUST_ANDROID_ABIS'].split(','):
+    for abi in os.environ['MOSIX_RUST_ANDROID_ABIS'].split(','):
         (output / ('app-' + abi + '-release.apk')).write_bytes(b'fixture split')
     (output / 'app-release.apk').write_bytes(b'fixture universal')
 """
@@ -64,7 +64,7 @@ class AndroidBuildScriptTest(unittest.TestCase):
         self.tools.mkdir()
         self.log = self.project / "calls.jsonl"
         self.env = os.environ.copy()
-        for key in ("MORNYE_DISCORD_SDK", "MORNYE_RUST_ANDROID_ABIS"):
+        for key in ("MOSIX_DISCORD_SDK", "MOSIX_RUST_ANDROID_ABIS"):
             self.env.pop(key, None)
         self.env.update(PATH=str(self.tools) + os.pathsep + os.defpath, BUILD_TEST_LOG=str(self.log))
         self.tool(self.tools / "python3", PYTHON_STUB)
@@ -107,7 +107,7 @@ class AndroidBuildScriptTest(unittest.TestCase):
         self.assertEqual(audits[-1][audits[-1].index("--abis") + 1], "arm64-v8a,armeabi-v7a")
 
     def test_lite_single_abi_ignores_and_preserves_previous_artifacts(self):
-        self.env["MORNYE_RUST_ANDROID_ABIS"] = "arm64-v8a"
+        self.env["MOSIX_RUST_ANDROID_ABIS"] = "arm64-v8a"
         output = self.project / "build/app/outputs/flutter-apk"
         output.mkdir(parents=True)
         previous = output / "app-armeabi-v7a-release.apk"
@@ -126,8 +126,8 @@ class AndroidBuildScriptTest(unittest.TestCase):
         self.assertEqual(previous.read_bytes(), b"previous build")
 
     def test_explicit_sdk_disable_is_honored_without_lite_argument(self):
-        self.env["MORNYE_DISCORD_SDK"] = "0"
-        self.env["MORNYE_RUST_ANDROID_ABIS"] = "armeabi-v7a"
+        self.env["MOSIX_DISCORD_SDK"] = "0"
+        self.env["MOSIX_RUST_ANDROID_ABIS"] = "armeabi-v7a"
         result = self.run_build()
         self.assertEqual(result.returncode, 0, result.stderr)
         audits = [call["args"] for call in self.calls() if call["tool"] == "audit"]
@@ -145,7 +145,7 @@ class AndroidBuildScriptTest(unittest.TestCase):
         self.assertEqual(preparation["tool"], "fvm")
 
     def test_production_requires_full_even_with_inherited_sdk_disable(self):
-        self.env["MORNYE_DISCORD_SDK"] = "0"
+        self.env["MOSIX_DISCORD_SDK"] = "0"
         result = self.run_build("--production")
         self.assertEqual(result.returncode, 0, result.stderr)
         calls = self.calls()
@@ -198,9 +198,9 @@ class AndroidBuildScriptTest(unittest.TestCase):
     def test_invalid_or_overridden_abis_stop_before_flutter(self):
         for abis in ("", "x86_64", "arm64-v8a,arm64-v8a", "armeabi-v7a, arm64-v8a"):
             with self.subTest(abis=abis):
-                self.env["MORNYE_RUST_ANDROID_ABIS"] = abis
+                self.env["MOSIX_RUST_ANDROID_ABIS"] = abis
                 self.assertNotEqual(self.run_build().returncode, 0)
-        self.env.pop("MORNYE_RUST_ANDROID_ABIS")
+        self.env.pop("MOSIX_RUST_ANDROID_ABIS")
         self.assertNotEqual(self.run_build("--target-platform=android-x64").returncode, 0)
         self.assertFalse(self.log.exists())
 

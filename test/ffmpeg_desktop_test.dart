@@ -141,15 +141,15 @@ void main() {
       expect(
         DesktopFFmpegTools.searchDirectories(
           operatingSystem: 'linux',
-          executablePath: '/opt/mornye/mornye',
+          executablePath: '/opt/mosix/mosix',
           environment: {'PATH': '/usr/bin'},
         ),
-        ['/opt/mornye/lib/ffmpeg', '/usr/bin'],
+        ['/opt/mosix/lib/ffmpeg', '/usr/bin'],
       );
       expect(
         DesktopFFmpegTools.searchDirectories(
           operatingSystem: 'windows',
-          executablePath: r'C:\Program Files\Mosix\mornye.exe',
+          executablePath: r'C:\Program Files\Mosix\mosix.exe',
           environment: {'PATH': r'C:\tools;;C:\bin'},
         ),
         [r'C:\Program Files\Mosix\ffmpeg', r'C:\tools', r'C:\bin'],
@@ -159,12 +159,12 @@ void main() {
     test('takes each tool from the first folder that has it', () async {
       final existing = {
         '/usr/local/bin/ffmpeg',
-        '/opt/mornye/lib/ffmpeg/ffmpeg',
-        '/opt/mornye/lib/ffmpeg/ffprobe',
+        '/opt/mosix/lib/ffmpeg/ffmpeg',
+        '/opt/mosix/lib/ffmpeg/ffprobe',
       };
       final tools = await DesktopFFmpegTools.locate(
         operatingSystem: 'linux',
-        executablePath: '/opt/mornye/mornye',
+        executablePath: '/opt/mosix/mosix',
         environment: {
           'MOSIX_FFMPEG_DIR': '/usr/local/bin',
           'PATH': '/usr/bin',
@@ -172,13 +172,13 @@ void main() {
         isFile: (path) async => existing.contains(path),
       );
       expect(tools.ffmpegPath, '/usr/local/bin/ffmpeg');
-      expect(tools.ffprobePath, '/opt/mornye/lib/ffmpeg/ffprobe');
+      expect(tools.ffprobePath, '/opt/mosix/lib/ffmpeg/ffprobe');
     });
 
     test('appends .exe on Windows and leaves missing tools null', () async {
       final tools = await DesktopFFmpegTools.locate(
         operatingSystem: 'windows',
-        executablePath: r'C:\Mosix\mornye.exe',
+        executablePath: r'C:\Mosix\mosix.exe',
         environment: const {},
         isFile: (path) async => path == r'C:\Mosix\ffmpeg\ffmpeg.exe',
       );
@@ -369,7 +369,7 @@ void main() {
       DesktopFFmpegRunner.debugShared = DesktopFFmpegRunner(
         tools: () async => tools,
       );
-      final directory = await Directory.systemTemp.createTemp('mornye-ff-');
+      final directory = await Directory.systemTemp.createTemp('mosix-ff-');
       addTearDown(() async {
         debugDesktopPlatformOverride = null;
         DesktopFFmpegRunner.debugShared = null;

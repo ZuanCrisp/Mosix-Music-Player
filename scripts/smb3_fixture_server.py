@@ -30,7 +30,7 @@ def main():
     if args.guest and args.encryption != "off":
         parser.error("Guest sessions cannot require encryption; use --encryption off")
     username = pwd.getpwuid(os.getuid()).pw_name
-    with TemporaryDirectory(prefix="mornye-samba-") as directory:
+    with TemporaryDirectory(prefix="mosix-samba-") as directory:
         root = Path(directory)
         for name in ["private", "lock", "state", "cache", "run", "music"]:
             (root / name).mkdir()

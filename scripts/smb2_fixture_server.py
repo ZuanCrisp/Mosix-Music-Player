@@ -16,7 +16,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("--deletion", action="store_true")
     args = parser.parse_args()
-    with TemporaryDirectory(prefix="mornye-smb-test-") as root:
+    with TemporaryDirectory(prefix="mosix-smb-test-") as root:
         (Path(root) / "A B.wav").write_bytes(bytes(range(256)))
         if args.deletion:
             deletion = Path(root) / "Deletion"

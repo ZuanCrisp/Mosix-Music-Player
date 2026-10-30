@@ -13,7 +13,7 @@ import 'package:mosix/services/app_navigation_service.dart';
 import 'package:mosix/services/music_playback_deck.dart'
     show usbHardwareVolume;
 import 'package:mosix/services/shell_navigation_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_refresh_indicator.dart';
 import 'package:mosix/widgets/desktop/desktop_commands.dart';
 import 'package:mosix/widgets/desktop/desktop_inspector.dart';
@@ -151,7 +151,7 @@ class _DesktopShortcutsState extends ConsumerState<DesktopShortcuts> {
   void _selectDestination(int position) {
     final context = _rootNavigator?.context ?? this.context;
     final tabs = desktopDestinationTabs(
-      mornye: context.isMosix,
+      mosix: context.isMosix,
       showStore: ref.read(settingsProvider).showExtensionStore,
     );
     if (position < 1 || position > tabs.length) return;
@@ -299,21 +299,21 @@ class _DesktopMenuBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final material = MaterialLocalizations.of(context);
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     return Consumer(
       builder: (context, ref, child) {
         final showStore = ref.watch(
           settingsProvider.select((s) => s.showExtensionStore),
         );
         final tabs = desktopDestinationTabs(
-          mornye: mornye,
+          mosix: mosix,
           showStore: showStore,
         );
         String tabLabel(ShellTab tab) => switch (tab) {
           ShellTab.home => l10n.navHome,
           ShellTab.library => l10n.navLibrary,
           ShellTab.repository => l10n.navStore,
-          ShellTab.search => l10n.mornyeSearch,
+          ShellTab.search => l10n.mosixSearch,
           ShellTab.settings => l10n.navSettings,
         };
         return PlatformMenuBar(
@@ -352,7 +352,7 @@ class _DesktopMenuBar extends StatelessWidget {
             ),
             PlatformMenu(
               label: l10n.desktopMenuFile,
-              menus: [_command(l10n.mornyeSearch, DesktopCommand.search)],
+              menus: [_command(l10n.mosixSearch, DesktopCommand.search)],
             ),
             PlatformMenu(
               label: l10n.desktopMenuEdit,

@@ -30,7 +30,7 @@ fn decode(value: &str) -> String {
 
 pub(crate) fn parse(raw: &str) -> Option<CallbackRoute> {
     let url = url::Url::parse(raw.trim()).ok()?;
-    if !url.scheme().eq_ignore_ascii_case("mornye") {
+    if !url.scheme().eq_ignore_ascii_case("mosix") && !url.scheme().eq_ignore_ascii_case("mornye") {
         return None;
     }
     let host = url.host_str().unwrap_or("").to_lowercase();

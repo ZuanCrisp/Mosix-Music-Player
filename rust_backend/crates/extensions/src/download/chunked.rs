@@ -6,7 +6,7 @@ use super::{
     status_failure, validator,
 };
 use crate::files::FilePath;
-use mornye_network::{HttpRequest, HttpResponse, HttpStream, NetworkSession};
+use mosix_network::{HttpRequest, HttpResponse, HttpStream, NetworkSession};
 use std::io::Write;
 use std::time::Duration;
 

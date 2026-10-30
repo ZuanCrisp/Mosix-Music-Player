@@ -16,7 +16,7 @@ import 'package:mosix/screens/track_metadata_screen.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/services/library_search.dart';
 import 'package:mosix/services/music_player_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/library_search_results.dart';
 import 'package:mosix/widgets/track_card.dart';
 
@@ -46,10 +46,10 @@ LibrarySearchHit _hit(
 );
 
 void main() {
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final local in [false, true]) {
       testWidgets(
-        'search opens metadata; only Play starts audio ($mornye/$local)',
+        'search opens metadata; only Play starts audio ($mosix/$local)',
         (tester) async {
           SharedPreferences.setMockInitialValues({});
           FlutterSecureStorage.setMockInitialValues({});
@@ -121,7 +121,7 @@ void main() {
                 }),
               ],
               child: MaterialApp(
-                theme: mornye
+                theme: mosix
                     ? MosixTheme.build(Brightness.dark)
                     : ThemeData(),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -139,7 +139,7 @@ void main() {
           await tester.pumpAndSettle();
           expect(
             tester.widget<TrackCard>(find.byType(TrackCard)).style,
-            mornye ? TrackCardStyle.flat : TrackCardStyle.filled,
+            mosix ? TrackCardStyle.flat : TrackCardStyle.filled,
           );
           await tester.tap(find.text('Song'));
           await tester.pumpAndSettle();
@@ -161,8 +161,8 @@ void main() {
     }
   }
 
-  for (final mornye in [false, true]) {
-    testWidgets('Library shows every result type and paginates ($mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('Library shows every result type and paginates ($mosix)', (
       tester,
     ) async {
       final requests = <LibrarySearchRequest>[];
@@ -179,7 +179,7 @@ void main() {
             }),
           ],
           child: MaterialApp(
-            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
@@ -262,9 +262,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'long-press selects songs for Library batch actions ($mornye)',
+      'long-press selects songs for Library batch actions ($mosix)',
       (tester) async {
         SharedPreferences.setMockInitialValues({});
         FlutterSecureStorage.setMockInitialValues({});
@@ -312,7 +312,7 @@ void main() {
               ),
             ],
             child: MaterialApp(
-              theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+              theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(

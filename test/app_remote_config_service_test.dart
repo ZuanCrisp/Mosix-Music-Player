@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/screens/settings/donate_page.dart';
 import 'package:mosix/services/app_remote_config_service.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_progress_indicator.dart';
 
 class _TrackedClient extends MockClient {

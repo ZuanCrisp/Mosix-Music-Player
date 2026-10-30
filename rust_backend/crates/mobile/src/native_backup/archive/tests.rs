@@ -4,7 +4,7 @@ use tempfile::TempDir;
 
 fn metadata(version: u64, data: Value) -> Vec<u8> {
     serde_json::to_vec(&json!({
-        "magic": if version == 2 { "spotiflac-backup" } else { "mornye-backup" },
+        "magic": if version == 2 { "spotiflac-backup" } else { "mosix-backup" },
         "format_version": version,
         "app_version": "5.1.0", "history_count": 1, "data": data,
     }))
@@ -41,7 +41,7 @@ fn native_archive_round_trip_preserves_payloads_and_selective_categories() {
                 metadata(
                     version,
                     json!({
-                        "settings": {"theme": "mornye"},
+                        "settings": {"theme": "mosix"},
                         "collections": {"playlists": [{"id": "a", "name": "音楽"}]},
                         "playlist_covers": {"a": {"file": "covers/a.jpg", "ext": ".jpg"}},
                         "profile": {"name": "Listener", "photo": PHOTO_ENTRY},

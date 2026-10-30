@@ -1,7 +1,7 @@
 #![cfg(unix)]
-use mornye_core::cancellation::{CancellationDomain, CancellationRegistry};
-use mornye_extensions::RuntimeLimits;
-use mornye_extensions::environment::ExtensionEnvironment;
+use mosix_core::cancellation::{CancellationDomain, CancellationRegistry};
+use mosix_extensions::RuntimeLimits;
+use mosix_extensions::environment::ExtensionEnvironment;
 use serde_json::{Value, json};
 use std::fs;
 use std::io::{Read, Write};

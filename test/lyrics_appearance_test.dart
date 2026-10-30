@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/models/theme_settings.dart';
 import 'package:mosix/providers/theme_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/lyrics_parser.dart';
 import 'package:mosix/widgets/app_slider.dart';
 import 'package:mosix/widgets/lyrics_size_setting.dart';

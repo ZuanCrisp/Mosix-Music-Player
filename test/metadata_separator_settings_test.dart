@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/settings/metadata_separator_settings_page.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/settings_group.dart';
 
@@ -13,10 +13,10 @@ import 'support/fixed_settings.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final size in [const Size(390, 844), const Size(844, 390)]) {
       testWidgets(
-        'separator preview, save, cancel and reset ($mornye, $size)',
+        'separator preview, save, cancel and reset ($mosix, $size)',
         (tester) async {
           tester.view.physicalSize = size;
           tester.view.devicePixelRatio = 1;
@@ -31,7 +31,7 @@ void main() {
             UncontrolledProviderScope(
               container: container,
               child: MaterialApp(
-                theme: ThemeData(extensions: [if (mornye) const MosixTheme()]),
+                theme: ThemeData(extensions: [if (mosix) const MosixTheme()]),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
                 home: const MetadataSeparatorSettingsPage(),

@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 Color extensionHealthColor(BuildContext context, String status) {
   final colorScheme = Theme.of(context).colorScheme;

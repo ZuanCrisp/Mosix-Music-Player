@@ -3,8 +3,8 @@
 
 use super::*;
 use crate::lyrics::http;
-use mornye_core::lyrics::{decode_document, payloads};
-use mornye_core::matching::lowercase;
+use mosix_core::lyrics::{decode_document, payloads};
+use mosix_core::matching::lowercase;
 
 pub(super) fn spotify_id(raw: &str) -> String {
     let mut raw = raw.trim();

@@ -4,8 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mosix/services/cover_cache_manager.dart';
 import 'package:mosix/constants/app_info.dart';
 import 'package:mosix/l10n/l10n.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/utils/nav_bar_inset.dart';
 import 'package:mosix/widgets/settings_group.dart';
@@ -180,31 +180,6 @@ class AboutPage extends StatelessWidget {
                     title: context.l10n.aboutFeatureRequest,
                     subtitle: context.l10n.aboutFeatureRequestSubtitle,
                     onTap: () => _launchUrl('${AppInfo.githubUrl}/issues/new'),
-                    showDivider: false,
-                  ),
-                ],
-              ),
-            ),
-
-            SliverToBoxAdapter(
-              child: SettingsSectionHeader(title: context.l10n.aboutSocial),
-            ),
-            SliverToBoxAdapter(
-              child: SettingsGroup(
-                connected: true,
-                children: [
-                  _AboutSettingsItem(
-                    icon: Icons.telegram,
-                    title: context.l10n.aboutTelegramChannel,
-                    subtitle: context.l10n.aboutTelegramChannelSubtitle,
-                    onTap: () => _launchUrl('https://t.me/mornyeupdates'),
-                    showDivider: true,
-                  ),
-                  _AboutSettingsItem(
-                    icon: Icons.forum_outlined,
-                    title: context.l10n.aboutTelegramChat,
-                    subtitle: context.l10n.aboutTelegramChatSubtitle,
-                    onTap: () => _launchUrl('https://t.me/mornyecommunity'),
                     showDivider: false,
                   ),
                 ],

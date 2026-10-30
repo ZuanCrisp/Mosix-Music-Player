@@ -3,7 +3,7 @@
 use super::{RecordStore, RuntimeHints, protocol};
 use crate::auth::{AuthRegistry, PendingAuthRequest};
 use crate::manifest::SignedSession;
-use mornye_network::{HttpRequest, HttpResponse, NetworkSession};
+use mosix_network::{HttpRequest, HttpResponse, NetworkSession};
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};

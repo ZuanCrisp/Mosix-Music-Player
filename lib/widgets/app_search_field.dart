@@ -3,10 +3,10 @@ import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mosix/providers/runtime_profile_provider.dart';
 import 'package:mosix/theme/app_tokens.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_icon_button.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 
 /// The standard search field used by top-level app surfaces.
 ///
@@ -46,9 +46,9 @@ class AppSearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final mornye = context.isMosix;
+    final mosix = context.isMosix;
     final radius = BorderRadius.circular(
-      mornye ? 28 : context.tokens.radiusSheet,
+      mosix ? 28 : context.tokens.radiusSheet,
     );
 
     final field = ValueListenableBuilder<TextEditingValue>(
@@ -62,7 +62,7 @@ class AppSearchField extends StatelessWidget {
           hintText: hintText,
           prefixIcon:
               prefixIcon ??
-              AppIcon(mornye ? CupertinoIcons.search : Icons.search),
+              AppIcon(mosix ? CupertinoIcons.search : Icons.search),
           suffixIcon:
               suffixIcon ??
               (value.text.isEmpty
@@ -70,7 +70,7 @@ class AppSearchField extends StatelessWidget {
                   : AppIconButton(
                       tooltip: clearTooltip,
                       icon: AppIcon(
-                        mornye
+                        mosix
                             ? CupertinoIcons.clear_circled_solid
                             : Icons.clear,
                       ),
@@ -91,12 +91,12 @@ class AppSearchField extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: radius,
-            borderSide: mornye
+            borderSide: mosix
                 ? BorderSide.none
                 : BorderSide(color: colorScheme.primary, width: 2),
           ),
           filled: true,
-          fillColor: mornye
+          fillColor: mosix
               ? Colors.transparent
               : colorScheme.surfaceContainerHigh,
           contentPadding: const EdgeInsets.symmetric(
@@ -109,11 +109,11 @@ class AppSearchField extends StatelessWidget {
         onTapOutside: (_) => FocusScope.of(context).unfocus(),
       ),
     );
-    if (!mornye) return field;
+    if (!mosix) return field;
     return Consumer(
       builder: (context, ref, child) => MosixGlass.navigation(
         radius: 28,
-        blurEnabled: ref.watch(mornyeBlurEnabledProvider),
+        blurEnabled: ref.watch(mosixBlurEnabledProvider),
         samplesBackdrop: samplesBackdrop,
         child: child!,
       ),

@@ -18,7 +18,7 @@ import 'package:mosix/screens/queue_tab.dart';
 import 'package:mosix/services/history_database.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_search_field.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -130,7 +130,7 @@ void main() {
   Future<void> pumpLibrary(
     WidgetTester tester, {
     bool desktop = false,
-    bool mornye = false,
+    bool mosix = false,
     bool reduceMotion = false,
     List<DateTime>? dates,
     List<UserPlaylistCollection> playlists = const [],
@@ -171,7 +171,7 @@ void main() {
           downloadQueueLookupProvider.overrideWithValue(queue),
         ],
         child: MaterialApp(
-          theme: mornye
+          theme: mosix
               ? MosixTheme.build(Brightness.light)
               : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -183,7 +183,7 @@ void main() {
             child: child!,
           ),
           // Mosix opens Songs as a section page from its Library root.
-          home: Scaffold(body: QueueTab(librarySection: mornye ? 'all' : null)),
+          home: Scaffold(body: QueueTab(librarySection: mosix ? 'all' : null)),
         ),
       ),
     );
@@ -338,22 +338,22 @@ void main() {
   });
 
   for (final desktop in [false, true]) {
-    for (final mornye in [false, true]) {
+    for (final mosix in [false, true]) {
       testWidgets('size sort applies from the Library menu '
-          '(desktop: $desktop, Mosix: $mornye)', (tester) async {
-        await pumpLibrary(tester, desktop: desktop, mornye: mornye);
+          '(desktop: $desktop, Mosix: $mosix)', (tester) async {
+        await pumpLibrary(tester, desktop: desktop, mosix: mosix);
         final l10n = l10nOf(tester);
         await tester.tap(
           find
               .text(
-                mornye ? l10n.libraryFilterTitle : l10n.libraryFilterSortLatest,
+                mosix ? l10n.libraryFilterTitle : l10n.libraryFilterSortLatest,
               )
               .hitTestable(),
         );
         for (var i = 0; i < 10; i++) {
           await tester.pump(const Duration(milliseconds: 50));
         }
-        if (mornye) {
+        if (mosix) {
           await tester.ensureVisible(
             find.text(l10n.libraryFilterSortSizeLargest),
           );
@@ -361,7 +361,7 @@ void main() {
         expect(find.text(l10n.libraryFilterSortSizeLargest), findsOneWidget);
         expect(find.text(l10n.libraryFilterSortSizeSmallest), findsOneWidget);
         await tester.tap(find.text(l10n.libraryFilterSortSizeLargest));
-        if (mornye) {
+        if (mosix) {
           await tester.ensureVisible(find.text(l10n.libraryFilterApply));
           await tester.tap(find.text(l10n.libraryFilterApply));
         }
@@ -400,7 +400,7 @@ void main() {
   });
 
   testWidgets('Mosix keeps its filter button', (tester) async {
-    await pumpLibrary(tester, mornye: true);
+    await pumpLibrary(tester, mosix: true);
     final l10n = l10nOf(tester);
 
     expect(find.byType(M3EButtonGroup), findsNothing);

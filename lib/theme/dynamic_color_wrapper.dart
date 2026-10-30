@@ -6,7 +6,7 @@ import 'package:mosix/providers/theme_provider.dart';
 import 'package:mosix/providers/custom_font_provider.dart';
 import 'package:mosix/theme/app_theme.dart';
 import 'package:mosix/models/theme_settings.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 class DynamicColorWrapper extends ConsumerWidget {
   final Widget Function(ThemeData light, ThemeData dark, ThemeMode mode)
@@ -24,23 +24,23 @@ class DynamicColorWrapper extends ConsumerWidget {
     // app, losing its state and briefly mounting a second macOS menu bar.
     return DynamicColorBuilder(
       builder: (lightDynamic, darkDynamic) {
-        if (themeSettings.style == AppThemeStyle.mornye) {
+        if (themeSettings.style == AppThemeStyle.mosix) {
           return builder(
             MosixTheme.build(
               Brightness.light,
-              accent: themeSettings.mornyeAccent,
+              accent: themeSettings.mosixAccent,
               useSystemFont: themeSettings.useSystemFont,
               fontFamily: fontFamily,
-              glassClarity: themeSettings.mornyeGlassClarity,
-              glassOutlines: themeSettings.mornyeGlassOutlines,
+              glassClarity: themeSettings.mosixGlassClarity,
+              glassOutlines: themeSettings.mosixGlassOutlines,
             ),
             MosixTheme.build(
               Brightness.dark,
-              accent: themeSettings.mornyeAccent,
+              accent: themeSettings.mosixAccent,
               useSystemFont: themeSettings.useSystemFont,
               fontFamily: fontFamily,
-              glassClarity: themeSettings.mornyeGlassClarity,
-              glassOutlines: themeSettings.mornyeGlassOutlines,
+              glassClarity: themeSettings.mosixGlassClarity,
+              glassOutlines: themeSettings.mosixGlassOutlines,
             ),
             themeSettings.themeMode,
           );

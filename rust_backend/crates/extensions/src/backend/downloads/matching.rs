@@ -1,10 +1,10 @@
 use cap_std::fs::OpenOptions;
-use mornye_core::downloads::DownloadRequest;
-use mornye_core::lyrics::matching::normalize_loose_artist;
-use mornye_core::matching::lowercase;
-use mornye_core::metadata::reenrich::{self, text};
-use mornye_core::resolver::{artists_match, titles_match, track_identity_title};
-use mornye_providers::resolver::Check;
+use mosix_core::downloads::DownloadRequest;
+use mosix_core::lyrics::matching::normalize_loose_artist;
+use mosix_core::matching::lowercase;
+use mosix_core::metadata::reenrich::{self, text};
+use mosix_core::resolver::{artists_match, titles_match, track_identity_title};
+use mosix_providers::resolver::Check;
 use serde_json::{Value, json};
 use std::io::{Read, Seek, SeekFrom};
 
@@ -37,7 +37,7 @@ pub(super) fn probe_result(
         let album = album_pending && text(result, "album").trim().is_empty();
         if (quality || album)
             && file.seek(SeekFrom::Start(0)).is_ok()
-            && let Ok(metadata) = mornye_core::tags::read_file_metadata(&mut file, &path, "", check)
+            && let Ok(metadata) = mosix_core::tags::read_file_metadata(&mut file, &path, "", check)
         {
             if quality {
                 for key in ["bit_depth", "sample_rate", "audio_codec"] {

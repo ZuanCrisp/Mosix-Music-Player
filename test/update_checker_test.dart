@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mosix/services/update_checker.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/runtime_profile_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/logger.dart';
 import 'package:mosix/widgets/update_dialog.dart';
 
@@ -284,9 +284,9 @@ void main() {
     expect(await checker.checkForUpdate(), isNull);
   });
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets(
-      'freshly discovered release opens the update dialog ($mornye)',
+      'freshly discovered release opens the update dialog ($mosix)',
       (tester) async {
         tester.view.physicalSize = const Size(390, 844);
         tester.view.devicePixelRatio = 1;
@@ -304,7 +304,7 @@ void main() {
           ProviderScope(
             overrides: [lowEndDeviceProvider.overrideWithValue(false)],
             child: MaterialApp(
-              theme: mornye ? MosixTheme.build(Brightness.dark) : null,
+              theme: mosix ? MosixTheme.build(Brightness.dark) : null,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(

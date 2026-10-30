@@ -7,8 +7,8 @@ import 'package:mosix/providers/runtime_profile_provider.dart';
 import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/providers/theme_provider.dart';
 import 'package:mosix/models/theme_settings.dart';
-import 'package:mosix/theme/mornye_theme.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/theme/mosix_theme.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 import 'package:mosix/utils/adaptive_layout.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/utils/nav_bar_inset.dart';
@@ -53,37 +53,16 @@ class AppearanceSettingsPage extends ConsumerWidget {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(
-                            style == AppThemeStyle.mornye
-                                ? 'Mosix'
+                            style == AppThemeStyle.mosix
+                                ? 'Mosix Theme'
                                 : 'Material',
                           ),
-                          if (style == AppThemeStyle.mornye)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'Beta',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
                         ],
                       ),
                       leading: context.isMosix
                           ? null
                           : AppIcon(
-                              style == AppThemeStyle.mornye
+                              style == AppThemeStyle.mosix
                                   ? Icons.music_note_outlined
                                   : Icons.palette_outlined,
                             ),
@@ -111,7 +90,7 @@ class AppearanceSettingsPage extends ConsumerWidget {
               ),
             ),
 
-            if (themeSettings.style == AppThemeStyle.mornye) ...[
+            if (themeSettings.style == AppThemeStyle.mosix) ...[
               SliverToBoxAdapter(
                 child: SettingsSectionHeader(title: context.l10n.sectionColor),
               ),
@@ -119,18 +98,18 @@ class AppearanceSettingsPage extends ConsumerWidget {
                 child: SettingsGroup(
                   children: [
                     _MosixAccentPicker(
-                      selected: themeSettings.mornyeAccent,
+                      selected: themeSettings.mosixAccent,
                       onChanged: ref
                           .read(themeProvider.notifier)
                           .setMosixAccent,
                     ),
                     const _MosixGlassClaritySlider(),
                     SettingsSwitchItem(
-                      key: const ValueKey('mornye-glass-outlines'),
+                      key: const ValueKey('mosix-glass-outlines'),
                       icon: Icons.rounded_corner,
                       title: context.l10n.appearanceGlassOutlines,
                       subtitle: context.l10n.appearanceGlassOutlinesSubtitle,
-                      value: themeSettings.mornyeGlassOutlines,
+                      value: themeSettings.mosixGlassOutlines,
                       onChanged: ref
                           .read(themeProvider.notifier)
                           .setMosixGlassOutlines,

@@ -221,13 +221,13 @@ String desktopDestinationTooltip(
 /// Desktop destinations in rail or sidebar order. Cmd/Ctrl+1..5 select them
 /// by position. Mosix reaches Search from the sidebar search field.
 List<ShellTab> desktopDestinationTabs({
-  required bool mornye,
+  required bool mosix,
   required bool showStore,
 }) => [
   ShellTab.home,
   ShellTab.library,
   if (showStore) ShellTab.repository,
-  if (mornye) ShellTab.search,
+  if (mosix) ShellTab.search,
   ShellTab.settings,
 ];
 

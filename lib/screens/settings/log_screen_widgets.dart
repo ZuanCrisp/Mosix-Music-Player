@@ -188,7 +188,7 @@ class _LogSummaryCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: AppContentCard(
         elevation: 0,
-        mornyeSurface: false,
+        mosixSurface: false,
         color: analysis.hasISPBlocking
             ? colorScheme.errorContainer.withValues(alpha: 0.5)
             : colorScheme.tertiaryContainer.withValues(alpha: 0.5),

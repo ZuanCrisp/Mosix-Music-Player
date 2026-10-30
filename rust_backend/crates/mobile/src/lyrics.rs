@@ -1,6 +1,6 @@
 use crate::cancellation::RequestLease;
 use crate::manager::{ExtensionManager, ExtensionManagerError};
-use mornye_extensions::backend::LyricsRequest as CoreRequest;
+use mosix_extensions::backend::LyricsRequest as CoreRequest;
 use std::sync::Arc;
 
 #[derive(uniffi::Record)]

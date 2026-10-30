@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/services/platform_bridge.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/ios_library_folder_sheet.dart';
 
 void main() {
@@ -39,11 +39,11 @@ void main() {
     await root.delete(recursive: true);
   });
 
-  Future<void> openSheet(WidgetTester tester, {bool mornye = false}) async {
+  Future<void> openSheet(WidgetTester tester, {bool mosix = false}) async {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+          theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
@@ -67,14 +67,14 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  for (final mornye in [false, true]) {
-    testWidgets('internal music bypasses Files (Mosix=$mornye)', (
+  for (final mosix in [false, true]) {
+    testWidgets('internal music bypasses Files (Mosix=$mosix)', (
       tester,
     ) async {
       final music = File('${documents.path}/Mosix/example.flac');
       music.parent.createSync(recursive: true);
       music.writeAsBytesSync([1, 2, 3]);
-      await openSheet(tester, mornye: mornye);
+      await openSheet(tester, mosix: mosix);
       expect(find.text('Choose from Files'), findsOneWidget);
       await tester.tap(find.text('App Documents Folder'));
       await tester.pumpAndSettle();

@@ -11,7 +11,7 @@ import 'package:mosix/services/concert_calendar_service.dart';
 import 'package:mosix/services/platform_bridge.dart';
 import 'package:mosix/services/shell_navigation_service.dart';
 import 'package:mosix/theme/cover_palette.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/nav_bar_inset.dart';
 import 'package:mosix/widgets/album_detail_header.dart';
 import 'package:mosix/widgets/animation_utils.dart';

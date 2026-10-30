@@ -1,7 +1,7 @@
 use super::{Check, LyricsError};
-use mornye_core::app_version::AppVersion;
-use mornye_core::lyrics::{decode_document, decode_response, errors};
-use mornye_network::{HttpRequest, HttpStream, NetworkService, NetworkSession};
+use mosix_core::app_version::AppVersion;
+use mosix_core::lyrics::{decode_document, decode_response, errors};
+use mosix_network::{HttpRequest, HttpStream, NetworkService, NetworkSession};
 use serde::de::DeserializeOwned;
 use std::collections::BTreeMap;
 use std::sync::Arc;

@@ -8,8 +8,8 @@ mod store;
 
 use crate::files::{ExtensionFiles, FilePath};
 use crate::transfer_policy::DownloadTransferPolicy;
-use mornye_core::app_version::AppVersion;
-use mornye_network::{HttpRequest, HttpResponse, NetworkSession, url::UrlParts};
+use mosix_core::app_version::AppVersion;
+use mosix_network::{HttpRequest, HttpResponse, NetworkSession, url::UrlParts};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;

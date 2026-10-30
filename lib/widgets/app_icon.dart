@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mosix/theme/material_symbols.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 
 /// [widget] as an [AppIcon] when it is a plain [Icon], so shared components
 /// can adopt Material Symbols without changing every caller.
@@ -37,7 +37,7 @@ class AppIcon extends StatelessWidget {
     this.textDirection,
   }) : _adaptive = false;
 
-  /// Uses [mornyeIconFor] when the Mosix theme is on.
+  /// Uses [mosixIconFor] when the Mosix theme is on.
   const AppIcon.adaptive(
     this.icon, {
     super.key,
@@ -65,7 +65,7 @@ class AppIcon extends StatelessWidget {
     final icon = this.icon;
     if (context.isMosix) {
       return Icon(
-        _adaptive && icon != null ? mornyeIconFor(icon) : icon,
+        _adaptive && icon != null ? mosixIconFor(icon) : icon,
         size: size,
         color: color,
         semanticLabel: semanticLabel,

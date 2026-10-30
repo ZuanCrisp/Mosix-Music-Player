@@ -112,7 +112,7 @@ void main() {
         onError: (e) {
           error = e;
           stagingRemained = directory.listSync().any(
-            (entry) => entry.path.contains('.mornye-staging-'),
+            (entry) => entry.path.contains('.mosix-staging-'),
           );
         },
       ),

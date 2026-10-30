@@ -1,13 +1,13 @@
 # Package the Windows release folder as a portable zip and a per-user
-# Inno Setup installer (windows\installer\mornye.iss).
+# Inno Setup installer (windows\installer\mosix.iss).
 #
 # Usage, from the repository root:
 #   pwsh scripts\package_windows.ps1 -Version v5.3.0
 #   pwsh scripts\package_windows.ps1 -Version v5.3.0 -Arch arm64 -Only installer
 #
 # Outputs, in -OutputDir (default build\desktop):
-#   Mornye-<version>-windows-<arch>-setup.exe
-#   Mornye-<version>-windows-<arch>-portable.zip
+#   Mosix-<version>-windows-<arch>-setup.exe
+#   Mosix-<version>-windows-<arch>-portable.zip
 #
 # Inno Setup 6 is used from PATH, its default install folder, or installed
 # with Chocolatey when neither has it.
@@ -41,13 +41,13 @@ if ($upstream -notmatch '^(\d+)\.(\d+)\.(\d+)([.-][0-9A-Za-z.-]+)?$') {
 }
 $numericVersion = "$($Matches[1]).$($Matches[2]).$($Matches[3]).0"
 
-foreach ($required in 'mornye.exe', 'flutter_windows.dll', 'data\app.so') {
+foreach ($required in 'mosix.exe', 'flutter_windows.dll', 'data\app.so') {
     if (-not (Test-Path (Join-Path $BundleDir $required))) {
         throw "Missing $required in $BundleDir"
     }
 }
 
-$baseName = "Mornye-$Version-windows-$Arch"
+$baseName = "Mosix-$Version-windows-$Arch"
 
 if ($Only -in 'all', 'portable') {
     $zip = Join-Path $OutputDir "$baseName-portable.zip"
@@ -70,7 +70,7 @@ if ($Only -in 'all', 'installer') {
         $iscc = $default
     }
 
-    $script = Join-Path $projectDir 'windows\installer\mornye.iss'
+    $script = Join-Path $projectDir 'windows\installer\mosix.iss'
     & $iscc `
         "/DAppVersion=$upstream" `
         "/DNumericVersion=$numericVersion" `

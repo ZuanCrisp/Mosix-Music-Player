@@ -10,7 +10,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $BundleDir = (Resolve-Path $BundleDir).Path
-$required = 'mornye.exe', 'flutter_windows.dll', 'mornye_desktop.dll',
+$required = 'mosix.exe', 'flutter_windows.dll', 'mosix_desktop.dll',
     'libmpv-2.dll', 'data\app.so', 'ffmpeg\ffmpeg.exe', 'ffmpeg\ffprobe.exe',
     'ffmpeg\LICENSE.txt', 'ffmpeg\SOURCE.txt'
 foreach ($file in $required) {

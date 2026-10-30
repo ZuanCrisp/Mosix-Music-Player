@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
-project(mornye LANGUAGES CXX)
+project(mosix LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "mornye")
+set(BINARY_NAME "mosix")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
@@ -98,7 +98,7 @@ else()
   set(MOSIX_RUST_TARGET "x86_64-pc-windows-msvc")
 endif()
 set(MOSIX_DESKTOP_LIBRARY
-  "${CMAKE_CURRENT_SOURCE_DIR}/../rust_backend/target/desktop/windows/${MOSIX_WINDOWS_ARCH}/mornye_desktop.dll")
+  "${CMAKE_CURRENT_SOURCE_DIR}/../rust_backend/target/desktop/windows/${MOSIX_WINDOWS_ARCH}/mosix_desktop.dll")
 if(NOT EXISTS "${MOSIX_DESKTOP_LIBRARY}")
   message(FATAL_ERROR
     "The Rust desktop backend was not built: ${MOSIX_DESKTOP_LIBRARY} "

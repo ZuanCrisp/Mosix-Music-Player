@@ -81,7 +81,7 @@ impl AvailabilityService {
     pub fn set_region(&self, region: &str) -> Result<(), ResolverError> {
         let mut state = self.inner.state.lock().unwrap();
         self.inner.check(&|| Ok(()))?;
-        let region = mornye_core::matching::uppercase(region.trim());
+        let region = mosix_core::matching::uppercase(region.trim());
         state.region = if region.len() == 2 && region.bytes().all(|byte| byte.is_ascii_uppercase())
         {
             region
@@ -171,7 +171,7 @@ impl AvailabilityService {
     fn lookup(&self, kind: Kind, spotify_id: &str, isrc: &str, check: &Check<'_>) -> Outcome {
         self.inner.check(check)?;
         let spotify_id = spotify_id.trim();
-        let isrc = mornye_core::matching::uppercase(isrc.trim());
+        let isrc = mosix_core::matching::uppercase(isrc.trim());
         let (id, isrc) = if !spotify_id.is_empty() {
             (spotify_id.to_owned(), false)
         } else if !isrc.is_empty() {
@@ -405,7 +405,7 @@ impl Inner {
 mod tests {
     use super::*;
     use crate::resolver::{Metadata, Resolution};
-    use mornye_core::metadata::TrackMetadata;
+    use mosix_core::metadata::TrackMetadata;
     use std::sync::atomic::AtomicUsize;
 
     #[derive(Default)]

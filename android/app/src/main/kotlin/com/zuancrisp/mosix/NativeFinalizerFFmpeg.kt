@@ -154,7 +154,7 @@ internal fun NativeDownloadFinalizer.promoteStagedConversion(stagedPath: String,
     if (!staged.isFile || staged.length() == 0L) return false
     fsyncQuietly(staged)
     val final = File(finalPath)
-    val backup = File("$finalPath.mornye-backup-${System.nanoTime()}")
+    val backup = File("$finalPath.mosix-backup-${System.nanoTime()}")
     val backedUp = final.exists()
     if (backedUp && (!final.isFile || !final.renameTo(backup))) return false
     if (staged.renameTo(final)) {

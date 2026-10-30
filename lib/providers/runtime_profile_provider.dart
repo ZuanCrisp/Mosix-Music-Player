@@ -25,7 +25,7 @@ final backdropBlurEnabledProvider = Provider<bool>((ref) {
 /// Flutter also reports Android's medium contrast as high contrast. Respect
 /// that request unless the user explicitly forces glass; this only controls
 /// decorative surfaces, never the inherited text or reduced-motion settings.
-final mornyeGlassContrastBlockedProvider = Provider.family<bool, bool>(
+final mosixGlassContrastBlockedProvider = Provider.family<bool, bool>(
   (ref, highContrast) =>
       highContrast &&
       !ref.watch(settingsProvider.select((s) => s.forceBackdropBlur)),
@@ -43,7 +43,7 @@ enum MosixGlassLevel {
   liquid,
 }
 
-final mornyeGlassLevelProvider = Provider<MosixGlassLevel>((ref) {
+final mosixGlassLevelProvider = Provider<MosixGlassLevel>((ref) {
   final lowEnd = ref.watch(lowEndDeviceProvider);
   if (!lowEnd && ref.watch(deviceSupportsLiquidGlassProvider)) {
     return MosixGlassLevel.liquid;
@@ -54,11 +54,11 @@ final mornyeGlassLevelProvider = Provider<MosixGlassLevel>((ref) {
 });
 
 /// Backdrop blur for Mosix surfaces (frosted or liquid).
-final mornyeBlurEnabledProvider = Provider<bool>(
-  (ref) => ref.watch(mornyeGlassLevelProvider) != MosixGlassLevel.flat,
+final mosixBlurEnabledProvider = Provider<bool>(
+  (ref) => ref.watch(mosixGlassLevelProvider) != MosixGlassLevel.flat,
 );
 
 /// Higher-quality glass and continuously filtered artwork / lyric effects.
-final mornyeLiquidGlassProvider = Provider<bool>(
-  (ref) => ref.watch(mornyeGlassLevelProvider) == MosixGlassLevel.liquid,
+final mosixLiquidGlassProvider = Provider<bool>(
+  (ref) => ref.watch(mosixGlassLevelProvider) == MosixGlassLevel.liquid,
 );

@@ -166,7 +166,7 @@ jobs:
           export KEY_PASSWORD="${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
 
           umask 077
-          signing_dir="$(mktemp -d "$RUNNER_TEMP/mornye-signing.XXXXXX")"
+          signing_dir="$(mktemp -d "$RUNNER_TEMP/mosix-signing.XXXXXX")"
           trap 'rm -rf "$signing_dir"' EXIT
           printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$signing_dir/release.jks"
           apksigner="$ANDROID_HOME/build-tools/37.0.0/apksigner"
@@ -474,7 +474,7 @@ jobs:
           VERSION: ${{ needs.get-version.outputs.version }}
         run: |
           app="build/macos/Build/Products/Release/Mosix.app"
-          test -s "$app/Contents/Frameworks/libmornye_desktop.dylib"
+          test -s "$app/Contents/Frameworks/libmosix_desktop.dylib"
           for tool in ffmpeg ffprobe; do
             test -x "$app/Contents/Resources/ffmpeg/$tool"
             for arch in arm64 x86_64; do
@@ -600,8 +600,8 @@ jobs:
           FLUTTER_ARCH: ${{ matrix.flutter_arch }}
         run: |
           bundle="build/linux/${FLUTTER_ARCH}/release/bundle"
-          test -x "$bundle/mornye"
-          test -s "$bundle/lib/libmornye_desktop.so"
+          test -x "$bundle/mosix"
+          test -s "$bundle/lib/libmosix_desktop.so"
           test -x "$bundle/lib/ffmpeg/ffmpeg"
           test -x "$bundle/lib/ffmpeg/ffprobe"
           test -s "$bundle/lib/ffmpeg/LICENSE.txt"
@@ -611,7 +611,7 @@ jobs:
           bash scripts/package_linux.sh deb "$bundle" "$VERSION" \
             "build/desktop/Mosix-${VERSION}-linux-${DEB_ARCH}.deb"
           dpkg-deb --contents "build/desktop/Mosix-${VERSION}-linux-${DEB_ARCH}.deb" |
-            grep -E 'usr/share/applications/com.zuancrisp.mosix.desktop|usr/lib/mornye/mornye$'
+            grep -E 'usr/share/applications/com.zuancrisp.mosix.desktop|usr/lib/mosix/mosix$'
           file "build/desktop/Mosix-${VERSION}-linux-${ARCH}.AppImage"
           (cd build/desktop && sha256sum Mosix-* > "SHA256SUMS-linux-${ARCH}.txt")
 
@@ -694,7 +694,7 @@ jobs:
       - name: Prepare Flutter framework patch
         run: dart scripts/prepare_flutter_sdk.dart
 
-      # windows/CMakeLists.txt installs the Rust library next to mornye.exe
+      # windows/CMakeLists.txt installs the Rust library next to mosix.exe
       # and the FFmpeg tools staged above into ffmpeg\.
       - name: Build Windows app
         run: |
@@ -731,7 +731,7 @@ jobs:
       - name: Use signed app
         if: env.SIGNPATH_API_TOKEN != ''
         run: |
-          if (-not (Test-Path 'build\windows-signed\mornye.exe')) { throw 'Signed app is missing' }
+          if (-not (Test-Path 'build\windows-signed\mosix.exe')) { throw 'Signed app is missing' }
           "MOSIX_WINDOWS_BUNDLE=build\windows-signed" >> $env:GITHUB_ENV
 
       - name: Package installer and portable zip
@@ -974,7 +974,7 @@ jobs:
           }
           desktop_row "macOS" "Mosix-${VERSION}-macos-universal.dmg" "Apple silicon and Intel, macOS 12 or later"
           desktop_row "Windows" "Mosix-${VERSION}-windows-x64-setup.exe" "Installer (x64), no administrator rights needed"
-          desktop_row "Windows" "Mosix-${VERSION}-windows-x64-portable.zip" "Portable (x64): extract and run mornye.exe"
+          desktop_row "Windows" "Mosix-${VERSION}-windows-x64-portable.zip" "Portable (x64): extract and run mosix.exe"
           desktop_row "Linux" "Mosix-${VERSION}-linux-x86_64.AppImage" "AppImage (x86_64), updates itself"
           desktop_row "Linux" "Mosix-${VERSION}-linux-aarch64.AppImage" "AppImage (aarch64), updates itself"
           desktop_row "Linux" "Mosix-${VERSION}-linux-amd64.deb" "Debian/Ubuntu (amd64)"
@@ -1150,7 +1150,7 @@ jobs:
       - name: Send to Telegram Channel
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHANNEL_ID: '@mornyeupdates'
+          TELEGRAM_CHANNEL_ID: '@mosixupdates'
           VERSION: ${{ needs.get-version.outputs.version }}
           REPOSITORY: ${{ github.repository }}
         run: |

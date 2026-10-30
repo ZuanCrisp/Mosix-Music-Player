@@ -67,7 +67,7 @@ impl PlatformResolverService {
     }
 
     pub fn set_region(&self, region: &str) -> Result<(), ResolverError> {
-        let region = mornye_core::matching::uppercase(region.trim());
+        let region = mosix_core::matching::uppercase(region.trim());
         let mut state = self.inner.state.lock().unwrap();
         self.inner.check(&|| Ok(()))?;
         state.region = if region.len() == 2 && region.bytes().all(|byte| byte.is_ascii_uppercase())

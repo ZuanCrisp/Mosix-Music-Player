@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Xcode Run Script phase of the macOS Runner target ("Embed Rust Backend").
-# Copies the Rust desktop backend (libmornye_desktop.dylib) into
+# Copies the Rust desktop backend (libmosix_desktop.dylib) into
 # <App>.app/Contents/Frameworks, where dart:ffi loads it, and signs it.
 #
 # The library is built with `bash scripts/build_rust_backend.sh desktop` when
@@ -13,7 +13,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 RUST_BACKEND_DIR="$PROJECT_DIR/rust_backend"
-LIBRARY_NAME="libmornye_desktop.dylib"
+LIBRARY_NAME="libmosix_desktop.dylib"
 STAGED_LIBRARY="$RUST_BACKEND_DIR/target/desktop/macos/$LIBRARY_NAME"
 
 : "${TARGET_BUILD_DIR:?Run this script from the Xcode build of the macOS Runner target.}"

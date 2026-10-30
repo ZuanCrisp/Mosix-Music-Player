@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mosix/providers/runtime_profile_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_content_card.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 
 /// Repo cards share the Mosix glass material, including their detail pages.
 class ExtensionRepoCard extends ConsumerWidget {
@@ -39,7 +39,7 @@ class ExtensionRepoCard extends ConsumerWidget {
       // backdrop blur is invisible but re-filters the whole card every frame.
       child: MosixGlass.navigation(
         radius: 24,
-        blurEnabled: ref.watch(mornyeBlurEnabledProvider),
+        blurEnabled: ref.watch(mosixBlurEnabledProvider),
         samplesBackdrop: false,
         child: Material(color: Colors.transparent, child: child),
       ),

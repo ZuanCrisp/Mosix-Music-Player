@@ -94,7 +94,7 @@ class SettingsSearchCatalog {
           title: l10n.appearanceGlassOutlines,
           subtitle: l10n.appearanceGlassOutlinesSubtitle,
           keywords: const [
-            'mornye',
+            'mosix',
             'liquid glass',
             'border',
             'rim',

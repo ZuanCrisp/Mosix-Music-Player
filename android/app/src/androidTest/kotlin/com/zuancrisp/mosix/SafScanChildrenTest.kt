@@ -21,7 +21,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SafScanChildrenTest {
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
-    private val authority = "com.mornye.test.documents.lookup"
+    private val authority = "com.mosix.test.documents.lookup"
     private val controlUri = Uri.parse("content://$authority.control")
     private val treeUri = DocumentsContract.buildTreeDocumentUri(authority, "root")
     private val grantFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION

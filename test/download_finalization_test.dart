@@ -50,7 +50,7 @@ void main() {
   group('file deletion', () {
     test('confirms a local file is absent before reporting success', () async {
       final tempDir = await Directory.systemTemp.createTemp(
-        'mornye-delete-test-',
+        'mosix-delete-test-',
       );
       addTearDown(() async {
         if (await tempDir.exists()) {

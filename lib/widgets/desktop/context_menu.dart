@@ -3,12 +3,12 @@ import 'package:flutter/gestures.dart' show kPrimaryButton;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:mosix/theme/mornye_icons.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_icons.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/desktop/desktop_selection.dart';
-import 'package:mosix/widgets/mornye_context_menu.dart';
+import 'package:mosix/widgets/mosix_context_menu.dart';
 
 /// One row of a desktop context menu. Use `Icons.*`; Mosix swaps in the
 /// Cupertino glyph.
@@ -36,7 +36,7 @@ class ContextMenuAction {
 }
 
 /// Mosix menus are as wide as the iOS popover, minus its touch padding.
-const double _mornyeMenuWidth = 280;
+const double _mosixMenuWidth = 280;
 
 /// Shows [groups] as a context menu at [position], in global coordinates.
 ///
@@ -62,8 +62,8 @@ Future<bool> showContextMenu(
       context: context,
       // The layout aligns the menu's trailing edge with the anchor's, so a
       // menu-wide anchor puts its leading edge at the pointer.
-      anchor: Rect.fromLTWH(position.dx, position.dy - 8, _mornyeMenuWidth, 0),
-      maxWidth: _mornyeMenuWidth,
+      anchor: Rect.fromLTWH(position.dx, position.dy - 8, _mosixMenuWidth, 0),
+      maxWidth: _mosixMenuWidth,
       builder: (menuContext) => MosixContextMenu(
         dense: true,
         groups: [
@@ -71,7 +71,7 @@ Future<bool> showContextMenu(
             [
               for (final action in group)
                 MosixMenuAction(
-                  icon: mornyeIconFor(action.icon),
+                  icon: mosixIconFor(action.icon),
                   label: action.label,
                   selected: action.checked,
                   destructive: action.destructive,

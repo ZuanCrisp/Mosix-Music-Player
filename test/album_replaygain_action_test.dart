@@ -9,7 +9,7 @@ import 'package:mosix/screens/downloaded_album_screen.dart';
 import 'package:mosix/screens/local_album_screen.dart';
 import 'package:mosix/services/library_database.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:mosix/widgets/selection_bottom_bar.dart';
 
@@ -19,11 +19,11 @@ void main() {
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final downloaded in [false, true]) {
       for (final remove in [false, true]) {
         testWidgets(
-          'ReplayGain survives hiding the album selection (Mosix: $mornye, downloaded: $downloaded, remove: $remove)',
+          'ReplayGain survives hiding the album selection (Mosix: $mosix, downloaded: $downloaded, remove: $remove)',
           (tester) async {
             SharedPreferences.setMockInitialValues({});
             var attempts = 0;
@@ -57,7 +57,7 @@ void main() {
                   ).overrideWith((ref) async => [item]),
                 ],
                 child: MaterialApp(
-                  theme: mornye
+                  theme: mosix
                       ? MosixTheme.build(Brightness.light)
                       : AppTheme.light(),
                   localizationsDelegates:

@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/theme/app_theme.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/utils/desktop_platform.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
@@ -21,7 +21,7 @@ void main() {
   Future<void> open(
     WidgetTester tester,
     void Function(BuildContext context) show, {
-    bool mornye = false,
+    bool mosix = false,
     double width = 1200,
   }) async {
     tester.view.physicalSize = Size(width, 900);
@@ -30,7 +30,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: mornye
+          theme: mosix
               ? MosixTheme.build(Brightness.light)
               : AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -138,10 +138,10 @@ void main() {
   testWidgets('dialog corners follow the sheet radius of each style', (
     tester,
   ) async {
-    for (final mornye in [false, true]) {
+    for (final mosix in [false, true]) {
       await open(
         tester,
-        mornye: mornye,
+        mosix: mosix,
         (context) => showAppBottomSheet<void>(
           context: context,
           title: 'Title',
@@ -152,7 +152,7 @@ void main() {
           tester.widget<Dialog>(find.byKey(_dialogKey)).shape!
               as RoundedRectangleBorder;
       expect(shape.borderRadius, BorderRadius.circular(28));
-      expect(find.byTooltip('Close'), mornye ? findsNothing : findsOneWidget);
+      expect(find.byTooltip('Close'), mosix ? findsNothing : findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     }
   });

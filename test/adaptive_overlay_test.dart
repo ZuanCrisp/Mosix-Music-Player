@@ -9,15 +9,15 @@ import 'package:mosix/providers/settings_provider.dart';
 import 'package:mosix/screens/settings/download_settings_page.dart';
 import 'package:mosix/services/app_remote_config_service.dart';
 import 'package:mosix/services/update_checker.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/theme/material_symbols.dart';
-import 'package:mosix/theme/mornye_icons.dart';
+import 'package:mosix/theme/mosix_icons.dart';
 import 'package:mosix/widgets/app_alert_dialog.dart';
 import 'package:mosix/widgets/app_announcement_dialog.dart';
 import 'package:mosix/widgets/app_bottom_sheet.dart';
 import 'package:mosix/widgets/app_choice_chip.dart';
 import 'package:mosix/widgets/app_icon.dart';
-import 'package:mosix/widgets/mornye_chrome.dart';
+import 'package:mosix/widgets/mosix_chrome.dart';
 import 'package:mosix/widgets/update_dialog.dart';
 
 Widget _app(ThemeData theme, Widget home) => ProviderScope(
@@ -35,12 +35,12 @@ class _ChoiceSettings extends SettingsNotifier {
 }
 
 void main() {
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     for (final brightness in Brightness.values) {
-      final theme = mornye
+      final theme = mosix
           ? MosixTheme.build(brightness)
           : ThemeData(brightness: brightness);
-      final variant = 'Mosix: $mornye, $brightness';
+      final variant = 'Mosix: $mosix, $brightness';
 
       testWidgets('choice rows preserve adaptive appearance ($variant)', (
         tester,
@@ -110,7 +110,7 @@ void main() {
               tester.getSemantics(find.text('Choice $selected')),
               isSemantics(isSelected: selected, hasTapAction: true),
             );
-            if (mornye) {
+            if (mosix) {
               expect(
                 tester.getSemantics(find.text('Choice $selected')),
                 isSemantics(isInMutuallyExclusiveGroup: true),
@@ -154,8 +154,8 @@ void main() {
           final container = ProviderScope.containerOf(
             tester.element(find.byType(DownloadSettingsPage)),
           );
-          final check = mornye
-              ? mornyeIconFor(Icons.check)
+          final check = mosix
+              ? mosixIconFor(Icons.check)
               : materialSymbolFor(Icons.check)!.icon;
           for (final (picker, initial, next) in [
             ('Output format', 'MP3', 'Opus'),
@@ -192,7 +192,7 @@ void main() {
             );
             expect(checkmark, findsOneWidget);
             expect(tester.widget<Icon>(checkmark).color, Colors.green);
-            expect(tester.getSize(checkmark), Size.square(mornye ? 20 : 24));
+            expect(tester.getSize(checkmark), Size.square(mosix ? 20 : 24));
             await tester.tap(option(next));
             await tester.pumpAndSettle();
             expect(find.byType(AppBottomSheet), findsNothing);
@@ -441,9 +441,9 @@ void main() {
         await tester.pumpAndSettle();
         expect(
           find.byType(MosixGlassPanel),
-          mornye ? findsOneWidget : findsNothing,
+          mosix ? findsOneWidget : findsNothing,
         );
-        expect(find.byType(M3EChip), mornye ? findsNothing : findsOneWidget);
+        expect(find.byType(M3EChip), mosix ? findsNothing : findsOneWidget);
         await tester.tap(find.text('Unavailable'));
         expect(disabledTaps, 0);
         await tester.tap(find.text('Downloaded tracks'));
@@ -501,7 +501,7 @@ void main() {
         expect(nestedNavigator.currentState!.canPop(), isTrue);
         expect(
           find.byType(MosixGlassPanel),
-          mornye ? findsOneWidget : findsNothing,
+          mosix ? findsOneWidget : findsNothing,
         );
         expect(
           Theme.of(tester.element(find.text('Import playlist'))).brightness,
@@ -558,13 +558,13 @@ void main() {
       });
     }
 
-    testWidgets('announcement keeps explicit dismissal (Mosix: $mornye)', (
+    testWidgets('announcement keeps explicit dismissal (Mosix: $mosix)', (
       tester,
     ) async {
       var dismissals = 0;
       await tester.pumpWidget(
         _app(
-          mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+          mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
           Builder(
             builder: (context) => Scaffold(
               body: TextButton(

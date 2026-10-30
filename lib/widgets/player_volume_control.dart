@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mosix/l10n/l10n.dart';
 import 'package:mosix/providers/system_volume_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/app_icon.dart';
 import 'package:mosix/widgets/app_slider.dart';
-import 'package:mosix/widgets/mornye_player_slider.dart';
+import 'package:mosix/widgets/mosix_player_slider.dart';
 import 'package:mosix/utils/logger.dart';
 import 'package:mosix/services/music_playback_deck.dart';
 

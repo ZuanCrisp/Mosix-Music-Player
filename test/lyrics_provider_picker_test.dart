@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mosix/l10n/app_localizations.dart';
 import 'package:mosix/providers/extension_provider.dart';
-import 'package:mosix/theme/mornye_theme.dart';
+import 'package:mosix/theme/mosix_theme.dart';
 import 'package:mosix/widgets/lyrics_provider_picker.dart';
 
 class _NoExtensions extends ExtensionNotifier {
@@ -56,16 +56,16 @@ void main() {
     expect(kind({'lyrics': '[ar:Only tags]'}), LyricsResultKind.none);
   });
 
-  for (final mornye in [false, true]) {
+  for (final mosix in [false, true]) {
     testWidgets('lists each provider in order and returns the chosen lyrics '
-        '(${mornye ? 'Mosix' : 'Material'})', (tester) async {
+        '(${mosix ? 'Mosix' : 'Material'})', (tester) async {
       final slow = Completer<Map<String, dynamic>>();
       String? chosen;
       await tester.pumpWidget(
         ProviderScope(
           overrides: [extensionProvider.overrideWith(_NoExtensions.new)],
           child: MaterialApp(
-            theme: mornye ? MosixTheme.build(Brightness.dark) : ThemeData(),
+            theme: mosix ? MosixTheme.build(Brightness.dark) : ThemeData(),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Builder(

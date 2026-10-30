@@ -1,6 +1,6 @@
 # Changelog
 
-## Mosix local update - 2026-10-30
+## Mosix v5.2.7 - 2026-10-30
 
 ### Added
 
@@ -10,7 +10,6 @@
 - New backups use the `mosix_backup_` filename and `mosix-backup` archive marker. Restore remains compatible with existing Mornye and Spotiflac backup markers.
 - Renamed app-owned Dart, Rust, native, asset, and packaging identifiers to Mosix. Existing callback schemes, extension package suffixes, backup markers, provider IDs, and request user-agent values remain compatible.
 - Set Mosix Theme as the default for fresh Android installs.
-- Added the private `READMEFORME` project guide for future maintenance and selective upstream updates.
 
 ### Changed
 
@@ -18,7 +17,14 @@
 - Removed Support Development from Settings and removed the Social section from About.
 - Changed new extension packages to use `.mosix-ext`; installation still accepts `.mornye-ext` and older package formats.
 - Kept the Apizarzmoe/Zarz API endpoints, request payloads, and auth callback value unchanged while registering both Mosix and legacy callback schemes.
-- Built an arm64 release APK for device testing; the APK and this changelog are copied to the local `Ready To Upload` folder outside the Git repository.
+
+### Fixed
+
+- Improved built-in player audio-focus handling: wait for interruption listeners before requesting focus, stay paused if focus is denied, pause when another app requests audio, and resume after a recognized interruption ends unless the user manually paused.
+
+### Downloads
+
+- Android ARM64 (`arm64-v8a`) and ARM32 (`armeabi-v7a`) release APKs are provided for testing and release.
 
 ---
 

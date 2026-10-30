@@ -1,7 +1,7 @@
 name: mosix
 description: Mosix, extension-driven music metadata and downloads for mobile devices
 publish_to: "none"
-version: 5.2.6+165
+version: 5.2.7+166
 
 environment:
   sdk: ^3.10.0

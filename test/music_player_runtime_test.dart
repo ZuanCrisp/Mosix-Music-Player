@@ -92,6 +92,7 @@ class _Deck implements PlaybackDeck {
 class _Session implements AudioSession {
   int configurations = 0;
   final activations = <bool>[];
+  bool activationGranted = true;
   Completer<void>? configureBarrier;
   final interruptions = StreamController<AudioInterruptionEvent>.broadcast();
 
@@ -114,7 +115,7 @@ class _Session implements AudioSession {
         const AudioSessionConfiguration.music(),
   }) async {
     activations.add(active);
-    return true;
+    return !active || activationGranted;
   }
 
   @override
@@ -474,6 +475,70 @@ void main() {
       expect(session.activations, isEmpty);
     },
   );
+
+  test('duck interruptions pause and resume the built-in player', () async {
+    final session = _Session();
+    final decks = <_Deck>[];
+    final handler = await _runtime(session: session, decks: decks).initialize();
+    await _settle();
+    await handler.setQueueAndPlay([_track]);
+    expect(decks.single.state, PlaybackDeckState.playing);
+    expect(session.activations, [true]);
+
+    final paused = handler.playbackState
+        .firstWhere((state) => !state.playing)
+        .timeout(const Duration(seconds: 2));
+    session.interruptions.add(
+      AudioInterruptionEvent(true, AudioInterruptionType.duck),
+    );
+    await paused;
+    expect(decks.single.state, PlaybackDeckState.paused);
+
+    final resumed = handler.playbackState
+        .firstWhere((state) => state.playing)
+        .timeout(const Duration(seconds: 2));
+    session.interruptions.add(
+      AudioInterruptionEvent(false, AudioInterruptionType.duck),
+    );
+    await resumed;
+    expect(decks.single.state, PlaybackDeckState.playing);
+  });
+
+  test('initial playback does not start without Android audio focus', () async {
+    final session = _Session()..activationGranted = false;
+    final decks = <_Deck>[];
+    final handler = await _runtime(session: session, decks: decks).initialize();
+    await _settle();
+    await handler.setQueueAndPlay([_track]);
+
+    expect(session.activations, [true]);
+    expect(handler.playbackState.value.playing, isFalse);
+    expect(decks.single.state, PlaybackDeckState.paused);
+  });
+
+  test('manual pause during a duck interruption is not auto-resumed', () async {
+    final session = _Session();
+    final decks = <_Deck>[];
+    final handler = await _runtime(session: session, decks: decks).initialize();
+    await _settle();
+    await handler.setQueueAndPlay([_track]);
+
+    final paused = handler.playbackState
+        .firstWhere((state) => !state.playing)
+        .timeout(const Duration(seconds: 2));
+    session.interruptions.add(
+      AudioInterruptionEvent(true, AudioInterruptionType.duck),
+    );
+    await paused;
+    await handler.pause();
+    session.interruptions.add(
+      AudioInterruptionEvent(false, AudioInterruptionType.duck),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+
+    expect(decks.single.state, PlaybackDeckState.paused);
+    expect(handler.playbackState.value.playing, isFalse);
+  });
 
   test(
     'iOS recovery cannot activate audio after a pause during configuration',

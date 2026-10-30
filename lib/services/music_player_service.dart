@@ -125,6 +125,7 @@ class MusicPlayerHandler extends BaseAudioHandler
   StreamSubscription<Set<AudioDevice>>? _automationDevicesSubscription;
   bool _headphoneMonitoringRequested = false;
   int _headphoneMonitoringRevision = 0;
+  Future<void>? _audioSessionSetup;
   final List<PlayableMedia> _media = [];
   final List<MediaItem> _queueItems = [];
   late final ContentUriPlaybackCache _sourceCache;
@@ -346,7 +347,7 @@ class MusicPlayerHandler extends BaseAudioHandler
       unawaited(_dependencies.recorder.flush());
     });
     unawaited(_player.configureOutput());
-    unawaited(_configureAudioSession());
+    unawaited(_ensureAudioSessionConfigured());
     _refreshPlaybackAutomation();
 
     _listenToPlayer(_player);
@@ -526,13 +527,20 @@ class MusicPlayerHandler extends BaseAudioHandler
   /// app like PowerAmp taking audio focus, or headphones unplugged) so playback
   /// pauses and the UI/notification reflect the real state instead of staying
   /// stuck on "playing".
+  Future<void> _ensureAudioSessionConfigured() =>
+      _audioSessionSetup ??= _configureAudioSession();
+
   Future<void> _configureAudioSession() async {
     // audio_session models mobile audio focus; desktop has no equivalent.
     if (isDesktopPlatform) return;
     try {
       final session = await _dependencies.audioSession();
       _audioSession = session;
-      await session.configure(const AudioSessionConfiguration.music());
+      await session.configure(
+        AudioSessionConfiguration.music().copyWith(
+          androidWillPauseWhenDucked: true,
+        ),
+      );
       if (_disposed) return;
       _refreshPlaybackAutomation();
 
@@ -544,28 +552,26 @@ class MusicPlayerHandler extends BaseAudioHandler
             'playing=${playbackState.value.playing}',
           );
           if (event.begin) {
-            if (event.type == AudioInterruptionType.duck) {
-              return;
-            }
-
             _interruptionActive = true;
-            _pausedByInterruption =
+            final wasPlaying =
                 _player.state == PlaybackDeckState.playing ||
                 playbackState.value.playing;
-            unawaited(_pauseForFocusLoss(reason: 'audio interruption'));
-          } else {
-            if (event.type == AudioInterruptionType.duck) {
-              return;
+            _pausedByInterruption = _pausedByInterruption || wasPlaying;
+            if (_pausedByInterruption) {
+              // A duck event means another app needs audio. Pause the deck
+              // instead of only lowering its volume: some platform/player
+              // combinations keep reporting "playing" while output is silent.
+              unawaited(_pauseForFocusLoss(reason: 'audio interruption'));
             }
-
+          } else {
             _interruptionActive = false;
-            if (_pausedByInterruption &&
-                event.type == AudioInterruptionType.pause &&
-                !_playbackAutomation.blocksPlayback) {
-              _pausedByInterruption = false;
+            final canResume =
+                _pausedByInterruption &&
+                event.type != AudioInterruptionType.unknown &&
+                !_playbackAutomation.blocksPlayback;
+            _pausedByInterruption = false;
+            if (canResume) {
               unawaited(play());
-            } else {
-              _pausedByInterruption = false;
             }
           }
         }),
@@ -688,9 +694,13 @@ class MusicPlayerHandler extends BaseAudioHandler
     _sleepTimerEndsAt = null;
   }
 
-  Future<void> _activateAudioSession() async {
-    if (isDesktopPlatform) return;
+  Future<bool> _activateAudioSession() async {
+    if (isDesktopPlatform) return true;
     try {
+      // Install the interruption listener before requesting focus. The player
+      // deck uses AudioFocus.none, so audio_session must make this request.
+      await _ensureAudioSessionConfigured();
+      if (_disposed) return false;
       final session = _audioSession ?? await _dependencies.audioSession();
       _audioSession = session;
       // Other media plugins can change the process-wide iOS category/options
@@ -702,8 +712,10 @@ class MusicPlayerHandler extends BaseAudioHandler
       if (!granted) {
         _log.w('Audio focus request was not granted');
       }
+      return granted;
     } catch (e) {
       _log.w('Failed to activate audio session: $e');
+      return false;
     }
   }
 
@@ -1483,7 +1495,15 @@ class MusicPlayerHandler extends BaseAudioHandler
       if (!_isCurrentPlayRequest(generation, media)) return;
       await _player.configureOutput();
       if (!_isCurrentPlayRequest(generation, media)) return;
-      await _activateAudioSession();
+      if (!await _activateAudioSession()) {
+        if (!_isCurrentPlayRequest(generation, media)) return;
+        _userPaused = true;
+        await _player.pause();
+        if (_isCurrentPlayRequest(generation, media)) {
+          _broadcastState(playerState: PlaybackDeckState.paused);
+        }
+        return;
+      }
       if (!_isCurrentPlayRequest(generation, media)) return;
       await _player.stop();
       _sourceReady = false;
@@ -1770,7 +1790,12 @@ class MusicPlayerHandler extends BaseAudioHandler
     final generation = _playRequestGeneration;
     await _serializeSourceChange(() async {
       if (generation != _playRequestGeneration || _disposed) return;
-      await _activateAudioSession();
+      if (!await _activateAudioSession()) {
+        if (generation != _playRequestGeneration || _disposed) return;
+        await _player.pause();
+        _broadcastState(playerState: PlaybackDeckState.paused);
+        return;
+      }
       if (generation != _playRequestGeneration || _disposed) return;
       await _claimHardwareMediaButtons();
       if (generation != _playRequestGeneration || _disposed) return;
